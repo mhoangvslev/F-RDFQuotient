@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#">
+
+  <rdfs:Class rdf:about="http://contentcheck.fr/schemas/Creator">
+  </rdfs:Class>
+
+  <rdfs:Class rdf:about="http://contentcheck.fr/schemas/Current">
+  </rdfs:Class>
+
+  <rdfs:Class rdf:about="http://contentcheck.fr/schemas/Position">
+  </rdfs:Class>
+
+  <rdfs:Class rdf:about="http://contentcheck.fr/schemas/Place">
+  </rdfs:Class>
+
+  <rdfs:Class rdf:about="http://contentcheck.fr/schemas/University">
+  </rdfs:Class>
+
+  <rdfs:Class rdf:about="http://contentcheck.fr/schemas/Ministry">
+  </rdfs:Class>
+
+  <rdfs:Class rdf:about="http://contentcheck.fr/schemas/Politician">
+    <rdfs:subClassOf rdf:resource="http://contentcheck.fr/schemas/Creator"/>
+  </rdfs:Class>
+
+  <rdfs:Class rdf:about="http://contentcheck.fr/schemas/Party">
+    <rdfs:subClassOf rdf:resource="http://contentcheck.fr/schemas/Creator"/>
+  </rdfs:Class>
+
+  <rdfs:Class rdf:about="http://contentcheck.fr/schemas/Organization">
+    <rdfs:subClassOf rdf:resource="http://contentcheck.fr/schemas/Creator"/>
+  </rdfs:Class>
+
+  <rdfs:Class rdf:about="http://contentcheck.fr/schemas/TwitterAccount">
+    <rdfs:subClassOf rdf:resource="http://contentcheck.fr/schemas/Creator"/>
+  </rdfs:Class>
+
+  <rdf:Property rdf:about="http://contentcheck.fr/schemas/abbreviation">
+    <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+  </rdf:Property>
+
+  <rdf:Property rdf:about="http://contentcheck.fr/schemas/minName">
+    <rdfs:domain rdf:resource="http://contentcheck.fr/schemas/Ministry"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+  </rdf:Property>
+
+  <rdf:Property rdf:about="http://contentcheck.fr/schemas/minHead">
+    <rdfs:domain rdf:resource="http://contentcheck.fr/schemas/Ministry"/>
+    <rdfs:range rdf:resource="http://contentcheck.fr/schemas/Politician"/>
+  </rdf:Property>
+
+  <rdf:Property rdf:about="http://contentcheck.fr/schemas/minDB">
+    <rdfs:domain rdf:resource="http://contentcheck.fr/schemas/Ministry"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+  </rdf:Property>
+
+  <rdf:Property rdf:about="http://contentcheck.fr/schemas/current">
+    <rdfs:domain rdf:resource="http://contentcheck.fr/schemas/Organization"/>
+    <rdfs:domain rdf:resource="http://contentcheck.fr/schemas/TwitterAccount"/>
+    <rdfs:domain rdf:resource="http://contentcheck.fr/schemas/Party"/>
+    <rdfs:range rdf:resource="http://contentcheck.fr/schemas/Current"/>
+  </rdf:Property>
+
+  <rdf:Property rdf:about="http://contentcheck.fr/schemas/label">
+    <rdfs:domain rdf:resource="http://contentcheck.fr/schemas/Party"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+  </rdf:Property>
+
+  <rdf:Property rdf:about="http://contentcheck.fr/schemas/gender">
+    <rdfs:domain rdf:resource="http://contentcheck.fr/schemas/Creator"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+  </rdf:Property>
+
+  <rdf:Property rdf:about="http://contentcheck.fr/schemas/homePage">
+    <rdfs:domain rdf:resource="http://contentcheck.fr/schemas/Creator"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+  </rdf:Property>
+
+  <rdf:Property rdf:about="http://contentcheck.fr/schemas/firstName">
+    <rdfs:domain rdf:resource="http://contentcheck.fr/schemas/Politician"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+  </rdf:Property>
+
+  <rdf:Property rdf:about="http://contentcheck.fr/schemas/lastName">
+    <rdfs:domain rdf:resource="http://contentcheck.fr/schemas/Politician"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+  </rdf:Property>
+
+  <rdf:Property rdf:about="http://contentcheck.fr/schemas/dob">
+    <rdfs:domain rdf:resource="http://contentcheck.fr/schemas/Politician"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+  </rdf:Property>
+
+  <rdf:Property rdf:about="http://contentcheck.fr/schemas/mob">
+    <rdfs:domain rdf:resource="http://contentcheck.fr/schemas/Politician"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+  </rdf:Property>
+
+  <rdf:Property rdf:about="http://contentcheck.fr/schemas/yob">
+    <rdfs:domain rdf:resource="http://contentcheck.fr/schemas/Politician"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+  </rdf:Property>
+
+  <rdf:Property rdf:about="http://contentcheck.fr/schemas/pob">
+    <rdfs:domain rdf:resource="http://contentcheck.fr/schemas/Politician"/>
+    <rdfs:range rdf:resource="http://contentcheck.fr/schemas/Place"/>
+  </rdf:Property>
+
+  <rdf:Property rdf:about="http://contentcheck.fr/schemas/nationality">
+    <rdfs:domain rdf:resource="http://contentcheck.fr/schemas/Politician"/>
+    <rdfs:range rdf:resource="http://contentcheck.fr/schemas/Place"/>
+  </rdf:Property>
+
+  <rdf:Property rdf:about="http://contentcheck.fr/schemas/education">
+    <rdfs:domain rdf:resource="http://contentcheck.fr/schemas/Politician"/>
+    <rdfs:range rdf:resource="http://contentcheck.fr/schemas/University"/>
+  </rdf:Property>
+
+  <rdf:Property rdf:about="http://contentcheck.fr/schemas/nameVariant">
+    <rdfs:domain rdf:resource="http://contentcheck.fr/schemas/Creator"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+  </rdf:Property>
+
+  <rdf:Property rdf:about="http://contentcheck.fr/schemas/region">
+    <rdfs:domain rdf:resource="http://contentcheck.fr/schemas/Place"/>
+    <rdfs:range rdf:resource="http://contentcheck.fr/schemas/Place"/>
+  </rdf:Property>
+
+  <rdf:Property rdf:about="http://contentcheck.fr/schemas/department">
+    <rdfs:domain rdf:resource="http://contentcheck.fr/schemas/Place"/>
+    <rdfs:range rdf:resource="http://contentcheck.fr/schemas/Place"/>
+  </rdf:Property>
+
+  <rdf:Property rdf:about="http://contentcheck.fr/schemas/country">
+    <rdfs:domain rdf:resource="http://contentcheck.fr/schemas/Place"/>
+    <rdfs:range rdf:resource="http://contentcheck.fr/schemas/Place"/>
+  </rdf:Property>
+
+  <rdf:Property rdf:about="http://contentcheck.fr/schemas/campus">
+    <rdfs:domain rdf:resource="http://contentcheck.fr/schemas/University"/>
+    <rdfs:range rdf:resource="http://contentcheck.fr/schemas/Place"/>
+  </rdf:Property>
+
+  <rdf:Property rdf:about="http://contentcheck.fr/schemas/position">
+    <rdfs:domain rdf:resource="http://contentcheck.fr/schemas/Politician"/>
+    <rdfs:range rdf:resource="http://contentcheck.fr/schemas/Position"/>
+  </rdf:Property>
+
+  <rdf:Property rdf:about="http://contentcheck.fr/schemas/party">
+    <rdfs:domain rdf:resource="http://contentcheck.fr/schemas/Creator"/>
+    <rdfs:range rdf:resource="http://contentcheck.fr/schemas/Party"/>
+  </rdf:Property>
+
+  <rdf:Property rdf:about="http://contentcheck.fr/schemas/twitterAccount">
+    <rdfs:domain rdf:resource="http://contentcheck.fr/schemas/Creator"/>
+    <rdfs:range rdf:resource="http://contentcheck.fr/schemas/TwitterAccount"/>
+  </rdf:Property>
+
+  <rdf:Property rdf:about="http://contentcheck.fr/schemas/facebook">
+    <rdfs:domain rdf:resource="http://contentcheck.fr/schemas/Creator"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+  </rdf:Property>
+
+  <rdf:Property rdf:about="http://contentcheck.fr/schemas/name">
+    <rdfs:domain rdf:resource="http://contentcheck.fr/schemas/Creator"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+  </rdf:Property>
+
+  <rdf:Property rdf:about="http://contentcheck.fr/schemas/userName">
+    <rdfs:domain rdf:resource="http://contentcheck.fr/schemas/TwitterAccount"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+  </rdf:Property>
+
+  <rdf:Property rdf:about="http://contentcheck.fr/schemas/title">
+    <rdfs:domain rdf:resource="http://contentcheck.fr/schemas/Position"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+  </rdf:Property>
+
+</rdf:RDF>
