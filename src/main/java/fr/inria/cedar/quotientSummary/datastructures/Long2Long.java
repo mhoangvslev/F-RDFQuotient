@@ -9,13 +9,14 @@ import fr.inria.cedar.commons.miscellaneous.Debugger;
 
 public class Long2Long{
 	// from the node to the ID of its clique
-	HashMap<Long, Long> map;
+	final HashMap<Long, Long> map;
+
 	// from the ID of a clique, to the list of IDs of all the nodes
-	HashMap<Long, ArrayList<Long>> inverse;
+	final HashMap<Long, ArrayList<Long>> inverse;
 	
 	public Long2Long(){
-		map = new HashMap<Long, Long>();
-		inverse = new HashMap<Long, ArrayList<Long>>();
+		map = new HashMap<>();
+		inverse = new HashMap<>();
 	}
 	
 	public Long get(long node){
@@ -30,7 +31,7 @@ public class Long2Long{
 		map.put(node, clique);
 		ArrayList<Long> nodesForC = inverse.get(clique);
 		if (nodesForC == null){
-			nodesForC = new ArrayList<Long>();
+			nodesForC = new ArrayList<>();
 			inverse.put(clique,  nodesForC);
 		}
 		nodesForC.add(node);
@@ -101,7 +102,7 @@ public class Long2Long{
 	}
 
 	public long countDistinctValues() {
-		TreeSet<Long> values = new TreeSet<Long>(); 
+		TreeSet<Long> values = new TreeSet<>(); 
 		for (Long key: map.keySet()){
 			Long val = map.get(key); 
 			if (!values.contains(val)){

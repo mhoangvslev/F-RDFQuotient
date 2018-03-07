@@ -1,18 +1,19 @@
 package fr.inria.cedar.quotientSummary.datastructures;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Objects;
 
-public class Path implements Comparable {
+public class Path implements Comparable<Path> {
 
-	ArrayList<Triple> triples;
+	final ArrayList<Triple> triples;
 	
 	public Path() {
-		triples = new ArrayList<Triple>();
+		triples = new ArrayList<>();
 	}
 	
 	public Path(Triple t) {
-		triples = new ArrayList<Triple>();
+		triples = new ArrayList<>();
 		triples.add(t); 
 	}
 	public static Path appendOneBefore(Triple t, Path p) {
@@ -32,6 +33,7 @@ public class Path implements Comparable {
 		triples.add(t); 
 	}
 	
+	@Override
 	public String toString() {
 		StringBuffer sb = new StringBuffer(); 
 		sb.append("||"); 
@@ -47,8 +49,13 @@ public class Path implements Comparable {
 	public boolean contains(Triple t) {
 		return (triples.indexOf(t)>=0); 
 	}
+	
+	@Override
 	public boolean equals(Object other){
-		Path p2 = (Path)other; 
+		if (!(other instanceof Path)) {
+			return false;
+		}
+		Path p2 = (Path) other; 
 		for (Triple t: triples) {
 			if (!p2.contains(t)){
 				return false; 
@@ -62,12 +69,17 @@ public class Path implements Comparable {
 		return true; 
 	}
 
+	@Override
+	public int hashCode() {
+		return Objects.hash(triples);
+	}
+
 	public ArrayList<Triple> getTriples() {
 		return triples; 
 	}
 
-	public int compareTo(Object o) {
-		Path p2 = (Path) o; 
+	@Override
+	public int compareTo(Path p2) {
 		for (Triple t: triples) {
 			if (!p2.contains(t)){
 				return -1; 

@@ -7,10 +7,10 @@ import java.util.Set;
 public class Long2LongSet {
 	// clique ID --> set of properties
 	// or: class set ID --> set of types
-	HashMap<Long, ArrayList<Long>> map;
+	final HashMap<Long, ArrayList<Long>> map;
 	
 	public Long2LongSet(){
-		map = new HashMap<Long, ArrayList<Long>>();
+		map = new HashMap<>();
 	}
 	
 	public ArrayList<Long> get(long node){
@@ -20,7 +20,7 @@ public class Long2LongSet {
 	public void put(long property, long clique){
 		ArrayList<Long> theClique = map.get(new Long(clique));
 		if (theClique == null){
-			theClique = new ArrayList<Long>();
+			theClique = new ArrayList<>();
 			map.put(clique,  theClique);
 		}
 		if (theClique.indexOf(property)==-1){

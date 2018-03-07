@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Reader;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
@@ -14,15 +15,14 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
-import java.util.TreeSet;
-import java.util.stream.Collectors;
+
+import com.google.common.base.Preconditions;
 
 import fr.inria.cedar.commons.miscellaneous.Debugger;
 import fr.inria.cedar.quotientSummary.datastructures.Long2Long;
-import fr.inria.cedar.quotientSummary.datastructures.Path;
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
 import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 
@@ -50,7 +50,7 @@ public class Summarization {
 	public Summarization(){
 		rep = new Long2Long();
 		//summary = new ArrayList<Triple>();
-		edges = new HashMap<Long, HashMap<Long, ArrayList<Long>>>();
+		edges = new HashMap<>();
 		typeOnlyNodeAlreadySeen = false;
 		Debugger.turnOff();
 	}
@@ -90,13 +90,13 @@ public class Summarization {
 
 		HashMap<Long, ArrayList<Long>> triplesOfThisSubject = edges.get(s);
 		if (triplesOfThisSubject == null){ // no edges yet for this subject; otherwise, s has already some edges
-			triplesOfThisSubject = new HashMap<Long, ArrayList<Long>>();
+			triplesOfThisSubject = new HashMap<>();
 			edges.put(s, triplesOfThisSubject);
 			//Debugger.log("XX Created triple map for subject " +s); 
 		}
 		ArrayList<Long> objectsOfThisSubjectAndProperty = triplesOfThisSubject.get(p); 
 		if (objectsOfThisSubjectAndProperty == null){ // no edges yet for this subject and property; otherwise, s has already some p edges
-			objectsOfThisSubjectAndProperty = new ArrayList<Long>();
+			objectsOfThisSubjectAndProperty = new ArrayList<>();
 			triplesOfThisSubject.put(t.p, objectsOfThisSubjectAndProperty); 
 			//Debugger.log("XX Created array list for subject " + s + " and property " + p);
 		}
@@ -177,7 +177,7 @@ public class Summarization {
 			for (long propOfThisSubject: triplesOfThisSubject.keySet()){
 
 				ArrayList<Long> objectsForThisSubjectAndProperty = triplesOfThisSubject.get(propOfThisSubject); 
-				ArrayList<Long> newObjectsForThisSubjectAndProperty = new ArrayList<Long>(); 
+				ArrayList<Long> newObjectsForThisSubjectAndProperty = new ArrayList<>(); 
 				boolean arrayChanged = false; 
 				for (long o: objectsForThisSubjectAndProperty){
 					if (o == oldNode.longValue()){
@@ -224,7 +224,7 @@ public class Summarization {
 						ArrayList<Long> newNodeObjectsForThisProperty = newNodeIsSubject.get(oldNodeProperty); 
 						if (newNodeObjectsForThisProperty == null){ // the new node did not have this one
 							Debugger.log(newNode + " did not have edges labeled " + oldNodeProperty + ", he is taking them from " + oldNode);
-							newNodeObjectsForThisProperty = new ArrayList<Long>();
+							newNodeObjectsForThisProperty = new ArrayList<>();
 							newNodeIsSubject.put(oldNodeProperty, newNodeObjectsForThisProperty);
 						}
 						// whether the new node did or did not have triples labeled oldNodeProperty, try to give him the triples labeled oldNodeProperty of the old node: 
@@ -285,10 +285,10 @@ public class Summarization {
 	 * @throws FileNotFoundException 
 	 * @throws IOException 
 	 */
-	public void summarizeFromTripleFiles(String typeTriplesFile, String dataTriplesFile, String method) throws FileNotFoundException, IOException{
+	public void summarizeFromTripleFiles(String typeTriplesFile, String dataTriplesFile, String method) throws IOException {
 	}
 
-	public void summarizeFromPostgresTable() throws FileNotFoundException, IOException{
+	public void summarizeFromPostgresTable() {
 	}
 
 	/**
@@ -303,69 +303,66 @@ public class Summarization {
 	 */
 	public void saveSummaryInPostgres(Connection conn, String rdfFileName) throws SQLException {
 		System.out.println("Attempting to save " + this.getClass().getName() + " in Postgres");
-		Statement stmt = conn.createStatement(); 
-		// create the table (it may have existed)
-		if (!existsTable(conn, "encoded_rep")) {			
-			stmt.execute("create table encoded_rep(graphNode int not null, summaryNode int not null); ");
-		}
-		else {
-			System.out.println("Did not created encoded_rep table as it was already there");
-		}
-		// empty it (even if the creation failed, e.g. because the table was already there)
-		try {
+		try (Statement stmt = conn.createStatement()) {
+			// create the table (it may have existed)
+			if (!existsTable(conn, "encoded_rep")) {			
+				stmt.execute("create table encoded_rep(graphNode int not null, summaryNode int not null); ");
+			} else {
+				System.out.println("Did not created encoded_rep table as it was already there");
+			}
+			// empty it (even if the creation failed, e.g. because the table was already there)
 			stmt.executeUpdate("delete from encoded_rep; "); 
-		}
-		catch(SQLException e) {
-			e.printStackTrace();
-		}
-		// now insert all the rep entries:
-		String insertIntoRep = "insert into encoded_rep values(?, ?);"; 
-		PreparedStatement insertInRep = conn.prepareStatement(insertIntoRep); 
-		Set<Long> origNodes = this.rep.getNodes(); 
-		for (Long origNode: origNodes) {
-			Long sumNode = this.rep.get(origNode); 
-			insertInRep.setLong(1, origNode);
-			insertInRep.setLong(2, sumNode);
-			insertInRep.executeUpdate(); 
-		}
+
+			// now insert all the rep entries:
+			String insertIntoRep = "insert into encoded_rep values(?, ?);"; 
+			try (PreparedStatement insertInRep = conn.prepareStatement(insertIntoRep)) {
+				Set<Long> origNodes = this.rep.getNodes(); 
+				for (Long origNode: origNodes) {
+					Long sumNode = this.rep.get(origNode); 
+					insertInRep.setLong(1, origNode);
+					insertInRep.setLong(2, sumNode);
+					insertInRep.executeUpdate(); 
+				}
 		//		if (!hasIndex(conn, "encoded_rep")) {
 		//			stmt.executeUpdate("create index indRepS on encoded_rep(graphNode); ");
 		//		} This gives some erros in the JDBC driver, perhaps it is not implemented properly.
-		if (!existsTable(conn, "encoded_summary")) {		
-			stmt.execute("create table encoded_summary(s int not null, p int not null, o int not null); ");
-		}
-		// empty it (even if the creation failed, e.g. because the table was already there)
-		try {
-			stmt.executeUpdate("delete from encoded_summary; "); 
-		}
-		catch(SQLException e) {
+				if (!existsTable(conn, "encoded_summary")) {		
+					stmt.execute("create table encoded_summary(s int not null, p int not null, o int not null); ");
+				}
+				// empty it (even if the creation failed, e.g. because the table was already there)
+				stmt.executeUpdate("delete from encoded_summary; "); 
+			}
+		} catch(SQLException e) {
 			e.printStackTrace();
 		}
 		// now insert all the summary edges:
 		String insertIntoSummary = "insert into encoded_summary values(?, ?, ?);"; 
-		PreparedStatement insertInSummary= conn.prepareStatement(insertIntoSummary); 
-		ArrayList<Triple> edges = this.getSummaryEdges(); 
-		for (Triple t: edges) {
-			insertInSummary.setLong(1, t.s);
-			insertInSummary.setLong(2, t.p);
-			insertInSummary.setLong(3, t.o);
-			insertInSummary.executeUpdate(); 
+		try (PreparedStatement insertInSummary= conn.prepareStatement(insertIntoSummary)) {
+			ArrayList<Triple> edges = this.getSummaryEdges(); 
+			for (Triple t: edges) {
+				insertInSummary.setLong(1, t.s);
+				insertInSummary.setLong(2, t.p);
+				insertInSummary.setLong(3, t.o);
+				insertInSummary.executeUpdate(); 
+			}
+//			if (!hasIndex(conn, "encoded_summary")) {
+//				stmt.executeUpdate("create index indSummaryS on encoded_summary(s); ");
+//			}
+			System.out.println("Summary saved in Postgres.");
 		}
-//		if (!hasIndex(conn, "encoded_summary")) {
-//			stmt.executeUpdate("create index indSummaryS on encoded_summary(s); ");
-//		}
-		System.out.println("Summary saved in Postgres.");
 	}
 
 	static protected boolean existsTable(Connection conn, String tableName) throws SQLException {
 		DatabaseMetaData meta = conn.getMetaData();
-		ResultSet res = meta.getTables(null, null, tableName, new String[] {"TABLE"});
-		return res.next();  
+		try (ResultSet res = meta.getTables(null, null, tableName, new String[] {"TABLE"})) {
+			return res.next();  
+		}
 	}
 	static protected boolean hasIndex(Connection conn, String tableName) throws SQLException {
 		DatabaseMetaData meta = conn.getMetaData();
-		ResultSet res = meta.getIndexInfo(null, null, tableName, true, true);
-		return res.next();  
+		try (ResultSet res = meta.getIndexInfo(null, null, tableName, true, true)) {
+			return res.next();  
+		}
 	}
 	
 	/**
@@ -379,38 +376,40 @@ public class Summarization {
 	 */
 	public void decodeSummary(Connection con, String rdfFileName) throws SQLException, FileNotFoundException, IOException{
 		Properties properties = new Properties();
-		properties.load(new FileReader(SUMMARY_CONFIG_FILE));
+		try (Reader reader = new FileReader(SUMMARY_CONFIG_FILE)) {
+			properties.load(reader);
+		}
 		String URIprefix = properties.getProperty("prefixURIForSummaryNodes"); 
 		System.out.println("decodeSummary:");
 		String findURIforCode = "select value from dictionary where key=?";
-		PreparedStatement decodingStatement = con.prepareStatement(findURIforCode);
-		ArrayList<Triple> summEdges = this.getSummaryEdges(); 
-		String summaryNTFileName = "";
-		if (rdfFileName.lastIndexOf(".nt") > 0) {
-			summaryNTFileName = rdfFileName.substring(0, rdfFileName.lastIndexOf(".nt")) + 
-					"-sum.nt"; 
-		}
-		else {
-			summaryNTFileName = rdfFileName + "-sum.nt"; 
-		}
-		BufferedWriter bw = new BufferedWriter(new FileWriter (new File(summaryNTFileName))); 
-		for (Triple t: summEdges){
-			String subject = URIprefix + t.s; 
-			String object =  URIprefix + t.o; 
-			String property = null; 
+		try (PreparedStatement decodingStatement = con.prepareStatement(findURIforCode)) {
+			ArrayList<Triple> summEdges = this.getSummaryEdges(); 
+			String summaryNTFileName = "";
+			if (rdfFileName.lastIndexOf(".nt") > 0) {
+				summaryNTFileName = rdfFileName.substring(0, rdfFileName.lastIndexOf(".nt")) + 
+						"-sum.nt"; 
+			}
+			else {
+				summaryNTFileName = rdfFileName + "-sum.nt"; 
+			}
+			try (BufferedWriter bw = new BufferedWriter(new FileWriter (new File(summaryNTFileName)))) {
+				for (Triple t: summEdges){
+					String subject = URIprefix + t.s; 
+					String object =  URIprefix + t.o; 
+					String property = null; 
 
-			decodingStatement.setLong(1, t.p); 	
-			ResultSet rs = decodingStatement.executeQuery();
-			while (rs.next()){
-				property = rs.getString(1);
+					decodingStatement.setLong(1, t.p); 	
+					try (ResultSet rs = decodingStatement.executeQuery()) {
+						while (rs.next()){
+							property = rs.getString(1);
+						}
+						Objects.requireNonNull(property, "Could not decode property: " + t.p); 
+					}
+					System.out.println(subject + " " + property + " " + object);
+					bw.write(subject + " " + property + " " + object + "\n");
+				}
 			}
-			if (property == null){
-				throw new Error("Could not decode property: " + t.p); 
-			}
-			System.out.println(subject + " " + property + " " + object);
-			bw.write(subject + " " + property + " " + object + "\n");
 		}
-		bw.close(); 
 	}
 
 	
@@ -423,59 +422,62 @@ public class Summarization {
 	 */
 	public void writeSummaryToDotFile(Connection con, String dotFile) throws SQLException, FileNotFoundException, IOException{
 		Properties properties = new Properties();
-		properties.load(new FileReader(SUMMARY_CONFIG_FILE));
+		try (Reader reader = new FileReader(SUMMARY_CONFIG_FILE)) {
+			properties.load(reader);
+		}
+
 		String URIprefix = properties.getProperty("prefixURIForSummaryNodes"); 
 		//Debugger.log("writeSummaryToDotFile:");
 		
-		BufferedWriter bw = new BufferedWriter(new FileWriter (new File(dotFile))); 
-		bw.write("digraph g{\n");
-		
-		String findURIforCode = "select value from dictionary where key=?";
-		PreparedStatement decodingStatement = con.prepareStatement(findURIforCode);
-		ArrayList<Triple> summEdges = this.getSummaryEdges(); 
-		for (Triple t: summEdges){
-			String subject = URIprefix + t.s; 
-			String object =  URIprefix + t.o; 
-			String property = null; 
+		try (BufferedWriter bw = new BufferedWriter(new FileWriter (new File(dotFile)))) {
+			bw.write("digraph g{\n");
+			
+			String findURIforCode = "select value from dictionary where key=?";
+			try (PreparedStatement decodingStatement = con.prepareStatement(findURIforCode)) {
+				ArrayList<Triple> summEdges = this.getSummaryEdges(); 
+				for (Triple t: summEdges){
+					String subject = URIprefix + t.s; 
+					String object =  URIprefix + t.o; 
+					String property = null; 
 
-			decodingStatement.setLong(1, t.p); 	
-			ResultSet rs = decodingStatement.executeQuery();
-			while (rs.next()){
-				property = rs.getString(1);
-			}
-			if (property == null){
-				throw new Error("Could not decode property: " + t.p); 
-			}
-			if (t.p == RDF2SQLEncoding.getTypeCode()) {
-				// if this is a type triple, decode the object, too: concretely, this changes the object string
-				decodingStatement.setLong(1,  t.o);
-				rs = decodingStatement.executeQuery();
-				//Debugger.log("Asking decoding query for object: " + findURIforCode + " on " + t.o);
-				while(rs.next()) {
-					object = rs.getString(1);
-					//Debugger.log("Got: " + object); 
-					break; 
+					decodingStatement.setLong(1, t.p); 	
+					try (ResultSet rs = decodingStatement.executeQuery()) {
+						while (rs.next()){
+							property = rs.getString(1);
+						}
+						Objects.requireNonNull(property, "Could not decode property: " + t.p);
+					}
+					if (t.p == RDF2SQLEncoding.getTypeCode()) {
+						// if this is a type triple, decode the object, too: concretely, this changes the object string
+						decodingStatement.setLong(1,  t.o);
+						try (ResultSet rs = decodingStatement.executeQuery()) {
+							//Debugger.log("Asking decoding query for object: " + findURIforCode + " on " + t.o);
+							while(rs.next()) {
+								object = rs.getString(1);
+								//Debugger.log("Got: " + object); 
+								break; 
+							}
+						}
+						bw.write("\"" + object.replaceAll("\"", "") + "\" [style = filled, color=darkseagreen];\n");  
+						bw.write("\"" + subject.replaceAll("\"", "") + "\"" + " -> \""+ 
+								object.replaceAll("\"", "") + 
+									"\" [color=darkseagreen, label=\"" +  property.replaceAll("\"", "")+ "\"];\n");
+					} else{
+						// in all cases, print the edge: 
+						//System.out.println(subject + " " + property + " " + object);
+						bw.write("\"" + subject.replaceAll("\"", "") + "\"" + " -> \""+ 
+							object.replaceAll("\"", "") + 
+							"\" [label=\"" +  property.replaceAll("\"", "")+ "\"];\n");
+					}
 				}
-				bw.write("\"" + object.replaceAll("\"", "") + "\" [style = filled, color=darkseagreen];\n");  
-				bw.write("\"" + subject.replaceAll("\"", "") + "\"" + " -> \""+ 
-						object.replaceAll("\"", "") + 
-							"\" [color=darkseagreen, label=\"" +  property.replaceAll("\"", "")+ "\"];\n");
 			}
-			else{// in all cases, print the edge: 
-				//System.out.println(subject + " " + property + " " + object);
-				bw.write("\"" + subject.replaceAll("\"", "") + "\"" + " -> \""+ 
-					object.replaceAll("\"", "") + 
-					"\" [label=\"" +  property.replaceAll("\"", "")+ "\"];\n");
-			}
+			bw.write("}\n"); 
 		}
-		bw.write("}\n"); 
-		bw.close(); 
 		System.out.println("Finished writing summary dot file " + dotFile + "."); 
 	}
 
-	
 	public ArrayList<Triple> getSummaryEdges() {
-		ArrayList<Triple> res = new ArrayList<Triple>();
+		ArrayList<Triple> res = new ArrayList<>();
 		for (Long s: edges.keySet()){
 			HashMap<Long, ArrayList<Long>> triplesOfThisSubject = edges.get(s); 
 			if (triplesOfThisSubject == null){
@@ -496,17 +498,20 @@ public class Summarization {
 		writeSummaryToFile(dataTriplesFile + "-sum.nt");
 		writeEncodedSummaryToDotFile(dataTriplesFile +  ".dot");
 	}
+
 	public void writeSummaryToFile(String fileName) throws IOException{
-		BufferedWriter bw = new BufferedWriter(new FileWriter (new File(fileName))); 
-		this.writeTripleToFile(bw);
-		bw.close();
+		try (BufferedWriter bw = new BufferedWriter(new FileWriter (new File(fileName)))) {
+			this.writeTripleToFile(bw);
+		}
 	}
+
 	private void writeTripleToFile(BufferedWriter bw) throws IOException{
 		for (Triple t: getSummaryEdges()){
 			bw.write(t.toString() + "\n"); 
 		}
 	}
 
+	@Override
 	public String toString(){
 		StringBuffer sb = new StringBuffer();
 		for (Triple t: getSummaryEdges()){
@@ -517,12 +522,12 @@ public class Summarization {
 	}
 
 	public void writeEncodedSummaryToDotFile(String dotFile) throws IOException{
-		BufferedWriter bw = new BufferedWriter(new FileWriter (new File(dotFile))); 
-		bw.write("digraph g{\n");
-		for (Triple t: getSummaryEdges()){
-			bw.write(t.s + " -> "+ t.o + " [label=\"" + t.p + "\"];\n");
+		try (BufferedWriter bw = new BufferedWriter(new FileWriter (new File(dotFile)))) {
+			bw.write("digraph g{\n");
+			for (Triple t: getSummaryEdges()){
+				bw.write(t.s + " -> "+ t.o + " [label=\"" + t.p + "\"];\n");
+			}
+			bw.write("}\n"); 
 		}
-		bw.write("}\n"); 
-		bw.close(); 
 	}
 }

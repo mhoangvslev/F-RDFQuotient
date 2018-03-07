@@ -1,18 +1,16 @@
 package summaries.weak;
 
-import static org.junit.Assert.assertTrue;
-
 import org.junit.Test;
 
 import fr.inria.cedar.quotientSummary.summaries.weak.WeakSummarization;
+import junit.framework.Assert;
 
 public class WeakSummaryTest {
 
 	@Test
-    public void testWeakSummary()
-    {
+    public void testWeakSummary() {
     	WeakSummarization ws = new WeakSummarization();
-    	try{
+    	try {
     		ws.summarizeFromTripleFiles("src/test/resources/test1-weak/0.nt", 
     			     "src/test/resources/test1-weak/short.nt", "weak");
     		// TODO fix the test (use the correct output)
@@ -20,10 +18,9 @@ public class WeakSummaryTest {
     		String output = ws.toString();
     		System.out.println("Output: #" + output + "#");
     		System.out.println("Expected: #" + expectedOutput + "#");
-    		assertTrue(output.equals(expectedOutput));
-    	}
-    	catch(Exception e){
-    		e.printStackTrace();
+    		Assert.assertEquals(expectedOutput, output);
+    	} catch(Exception e){
+    		Assert.fail();
     	}
     }
 }

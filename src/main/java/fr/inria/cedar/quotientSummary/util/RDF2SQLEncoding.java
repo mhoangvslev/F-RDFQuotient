@@ -35,8 +35,8 @@ public class RDF2SQLEncoding {
 	 */
 	public static void setUp(Connection givenConn) throws SQLException {
 		conn = givenConn; 
-		codeToURIOrLiteral = new HashMap<Long, String>(); 
-		uriOrLiteralToCode = new HashMap<String, Long>(); 
+		codeToURIOrLiteral = new HashMap<>(); 
+		uriOrLiteralToCode = new HashMap<>(); 
 		setRDFBuiltInPropertyCodes(); 
 	}
 	
@@ -93,7 +93,6 @@ public class RDF2SQLEncoding {
 	/**
 	 * Gets the dictionary code for a specific URI. Returns -1 if URI not found in the dictionary.
 	 * @param URI
-	 * @param conn
 	 * @return
 	 * @throws SQLException
 	 */
@@ -104,19 +103,19 @@ public class RDF2SQLEncoding {
 			return alreadyKnownCode; 
 		}
 		String learnCodeQueryString = "select key from dictionary where value = '" + URI + "';";
-		Statement learnCode = conn.createStatement(); 
-		ResultSet rs = learnCode.executeQuery(learnCodeQueryString);
-		//Debugger.log("Asked query: " + learnCodeQueryString);
-		long code = -1; 
-		while (rs.next()){
-			code  = rs.getInt(1); 
-			//Debugger.log("The code of " + URI + " is: " + constantCode);
-			break; 
+		try(Statement learnCode = conn.createStatement(); 
+			ResultSet rs = learnCode.executeQuery(learnCodeQueryString)) {
+			//Debugger.log("Asked query: " + learnCodeQueryString);
+			long code = -1; 
+			while (rs.next()){
+				code  = rs.getInt(1); 
+				//Debugger.log("The code of " + URI + " is: " + constantCode);
+				break; 
+			}
+			// feed the cache: 
+			uriOrLiteralToCode.put(URI, code); 
+			return code; 
 		}
-		rs.close(); 
-		// feed the cache: 
-		uriOrLiteralToCode.put(URI, code); 
-		return code; 
 	}
 	public static String dictionaryDecode(Long URL) throws SQLException {
 		// try to use the cache if possible
@@ -124,16 +123,18 @@ public class RDF2SQLEncoding {
 		if (alreadyKnownURIOrLiteral != null) {
 			return alreadyKnownURIOrLiteral; 
 		}
-		PreparedStatement pstmt = conn.prepareStatement("select value from dictionary where key=?"); 
-		pstmt.setLong(1, URL);
-		ResultSet rs = pstmt.executeQuery();
-		if (rs.next()) {
-			String s = rs.getString(1); 
-			// feed the cache: 
-			codeToURIOrLiteral.put(URL,  s); 
-			return s; 
+		try (PreparedStatement pstmt = conn.prepareStatement("select value from dictionary where key=?")) {
+			pstmt.setLong(1, URL);
+			try (ResultSet rs = pstmt.executeQuery()) {
+				if (rs.next()) {
+					String s = rs.getString(1); 
+					// feed the cache: 
+					codeToURIOrLiteral.put(URL,  s); 
+					return s; 
+				}
+				throw new IllegalStateException("Could not decode: " + URL);
+			}
 		}
-		throw new Error("Could not decode: " + URL);
 	}
 
 	public static boolean isSpecialProperty(Long p) {

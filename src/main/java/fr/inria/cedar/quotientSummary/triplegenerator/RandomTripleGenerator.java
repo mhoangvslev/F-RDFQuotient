@@ -31,28 +31,25 @@ public class RandomTripleGenerator {
 
 	void generateTriples(){
 		r  = new Random();
-		try {
-			BufferedWriter dataBw = new BufferedWriter(new FileWriter(dataTriplesFile));
-			BufferedWriter typeBw = new BufferedWriter(new FileWriter(typeTriplesFile)); 
-			
+		try(BufferedWriter dataBw = new BufferedWriter(new FileWriter(dataTriplesFile));
+			BufferedWriter typeBw = new BufferedWriter(new FileWriter(typeTriplesFile))) {
+
 			for (long i = 0; i < typeTripleNumber; i ++){
-				long s = (long)(r.nextDouble() * ((double)maxURI)); 
+				long s = (long)(r.nextDouble() * maxURI); 
 				long p = typeProperty;
-				long o = (long)(r.nextDouble() * ((double)classNumber)); 
+				long o = (long)(r.nextDouble() * classNumber); 
 				typeBw.write(s + " " + p + " " + o + "\n");
 			}
 			
 			for (long i = 0; i < dataTripleNumber; i ++){
-				long s = (long)(r.nextDouble() * ((double)maxURI)); 
+				long s = (long)(r.nextDouble() * maxURI);
 				long p = typeProperty;
 				while (p == typeProperty){
-					p = (long)(r.nextDouble() * ((double)propertyNumber)); // so that we do not generate type triples in the data triples set
+					p = (long)(r.nextDouble() * propertyNumber); // so that we do not generate type triples in the data triples set
 				}
-				long o = (long)(r.nextDouble() * ((double)maxURI)); 
+				long o = (long)(r.nextDouble() * maxURI);
 				dataBw.write(s + " " + p + " " + o + "\n");
 			}
-			dataBw.close();
-			typeBw.close();
 			
 		} catch (IOException e) {
 			e.printStackTrace();
