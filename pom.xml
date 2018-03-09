@@ -1,67 +1,74 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
 
-  <groupId>fr.inria.cedar</groupId>
-  <artifactId>quotientSummary</artifactId>
-  <version>1.1</version>
+	<groupId>fr.inria.cedar</groupId>
+	<artifactId>quotientSummary</artifactId>
+	<version>1.1</version>
 
-  <packaging>jar</packaging>
+	<packaging>jar</packaging>
 
-  <name>quotientSummary</name>
-  <url>http://maven.apache.org</url>
+	<name>quotientSummary</name>
+	<url>http://maven.apache.org</url>
 
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
 
-  <dependencies>
-  <dependency>
-        <groupId>fr.inria.cedar.ontosql</groupId>
-        <artifactId>ontosql-rdfdb</artifactId>
-	   <version>1.0.0</version>
-	</dependency>
-     <dependency>
-        <groupId>junit</groupId>
-        <artifactId>junit</artifactId>
-        <version>4.11</version>
-        <scope>test</scope>
-    </dependency>  
-     <dependency>
-      <groupId>org.postgresql</groupId>
-      <artifactId>postgresql</artifactId>
-      <version>9.3-1102-jdbc41</version>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-        <groupId>com.sleepycat</groupId>
-        <artifactId>je</artifactId>
-        <version>5.0.73</version>
-    </dependency>
-  </dependencies>
-  <distributionManagement>
-    <repository>
-        <id>cedarcommons-private-release</id>
-        <name>CEDAR-commons MVN release repo</name>
-        <url>http://maven.inria.fr/artifactory/cedarcommons-private-release</url>
-    </repository>
-    <snapshotRepository>
-        <id>cedarcommons-private-snapshot</id>
-        <name>CEDAR-commons MVN snapshot repo</name>
-        <url>http://maven.inria.fr/artifactory/cedarcommons-private-snapshot</url>
-    </snapshotRepository>
-</distributionManagement>
-  <build>
-    <plugins>
-      <plugin>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.1</version>
-        <configuration>
-          <source>1.8</source>
-          <target>1.8</target>
-          <encoding>UTF-8</encoding>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
+	<dependencies>
+		<dependency>
+			<groupId>fr.inria.cedar.ontosql</groupId>
+			<artifactId>ontosql-rdfdb</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.11</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<version>9.3-1102-jdbc41</version>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>com.sleepycat</groupId>
+			<artifactId>je</artifactId>
+			<version>5.0.73</version>
+		</dependency>
+	</dependencies>
+	<distributionManagement>
+		<repository>
+			<id>cedarcommons-private-release</id>
+			<name>CEDAR-commons MVN release repo</name>
+			<url>http://maven.inria.fr/artifactory/cedarcommons-private-release</url>
+		</repository>
+		<snapshotRepository>
+			<id>cedarcommons-private-snapshot</id>
+			<name>CEDAR-commons MVN snapshot repo</name>
+			<url>http://maven.inria.fr/artifactory/cedarcommons-private-snapshot</url>
+		</snapshotRepository>
+	</distributionManagement>
+	<repositories>
+		<repository>
+			<id>cedarcommons-private-release</id>
+			<name>CEDAR-commons MVN release repo</name>
+			<url>http://maven.inria.fr/artifactory/cedarcommons-private-release</url>
+		</repository>
+	</repositories>
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.1</version>
+				<configuration>
+					<source>1.8</source>
+					<target>1.8</target>
+					<encoding>UTF-8</encoding>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 </project>
