@@ -16,7 +16,7 @@ public class WeakSummaryTest {
 	@Test
 	public void testWeakSummarizationOfRDFNTFile() {
 		String[] args = new String[1];
-		args[0] = "resources/rdf-nt-files/model-03_17"; 
+		args[0] = "resources/rdf-nt-files/model-03_17.nt"; 
 		Connection conn; 
 		try {
 			conn = SummaryBuilder.loadRDFInPostgres(args);
