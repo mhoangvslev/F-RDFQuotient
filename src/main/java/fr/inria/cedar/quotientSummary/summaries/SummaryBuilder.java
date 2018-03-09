@@ -145,9 +145,9 @@ public class SummaryBuilder {
 		Debugger.turnOff();
 		ws.summarizeFromRDBMS(conn, args);  
 		System.out.println("RDF graph summarized.");
-		ws.decodeSummary(conn, args[0]);
-		ws.writeSummaryToDotFile(conn, (args[0]+ "-toDot.txt"));  
 		ws.saveSummaryInPostgres(conn, args[0]);
+		ws.writeDecodedSummaryToNTFile(conn, args[0]);
+		ws.writeSummaryToDotFile(conn, (args[0]+ "-toDot.txt"));  
 	}
 
 	/**

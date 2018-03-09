@@ -28,13 +28,17 @@ import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 
 public class Summarization {
 	protected Long2Long rep; // representative function for untyped nodes
-	
+
 	protected boolean typeTriplesExist = false; 
 
 	// for each subject
 	//     for each property
 	//         the set of objects such that (subject, property, object) is in the summary
 	protected HashMap<Long, HashMap<Long, ArrayList<Long>>> edges; 
+	// for each summary node, the number of graph nodes it represents
+	protected HashMap<Long, Long> summaryNodeStatistics; 
+	// for each summary edge, the number of graph edge it represents
+	protected HashMap<Triple, Long> summaryEdgeStatistics; 
 
 	protected long maxSummaryNode; 
 
@@ -45,13 +49,21 @@ public class Summarization {
 	protected long numberOfDataTriplesRead; 
 	protected long numberOfTypeTriplesRead; 
 
+	protected Properties properties; 
 	protected static String SUMMARY_CONFIG_FILE="conf/summarization.properties"; 
 
 	public Summarization(){
 		rep = new Long2Long();
-		//summary = new ArrayList<Triple>();
 		edges = new HashMap<Long, HashMap<Long, ArrayList<Long>>>();
+		summaryNodeStatistics = new HashMap<Long, Long>(); 
+		summaryEdgeStatistics = new HashMap<Triple, Long>(); 
 		typeOnlyNodeAlreadySeen = false;
+		properties = new Properties();
+		try {
+			properties.load(new FileReader(SUMMARY_CONFIG_FILE));
+		} catch (IOException e) {
+			throw new IllegalStateException("Unable to initialize summary properties"); 
+		}
 		Debugger.turnOff();
 	}
 	/**
@@ -105,7 +117,7 @@ public class Summarization {
 			objectsOfThisSubjectAndProperty.add(o); 
 		}
 	}
-	
+
 	protected boolean isDataProperty(Long p) {
 		long n = RDF2SQLEncoding.getTypeCode(); 
 		if (n != -1) {
@@ -141,7 +153,7 @@ public class Summarization {
 		//		" " + domainCode + " " + rangeCode);
 		return true; 
 	}
-	
+
 	protected void showRepInBuffer(StringBuffer sb) {
 		sb.append("|| rep:  ");
 		for (Long node: this.rep.getNodes()){
@@ -245,6 +257,53 @@ public class Summarization {
 		}
 	}
 
+	protected void gatherStatistics() {
+		gatherNodeStatistics(); 
+		gatherEdgeStatistics(); 
+	}
+
+	/**
+	 * Computes node statistics through a GROUP-BY query. Should be called after the summary is completely computed and stored in Postgres.
+	 */
+	private void gatherNodeStatistics() {
+		try{
+			Statement nodeStatisticQuery = RDF2SQLEncoding.getConnection().createStatement(); 
+			ResultSet rs = nodeStatisticQuery.executeQuery("select summarynode, count(*) from encoded_rep group by summarynode;"); 
+			while (rs.next()) {
+				Long summaryNode = rs.getLong(1);
+				Long numberOfReprGraphNodes = rs.getLong(2); 
+				this.summaryNodeStatistics.put(summaryNode, numberOfReprGraphNodes); 
+			}
+			rs.close(); 
+			nodeStatisticQuery.close();
+		}
+		catch(SQLException e) {
+			throw new IllegalStateException("Could not compute node representation statistics from Postgres " + e.toString()); 
+		}
+	}
+	/**
+	 * Computes edge statistics through a GROUP-BY query. Should be called after the summary is completely computed and stored in Postgres. 
+	 */
+	private void gatherEdgeStatistics() {
+		try {
+			Statement edgeStatisticQuery = RDF2SQLEncoding.getConnection().createStatement(); 
+			ResultSet rs = edgeStatisticQuery.executeQuery(
+					"select es.s as summary_source, es.p as summary_prop, es.o as summary_target, count(*) " +
+							"from encoded_rep rep1, encoded_rep rep2, encoded_triples t, encoded_summary es " +
+							"where rep1.graphnode = t.s and rep2.graphnode=t.o and es.s = rep1.summarynode and es.o = rep2.summarynode and es.p = t.p " +
+					"group by es.s, es.p, es.o\n"); // + 	"order by es.s, es.p, es.o;");  
+			while (rs.next()) {
+				Triple t = new Triple(rs.getLong(1), rs.getLong(2), rs.getLong(3)); 
+				this.summaryEdgeStatistics.put(t,  rs.getLong(4)); 
+			}
+			rs.close();
+			edgeStatisticQuery.close();
+		}
+		catch(SQLException e) {
+			throw new IllegalStateException("Could not compute edge representation statistics from Postgres"); 
+		}
+	}
+
 
 	/** This implementation should be shared by Weak and Strong
 	 * 
@@ -273,8 +332,8 @@ public class Summarization {
 	 */
 	protected void addTypeTriple(Long repS, long p, long o) {
 		// needs to add a type edge to the summary
-		
-		
+
+
 	}
 	/**
 	 * Summarizes an RDF graph, given a file of (integer-encoded) type triples and a file of (integer-encoded) data triples
@@ -351,9 +410,9 @@ public class Summarization {
 			insertInSummary.setLong(3, t.o);
 			insertInSummary.executeUpdate(); 
 		}
-//		if (!hasIndex(conn, "encoded_summary")) {
-//			stmt.executeUpdate("create index indSummaryS on encoded_summary(s); ");
-//		}
+		//		if (!hasIndex(conn, "encoded_summary")) {
+		//			stmt.executeUpdate("create index indSummaryS on encoded_summary(s); ");
+		//		}
 		System.out.println("Summary saved in Postgres.");
 	}
 
@@ -367,7 +426,7 @@ public class Summarization {
 		ResultSet res = meta.getIndexInfo(null, null, tableName, true, true);
 		return res.next();  
 	}
-	
+
 	/**
 	 * This decodes the summary (replaces property codes with the original URIs or strings) 
 	 * based on a dictionary table in Postgres. It prints the summary to the standard output
@@ -377,13 +436,8 @@ public class Summarization {
 	 * @throws IOException 
 	 * @throws FileNotFoundException 
 	 */
-	public void decodeSummary(Connection con, String rdfFileName) throws SQLException, FileNotFoundException, IOException{
-		Properties properties = new Properties();
-		properties.load(new FileReader(SUMMARY_CONFIG_FILE));
+	public void writeDecodedSummaryToNTFile(Connection con, String rdfFileName) {
 		String URIprefix = properties.getProperty("prefixURIForSummaryNodes"); 
-		System.out.println("decodeSummary:");
-		String findURIforCode = "select value from dictionary where key=?";
-		PreparedStatement decodingStatement = con.prepareStatement(findURIforCode);
 		ArrayList<Triple> summEdges = this.getSummaryEdges(); 
 		String summaryNTFileName = "";
 		if (rdfFileName.lastIndexOf(".nt") > 0) {
@@ -393,27 +447,50 @@ public class Summarization {
 		else {
 			summaryNTFileName = rdfFileName + "-sum.nt"; 
 		}
-		BufferedWriter bw = new BufferedWriter(new FileWriter (new File(summaryNTFileName))); 
-		for (Triple t: summEdges){
-			String subject = URIprefix + t.s; 
-			String object =  URIprefix + t.o; 
-			String property = null; 
-
-			decodingStatement.setLong(1, t.p); 	
-			ResultSet rs = decodingStatement.executeQuery();
-			while (rs.next()){
-				property = rs.getString(1);
+		System.out.println("Decoding summary and saving it in .nt format in " + summaryNTFileName); 
+		this.gatherStatistics();
+		try {
+			BufferedWriter bw = new BufferedWriter(new FileWriter (new File(summaryNTFileName))); 
+			// write summary triples: 
+			for (Triple t: summEdges){
+				String subject = getSummaryNodeURI(URIprefix, t.s); 
+				String object =  getSummaryNodeURI(URIprefix, t.p);  
+				String property = RDF2SQLEncoding.dictionaryDecode(t.p); 
+				Debugger.log(subject + " " + property + " " + object);
+				bw.write(subject + " <" + property + "> " + object + " . \n");
 			}
-			if (property == null){
-				throw new Error("Could not decode property: " + t.p); 
+			// write node cardinality statistics: 
+			for (Long node: this.summaryNodeStatistics.keySet()) {
+				Long numberOfRepresentedGraphNodes = this.summaryNodeStatistics.get(node); 
+				String subject = getSummaryNodeURI(URIprefix, node); 
+				String property = properties.getProperty("summaryNodeSupportURI");
+				String object = ("\"" + numberOfRepresentedGraphNodes + "\""); 
+				Debugger.log(subject + " " + property + " " + object);
+				bw.write(subject + " <" + property + "> " + object + " . \n");
 			}
-			System.out.println(subject + " " + property + " " + object);
-			bw.write(subject + " " + property + " " + object + "\n");
+			// write edge cardinality statistics: 
+			int reifiedEdgeNumber = 0; 
+			for (Triple ts: this.summaryEdgeStatistics.keySet()) {
+				Long numberOfRepresentedEdges = this.summaryEdgeStatistics.get(ts); 
+				String reifEdgeURI = getSummaryNodeURI(properties.getProperty("reifiedSummaryEdgeURIPrefix"), reifiedEdgeNumber);
+				bw.write(reifEdgeURI + " <" + properties.getProperty("reifiedEdgeHasSubject") + "> " + getSummaryNodeURI(URIprefix, ts.s) + " . \n");
+				bw.write(reifEdgeURI + " <" + properties.getProperty("reifiedEdgeHasProperty") + "> " + RDF2SQLEncoding.dictionaryDecode(ts.p) + " . \n") ;
+				bw.write(reifEdgeURI + " <" + properties.getProperty("reifiedEdgeHasObject") + "> " + getSummaryNodeURI(URIprefix, ts.o) + " . \n");
+				bw.write(reifEdgeURI + " <" + properties.getProperty("summaryEdgeSupportURI") + "> \"" + numberOfRepresentedEdges + "\" . \n"); 
+				reifiedEdgeNumber ++; 
+			}
+			bw.close(); 
 		}
-		bw.close(); 
+		catch(IOException e) {
+			throw new IllegalStateException("Could not save the decoded summary in .nt file"); 
+		}
+		System.out.println("Summary decoded and saved in .nt format");
 	}
 
-	
+
+	private String getSummaryNodeURI(String uriPrefix, long n) {
+		return ("<" + uriPrefix + n + ">");
+	}
 	/**
 	 * This decodes the summary (replaces property codes with the original URIs or strings) based on a dictionary table in Postgres
 	 * @param con
@@ -421,59 +498,50 @@ public class Summarization {
 	 * @throws IOException 
 	 * @throws FileNotFoundException 
 	 */
-	public void writeSummaryToDotFile(Connection con, String dotFile) throws SQLException, FileNotFoundException, IOException{
+	public void writeSummaryToDotFile(Connection con, String dotFile) {
 		Properties properties = new Properties();
-		properties.load(new FileReader(SUMMARY_CONFIG_FILE));
+		try {
+			properties.load(new FileReader(SUMMARY_CONFIG_FILE));
+		} catch (IOException e) {
+			throw new IllegalStateException("Unable to read config file"); 
+		}
 		String URIprefix = properties.getProperty("prefixURIForSummaryNodes"); 
 		//Debugger.log("writeSummaryToDotFile:");
-		
-		BufferedWriter bw = new BufferedWriter(new FileWriter (new File(dotFile))); 
-		bw.write("digraph g{\n");
-		
-		String findURIforCode = "select value from dictionary where key=?";
-		PreparedStatement decodingStatement = con.prepareStatement(findURIforCode);
-		ArrayList<Triple> summEdges = this.getSummaryEdges(); 
-		for (Triple t: summEdges){
-			String subject = URIprefix + t.s; 
-			String object =  URIprefix + t.o; 
-			String property = null; 
 
-			decodingStatement.setLong(1, t.p); 	
-			ResultSet rs = decodingStatement.executeQuery();
-			while (rs.next()){
-				property = rs.getString(1);
-			}
-			if (property == null){
-				throw new Error("Could not decode property: " + t.p); 
-			}
-			if (t.p == RDF2SQLEncoding.getTypeCode()) {
-				// if this is a type triple, decode the object, too: concretely, this changes the object string
-				decodingStatement.setLong(1,  t.o);
-				rs = decodingStatement.executeQuery();
-				//Debugger.log("Asking decoding query for object: " + findURIforCode + " on " + t.o);
-				while(rs.next()) {
-					object = rs.getString(1);
-					//Debugger.log("Got: " + object); 
-					break; 
-				}
-				bw.write("\"" + object.replaceAll("\"", "") + "\" [style = filled, color=darkseagreen];\n");  
-				bw.write("\"" + subject.replaceAll("\"", "") + "\"" + " -> \""+ 
-						object.replaceAll("\"", "") + 
+		try {
+			BufferedWriter bw = new BufferedWriter(new FileWriter (new File(dotFile))); 
+			bw.write("digraph g{\n");
+
+			ArrayList<Triple> summEdges = this.getSummaryEdges(); 
+			for (Triple t: summEdges){
+				String subject = URIprefix + t.s; 
+				String object =  URIprefix + t.o; 
+				String property = RDF2SQLEncoding.dictionaryDecode(t.p); 
+				if (t.p == RDF2SQLEncoding.getTypeCode()) {
+					// if this is a type triple, decode the object, too: concretely, this changes the object string
+					object = RDF2SQLEncoding.dictionaryDecode(t.o); 
+					bw.write("\"" + object.replaceAll("\"", "") + "\" [style = filled, color=darkseagreen];\n");  
+					bw.write("\"" + subject.replaceAll("\"", "") + "\"" + " -> \""+ 
+							object.replaceAll("\"", "") + 
 							"\" [color=darkseagreen, label=\"" +  property.replaceAll("\"", "")+ "\"];\n");
+				}
+				else{// in all cases, print the edge: 
+					//System.out.println(subject + " " + property + " " + object);
+					bw.write("\"" + subject.replaceAll("\"", "") + "\"" + " -> \""+ 
+							object.replaceAll("\"", "") + 
+							"\" [label=\"" +  property.replaceAll("\"", "")+ "\"];\n");
+				}
 			}
-			else{// in all cases, print the edge: 
-				//System.out.println(subject + " " + property + " " + object);
-				bw.write("\"" + subject.replaceAll("\"", "") + "\"" + " -> \""+ 
-					object.replaceAll("\"", "") + 
-					"\" [label=\"" +  property.replaceAll("\"", "")+ "\"];\n");
-			}
+			bw.write("}\n"); 
+			bw.close(); 
 		}
-		bw.write("}\n"); 
-		bw.close(); 
-		System.out.println("Finished writing summary dot file " + dotFile + "."); 
+		catch(IOException e) {
+			throw new IllegalStateException("Unable to open the DOT file to for the summary"); 
+		}
+		System.out.println("Summary written to DOT file " + dotFile + "."); 
 	}
 
-	
+
 	public ArrayList<Triple> getSummaryEdges() {
 		ArrayList<Triple> res = new ArrayList<Triple>();
 		for (Long s: edges.keySet()){
@@ -491,17 +559,22 @@ public class Summarization {
 		}
 		return res; 
 	}
-	
-	public void display(String dataTriplesFile) throws FileNotFoundException, IOException{
-		writeSummaryToFile(dataTriplesFile + "-sum.nt");
+
+	public void display(String dataTriplesFile){
+		writeEncodedSummaryToFile(dataTriplesFile + "-sum.nt");
 		writeEncodedSummaryToDotFile(dataTriplesFile +  ".dot");
 	}
-	public void writeSummaryToFile(String fileName) throws IOException{
-		BufferedWriter bw = new BufferedWriter(new FileWriter (new File(fileName))); 
-		this.writeTripleToFile(bw);
-		bw.close();
+	public void writeEncodedSummaryToFile(String fileName){
+		try {
+			BufferedWriter bw = new BufferedWriter(new FileWriter (new File(fileName))); 
+			this.writeEncodedTripleToFile(bw);
+			bw.close();
+		}
+		catch(IOException e) {
+			throw new IllegalStateException("Could not write encoded summary to file: " + fileName + ". Is the path correct?"); 
+		}
 	}
-	private void writeTripleToFile(BufferedWriter bw) throws IOException{
+	private void writeEncodedTripleToFile(BufferedWriter bw) throws IOException {
 		for (Triple t: getSummaryEdges()){
 			bw.write(t.toString() + "\n"); 
 		}
@@ -516,13 +589,18 @@ public class Summarization {
 		return new String(sb); 
 	}
 
-	public void writeEncodedSummaryToDotFile(String dotFile) throws IOException{
-		BufferedWriter bw = new BufferedWriter(new FileWriter (new File(dotFile))); 
-		bw.write("digraph g{\n");
-		for (Triple t: getSummaryEdges()){
-			bw.write(t.s + " -> "+ t.o + " [label=\"" + t.p + "\"];\n");
+	public void writeEncodedSummaryToDotFile(String dotFile) {
+		try {
+			BufferedWriter bw = new BufferedWriter(new FileWriter (new File(dotFile))); 
+			bw.write("digraph g{\n");
+			for (Triple t: getSummaryEdges()){
+				bw.write(t.s + " -> "+ t.o + " [label=\"" + t.p + "\"];\n");
+			}
+			bw.write("}\n"); 
+			bw.close(); 
 		}
-		bw.write("}\n"); 
-		bw.close(); 
+		catch(IOException e) {
+			throw new IllegalStateException("Could not write encoded summary to dot file: " + dotFile + ". Is the path correct?"); 
+		}
 	}
 }

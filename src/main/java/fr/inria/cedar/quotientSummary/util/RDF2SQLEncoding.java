@@ -22,31 +22,34 @@ public class RDF2SQLEncoding {
 	protected static long subPropertyCode = -1;
 	protected static long domainCode = -1;
 	protected static long rangeCode = -1;
-	
+
 	static HashMap<Long, String> codeToURIOrLiteral;
 	static HashMap<String, Long> uriOrLiteralToCode; 
-	
+
 	static Connection conn;
-	
+
 	/** 
 	 * It is crucial to call this method in order for the summarization or any summary usage code to work OK.
 	 * @param givenConn
 	 * @throws SQLException
 	 */
-	public static void setUp(Connection givenConn) throws SQLException {
+	public static void setUp(Connection givenConn) {
 		conn = givenConn; 
 		codeToURIOrLiteral = new HashMap<Long, String>(); 
 		uriOrLiteralToCode = new HashMap<String, Long>(); 
 		setRDFBuiltInPropertyCodes(); 
 	}
-	
+
 	public RDF2SQLEncoding() {
 	}
-	
+
+	public static Connection getConnection() {
+		return conn; 
+	}
 	public static void setConnection(Connection givenConn) {
 		conn = givenConn; 
 	}
-	
+
 	public static long getTypeCode() {
 		return typeCode; 
 	}
@@ -67,26 +70,26 @@ public class RDF2SQLEncoding {
 		return rangeCode; 
 	} 
 
-	public static void setRDFBuiltInPropertyCodes() throws SQLException {
+	public static void setRDFBuiltInPropertyCodes() {
 		setTypeCode();
 		setSubClassCode();
 		setSubPropertyCode();
 		setDomainCode();
 		setRangeCode();
 	}
-	private static void setTypeCode() throws SQLException {
+	private static void setTypeCode()  {
 		typeCode = dictionaryEncode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
 	}
-	private static void setSubClassCode() throws SQLException {
+	private static void setSubClassCode() {
 		subClassCode = dictionaryEncode("http://www.w3.org/2000/01/rdf-schema#subClassOf");
 	}
-	private static void setSubPropertyCode() throws SQLException {
+	private static void setSubPropertyCode()  {
 		subPropertyCode = dictionaryEncode("http://www.w3.org/2000/01/rdf-schema#subPropertyOf");
 	}
-	private static void setDomainCode() throws SQLException {
+	private static void setDomainCode() {
 		domainCode = dictionaryEncode("http://www.w3.org/2000/01/rdf-schema#domain");
 	}
-	private static void setRangeCode() throws SQLException {
+	private static void setRangeCode()  {
 		rangeCode = dictionaryEncode("http://www.w3.org/2000/01/rdf-schema#range");
 	}
 
@@ -97,43 +100,55 @@ public class RDF2SQLEncoding {
 	 * @return
 	 * @throws SQLException
 	 */
-	public static long dictionaryEncode(String URI) throws SQLException {
+	public static long dictionaryEncode(String URI) {
 		// try to use the cache if possible
 		Long alreadyKnownCode = uriOrLiteralToCode.get(URI); 
 		if (alreadyKnownCode != null) {
 			return alreadyKnownCode; 
 		}
 		String learnCodeQueryString = "select key from dictionary where value = '" + URI + "';";
-		Statement learnCode = conn.createStatement(); 
-		ResultSet rs = learnCode.executeQuery(learnCodeQueryString);
-		//Debugger.log("Asked query: " + learnCodeQueryString);
 		long code = -1; 
-		while (rs.next()){
-			code  = rs.getInt(1); 
-			//Debugger.log("The code of " + URI + " is: " + constantCode);
-			break; 
+		try {
+			Statement learnCode = conn.createStatement(); 
+			ResultSet rs = learnCode.executeQuery(learnCodeQueryString);
+			//Debugger.log("Asked query: " + learnCodeQueryString);
+			while (rs.next()){
+				code  = rs.getInt(1); 
+				//Debugger.log("The code of " + URI + " is: " + constantCode);
+				break; 
+			}
+			rs.close(); 
 		}
-		rs.close(); 
+		catch(SQLException e) {
+			throw new IllegalStateException("Not able to encode"); 
+		}
 		// feed the cache: 
 		uriOrLiteralToCode.put(URI, code); 
 		return code; 
 	}
-	public static String dictionaryDecode(Long URL) throws SQLException {
+	public static String dictionaryDecode(Long URL) {
 		// try to use the cache if possible
 		String alreadyKnownURIOrLiteral = codeToURIOrLiteral.get(URL); 
 		if (alreadyKnownURIOrLiteral != null) {
 			return alreadyKnownURIOrLiteral; 
 		}
-		PreparedStatement pstmt = conn.prepareStatement("select value from dictionary where key=?"); 
-		pstmt.setLong(1, URL);
-		ResultSet rs = pstmt.executeQuery();
-		if (rs.next()) {
-			String s = rs.getString(1); 
-			// feed the cache: 
-			codeToURIOrLiteral.put(URL,  s); 
-			return s; 
+		try {
+			PreparedStatement pstmt = conn.prepareStatement("select value from dictionary where key=?"); 
+			pstmt.setLong(1, URL);
+			ResultSet rs = pstmt.executeQuery();
+			if (rs.next()) {
+				String s = rs.getString(1); 
+				// feed the cache: 
+				codeToURIOrLiteral.put(URL,  s);
+				return s; 
+			}
+			else {
+				throw new IllegalStateException("No value for code " + URL); 
+			}
 		}
-		throw new Error("Could not decode: " + URL);
+		catch(SQLException e) {
+			throw new IllegalStateException("Not able to decode"); 
+		}
 	}
 
 	public static boolean isSpecialProperty(Long p) {
