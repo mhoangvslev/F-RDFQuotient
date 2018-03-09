@@ -1,12 +1,7 @@
 package summaries.weak;
 
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.SQLException;
-
 import org.junit.Test;
 
-import fr.inria.cedar.ontosql.db.UnsupportedDatabaseEngineException;
 import fr.inria.cedar.quotientSummary.summaries.SummaryBuilder;
 import fr.inria.cedar.quotientSummary.summaries.weak.WeakSummarization;
 import junit.framework.Assert;
@@ -15,20 +10,7 @@ public class WeakSummaryTest {
 
 	@Test
 	public void testWeakSummarizationOfRDFNTFile() {
-		String[] args = new String[1];
-		args[0] = "resources/rdf-nt-files/model-03_17.nt"; 
-		Connection conn; 
-		try {
-			conn = SummaryBuilder.loadRDFInPostgres(args);
-		} catch (IOException | UnsupportedDatabaseEngineException | SQLException e) {
-			throw new IllegalStateException("Loading RDF graph in Postgres failed: " + e.toString()); 
-		} 	
-		try {
-			SummaryBuilder.summarizeGraphFromPostgres(conn, args);
-		} catch (SQLException | IOException e) {
-			throw new IllegalStateException("Summarizing RDF graph from Postgres failed: " + e.toString()); 
-		} 
-		
+		SummaryBuilder.loadInPostgresAndSummarize("resources/rdf-nt-files/model-03_17.nt");		
 	}
 	
 	@Test

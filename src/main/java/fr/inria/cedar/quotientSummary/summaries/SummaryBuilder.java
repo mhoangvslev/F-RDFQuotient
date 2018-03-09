@@ -26,7 +26,7 @@ import fr.inria.cedar.ontosql.rdfgraphstatsgen.RDFGraphStatisticsGenerator;
 import fr.inria.cedar.quotientSummary.summaries.weak.WeakSummarization;
 
 public class SummaryBuilder {
-	
+
 	public SummaryBuilder() {
 		try {
 			getConnection(); 
@@ -39,7 +39,7 @@ public class SummaryBuilder {
 	private static final String DEFAULT_CONFIG_FILE = System.getProperty("user.dir")+"/conf/dataLoading.properties";
 	// Sample data set
 	//private static final String DATA_SET = System.getProperty("user.dir")+"/resources/rdf-nt-files/dataSetFile.nt";
-	// Sample ntology file
+	// Sample ontology file
 	//private static String ONTOLOGY_FILE =System.getProperty("user.dir")+"/resources/ontology-files/frenchpolitican.rdf";
 
 	/**
@@ -85,11 +85,15 @@ public class SummaryBuilder {
 
 	}
 
-	public static void loadInPostgresAndSummarize(String triplesNTFileName) throws FileNotFoundException, IOException, UnsupportedDatabaseEngineException, SQLException {
+
+	public static void loadInPostgresAndSummarize(String triplesNTFileName)  {
 		String[] args = new String[1];
 		args[0] = triplesNTFileName; 
 		try (Connection conn = loadRDFInPostgres(args)) {
 			summarizeGraphFromPostgres(conn, args); 
+		} catch (SQLException | IOException | UnsupportedDatabaseEngineException e) {
+			throw new IllegalStateException("Could not load in Postgres and summarize " + triplesNTFileName + ": " + 
+					e.toString()); 
 		} 
 	}
 
@@ -233,7 +237,7 @@ public class SummaryBuilder {
 		return conn; 
 
 	}
-	
+
 	private static void printUsage() {
 		System.out.println("Usage:");
 		System.out.println("args[0]=load: loads the data in Postgres");
