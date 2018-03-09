@@ -5,6 +5,7 @@
   <groupId>fr.inria.cedar</groupId>
   <artifactId>quotientSummary</artifactId>
   <version>1.1</version>
+
   <packaging>jar</packaging>
 
   <name>quotientSummary</name>
@@ -38,7 +39,6 @@
         <version>5.0.73</version>
     </dependency>
   </dependencies>
-  
   <distributionManagement>
     <repository>
         <id>cedarcommons-private-release</id>
@@ -51,8 +51,8 @@
         <url>http://maven.inria.fr/artifactory/cedarcommons-private-snapshot</url>
     </snapshotRepository>
 </distributionManagement>
-<build>
-<plugins>
+  <build>
+    <plugins>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.1</version>
@@ -63,5 +63,5 @@
         </configuration>
       </plugin>
     </plugins>
-</build>
+  </build>
 </project>

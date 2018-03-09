@@ -1,7 +1,5 @@
 package summaries.weak;
 
-import static org.junit.Assert.assertTrue;
-
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -11,6 +9,7 @@ import org.junit.Test;
 import fr.inria.cedar.ontosql.db.UnsupportedDatabaseEngineException;
 import fr.inria.cedar.quotientSummary.summaries.SummaryBuilder;
 import fr.inria.cedar.quotientSummary.summaries.weak.WeakSummarization;
+import junit.framework.Assert;
 
 public class WeakSummaryTest {
 
@@ -35,8 +34,9 @@ public class WeakSummaryTest {
 	@Test
     public void testWeakSummarizationOfIntegerEncodedFile()
     {
+
     	WeakSummarization ws = new WeakSummarization();
- 
+    	try {
     		ws.summarizeFromTripleFiles("src/test/resources/test1-weak/0.nt", 
     			     "src/test/resources/test1-weak/short.nt", "weak");
     		// TODO fix the test (use the correct output)
@@ -44,7 +44,10 @@ public class WeakSummaryTest {
     		String output = ws.toString();
     		System.out.println("Output: #" + output + "#");
     		System.out.println("Expected: #" + expectedOutput + "#");
-    		assertTrue(output.equals(expectedOutput));
+    		Assert.assertEquals(expectedOutput, output);
+    	} catch(Exception e){
+    		Assert.fail();
+    	}
     }
 	
 }

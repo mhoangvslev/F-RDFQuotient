@@ -35,8 +35,8 @@ public class RDF2SQLEncoding {
 	 */
 	public static void setUp(Connection givenConn) {
 		conn = givenConn; 
-		codeToURIOrLiteral = new HashMap<Long, String>(); 
-		uriOrLiteralToCode = new HashMap<String, Long>(); 
+		codeToURIOrLiteral = new HashMap<>(); 
+		uriOrLiteralToCode = new HashMap<>(); 
 		setRDFBuiltInPropertyCodes(); 
 	}
 
@@ -96,7 +96,6 @@ public class RDF2SQLEncoding {
 	/**
 	 * Gets the dictionary code for a specific URI. Returns -1 if URI not found in the dictionary.
 	 * @param URI
-	 * @param conn
 	 * @return
 	 * @throws SQLException
 	 */

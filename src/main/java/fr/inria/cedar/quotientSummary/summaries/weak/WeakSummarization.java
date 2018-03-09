@@ -5,11 +5,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -17,8 +13,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import fr.inria.cedar.commons.miscellaneous.Debugger;
-import fr.inria.cedar.quotientSummary.datastructures.Long2Long;
-import fr.inria.cedar.quotientSummary.datastructures.Long2LongSet;
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
 import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 
@@ -72,30 +66,30 @@ public class WeakSummarization extends fr.inria.cedar.quotientSummary.summaries.
 		long start = System.currentTimeMillis(); 
 		try {
 		//  Second file: data triples	
-		BufferedReader	br = new BufferedReader(new FileReader(new File(dataTriplesFile)));
-		while (br.ready()){
-			String spo = br.readLine();
-			Triple t = readTriple(spo);
-			//System.out.println("\n");
-			//t.display();
-			handleDataTriple(t);
-			//display();
-			//System.out.println();
+		try (BufferedReader br = new BufferedReader(new FileReader(new File(dataTriplesFile)))) {
+			while (br.ready()){
+				String spo = br.readLine();
+				Triple t = readTriple(spo);
+				//System.out.println("\n");
+				//t.display();
+				handleDataTriple(t);
+				//display();
+				//System.out.println();
+			}
 		}
-		br.close();
 		//System.out.println("=== After weak data triple summarization of "+ dataTriplesFile + ": ==================================");
 		//display();
 
 		// First file: type triples
-		br = new BufferedReader(new FileReader(new File(typeTriplesFile)));
-		while (br.ready()){
-			String spo = br.readLine();
-			Triple t = readTriple(spo);
-			//t.display();
-			handleTypeTriplesAfterData(t);
-			//System.out.println();
+		try (BufferedReader br = new BufferedReader(new FileReader(new File(typeTriplesFile)))) {
+			while (br.ready()){
+				String spo = br.readLine();
+				Triple t = readTriple(spo);
+				//t.display();
+				handleTypeTriplesAfterData(t);
+				//System.out.println();
+			}
 		}
-		br.close();
 		//System.out.println("=== After weak type triple summarization of " + typeTriplesFile + ": =================================== ");
 		//display();
 		}
@@ -341,43 +335,29 @@ public class WeakSummarization extends fr.inria.cedar.quotientSummary.summaries.
 				if (oRepresented){
 					return RS_RP_RO; 
 				}
-				else{
-					return RS_RP_UO; 
-				}
+				return RS_RP_UO; 
 			}
-			else{
-				if (oRepresented){
-					return RS_UP_RO;
-				}
-				else{
-					return RS_UP_UO; 
-				}
+			if (oRepresented){
+				return RS_UP_RO;
 			}
+			return RS_UP_UO; 
 		}
-		else{
-			if (pRepresented){
-				if (oRepresented){
-					return US_RP_RO; 
-				}
-				else{
-					return US_RP_UO; 
-				}
+		if (pRepresented){
+			if (oRepresented){
+				return US_RP_RO; 
 			}
-			else{
-				if (oRepresented){
-					return US_UP_RO; 
-				}
-				else{
-					return US_UP_UO; 
-				}
-			}
+			return US_RP_UO; 
 		}
+		if (oRepresented){
+			return US_UP_RO; 
+		}
+		return US_UP_UO; 
 	}
 
 	/**
 	 * Summarizes an RDF graph assuming the data triples are in Postgres
 	 * @param conn
-	 * @param dataTriplesFileName
+	 * @param args
 	 * @throws SQLException
 	 * @throws IOException
 	 */
@@ -435,7 +415,7 @@ public class WeakSummarization extends fr.inria.cedar.quotientSummary.summaries.
 			getTypedTriples.close();
 		}
 		catch(SQLException e) {
-			throw new IllegalStateException("Postgres error encountered while summarizing type triples"); 
+			throw new IllegalStateException("Postgres error encountered while summarizing type triples: " + e.toString()); 
 		}
 		this.display(dataTriplesFileName);
 	}
@@ -464,8 +444,10 @@ public class WeakSummarization extends fr.inria.cedar.quotientSummary.summaries.
 			}
 		}
 	}
+
+	@Override
 	public ArrayList<Triple> getSummaryEdges() {
-		ArrayList<Triple> res = new ArrayList<Triple>();
+		ArrayList<Triple> res = new ArrayList<>();
 		for (Long s: edges.keySet()){
 			HashMap<Long, ArrayList<Long>> triplesOfThisSubject = edges.get(s); 
 			if (triplesOfThisSubject == null){
@@ -486,6 +468,8 @@ public class WeakSummarization extends fr.inria.cedar.quotientSummary.summaries.
 		}
 		return res; 
 	}
+
+	@Override
 	public String toString(){
 		StringBuffer sb = new StringBuffer();
 		for (Triple t: getSummaryEdges()){
@@ -494,16 +478,16 @@ public class WeakSummarization extends fr.inria.cedar.quotientSummary.summaries.
 		}
 		//sb.append("rep:\n");
 		//this.showRepInBuffer(sb);
-		sb.append("\nProperty sources:\n");
-		for (Long l: ps.keySet()) {
-			sb.append(l + ": " + ps.get(l));
-			sb.append(" "); 
-		}
-		sb.append("\nProperty targets:\n");
-		for (Long l: pt.keySet()) {
-			sb.append(l + ": " + pt.get(l));
-			sb.append(" "); 
-		}
+//		sb.append("\nProperty sources:\n");
+//		for (Long l: ps.keySet()) {
+//			sb.append(l + ": " + ps.get(l));
+//			sb.append(" "); 
+//		}
+//		sb.append("\nProperty targets:\n");
+//		for (Long l: pt.keySet()) {
+//			sb.append(l + ": " + pt.get(l));
+//			sb.append(" "); 
+//		}
 		return new String(sb); 
 	}
 
@@ -519,13 +503,13 @@ public class WeakSummarization extends fr.inria.cedar.quotientSummary.summaries.
 		WeakSummarization ws = new WeakSummarization(); 
 		String summaryTripleFileName = args[0]; 
 		System.out.println("Trying to read an encoded summary from file:" + summaryTripleFileName);
-		BufferedReader	br = new BufferedReader(new FileReader(new File(summaryTripleFileName)));
-		while (br.ready()){
-			String spo = br.readLine().replaceAll("<", "").replaceAll(">", ""); 
-			Triple t = ws.readTriple(spo);
-			ws.addTriple(t.s, t.p, t.o);
+		try (BufferedReader br = new BufferedReader(new FileReader(new File(summaryTripleFileName)))) {
+			while (br.ready()){
+				String spo = br.readLine().replaceAll("<", "").replaceAll(">", ""); 
+				Triple t = ws.readTriple(spo);
+				ws.addTriple(t.s, t.p, t.o);
+			}
 		}
-		br.close();
 		return ws; 
 	}
 
@@ -535,17 +519,18 @@ public class WeakSummarization extends fr.inria.cedar.quotientSummary.summaries.
 		RDF2SQLEncoding.setUp(conn); 
 		Debugger.log("Set up special URIs from dictionary"); 
 		String getSummaryTriples = ("select *  from encoded_summary"); 
-		Statement getTriples = conn.createStatement(); 
-		//Debugger.log("Created statement");
-		ResultSet rs = getTriples.executeQuery(getSummaryTriples);
-		//Debugger.log("Asking for summary triples");
-		while (rs.next()) {
-			Long s = rs.getLong(1);
-			Long p = rs.getLong(2); 
-			Long o = rs.getLong(3);
-			ws.addTriple(s, p, o);
+		try(Statement getTriples = conn.createStatement(); 
+			// Debugger.log("Created statement");
+			ResultSet rs = getTriples.executeQuery(getSummaryTriples)
+			// Debugger.log("Asking for summary triples")
+			) {
+			while (rs.next()) {
+				Long s = rs.getLong(1);
+				Long p = rs.getLong(2); 
+				Long o = rs.getLong(3);
+				ws.addTriple(s, p, o);
+			}
 		}
-		rs.close();
 		System.out.println("Read weak summary from Postgres"); 
 		return ws; 
 	}

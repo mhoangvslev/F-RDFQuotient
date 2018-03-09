@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+import com.google.common.base.Preconditions;
+
 import fr.inria.cedar.commons.miscellaneous.Debugger;
 import fr.inria.cedar.ontosql.db.UnsupportedDatabaseEngineException;
 import fr.inria.cedar.ontosql.rdfdb.StorageSchema;
@@ -26,10 +28,9 @@ import fr.inria.cedar.quotientSummary.summaries.weak.WeakSummarization;
 public class SummaryBuilder {
 	
 	public SummaryBuilder() {
-		try{
+		try {
 			getConnection(); 
-		}
-		catch(Exception e) {
+		} catch(Exception e) {
 			e.printStackTrace(); 
 		}
 	}
@@ -65,14 +66,16 @@ public class SummaryBuilder {
 			return; 
 		}
 		if (args[0].toLowerCase().equals("summarize")) {
-			Connection conn = getConnection();
-			summarizeGraphFromPostgres(conn, nextArguments); 
-			return;
+			try (Connection conn = getConnection()) {
+				summarizeGraphFromPostgres(conn, nextArguments); 
+				return;
+			}
 		}
 		if (args[0].toLowerCase().equals("loadsummarize")) {
-			Connection conn = loadRDFInPostgres(nextArguments); 
-			summarizeGraphFromPostgres(conn, nextArguments); 
-			return;
+			try (Connection conn = loadRDFInPostgres(nextArguments)) {
+				summarizeGraphFromPostgres(conn, nextArguments); 
+				return;
+			}
 		}
 		if (args[0].toLowerCase().equals("summarizeencodedfile")) {
 			summarizeEncodedFile(nextArguments); 
@@ -85,8 +88,9 @@ public class SummaryBuilder {
 	public static void loadInPostgresAndSummarize(String triplesNTFileName) throws FileNotFoundException, IOException, UnsupportedDatabaseEngineException, SQLException {
 		String[] args = new String[1];
 		args[0] = triplesNTFileName; 
-		Connection conn = loadRDFInPostgres(args); 
-		summarizeGraphFromPostgres(conn, args); 
+		try (Connection conn = loadRDFInPostgres(args)) {
+			summarizeGraphFromPostgres(conn, args); 
+		} 
 	}
 
 	/**
@@ -112,9 +116,7 @@ public class SummaryBuilder {
 				":" + properties.getProperty("database.port") + "/" + properties.getProperty("database.name"); 
 		Connection conn = DriverManager.getConnection(connectionURL, connectionProps); 
 		System.out.println("Connection URL is: " + connectionURL);
-		if (conn == null){
-			throw new Error("No connection for " + connectionURL); 
-		}
+		Preconditions.checkState(conn != null, "No connection for " + connectionURL); 
 		return conn; 
 	}
 
@@ -168,7 +170,7 @@ public class SummaryBuilder {
 
 		System.out.println(System.getProperty("user.dir")); 
 
-		List<String> tripleFiles = new ArrayList<String>();
+		List<String> tripleFiles = new ArrayList<>();
 		for (String s: args) {
 			System.out.println("Argument: " +s);
 			if (s.endsWith(".nt")) {
@@ -177,7 +179,7 @@ public class SummaryBuilder {
 			}
 		}
 		// TODO if we want to load schemas from separate files, do it from here
-		List<String> rdfsFiles = new ArrayList<String>(); 
+		List<String> rdfsFiles = new ArrayList<>(); 
 
 		Properties properties = new Properties();
 		properties.load(new FileReader(DEFAULT_CONFIG_FILE));
@@ -227,9 +229,7 @@ public class SummaryBuilder {
 				":" + properties.getProperty("database.port") + "/" + properties.getProperty("database.name"); 
 		Connection conn = DriverManager.getConnection(connectionURL, connectionProps); 
 		System.out.println("Connection URL is: " + connectionURL);
-		if (conn == null){
-			throw new Error("No connection for " + connectionURL); 
-		}
+		Preconditions.checkState(conn != null, "No connection for " + connectionURL); 
 		return conn; 
 
 	}

@@ -90,84 +90,66 @@ public class StrongSummarization extends fr.inria.cedar.quotientSummary.summarie
 			if (classSetO != null){ // TS, TO
 				return TS_TO; 
 			}
-			else{//TS, UO
-				if (sourceCliqueO != null){// TS, UO, RO
-					if (sourceCliqueP != null){// TS, UO, RO, RP
-						return TS_UO_RO_RP; 
-					}
-					else{// TS, UO, RO, NP
-						return TS_UO_RO_NP; 
-					}
+			//TS, UO
+			if (sourceCliqueO != null){// TS, UO, RO
+				if (sourceCliqueP != null){// TS, UO, RO, RP
+					return TS_UO_RO_RP; 
 				}
-				else{ // TS, UO, NO
-					if (sourceCliqueP != null){ // TS, UO, NO, RP
-						return TS_UO_NO_RP;
-					}
-					else { // TS, UO, NO, NP
-						return TS_UO_NO_NP; 
-					}
-				}
+				// TS, UO, RO, NP
+				return TS_UO_RO_NP; 
 			}
+			 // TS, UO, NO
+			if (sourceCliqueP != null){ // TS, UO, NO, RP
+				return TS_UO_NO_RP;
+			}
+			// TS, UO, NO, NP
+			return TS_UO_NO_NP; 
 		}
-		else // US
-		{
-			if (sourceCliqueS != null){// US, RS
-				if (classSetO != null){ // US, RS, TO
-					if (sourceCliqueP != null){// US, RS, TO, RP
-						return US_RS_TO_RP;
-					}
-					else{ // US, RS, TO, NP
-						return US_RS_TO_NP; 
-					}
+		// US
+		if (sourceCliqueS != null){// US, RS
+			if (classSetO != null){ // US, RS, TO
+				if (sourceCliqueP != null){// US, RS, TO, RP
+					return US_RS_TO_RP;
 				}
-				else{ // US, RS, UO
-					if (sourceCliqueO != null){ //US, RS, UO, RO
-						if (sourceCliqueP != null){ //US, RS, UO, RO, RP
-							return US_RS_UO_RO_RP; 
-						}
-						else{ //US, RS, UO, RO, NP
-							return US_RS_UO_RO_NP; 
-						}
-					}
-					else{// US, RS, UO, NO
-						if (sourceCliqueP != null){ // US, RS, UO, NO, RP
-							return US_RS_UO_NO_RP;
-						}
-						else{ // US, RS, UO, NO, NP 
-							return US_RS_UO_NO_NP; 
-						}
-					}
-				}
+				// US, RS, TO, NP
+				return US_RS_TO_NP; 
 			}
-			else{// US, NS
-				if (classSetO != null){ // US, NS, TO
-					if (sourceCliqueP != null){// US, NS, TO, RP
-						return US_NS_TO_RP;
-					}
-					else{ // US, NS, TO, NP
-						return US_NS_TO_NP; 
-					}
+			// US, RS, UO
+			if (sourceCliqueO != null){ //US, RS, UO, RO
+				if (sourceCliqueP != null){ //US, RS, UO, RO, RP
+					return US_RS_UO_RO_RP; 
 				}
-				else{ // US, NS, UO
-					if (sourceCliqueO != null){ //US, NS, UO, RO
-						if (sourceCliqueP != null){ //US, NS, UO, RO, RP
-							return US_NS_UO_RO_RP; 
-						}
-						else{ //US, NS, UO, RO, NP
-							return US_NS_UO_RO_NP; 
-						}
-					}
-					else{// US, NS, UO, NO
-						if (sourceCliqueP != null){ // US, NS, UO, NO, RP
-							return US_NS_UO_NO_RP;
-						}
-						else{ // US, NS, UO, NO, NP 
-							return US_NS_UO_NO_NP; 
-						}
-					}
-				}
+				//US, RS, UO, RO, NP
+				return US_RS_UO_RO_NP; 
 			}
+			// US, RS, UO, NO
+			if (sourceCliqueP != null){ // US, RS, UO, NO, RP
+				return US_RS_UO_NO_RP;
+			}
+			// US, RS, UO, NO, NP 
+			return US_RS_UO_NO_NP; 
 		}
+		if (classSetO != null){ // US, NS, TO
+			if (sourceCliqueP != null){// US, NS, TO, RP
+				return US_NS_TO_RP;
+			}
+			// US, NS, TO, NP
+			return US_NS_TO_NP; 
+		}
+		// US, NS, UO
+		if (sourceCliqueO != null){ //US, NS, UO, RO
+			if (sourceCliqueP != null){ //US, NS, UO, RO, RP
+				return US_NS_UO_RO_RP; 
+			}
+			//US, NS, UO, RO, NP
+			return US_NS_UO_RO_NP; 
+		}
+		// US, NS, UO, NO
+		if (sourceCliqueP != null){ // US, NS, UO, NO, RP
+			return US_NS_UO_NO_RP;
+		}
+		// US, NS, UO, NO, NP 
+		return US_NS_UO_NO_NP; 
 	}
 	
 	public StrongSummarization(){
@@ -182,7 +164,7 @@ public class StrongSummarization extends fr.inria.cedar.quotientSummary.summarie
 		p2tc = new Long2Long();
 		c2cs = new Long2Long();
 		rep = new Long2Long();
-		untypedSummaryNodes = new HashMap<Long, HashMap<Long, Long>>();
+		untypedSummaryNodes = new HashMap<>();
 		minCliqueID = -1;
 		emptySCCount = Long.MAX_VALUE;
 		emptyTCCount = Long.MAX_VALUE; 
@@ -222,7 +204,7 @@ public class StrongSummarization extends fr.inria.cedar.quotientSummary.summarie
 	}
 
 	private long countDistinctTargetCliquesInCliqueToNodesMap() {
-		TreeSet<Long> uniqueTCs = new TreeSet<Long>();
+		TreeSet<Long> uniqueTCs = new TreeSet<>();
 		for (Long sourceClique: untypedSummaryNodes.keySet()){
 			HashMap<Long, Long> map = untypedSummaryNodes.get(sourceClique); 
 			for (Long targetClique: map.keySet()){
@@ -311,7 +293,7 @@ public class StrongSummarization extends fr.inria.cedar.quotientSummary.summarie
 		// create the class set for this type if necessary:
 		ArrayList<Long> thisTypeClassSet = cs.get(classSetIDForThisType);
 		if (thisTypeClassSet == null){
-			thisTypeClassSet = new ArrayList<Long>();
+			thisTypeClassSet = new ArrayList<>();
 			cs.put(classSetIDForThisType, thisTypeClassSet);
 
 		}
@@ -445,23 +427,23 @@ public class StrongSummarization extends fr.inria.cedar.quotientSummary.summarie
 		char caseNumber = decode(classSetS, classSetO, sourceCliqueS, sourceCliqueO, sourceCliqueP); 
 		
 		switch(caseNumber){
-		case TS_TO: { handleDataTriple_TS_TO(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); }
-		case TS_UO_RO_RP: { handleDataTriple_TS_UO_RO_RP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); }
-		case TS_UO_NO_RP: { handleDataTriple_TS_UO_NO_RP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); }
-		case US_RS_TO_RP: { handleDataTriple_US_RS_TO_RP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); }
-		case US_RS_UO_RO_RP: { handleDataTriple_US_RS_UO_RO_RP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); }
-		case US_RS_UO_NO_RP: { handleDataTriple_US_RS_UO_NO_RP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); }
-		case US_NS_TO_RP: { handleDataTriple_US_NS_TO_RP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); }
-		case US_NS_UO_RO_RP: { handleDataTriple_US_NS_UO_RO_RP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); }
-		case US_NS_UO_NO_RP: { handleDataTriple_US_NS_UO_NO_RP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); }
-		case TS_UO_RO_NP: { handleDataTriple_TS_UO_RO_NP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); }
-		case TS_UO_NO_NP: { handleDataTriple_TS_UO_NO_NP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); }
-		case US_RS_TO_NP: { handleDataTriple_US_RS_TO_NP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); }
-		case US_RS_UO_RO_NP: { handleDataTriple_US_RS_UO_RO_NP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); }
-		case US_RS_UO_NO_NP: { handleDataTriple_US_RS_UO_NO_NP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); }
-		case US_NS_TO_NP: { handleDataTriple_US_NS_TO_NP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); }
-		case US_NS_UO_RO_NP: { handleDataTriple_US_NS_UO_RO_NP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); }
-		case US_NS_UO_NO_NP: { handleDataTriple_US_NS_UO_NO_NP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); }
+		case TS_TO: {          handleDataTriple_TS_TO(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); break; }
+		case TS_UO_RO_RP: {    handleDataTriple_TS_UO_RO_RP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); break; }
+		case TS_UO_NO_RP: {    handleDataTriple_TS_UO_NO_RP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); break; }
+		case US_RS_TO_RP: {    handleDataTriple_US_RS_TO_RP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); break; }
+		case US_RS_UO_RO_RP: { handleDataTriple_US_RS_UO_RO_RP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); break; }
+		case US_RS_UO_NO_RP: { handleDataTriple_US_RS_UO_NO_RP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); break; }
+		case US_NS_TO_RP: {    handleDataTriple_US_NS_TO_RP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); break; }
+		case US_NS_UO_RO_RP: { handleDataTriple_US_NS_UO_RO_RP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); break; }
+		case US_NS_UO_NO_RP: { handleDataTriple_US_NS_UO_NO_RP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); break; }
+		case TS_UO_RO_NP: {    handleDataTriple_TS_UO_RO_NP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); break; }
+		case TS_UO_NO_NP: {    handleDataTriple_TS_UO_NO_NP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); break; }
+		case US_RS_TO_NP: {    handleDataTriple_US_RS_TO_NP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); break; }
+		case US_RS_UO_RO_NP: { handleDataTriple_US_RS_UO_RO_NP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); break; }
+		case US_RS_UO_NO_NP: { handleDataTriple_US_RS_UO_NO_NP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); break; }
+		case US_NS_TO_NP: {    handleDataTriple_US_NS_TO_NP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); break; }
+		case US_NS_UO_RO_NP: { handleDataTriple_US_NS_UO_RO_NP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); break; }
+		case US_NS_UO_NO_NP: { handleDataTriple_US_NS_UO_NO_NP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); break; }
 	}
 		
 		if (classSetS != null){ // typed subject
@@ -934,7 +916,7 @@ public class StrongSummarization extends fr.inria.cedar.quotientSummary.summarie
 		assert(sourceClique != null & targetClique != null); 
 		HashMap<Long, Long> targetCliquesForThisSourceClique = this.untypedSummaryNodes.get(sourceClique); 
 		if (targetCliquesForThisSourceClique == null){
-			targetCliquesForThisSourceClique = new HashMap<Long, Long>();
+			targetCliquesForThisSourceClique = new HashMap<>();
 			this.untypedSummaryNodes.put(sourceClique, targetCliquesForThisSourceClique); 
 		}
 		Long node = targetCliquesForThisSourceClique.get(targetClique);
@@ -949,7 +931,7 @@ public class StrongSummarization extends fr.inria.cedar.quotientSummary.summarie
 	private Long getEmptySourceCliqueID() {
 		Long res; 
 		if (this.emptySCCount == Long.MAX_VALUE){ // the empty source clique has not been created yet
-			ArrayList<Long> emptySC = new ArrayList<Long>();
+			ArrayList<Long> emptySC = new ArrayList<>();
 			res = minCliqueID; // we invent a new source clique
 			Debugger.log("ooooo> Initialized the empty source clique at: " + res);
 			this.emptySCCount = minCliqueID; 
@@ -966,7 +948,7 @@ public class StrongSummarization extends fr.inria.cedar.quotientSummary.summarie
 	private Long getEmptyTargetCliqueID() {
 		Long res; 
 		if (this.emptyTCCount == Long.MAX_VALUE){ // the empty source clique has not been created yet
-			ArrayList<Long> emptyTC = new ArrayList<Long>();
+			ArrayList<Long> emptyTC = new ArrayList<>();
 			res = minCliqueID; // we invent a new source clique
 			Debugger.log("ooooo> Initialized the empty target clique at: " + res);
 			this.emptyTCCount = minCliqueID; 
@@ -1032,7 +1014,7 @@ public class StrongSummarization extends fr.inria.cedar.quotientSummary.summarie
 	 */
 	private Long makeNewSourceClique(Long p){
 		Long res = new Long(this.minCliqueID);
-		ArrayList<Long> actualSourceClique = new ArrayList<Long>(); 
+		ArrayList<Long> actualSourceClique = new ArrayList<>(); 
 		actualSourceClique.add(p);
 		sc.put(res, actualSourceClique);
 		p2sc.put(p,  res);
@@ -1060,7 +1042,7 @@ public class StrongSummarization extends fr.inria.cedar.quotientSummary.summarie
 	 */
 	private Long makeAndAddNewTargetClique(Long p){		
 		Long targetCliqueID = new Long(this.minCliqueID);
-		ArrayList<Long> actualTargetClique = new ArrayList<Long>(); 
+		ArrayList<Long> actualTargetClique = new ArrayList<>(); 
 		actualTargetClique.add(p);
 		tc.put(targetCliqueID, actualTargetClique);
 		p2tc.put(p,  targetCliqueID);
@@ -1115,7 +1097,7 @@ public class StrongSummarization extends fr.inria.cedar.quotientSummary.summarie
 		HashMap<Long, Long> tcToNodesForNewSC = untypedSummaryNodes.get(newCliqueID);
 		if (tcToNodesForOldSC != null){
 			if (tcToNodesForNewSC == null){
-				tcToNodesForNewSC = new HashMap<Long, Long>();
+				tcToNodesForNewSC = new HashMap<>();
 				untypedSummaryNodes.put(newCliqueID,  tcToNodesForNewSC);
 			}
 			for (Long thisOldTC: tcToNodesForOldSC.keySet()){
@@ -1142,38 +1124,36 @@ public class StrongSummarization extends fr.inria.cedar.quotientSummary.summarie
 		}
 	}
 
-	public void summarizeFromTripleFiles(String typeTriplesFile, String dataTriplesFile, String method) throws IOException{
+	public void summarizeFromTripleFiles(String typeTriplesFile, String dataTriplesFile, String method) throws IOException {
 		long start = System.currentTimeMillis(); 
 		if (method.equals("typedstrong")){
 			// First file: type triples
-			BufferedReader br = new BufferedReader(
-					new FileReader(
-							new File(typeTriplesFile)));
-			while (br.ready()){
-				String spo = br.readLine();
-				Triple t = readTriple(spo);
-				//t.display();
-				handleTypeTripleBeforeData(t);
-				//System.out.println();
+			try (BufferedReader br = new BufferedReader(new FileReader(new File(typeTriplesFile)))) {
+				while (br.ready()){
+					String spo = br.readLine();
+					Triple t = readTriple(spo);
+					//t.display();
+					handleTypeTripleBeforeData(t);
+					//System.out.println();
+				}
 			}
-			br.close();
+
 			typedStrongPostHandleTypeTriples();
 			//System.out.println("=== After typed strong type triple summarization: =================================== ");
 			//display();
 			//  Second file: data triples	
-			br = new BufferedReader(
-					new FileReader(
-							new File(dataTriplesFile)));
-			while (br.ready()){
-				String spo = br.readLine();
-				Triple t = readTriple(spo);
-				//System.out.println("\nLooking at data triple:");
-				//t.display();
-				handleDataTriple(t);
-				//display();
-				//System.out.println();
+			try (BufferedReader br = new BufferedReader(new FileReader(new File(dataTriplesFile)))) {
+				while (br.ready()){
+					String spo = br.readLine();
+					Triple t = readTriple(spo);
+					//System.out.println("\nLooking at data triple:");
+					//t.display();
+					handleDataTriple(t);
+					//display();
+					//System.out.println();
+				}
 			}
-			br.close();
+
 			//System.out.println("After typed strong data triple summarization: ");
 			//display();
 			long stop = System.currentTimeMillis();
@@ -1182,35 +1162,32 @@ public class StrongSummarization extends fr.inria.cedar.quotientSummary.summarie
 		}
 		if (method.equals("strong")){
 			//  Second file: data triples	
-			BufferedReader	br = new BufferedReader(
-					new FileReader(
-							new File(dataTriplesFile)));
-			while (br.ready()){
-				String spo = br.readLine();
-				Triple t = readTriple(spo);
-				//System.out.println("\n");
-				//t.display();
-				handleDataTriple(t);
-				//display();
-				//System.out.println();
+			try (BufferedReader	br = new BufferedReader(new FileReader(new File(dataTriplesFile)))) {
+				while (br.ready()){
+					String spo = br.readLine();
+					Triple t = readTriple(spo);
+					//System.out.println("\n");
+					//t.display();
+					handleDataTriple(t);
+					//display();
+					//System.out.println();
+				}
 			}
-			br.close();
 			//System.out.println("=== After strong data triple summarization of "+ dataTriplesFile + ": ==================================");
 			//display();
 
 
 			// First file: type triples
-			br = new BufferedReader(
-					new FileReader(
-							new File(typeTriplesFile)));
-			while (br.ready()){
-				String spo = br.readLine();
-				Triple t = readTriple(spo);
-				//t.display();
-				handleTypeTriplesAfterData(t);
-				//System.out.println();
+			try (BufferedReader	br = new BufferedReader(new FileReader(new File(typeTriplesFile)))) {
+				while (br.ready()){
+					String spo = br.readLine();
+					Triple t = readTriple(spo);
+					//t.display();
+					handleTypeTriplesAfterData(t);
+					//System.out.println();
+				}
 			}
-			br.close();
+
 			//System.out.println("=== After strong type triple summarization of " + typeTriplesFile + ": =================================== ");
 			//display();
 			long stop = System.currentTimeMillis();
