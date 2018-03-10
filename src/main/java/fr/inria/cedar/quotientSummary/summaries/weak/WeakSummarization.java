@@ -102,11 +102,6 @@ public class WeakSummarization extends fr.inria.cedar.quotientSummary.summaries.
 	}
 
 	private void handleDataTriple(Triple t) {
-		//if (globalTripleCount >= 28835) {
-		//	Debugger.turnOn();
-		//	Debugger.log("Before processing " +t.toString());
-		//	Debugger.log(this.toString());
-		//}
 		Long repS = rep.get(t.s);
 		Long repO = rep.get(t.o);
 		Long pSource = ps.get(t.p);
@@ -130,13 +125,13 @@ public class WeakSummarization extends fr.inria.cedar.quotientSummary.summaries.
 		case RS_RP_RO: handleDataTriple_RS_RP_RO(t); break; 
 		}
 
-		Debugger.log("After processing triple " + t.toString() + ", we have:\n" + this.toString()); 
-		safetyCheck(); 
+		//Debugger.log("After processing triple " + t.toString() + ", we have:\n" + this.toString()); 
+		//safetyCheck(); 
 	}
 
 	private void replaceAll(Long oldNode, Long newNode, Long forProperty){
-		Debugger.log("WEAK REPLACE-ALL " + oldNode + " with " + newNode + " for property " + forProperty + " in: ");
-		Debugger.log(this.toString());
+		//Debugger.log("WEAK REPLACE-ALL " + oldNode + " with " + newNode + " for property " + forProperty + " in: ");
+		//Debugger.log(this.toString());
 		replaceInSummary(oldNode, newNode);
 		//Debugger.log("Representation was: "); 
 		//showRep(); 
@@ -203,9 +198,9 @@ public class WeakSummarization extends fr.inria.cedar.quotientSummary.summaries.
 	}
 
 	private void handleDataTriple_RS_RP_UO(Triple t) {
-		Debugger.log("================== RS_RP_UO on " + t.toString() + " starts on");
-		Debugger.log(this.toString()); 
-		safetyCheck(); 
+		//Debugger.log("================== RS_RP_UO on " + t.toString() + " starts on");
+		//Debugger.log(this.toString()); 
+		//safetyCheck(); 
 
 		// the subject and property have been represented, not the object. In this case we must:
 		// - represent the object by the target of the property 
@@ -215,25 +210,25 @@ public class WeakSummarization extends fr.inria.cedar.quotientSummary.summaries.
 
 		Long sourceP = ps.get(t.p);
 		long repS = rep.get(t.s); 
-		Debugger.log("RS_RP_UO 1. repS: " + repS + " sourceP: " + sourceP + " we should keep the smaller"); 
-		Debugger.log("RS_RP_UO 2. targetP: " + targetP);
+		//Debugger.log("RS_RP_UO 1. repS: " + repS + " sourceP: " + sourceP + " we should keep the smaller"); 
+		//Debugger.log("RS_RP_UO 2. targetP: " + targetP);
 		if (repS < sourceP){ // we keep repS, replace sourceP with repS all over
-			Debugger.log("RS_RP_UO 3. Replacing " + sourceP + " with " + repS); 
+			//Debugger.log("RS_RP_UO 3. Replacing " + sourceP + " with " + repS); 
 			replaceAll(sourceP, repS, t.p); 
-			Debugger.log("RS_RP_UO 4. After replacement but before triple addition (1)\n" + this.toString());
+			//Debugger.log("RS_RP_UO 4. After replacement but before triple addition (1)\n" + this.toString());
 			addTripleAndCheck(repS, t.p, targetP); 
-			Debugger.log("RS_RP_UO 5. After replacement and triple addition (1)\n" + this.toString());
+			//Debugger.log("RS_RP_UO 5. After replacement and triple addition (1)\n" + this.toString());
 		}
 		else{ 
 			if (repS > sourceP ) { // we keep sourceP, replace repS with sourceP all over
-				Debugger.log("RS_RP_UO 6. Replacing " + repS + " with " + sourceP); 
+				//Debugger.log("RS_RP_UO 6. Replacing " + repS + " with " + sourceP); 
 				replaceAll(repS, sourceP, t.p);
-				Debugger.log("RS_RP_UO 7. After replacement but before triple addition (2)\n" + this.toString());
+				//Debugger.log("RS_RP_UO 7. After replacement but before triple addition (2)\n" + this.toString());
 			}
 			// add the edge in any case
 			addTripleAndCheck(sourceP, t.p, targetP); 
-			Debugger.log("RS_RP_UO 8. After replacement and triple addition (2)\n" + this.toString());
-			safetyCheck();
+			//Debugger.log("RS_RP_UO 8. After replacement and triple addition (2)\n" + this.toString());
+			//safetyCheck();
 		}
 	}
 
@@ -326,7 +321,7 @@ public class WeakSummarization extends fr.inria.cedar.quotientSummary.summaries.
 
 	private void addTripleAndCheck(Long s, long p, Long o) {
 		addTriple(s, p, o); 
-		safetyCheck(); //This may have been called too early
+		//safetyCheck();
 	}
 
 	private char identifyTripleSummarizationCase(boolean sRepresented, boolean pRepresented, boolean oRepresented) {
@@ -362,6 +357,7 @@ public class WeakSummarization extends fr.inria.cedar.quotientSummary.summaries.
 	 * @throws IOException
 	 */
 	public void summarizeFromRDBMS(Connection conn, String[] args) {
+		long start = System.currentTimeMillis(); 
 		String dataTriplesFileName = args[0];
 		// this is needed to find the constants associated to special RDF properties
 		RDF2SQLEncoding.setUp(conn); 
@@ -371,21 +367,15 @@ public class WeakSummarization extends fr.inria.cedar.quotientSummary.summaries.
 		}
 		String getUntypedTriplesString = ("select *  from encoded_triples where p <> " + typeConstantCode); 
 		try{
+			conn.setAutoCommit(false);
 			Statement getUntypedTriples = conn.createStatement(); 
+			getUntypedTriples.setFetchSize(10000);
 			ResultSet rs = getUntypedTriples.executeQuery(getUntypedTriplesString);
 			globalTripleCount = 0;
 			while (rs.next()){
-				long s = rs.getInt(1); 
-				long p = rs.getInt(2); 
-				long o = rs.getInt(3); 
-				Triple t = new Triple(s, p, o); 
-				try{
-					Debugger.log("#### Triple " + t.toString());
-					handleDataTriple(t); 
-				}
-				catch(Exception e){
-					e.printStackTrace(); 
-				}
+				Triple t = new Triple(rs.getInt(1), rs.getInt(2), rs.getInt(3)); 
+				Debugger.log("#### Triple " + t.toString());
+				handleDataTriple(t); 
 				//Files.write(Paths.get("output.txt"), (globalTripleCount + ": " + new String(s + " " + p + " " + o + "\n")).getBytes(), StandardOpenOption.APPEND); 
 				globalTripleCount++; 
 				//if ((globalTripleCount % 1000 == 0)) {//|| (globalTripleCount > 28800)) {
@@ -393,23 +383,24 @@ public class WeakSummarization extends fr.inria.cedar.quotientSummary.summaries.
 				//}
 			}
 			rs.close();
+			getUntypedTriples.close();
 		}
 		catch(SQLException e) {
 			throw new IllegalStateException("Postgres error encountered while summarizing data triples " + e.toString()); 
 		}
-		System.out.println("Summarized " + globalTripleCount + " triples.");
-
+		long afterDataTriples = System.currentTimeMillis(); 
+		System.out.println("Summarized " + globalTripleCount + " data triples in " + (afterDataTriples - start) + " ms.");
+ 
 		String getTypedTriplesString = ("select *  from encoded_triples where p=" + typeConstantCode); 
 		try {
 			Statement getTypedTriples = conn.createStatement(); 
+			getTypedTriples.setFetchSize(1000);
 			ResultSet rs = getTypedTriples.executeQuery(getTypedTriplesString);
-			while (rs.next()){	
-				long s = rs.getInt(1);	
-				long p = rs.getInt(2);	
-				long o = rs.getInt(3);	
-				Triple t = new Triple(s, p, o); 
+			while (rs.next()){		
+				Triple t = new Triple(rs.getInt(1), rs.getInt(2), rs.getInt(3)); 
 				//Debugger.log("#### Type triple " + t.toString());
 				this.handleTypeTriplesAfterData(t);
+				globalTripleCount ++; 
 			}
 			rs.close();
 			getTypedTriples.close();
@@ -417,6 +408,7 @@ public class WeakSummarization extends fr.inria.cedar.quotientSummary.summaries.
 		catch(SQLException e) {
 			throw new IllegalStateException("Postgres error encountered while summarizing type triples: " + e.toString()); 
 		}
+		System.out.println("Summarized " + globalTripleCount + " triples in " + (System.currentTimeMillis() - start)  + " ms."); 
 		this.display(dataTriplesFileName);
 	}
 	void safetyCheck(){

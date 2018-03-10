@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.HashMap;
 
 import fr.inria.cedar.quotientSummary.datastructures.DecodedTriple;
@@ -27,6 +26,9 @@ public class RDF2SQLEncoding {
 	static HashMap<String, Long> uriOrLiteralToCode; 
 
 	static Connection conn;
+	
+	protected static PreparedStatement stmtDecode; 
+	protected static PreparedStatement stmtEncode; 
 
 	/** 
 	 * It is crucial to call this method in order for the summarization or any summary usage code to work OK.
@@ -35,6 +37,13 @@ public class RDF2SQLEncoding {
 	 */
 	public static void setUp(Connection givenConn) {
 		conn = givenConn; 
+		try {
+			stmtDecode = conn.prepareStatement("select value from dictionary where key=?"); 
+			stmtEncode = conn.prepareStatement("select key from dictionary where value=?");
+		}
+		catch(SQLException e) {
+			throw new IllegalStateException("Could not prepare encode/decode statements " + e.toString()); 
+		}
 		codeToURIOrLiteral = new HashMap<>(); 
 		uriOrLiteralToCode = new HashMap<>(); 
 		setRDFBuiltInPropertyCodes(); 
@@ -105,21 +114,19 @@ public class RDF2SQLEncoding {
 		if (alreadyKnownCode != null) {
 			return alreadyKnownCode; 
 		}
-		String learnCodeQueryString = "select key from dictionary where value = '" + URI + "';";
 		long code = -1; 
 		try {
-			Statement learnCode = conn.createStatement(); 
-			ResultSet rs = learnCode.executeQuery(learnCodeQueryString);
+			stmtEncode.setString(1, URI);
+			ResultSet rs = stmtEncode.executeQuery(); 
 			//Debugger.log("Asked query: " + learnCodeQueryString);
-			while (rs.next()){
+			if (rs.next()){
 				code  = rs.getInt(1); 
 				//Debugger.log("The code of " + URI + " is: " + constantCode);
-				break; 
 			}
 			rs.close(); 
 		}
 		catch(SQLException e) {
-			throw new IllegalStateException("Not able to encode"); 
+			throw new IllegalStateException("Not able to encode " + e.toString()); 
 		}
 		// feed the cache: 
 		uriOrLiteralToCode.put(URI, code); 
@@ -132,9 +139,8 @@ public class RDF2SQLEncoding {
 			return alreadyKnownURIOrLiteral; 
 		}
 		try {
-			PreparedStatement pstmt = conn.prepareStatement("select value from dictionary where key=?"); 
-			pstmt.setLong(1, URL);
-			ResultSet rs = pstmt.executeQuery();
+			stmtDecode.setLong(1, URL);
+			ResultSet rs = stmtDecode.executeQuery();
 			if (rs.next()) {
 				String s = rs.getString(1); 
 				// feed the cache: 
@@ -158,7 +164,7 @@ public class RDF2SQLEncoding {
 		return false;
 	}
 
-	public static DecodedTriple decode(Triple t) throws SQLException {
+	public static DecodedTriple decode(Triple t)  {
 		return new DecodedTriple(dictionaryDecode(t.s), dictionaryDecode(t.p), dictionaryDecode(t.o)); 
 	}
 }

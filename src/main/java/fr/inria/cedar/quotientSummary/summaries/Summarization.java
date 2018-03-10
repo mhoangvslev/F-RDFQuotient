@@ -360,67 +360,92 @@ public class Summarization {
 	 * @param rdfFileName
 	 * @throws SQLException
 	 */
-	public void saveSummaryInPostgres(Connection conn, String rdfFileName) throws SQLException {
-		System.out.println("Attempting to save " + this.getClass().getName() + " in Postgres");
-		try (Statement stmt = conn.createStatement()) {
+	public void saveSummaryInPostgres(Connection conn, String rdfFileName) {
+		System.out.println("Saving " + this.getClass().getName() + " in Postgres...");
+		Statement stmt; 
+		try {
+			long start = System.currentTimeMillis(); 
+			conn.setAutoCommit(false);
+			stmt = conn.createStatement();
 			// create the table (it may have existed)
 			if (!existsTable(conn, "encoded_rep")) {			
 				stmt.execute("create table encoded_rep(graphNode int not null, summaryNode int not null); ");
 			} else {
-				System.out.println("Did not created encoded_rep table as it was already there");
+				Debugger.log("Did not created encoded_rep table as it was already there");
 			}
 			// empty it (even if the creation failed, e.g. because the table was already there)
 			stmt.executeUpdate("delete from encoded_rep; "); 
 
 			// now insert all the rep entries:
 			String insertIntoRep = "insert into encoded_rep values(?, ?);"; 
-			try (PreparedStatement insertInRep = conn.prepareStatement(insertIntoRep)) {
-				Set<Long> origNodes = this.rep.getNodes(); 
-				for (Long origNode: origNodes) {
-					Long sumNode = this.rep.get(origNode); 
-					insertInRep.setLong(1, origNode);
-					insertInRep.setLong(2, sumNode);
-					insertInRep.executeUpdate(); 
-				}
-		//		if (!hasIndex(conn, "encoded_rep")) {
-		//			stmt.executeUpdate("create index indRepS on encoded_rep(graphNode); ");
-		//		} This gives some erros in the JDBC driver, perhaps it is not implemented properly.
-				if (!existsTable(conn, "encoded_summary")) {		
-					stmt.execute("create table encoded_summary(s int not null, p int not null, o int not null); ");
-				}
-				// empty it (even if the creation failed, e.g. because the table was already there)
-				stmt.executeUpdate("delete from encoded_summary; "); 
+			PreparedStatement insertInRep = conn.prepareStatement(insertIntoRep); 
+			Set<Long> origNodes = this.rep.getNodes(); 
+			for (Long origNode: origNodes) {
+				Long sumNode = this.rep.get(origNode); 
+				insertInRep.setLong(1, origNode);
+				insertInRep.setLong(2, sumNode);
+				insertInRep.executeUpdate(); 
 			}
-		} catch(SQLException e) {
-			e.printStackTrace();
+			//		if (!hasIndex(conn, "encoded_rep")) {
+			//			stmt.executeUpdate("create index indRepS on encoded_rep(graphNode); ");
+			//		} This gives some erros in the JDBC driver, perhaps it is not implemented properly.
+			conn.commit();
+			System.out.println("Saved representation function in " + (System.currentTimeMillis() - start) + " ms.");
 		}
-		// now insert all the summary edges:
-		String insertIntoSummary = "insert into encoded_summary values(?, ?, ?);"; 
-		try (PreparedStatement insertInSummary= conn.prepareStatement(insertIntoSummary)) {
-			ArrayList<Triple> edges = this.getSummaryEdges(); 
-			for (Triple t: edges) {
-				insertInSummary.setLong(1, t.s);
-				insertInSummary.setLong(2, t.p);
-				insertInSummary.setLong(3, t.o);
-				insertInSummary.executeUpdate(); 
+		catch(SQLException e) {
+			throw new IllegalStateException("Could not insert summary triples in encoded_rep " + e.toString()); 
+		}
+
+		try {
+			conn.setAutoCommit(false);
+			long start = System.currentTimeMillis(); 
+			if (!existsTable(conn, "encoded_summary")) {			
+				stmt.execute("create table encoded_summary(s int not null, p int not null, o int not null); ");
 			}
-//			if (!hasIndex(conn, "encoded_summary")) {
-//				stmt.executeUpdate("create index indSummaryS on encoded_summary(s); ");
-//			}
-			System.out.println("Summary saved in Postgres.");
+			// empty it (even if the creation failed, e.g. because the table was already there)
+			stmt.executeUpdate("delete from encoded_summary; "); 
+
+			// now insert all the summary edges:
+			String insertIntoSummary = "insert into encoded_summary values(?, ?, ?);"; 
+			try (PreparedStatement insertInSummary= conn.prepareStatement(insertIntoSummary)) {
+				ArrayList<Triple> edges = this.getSummaryEdges(); 
+				for (Triple t: edges) {
+					insertInSummary.setLong(1, t.s);
+					insertInSummary.setLong(2, t.p);
+					insertInSummary.setLong(3, t.o);
+					insertInSummary.executeUpdate(); 
+				}
+				//			if (!hasIndex(conn, "encoded_summary")) {
+				//				stmt.executeUpdate("create index indSummaryS on encoded_summary(s); ");
+				//			}
+				conn.commit();
+				insertInSummary.close();
+				System.out.println("Summary edges saved in " + (System.currentTimeMillis() - start) + " ms."); 
+				System.out.println("Summary saved in Postgres.");
+			}
+		}
+		catch(SQLException e) {
+			throw new IllegalStateException("Could not insert summary triples in encoded_summary " + e.toString()); 
 		}
 	}
 
-	static protected boolean existsTable(Connection conn, String tableName) throws SQLException {
-		DatabaseMetaData meta = conn.getMetaData();
-		try (ResultSet res = meta.getTables(null, null, tableName, new String[] {"TABLE"})) {
+	static protected boolean existsTable(Connection conn, String tableName) {
+		try {	
+			ResultSet res = conn.getMetaData().getTables(null, null, tableName, new String[] {"TABLE"}) ;
 			return res.next();  
 		}
+		catch(SQLException e) {
+			throw new IllegalStateException("Could not find out if table " + tableName + " exists " + e.toString()); 
+		}
 	}
-	static protected boolean hasIndex(Connection conn, String tableName) throws SQLException {
-		DatabaseMetaData meta = conn.getMetaData();
-		try (ResultSet res = meta.getIndexInfo(null, null, tableName, true, true)) {
+	static protected boolean hasIndex(Connection conn, String tableName) {
+		try{
+			DatabaseMetaData meta = conn.getMetaData();
+			ResultSet res = meta.getIndexInfo(null, null, tableName, true, true); 
 			return res.next();  
+		}
+		catch(SQLException e) {
+			throw new IllegalStateException("Could not find out if an index exists on " + tableName + e.toString()); 
 		}
 	}
 
@@ -444,7 +469,7 @@ public class Summarization {
 		else {
 			summaryNTFileName = rdfFileName + "-sum.nt"; 
 		}
-		System.out.println("Decoding summary and saving it in .nt format in " + summaryNTFileName); 
+		System.out.println("Decoding summary and saving it in .nt format in " + summaryNTFileName + "..."); 
 		this.gatherStatistics();
 		try {
 			BufferedWriter bw = new BufferedWriter(new FileWriter (new File(summaryNTFileName))); 
@@ -573,7 +598,7 @@ public class Summarization {
 			throw new IllegalStateException("Could not write encoded summary to file: " + fileName + ". Is the path correct?"); 
 		}
 	}
-	
+
 
 	private void writeEncodedTripleToFile(BufferedWriter bw) throws IOException{
 		for (Triple t: getSummaryEdges()){
