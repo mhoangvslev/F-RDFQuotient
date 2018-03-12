@@ -212,7 +212,7 @@ public class SummaryBuilder {
 		}				
 
 		//Schema conversor
-		if(config.getStorageSchema().equals(StorageSchema.TABLE_PER_ROLE_AND_CONCEPT)){
+		if(config.getStorageLayout().equals(StorageSchema.TABLE_PER_ROLE_AND_CONCEPT)){
 			System.out.println("Converting graph schema...");
 			RDFGraphSchemaConversor.process(DEFAULT_CONFIG_FILE);
 			System.out.println("Conversion finished");	
