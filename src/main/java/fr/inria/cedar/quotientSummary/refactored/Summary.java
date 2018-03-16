@@ -1,5 +1,6 @@
-package fr.inria.cedar.quotientSummary.summaries;
+package fr.inria.cedar.quotientSummary.refactored;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -20,9 +21,10 @@ import java.util.Set;
 import fr.inria.cedar.commons.miscellaneous.Debugger;
 import fr.inria.cedar.quotientSummary.datastructures.Long2Long;
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
+import fr.inria.cedar.quotientSummary.summaries.weak.WeakSummarization;
 import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 
-public class Summarization {
+public class Summary {
 	protected Long2Long rep; // representative function for untyped nodes
 
 	protected boolean typeTriplesExist = false; 
@@ -36,19 +38,16 @@ public class Summarization {
 	// for each summary edge, the number of graph edge it represents
 	protected HashMap<Triple, Long> summaryEdgeStatistics; 
 
-	protected long maxSummaryNode; 
-
 	protected boolean typeOnlyNodeAlreadySeen;
 	protected long typeOnlyNodeID;
 
 	protected Triple lastReadTriple; 
-	protected long numberOfDataTriplesRead; 
-	protected long numberOfTypeTriplesRead; 
-
+	
+	protected long maxSummaryNode; 
 	protected Properties properties; 
 	protected static String SUMMARY_CONFIG_FILE="conf/summarization.properties"; 
 
-	public Summarization(){
+	public Summary(){
 		rep = new Long2Long();
 		edges = new HashMap<Long, HashMap<Long, ArrayList<Long>>>();
 		summaryNodeStatistics = new HashMap<Long, Long>(); 
@@ -300,26 +299,10 @@ public class Summarization {
 		}
 	}
 
-
-	/** This implementation should be shared by Weak and Strong
-	 * 
-	 * @param t
-	 */
-	protected void handleTypeTriplesAfterData(Triple t) {
-		Long repS = rep.get(t.s);
-		if (repS != null){
-			addTriple(repS, t.p, t.o);
-		}
-		else{
-			if (!typeOnlyNodeAlreadySeen){
-				this.typeOnlyNodeID = getNextSummaryNode();
-				typeOnlyNodeAlreadySeen=true;
-			}
-			addTriple(typeOnlyNodeID, t.p, t.o); 
-		}
-		this.numberOfTypeTriplesRead++;
+	protected void handleTypeTripleAfterData(Triple t) {
+		throw new IllegalStateException("Not implemented at this level"); 
 	}
-
+	
 	/**
 	 * Saves a summary as two Postgres tables: one is rep (the representation function)
 	 * the other one is the set of summary edges, encoded as integers.
@@ -601,4 +584,85 @@ public class Summarization {
 			throw new IllegalStateException("Could not write encoded summary to dot file: " + dotFile + ". Is the path correct?"); 
 		}
 	}
+	
+	/** Reads an encoded weak summary from an .nt file 
+	 *  TODO the method is currently insufficient as in the summary that has been read, the codes of special properties are not known.
+	 *  Either fix by starting the serialization in a file with the five magic constants, or don't use for now.
+	 *  Instead, use readSummaryFromPostgres (below).
+	 * @param args
+	 * @return
+	 * @throws IOException
+	 */
+	public static Summary readSummaryFromFile(String[] args) throws IOException {
+		Summary sum = new Summary(); 
+		String summaryTripleFileName = args[0]; 
+		System.out.println("Trying to read an encoded summary from file:" + summaryTripleFileName);
+		try (BufferedReader br = new BufferedReader(new FileReader(new File(summaryTripleFileName)))) {
+			while (br.ready()){
+				String spo = br.readLine().replaceAll("<", "").replaceAll(">", ""); 
+				Triple t = sum.readTriple(spo);
+				sum.addTriple(t.s, t.p, t.o);
+			}
+		}
+		return sum; 
+	}
+
+	public  Summary (Connection conn) throws SQLException {
+		Debugger.log("Trying to read summary from Postgres");
+		RDF2SQLEncoding.setUp(conn); 
+		Debugger.log("Set up special URIs from dictionary"); 
+		String getSummaryTriples = ("select *  from encoded_summary"); 
+		try(Statement getTriples = conn.createStatement(); 
+			// Debugger.log("Created statement");
+			ResultSet rs = getTriples.executeQuery(getSummaryTriples)
+			// Debugger.log("Asking for summary triples")
+			) {
+			while (rs.next()) {
+				Long s = rs.getLong(1);
+				Long p = rs.getLong(2); 
+				Long o = rs.getLong(3);
+				this.addTriple(s, p, o);
+			}
+		}
+		System.out.println("Read summary from Postgres"); 
+	}
+	
+	public void summarizeFromRDBMS(Connection conn, String[] args) {
+		throw new IllegalStateException("This method is not defined for " + this.getClass().getName());  
+	}
+
+	public static Summary readSummaryFromPostgres(Connection conn) {
+		Summary sum = new Summary(); 
+		Debugger.log("Trying to read summary from Postgres");
+		RDF2SQLEncoding.setUp(conn); 
+		Debugger.log("Set up special URIs from dictionary"); 
+		String getSummaryTriples = ("select *  from encoded_summary"); 
+		try{
+			Statement getTriples = conn.createStatement(); 
+			// Debugger.log("Created statement");
+			ResultSet rs = getTriples.executeQuery(getSummaryTriples); 
+			// Debugger.log("Asking for summary triples")
+			while (rs.next()) {
+				Long s = rs.getLong(1);
+				Long p = rs.getLong(2); 
+				Long o = rs.getLong(3);
+				sum.addTriple(s, p, o);
+			}
+		}
+		catch(SQLException e) {
+			throw new IllegalStateException("Unable to read summary from Postgres"); 
+		}
+		System.out.println("Read summary from Postgres"); 
+		return sum; 
+	}
+	
+	/**
+	 * This method is needed by specialization classes when they are read from Postgres.
+	 * They need to 
+	 * @return
+	 */
+	public HashMap<Long, HashMap<Long, ArrayList<Long>>> getEdgesAsInternallyStored() {
+		return this.edges; 
+	}
+	
 }

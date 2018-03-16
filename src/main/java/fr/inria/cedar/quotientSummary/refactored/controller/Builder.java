@@ -1,4 +1,4 @@
-package fr.inria.cedar.quotientSummary.summaries;
+package fr.inria.cedar.quotientSummary.refactored.controller;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -23,11 +23,15 @@ import fr.inria.cedar.ontosql.rdfdb.dictionaryencoder.RDFGraphDictionaryEncoder;
 import fr.inria.cedar.ontosql.rdfdb.graphsaturator.RDFGraphSaturator;
 import fr.inria.cedar.ontosql.rdfdb.schemaconversor.RDFGraphSchemaConversor;
 import fr.inria.cedar.ontosql.rdfgraphstatsgen.RDFGraphStatisticsGenerator;
-import fr.inria.cedar.quotientSummary.summaries.weak.WeakSummarization;
+import fr.inria.cedar.quotientSummary.refactored.Summary;
+import fr.inria.cedar.quotientSummary.refactored.weak.WeakSummary;
+import fr.inria.cedar.quotientSummary.refactored.weak.TypedWeakSummary;
+import fr.inria.cedar.quotientSummary.refactored.strong.StrongSummary;
+import fr.inria.cedar.quotientSummary.refactored.strong.TypedStrongSummary;
 
-public class SummaryBuilder {
+public class Builder {
 
-	public SummaryBuilder() {
+	public Builder() {
 		try {
 			getConnection(); 
 		} catch(Exception e) {
@@ -37,11 +41,7 @@ public class SummaryBuilder {
 
 	// Default properties file
 	private static final String DEFAULT_CONFIG_FILE = System.getProperty("user.dir")+"/conf/dataLoading.properties";
-	// Sample data set
-	//private static final String DATA_SET = System.getProperty("user.dir")+"/resources/rdf-nt-files/dataSetFile.nt";
-	// Sample ontology file
-	//private static String ONTOLOGY_FILE =System.getProperty("user.dir")+"/resources/ontology-files/frenchpolitican.rdf";
-
+	
 	/**
 	 * 
 	 * @param args
@@ -77,10 +77,7 @@ public class SummaryBuilder {
 				return;
 			}
 		}
-		if (args[0].toLowerCase().equals("summarizeencodedfile")) {
-			summarizeEncodedFile(nextArguments); 
-			return;
-		}
+		
 		printUsage(); 
 
 	}
@@ -127,20 +124,6 @@ public class SummaryBuilder {
 		return conn; 
 	}
 
-	/**
-	 * This method summarizes an RDF graph which it expects to find in two files:
-	 * - a first .nt file with the type triples;
-	 * - a second .nt file with the data triples.
-	 * @param args
-	 * @throws IOException 
-	 * @throws FileNotFoundException 
-	 */
-	public static void summarizeEncodedFile(String[] args) throws FileNotFoundException, IOException {
-		// TODO decode one more argument to know which summarization to use, when more are implemented
-		WeakSummarization ws = new WeakSummarization();
-		Debugger.turnOff();
-		ws.summarizeFromTripleFiles(args[0], args[1]);
-	}
 
 	/**
 	 * Supposes the graph has already been loaded
@@ -149,15 +132,38 @@ public class SummaryBuilder {
 	 * @throws SQLException 
 	 */
 	public static void summarizeGraphFromPostgres(Connection conn, String[] args) throws SQLException, IOException {
-		// TODO decode one more argument to know which summarization to use, when more are implemented
-		WeakSummarization ws = new WeakSummarization();
+		Summary sum = createNewSummary(args[0]); 
 		Debugger.turnOff();
-		ws.summarizeFromRDBMS(conn, args);  
+		sum.summarizeFromRDBMS(conn, extractArguments(args)); 
 		System.out.println("RDF graph summarized.");
-		ws.saveSummaryInPostgres(conn, args[0]);
-		ws.writeDecodedSummaryToNTFile(conn, args[0]);
+		sum.saveSummaryInPostgres(conn, args[1]);
+		sum.writeDecodedSummaryToNTFile(conn, args[1]);
 		//ws.writeSummaryToDotFile(conn, (args[0]+ "-toDot.txt"));  
 	}
+
+	private static Summary createNewSummary(String summaryType) {
+		String lowerCaseSummaryType = summaryType.toLowerCase();
+		switch(lowerCaseSummaryType) {
+			case("weak"): return new WeakSummary(); 
+			case("strong"): return new StrongSummary();
+			case("typedweak"): return new TypedWeakSummary(); 
+			case("typedstrong"): return new TypedStrongSummary(); 
+		}
+		return null;
+	}
+
+
+	private static Summary readSummaryFromPostgres(String summaryType, Connection conn) {
+		String lowerCaseSummaryType = summaryType.toLowerCase();
+		switch(lowerCaseSummaryType) {
+			case("weak"): return new WeakSummary(conn); 
+			case("strong"): return new StrongSummary(conn);
+			case("typedweak"): return new TypedWeakSummary(conn); 
+			case("typedstrong"): return new TypedStrongSummary(conn); 
+		}
+		return null;
+	}
+
 
 	/**
 	 * Small helper function to extract all but the first argument
@@ -265,7 +271,4 @@ public class SummaryBuilder {
 		System.out.println("args[0]=summarizeEncodedFile: build the summary out of integer-encoded triples in a file"); 
 	}
 
-
 }
-
-
