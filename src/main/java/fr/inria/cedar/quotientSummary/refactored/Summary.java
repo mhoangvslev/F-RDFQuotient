@@ -578,6 +578,7 @@ public class Summary {
 				if (t.p == RDF2SQLEncoding.getTypeCode()) {
 					// if this is a type triple, decode the object, too: concretely, this changes the object string
 					object = getShortURIForDot(RDF2SQLEncoding.dictionaryDecode(t.o)); 
+					property = "rdf:type"; 
 					bw.write("\"" + object.replaceAll("\"", "") + "\" [style = filled, color=darkseagreen];\n");  
 					bw.write("\"" + subject.replaceAll("\"", "") + "\"" + " -> \""+ 
 							object.replaceAll("\"", "") + 
@@ -597,6 +598,16 @@ public class Summary {
 			throw new IllegalStateException("Unable to open the DOT file to for the summary: " + e.toString()); 
 		}
 		System.out.println("Summary written to DOT file " + dotFileName + "."); 
+			
+		String pathToDot = properties.getProperty("pathToDot"); 
+		try {
+			String pngFileName = dotFileName.substring(0, dotFileName.length() - 4) + ".png"; 
+			Runtime.getRuntime().exec(pathToDot + " -Tpng " + dotFileName + " -o " + 
+					pngFileName);
+			System.out.println("Summary drawn to PNG file " + pngFileName + "."); 
+		} catch (IOException e) {
+			System.out.println("Could not turn .dot file into .png (check the pathToDot value in summarization.properties)" + e.toString());
+		} 
 	}
 
 	/** 

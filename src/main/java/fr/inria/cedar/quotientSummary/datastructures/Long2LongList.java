@@ -1,42 +1,44 @@
 package fr.inria.cedar.quotientSummary.datastructures;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
-import java.util.TreeSet;
 
-public class Long2LongSet {
-final HashMap<Long, TreeSet<Long>> map;
+public class Long2LongList {
+	// clique ID --> set of properties
+	// or: class set ID --> set of types
+	final HashMap<Long, ArrayList<Long>> map;
 	
-	public Long2LongSet(){
+	public Long2LongList(){
 		map = new HashMap<>();
 	}
 	
-	public TreeSet<Long> get(long node){
+	public ArrayList<Long> get(long node){
 		return map.get(new Long(node));
 	}
 	
-	public void put(long item, long set){
-		TreeSet<Long> theSet = map.get(new Long(set));
-		if (theSet == null){
-			theSet = new TreeSet<>();
-			map.put(set,  theSet);
+	public void put(long property, long clique){
+		ArrayList<Long> theClique = map.get(new Long(clique));
+		if (theClique == null){
+			theClique = new ArrayList<>();
+			map.put(clique,  theClique);
 		}
-		if (!theSet.contains(item)){
-			theSet.add(new Long(item));
+		if (theClique.indexOf(property)==-1){
+			theClique.add(new Long(property));
 		}
 	}
 	public void remove(Long node){
 		map.remove(node);
 	}
-	public void put(long property, TreeSet<Long> item){
-		map.put(property, item);
+	public void put(long property, ArrayList<Long> clique){
+		map.put(property, clique);
 	}
 
 	// merges the entry of the first param into the entry of the second
 	// then removes the entry of the first
 	public void fuseKeyInto(Long l1, Long l2) {
-		TreeSet<Long> ll1 = map.get(l1);
-		TreeSet<Long> ll2 = map.get(l2);
+		ArrayList<Long> ll1 = map.get(l1);
+		ArrayList<Long> ll2 = map.get(l2);
 		if ((ll1 != null) && (ll2 != null)){
 			// added all content of l1 into l2
 			for (Long i1: ll1){
@@ -55,7 +57,7 @@ final HashMap<Long, TreeSet<Long>> map;
 		sb.append("==============: \n");
 		for (Long key: map.keySet()){
 			sb.append("#"+ key + "|{");
-			TreeSet<Long> values = map.get(key);
+			ArrayList<Long> values = map.get(key);
 			for (Long val: values){
 				sb.append(val + ", ");
 			}

@@ -10,6 +10,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.TreeSet;
 
 import fr.inria.cedar.commons.miscellaneous.Debugger;
 import fr.inria.cedar.quotientSummary.datastructures.Long2Long;
@@ -64,6 +65,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 	 * @throws IOException
 	 */
 	public void summarizeFromRDBMS(Connection conn, String[] args) {
+		Debugger.setFlag(true);
 		long start = System.currentTimeMillis(); 
 		String dataTriplesFileName = args[0];
 		// this is needed to find the constants associated to special RDF properties
@@ -312,77 +314,63 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 	}
 
 	public void handleTypeTripleBeforeData(Triple t){
-		//display();
-		//System.out.println("handleTypeTriple");
-		Long classSetIDForThisType = c2cs.get(t.o);
-		if (classSetIDForThisType == null){
-			classSetIDForThisType = getNextSummaryNode(); 
-			c2cs.put(new Long(t.o), classSetIDForThisType);
-			System.out.println("Created class set ID " + classSetIDForThisType + " for type " + t.o + 
-					"  " + RDF2SQLEncoding.dictionaryDecode(t.o)); 
+		Long prevClassSetOfS = this.n2cs.get(t.s);
+		if (prevClassSetOfS == null) {
+			prevClassSetOfS = getNextSummaryNode();
+			n2cs.put(t.s, prevClassSetOfS);
 		}
-		// now classSetIDForThisType exists
-		// create the class set for this type if necessary:
-		ArrayList<Long> thisTypeClassSet = cs.get(classSetIDForThisType);
-		if (thisTypeClassSet == null){
-			thisTypeClassSet = new ArrayList<>();
-			cs.put(classSetIDForThisType, thisTypeClassSet);
-
+		TreeSet<Long> thisSubjectClassSet = cs.get(prevClassSetOfS);
+		if (thisSubjectClassSet == null){
+			thisSubjectClassSet = new TreeSet<>();
+			cs.put(prevClassSetOfS, thisSubjectClassSet);
 		}
-		// add the type to this class set if necessary:
-		if (!(thisTypeClassSet.contains(t.o))){
-			System.out.println("Added type " + t.o + " to class set " + thisTypeClassSet);
-			thisTypeClassSet.add(t.o);
+		if (thisSubjectClassSet.contains(t.o)) {
+			// do nothing -- we knew s was of type o
+			Debugger.log("Already knew " + t.s + " was of type " + t.o);
 		}
-		// If the node had another class set before, fuse
-		Long thisNodeClassSetID = n2cs.get(new Long(t.s));
-
-		if (thisNodeClassSetID != null){ // the class sets need to be fused
-			ArrayList<Long> thisNodeClassSet = cs.get(thisNodeClassSetID);
-			if (thisNodeClassSetID < classSetIDForThisType){
-				//Debugger.log("(1) Fusing class set " + classSetIDForThisType + " into " + thisNodeClassSetID);
-				// unify both into thisNodeClassSetID:
-				// - thisNodeClassSet gets all the properties of thisTypeCS
-				for (Long cl: thisTypeClassSet){
-					thisNodeClassSet.add(cl);
-				}
-				// in this case, we are updating the class set of the o class
-				c2cs.put(t.o, thisNodeClassSetID);
-				// and the class set (thus, representative) of this node: 
-				n2cs.replaceValue(classSetIDForThisType, thisNodeClassSetID);
-				//n2cs.put(t.s, thisNodeClassSetID);
-				// all the nodes previously attached to thisNodeClassSetID need to change
-				cs.fuseKeyInto(classSetIDForThisType, thisNodeClassSetID);
+		else {	
+			// the class set of s needs to change get also o
+			TreeSet<Long> newClassSetOfS = new TreeSet<Long>();
+			newClassSetOfS.addAll(thisSubjectClassSet);
+			newClassSetOfS.add(t.o); 
+			//Either the union of the class plus t.o already existed:
+			long existingClassSetID = classSetID(newClassSetOfS); 
+			if (existingClassSetID>= 0) {
+				// then we need to connect t.s to that
+				n2cs.put(t.s, existingClassSetID);
+				Debugger.log("Attached " + t.s + " to the existing class set " + existingClassSetID);
 			}
-			if (thisNodeClassSetID > classSetIDForThisType){
-				Debugger.log("(2) Fusing class set " + thisNodeClassSetID + " into " + classSetIDForThisType);
-				// unify both into classSetIDForThisType:
-				// - classSetIDForThisType gets all the properties of thisNodeClassSet
-				for (Long cl: thisNodeClassSet){
-					thisTypeClassSet.add(cl);
-				}
-				// - replace the class set in cs:
-				cs.remove(thisNodeClassSetID);
-				n2cs.replaceValue(thisNodeClassSetID, classSetIDForThisType);
-				//n2cs.put(t.s, classSetIDForThisType);
-				// all the nodes previously attached to thisNodeClassSetID need to change
-				cs.fuseKeyInto(thisNodeClassSetID, classSetIDForThisType);
+			else {
+				//we need to create a new class set, move t.s to that class set, 
+				// detach t.s from its previous class set
+				long newClassSetID = getNextSummaryNode(); 
+				cs.put(newClassSetID, newClassSetOfS);
+				n2cs.put(t.s, newClassSetID);
+				Debugger.log("Attached " + t.s + " to the newly created class set " + newClassSetID);
 			}
-		}
-		else{ // the node did not have another class set before
-			n2cs.put(new Long(t.s), classSetIDForThisType);
 		}
 		// store the representation of t.s:
 		rep.put(t.s, n2cs.get(t.s));
-		System.out.println(t.s + " represented by " + n2cs.get(t.s));
+		Debugger.log(t.s + " represented by " + n2cs.get(t.s));
 		//display();
 		this.numberOfTypeTriplesRead ++; 
 	}
+	
+	private long classSetID(TreeSet<Long> newClassSetOfS) {
+		for (Long csNumber: cs.keys()) {
+			TreeSet<Long> classSet = cs.get(csNumber);
+			if (classSet.equals(newClassSetOfS)) {
+				return csNumber; 
+			}
+		}
+		return -1;
+	}
+
 	public void postHandleTypeTriples() {
-		for (Long classSetCode: this.cs.keys()){	
-			for (Long thisClass: this.cs.get(classSetCode)){
-				System.out.println("Adding triple " + classSetCode + " type " + RDF2SQLEncoding.dictionaryDecode(thisClass));
-				this.addTriple(classSetCode, RDF2SQLEncoding.getTypeCode(), thisClass);
+		for (Long node: this.n2cs.getNodes()) {
+			for (Long thisClass: this.cs.get(this.n2cs.get(node))) {
+				System.out.println("Adding triple " + thisClass + " type " + RDF2SQLEncoding.dictionaryDecode(thisClass));
+				this.addTriple(rep.get(node), RDF2SQLEncoding.getTypeCode(), thisClass);
 				checkTypeIsObject(); 
 				globalTripleCount ++; 
 			}

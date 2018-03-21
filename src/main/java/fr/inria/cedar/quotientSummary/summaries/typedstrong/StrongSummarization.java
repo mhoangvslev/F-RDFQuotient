@@ -10,7 +10,7 @@ import java.util.TreeSet;
 
 import fr.inria.cedar.commons.miscellaneous.Debugger;
 import fr.inria.cedar.quotientSummary.datastructures.Long2Long;
-import fr.inria.cedar.quotientSummary.datastructures.Long2LongSet;
+import fr.inria.cedar.quotientSummary.datastructures.Long2LongList;
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
 
 /**
@@ -20,9 +20,9 @@ import fr.inria.cedar.quotientSummary.datastructures.Triple;
  */
 public class StrongSummarization extends fr.inria.cedar.quotientSummary.summaries.Summarization 
 {
-	Long2LongSet sc; // for each source clique ID,  a source clique
-	Long2LongSet tc; // for each target clique ID,  its target clique
-	Long2LongSet cs; // for each class set ID, a class set
+	Long2LongList sc; // for each source clique ID,  a source clique
+	Long2LongList tc; // for each target clique ID,  its target clique
+	Long2LongList cs; // for each class set ID, a class set
 	Long2Long n2sc; // for each node, its source clique ID
 	Long2Long n2tc; // for each node, its target clique ID
 	Long2Long n2cs; // for each node, its class set ID. This is also the rep function for typed nodes
@@ -154,9 +154,9 @@ public class StrongSummarization extends fr.inria.cedar.quotientSummary.summarie
 	
 	public StrongSummarization(){
 		super(); 
-		sc = new Long2LongSet();
-		tc = new Long2LongSet();
-		cs = new Long2LongSet();
+		sc = new Long2LongList();
+		tc = new Long2LongList();
+		cs = new Long2LongList();
 		n2sc = new Long2Long();
 		n2tc = new Long2Long();
 		n2cs = new Long2Long();
