@@ -81,10 +81,15 @@ public class RDF2SQLEncoding {
 
 	public static void setRDFBuiltInPropertyCodes() {
 		setTypeCode();
+		System.out.println("rdf:type code is " + typeCode); 
 		setSubClassCode();
+		System.out.println("rdfs:subclass  code is: " + subClassCode); 
 		setSubPropertyCode();
+		System.out.println("rdfs:subproperty code is: " + subPropertyCode); 
 		setDomainCode();
+		System.out.println("rdfs:domain code is: " + domainCode); 
 		setRangeCode();
+		System.out.println("rdfs:range code is: " + rangeCode); 
 	}
 	private static void setTypeCode()  {
 		typeCode = dictionaryEncode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type");

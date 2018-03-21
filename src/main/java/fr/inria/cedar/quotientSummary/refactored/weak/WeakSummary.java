@@ -9,6 +9,8 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 import fr.inria.cedar.commons.miscellaneous.Debugger;
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
@@ -26,9 +28,10 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 		Summary s = Summary.readSummaryFromPostgres(conn);
 		this.edges = s.getEdgesAsInternallyStored(); 
 	}
-	
+
 	public WeakSummary() {
 		super(); 
+		this.summaryTablePrefix = WEAK_SUMMARY_PREFIX; 
 	}
 
 	/**
@@ -41,33 +44,33 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 	public void summarizeFromTripleFiles(String typeTriplesFile, String dataTriplesFile) {
 		long start = System.currentTimeMillis(); 
 		try {
-		//  Second file: data triples	
-		try (BufferedReader br = new BufferedReader(new FileReader(new File(dataTriplesFile)))) {
-			while (br.ready()){
-				String spo = br.readLine();
-				Triple t = readTriple(spo);
-				//System.out.println("\n");
-				//t.display();
-				handleDataTriple(t);
-				//display();
-				//System.out.println();
+			//  Second file: data triples	
+			try (BufferedReader br = new BufferedReader(new FileReader(new File(dataTriplesFile)))) {
+				while (br.ready()){
+					String spo = br.readLine();
+					Triple t = readTriple(spo);
+					//System.out.println("\n");
+					//t.display();
+					handleDataTriple(t);
+					//display();
+					//System.out.println();
+				}
 			}
-		}
-		//System.out.println("=== After weak data triple summarization of "+ dataTriplesFile + ": ==================================");
-		//display();
+			//System.out.println("=== After weak data triple summarization of "+ dataTriplesFile + ": ==================================");
+			//display();
 
-		// First file: type triples
-		try (BufferedReader br = new BufferedReader(new FileReader(new File(typeTriplesFile)))) {
-			while (br.ready()){
-				String spo = br.readLine();
-				Triple t = readTriple(spo);
-				//t.display();
-				handleTypeTripleAfterData(t);
-				//System.out.println();
+			// First file: type triples
+			try (BufferedReader br = new BufferedReader(new FileReader(new File(typeTriplesFile)))) {
+				while (br.ready()){
+					String spo = br.readLine();
+					Triple t = readTriple(spo);
+					//t.display();
+					handleTypeTripleAfterData(t);
+					//System.out.println();
+				}
 			}
-		}
-		//System.out.println("=== After weak type triple summarization of " + typeTriplesFile + ": =================================== ");
-		//display();
+			//System.out.println("=== After weak type triple summarization of " + typeTriplesFile + ": =================================== ");
+			//display();
 		}
 		catch(IOException e) {
 			throw new IllegalStateException("Unable to open file " + dataTriplesFile + " or " + typeTriplesFile + ": " + e.toString()); 
@@ -76,7 +79,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 		System.out.println("Weak summarization took: "+ (stop - start));
 		display(dataTriplesFile); // this prints out and makes a DOT file
 	}
-	
+
 
 	/**
 	 * Summarizes an RDF graph assuming the data triples are in Postgres
@@ -86,6 +89,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 	 * @throws IOException
 	 */
 	public void summarizeFromRDBMS(Connection conn, String[] args) {
+		Debugger.setFlag(true);
 		long start = System.currentTimeMillis(); 
 		String dataTriplesFileName = args[0];
 		// this is needed to find the constants associated to special RDF properties
@@ -104,7 +108,15 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 			while (rs.next()){
 				Triple t = new Triple(rs.getInt(1), rs.getInt(2), rs.getInt(3)); 
 				Debugger.log("#### Triple " + t.toString());
-				handleDataTriple(t); 
+				if ((t.p == RDF2SQLEncoding.getSubClassCode()) ||
+						(t.p == RDF2SQLEncoding.getSubPropertyCode()) ||
+						(t.p == RDF2SQLEncoding.getDomainCode()) ||
+						(t.p == RDF2SQLEncoding.getRangeCode())) {
+					copySchemaTriple(t.s, t.p, t.o); 
+				}
+				else{
+					handleDataTriple(t); 
+				}
 				//Files.write(Paths.get("output.txt"), (globalTripleCount + ": " + new String(s + " " + p + " " + o + "\n")).getBytes(), StandardOpenOption.APPEND); 
 				globalTripleCount++; 
 				//if ((globalTripleCount % 1000 == 0)) {//|| (globalTripleCount > 28800)) {
@@ -119,7 +131,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 		}
 		long afterDataTriples = System.currentTimeMillis(); 
 		System.out.println("Summarized " + globalTripleCount + " data triples in " + (afterDataTriples - start) + " ms.");
- 
+
 		String getTypedTriplesString = ("select *  from encoded_triples where p=" + typeConstantCode); 
 		try {
 			Statement getTypedTriples = conn.createStatement(); 
@@ -140,7 +152,52 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 		System.out.println("Summarized " + globalTripleCount + " triples in " + (System.currentTimeMillis() - start)  + " ms."); 
 		this.display(dataTriplesFileName);
 	}
-	
+
+	protected void handleDataTriple(Triple t) {
+		System.out.println("### Data triple: " + t.toString());
+		Long repS = rep.get(t.s);
+		Long repO = rep.get(t.o);
+		Long pSource = ps.get(t.p);
+		Long pTarget = pt.get(t.p);
+		if ((pSource == null && pTarget != null) ||(pSource != null && pTarget == null)){
+			throw new Error("Source represented and target not represented, or the opposite"); 
+		}
+		boolean pRepresented = (pSource == null ? false: true); 
+		boolean sRepresented = (repS == null ? false: true); 
+		boolean oRepresented = (repO == null? false: true); 
+
+		char caseNumber = identifyTripleSummarizationCase(sRepresented, pRepresented, oRepresented); 
+		System.out.println(showCaseNumber(caseNumber));
+		switch(caseNumber){
+		case US_UP_UO: handleDataTriple_US_UP_UO(t); break; 
+		case US_UP_RO: handleDataTriple_US_UP_RO(t); break; 
+		case US_RP_UO: handleDataTriple_US_RP_UO(t); break; 
+		case US_RP_RO: handleDataTriple_US_RP_RO(t); break; 
+		case RS_UP_UO: handleDataTriple_RS_UP_UO(t); break; 
+		case RS_UP_RO: handleDataTriple_RS_UP_RO(t); break; 
+		case RS_RP_UO: handleDataTriple_RS_RP_UO(t); break; 
+		case RS_RP_RO: handleDataTriple_RS_RP_RO(t); break; 
+		default: throw new IllegalStateException("This case should not be encountered here"); 
+		}
+
+		System.out.println("After processing triple " + t.toString() + ", we have:\n" + this.toString()); 
+		//safetyCheck(); 
+	}
+
+	private String showCaseNumber(char caseNumber) {
+		switch(caseNumber) {
+		case US_UP_UO: return "US_UP_UO"; 
+		case US_UP_RO: return "US_UP_RO";  
+		case US_RP_UO: return "US_RP_UO"; 
+		case US_RP_RO: return "US_RP_RO"; 
+		case RS_UP_UO: return "RS_UP_UO";  
+		case RS_UP_RO: return "RS_UP_RO";  
+		case RS_RP_UO: return "RS_RP_UO";  
+		case RS_RP_RO: return "RS_RP_RO"; 
+		default: throw new IllegalStateException("Unrecognized case " + caseNumber); 
+		}
+	}
+
 
 	/** This implementation should be shared by Weak and Strong
 	 * 
@@ -159,6 +216,31 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 			addTriple(typeOnlyNodeID, t.p, t.o); 
 		}
 		this.numberOfTypeTriplesRead++;
+	}
+	protected void consistencyChecks(){
+		for (Long s: edges.keySet()){
+			HashMap<Long, ArrayList<Long>> triplesOfThisSubject = edges.get(s); 
+			if (triplesOfThisSubject == null){
+				throw new IllegalStateException("No triples whose subject is " + s); 
+			}
+			for (Long p: triplesOfThisSubject.keySet()){
+				ArrayList<Long> objectsOfThisSandP = triplesOfThisSubject.get(p);
+				if ((objectsOfThisSandP.size() > 1) && isDataProperty(p)){
+					throw new IllegalStateException("Subject " + s + " has more than one edge with label " + p); 
+				}
+				for (Long o: objectsOfThisSandP){
+					if (!this.ps.get(p).equals(s)){
+						throw new IllegalStateException("Source of " + p + " is not " + s + " but " + this.ps.get(p)); 
+					}
+					if (pt.get(p) == null) {
+						throw new IllegalStateException("No target for " + p); 
+					}
+					if (!this.pt.get(p).equals(o)){
+						throw new IllegalStateException("Target of " + p + " is not " + o + " but " + this.pt.get(p)); 
+					}
+				}
+			}
+		}
 	}
 
 

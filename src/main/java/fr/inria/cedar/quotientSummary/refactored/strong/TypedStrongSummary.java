@@ -19,6 +19,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	
 	public TypedStrongSummary() {
 		super();
+		this.summaryTablePrefix = TYPED_STRONG_SUMMARY_PREFIX; 
 	}
 
 	protected void handleTypeTripleAfterData(Triple t) {

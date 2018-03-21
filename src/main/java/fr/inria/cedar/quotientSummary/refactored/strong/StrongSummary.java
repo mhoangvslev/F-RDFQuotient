@@ -19,6 +19,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 
 	public StrongSummary() {
 		super(); 
+		this.summaryTablePrefix = "s_"; 
 	}
 
 	/** This implementation should be shared by Weak and Strong

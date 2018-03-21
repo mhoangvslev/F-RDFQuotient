@@ -12,15 +12,19 @@ public class WeakOrTypedWeakSummary extends Summary {
 	HashMap<Long, Long> pt; // for each property, the property source	
 
 	long minSummaryNode; 
-
-	private final static char US_UP_UO = 1;
-	private final static char US_UP_RO = 2;
-	private final static char US_RP_UO = 3;
-	private final static char US_RP_RO = 4;
-	private final static char RS_UP_UO = 5;
-	private final static char RS_UP_RO = 6;
-	private final static char RS_RP_UO = 7;
-	private final static char RS_RP_RO = 8;
+	// below:
+	// U means unrepresented (so far) 
+	// R means represented (so far) 
+	// TRS means typed (thus, already represented) represented so far
+	protected final static char US_UP_UO = 1;
+	protected final static char US_UP_RO = 2;
+	protected final static char US_RP_UO = 3;
+	protected final static char US_RP_RO = 4;
+	protected final static char RS_UP_UO = 5;
+	protected final static char RS_UP_RO = 6;
+	protected final static char RS_RP_UO = 7;
+	protected final static char RS_RP_RO = 8;
+	
 
 	// for debugging
 	long globalTripleCount; 
@@ -73,33 +77,7 @@ public class WeakOrTypedWeakSummary extends Summary {
 		return US_UP_UO; 
 	}
 	
-	protected void handleDataTriple(Triple t) {
-		Long repS = rep.get(t.s);
-		Long repO = rep.get(t.o);
-		Long pSource = ps.get(t.p);
-		Long pTarget = pt.get(t.p);
-		if ((pSource == null && pTarget != null) ||(pSource != null && pTarget == null)){
-			throw new Error("Source represented and target not represented, or the opposite"); 
-		}
-		boolean pRepresented = (pSource == null ? false: true); 
-		boolean sRepresented = (repS == null ? false: true); 
-		boolean oRepresented = (repO == null? false: true); 
-
-		char caseNumber = identifyTripleSummarizationCase(sRepresented, pRepresented, oRepresented); 
-		switch(caseNumber){
-		case US_UP_UO: handleDataTriple_US_UP_UO(t); break; 
-		case US_UP_RO: handleDataTriple_US_UP_RO(t); break; 
-		case US_RP_UO: handleDataTriple_US_RP_UO(t); break; 
-		case US_RP_RO: handleDataTriple_US_RP_RO(t); break; 
-		case RS_UP_UO: handleDataTriple_RS_UP_UO(t); break; 
-		case RS_UP_RO: handleDataTriple_RS_UP_RO(t); break; 
-		case RS_RP_UO: handleDataTriple_RS_RP_UO(t); break; 
-		case RS_RP_RO: handleDataTriple_RS_RP_RO(t); break; 
-		}
-
-		//Debugger.log("After processing triple " + t.toString() + ", we have:\n" + this.toString()); 
-		//safetyCheck(); 
-	}
+	
 
 	protected void replaceAll(Long oldNode, Long newNode, Long forProperty){
 		//Debugger.log("WTW REPLACE-ALL " + oldNode + " with " + newNode + " for property " + forProperty + " in: ");
@@ -132,38 +110,55 @@ public class WeakOrTypedWeakSummary extends Summary {
 		// everything has been represented. In this case we must:
 		// - fuse the subject of p with the representative of s (keep the smallest)
 		// - fuse the object of p with the representative of s (keep the smallest)
-		Long targetP = pt.get(t.p); 
 		Long sourceP = ps.get(t.p);
+		Long addedTripleSource = sourceP; 
+		Long targetP = pt.get(t.p); 
+		Long addedTripleTarget = targetP; 
 		Long repS = rep.get(t.s); 
 		Long repO = rep.get(t.o); 
 
-		if (sourceP < repS){
+		if (sourceP < repS){ // addedTripleSource is sourceP
 			replaceAll(repS, sourceP, t.p);
 			if (targetP < repO){
-				replaceAll(repO, targetP, t.p);
-				this.addTripleAndCheck(sourceP, t.p, targetP);
+				if (addedTripleSource == repO) {
+					addedTripleSource = targetP; 
+				}
+				replaceAll(repO, targetP, t.p); // replace repO with targetP; addedTripleTarget is targetP
+				this.addTripleAndCheck(addedTripleSource, t.p, addedTripleTarget);
 			}
 			else{//repO <= targetP
-				if (targetP > repO){ // replace if not equal
+				if (targetP > repO){ // replace targetP with repO
+					if (addedTripleSource == targetP) {
+						addedTripleSource = repO; 
+					}
 					replaceAll(targetP, repO, t.p);
 				}	
-				this.addTripleAndCheck(sourceP, t.p, repO);
+				this.addTripleAndCheck(addedTripleSource, t.p, addedTripleTarget);
 			}
 		}
 		else{// sourceP >= repS
 			if (sourceP > repS){
+				if (addedTripleTarget == sourceP) {
+					addedTripleTarget = repS; 
+				}
 				replaceAll(sourceP, repS, t.p);
 			}
 			if (targetP < repO){
+				if (addedTripleSource == repO) {
+					addedTripleSource = targetP; 
+				}
 				replaceAll(repO, targetP, t.p); 
-				this.addTripleAndCheck(repS, t.p, targetP);
+				this.addTripleAndCheck(addedTripleSource, t.p, addedTripleTarget);
 			}
 			else{ // repO <= targetP
 				if (targetP > repO){ // replace if not equal
+					if (addedTripleSource == targetP) {
+						addedTripleSource = repO; 
+					}
 					replaceAll(targetP, repO, t.p); 
 				}
 				// add this triple in any case
-				this.addTripleAndCheck(repS, t.p, repO);
+				this.addTripleAndCheck(addedTripleSource, t.p, addedTripleTarget);
 			}
 		}
 
@@ -177,31 +172,46 @@ public class WeakOrTypedWeakSummary extends Summary {
 		// the subject and property have been represented, not the object. In this case we must:
 		// - represent the object by the target of the property 
 		// - fuse the source of p with the representative of s. By convention, we will keep the *** smaller *** one. 
+		// - the fusion may also impact the representative of o.
+		
 		Long targetP = pt.get(t.p); 
 		rep.put(t.o, targetP);
-
+		Long addedTripleTarget = targetP; // this may be a collateral damage of fusion and replacements
+		// in this case it needs to change, to follow the fusion and replacement
+		
 		Long sourceP = ps.get(t.p);
 		long repS = rep.get(t.s); 
 		//Debugger.log("RS_RP_UO 1. repS: " + repS + " sourceP: " + sourceP + " we should keep the smaller"); 
 		//Debugger.log("RS_RP_UO 2. targetP: " + targetP);
 		if (repS < sourceP){ // we keep repS, replace sourceP with repS all over
+			if (addedTripleTarget == sourceP) {
+				addedTripleTarget = repS;
+			}
 			//Debugger.log("RS_RP_UO 3. Replacing " + sourceP + " with " + repS); 
 			replaceAll(sourceP, repS, t.p); 
 			//Debugger.log("RS_RP_UO 4. After replacement but before triple addition (1)\n" + this.toString());
-			addTripleAndCheck(repS, t.p, targetP); 
+			addTripleAndCheck(repS, t.p, addedTripleTarget); 
 			//Debugger.log("RS_RP_UO 5. After replacement and triple addition (1)\n" + this.toString());
 		}
 		else{ 
 			if (repS > sourceP ) { // we keep sourceP, replace repS with sourceP all over
+				if (addedTripleTarget == repS) {
+					addedTripleTarget = sourceP; 
+				}
 				//Debugger.log("RS_RP_UO 6. Replacing " + repS + " with " + sourceP); 
 				replaceAll(repS, sourceP, t.p);
 				//Debugger.log("RS_RP_UO 7. After replacement but before triple addition (2)\n" + this.toString());
 			}
 			// add the edge in any case
-			addTripleAndCheck(sourceP, t.p, targetP); 
-			//Debugger.log("RS_RP_UO 8. After replacement and triple addition (2)\n" + this.toString());
-			//safetyCheck();
+			addTripleAndCheck(sourceP, t.p, addedTripleTarget); 
+			//Debugger.log("RS_RP_UO 8. After replacement and addition of " + sourceP + " " + t.p + " " + targetP);
+			//Debugger.log(this.toString());
+			//consistentyChecks();
 		}
+	}
+
+	protected void consistencyChecks() {
+		throw new IllegalStateException("This check is not defined here, define it in specialized classes"); 
 	}
 
 	protected void handleDataTriple_RS_UP_RO(Triple t) {
@@ -236,20 +246,29 @@ public class WeakOrTypedWeakSummary extends Summary {
 		Long sourceP = ps.get(t.p); 
 		rep.put(t.s, sourceP); 
 
+		Long addedTripleSource = sourceP; 
+		// this may change as collateral damage of fusions below
+		
 		// - fuse the target of p with the representative of o. By convention we will keep the *** smaller *** one. 
 		Long targetP = pt.get(t.p); 
 		Long repO = rep.get(t.o); 
 		if (repO > targetP){ // we keep targetP, we need to replace repO  with targetP, all over the summary
+			if (addedTripleSource == repO) {
+				addedTripleSource = targetP; 
+			}
 			replaceAll(repO, targetP, t.p); 
-			addTripleAndCheck(sourceP, t.p, targetP); 
+			addTripleAndCheck(addedTripleSource, t.p, targetP); 
 		}
 		else{ 
 			if (repO < targetP){
+				if (addedTripleSource == targetP) {
+					addedTripleSource = repO; 
+				}
 				// we keep repO, we need to replace targetP with repO all over in the summary
 				replaceAll(targetP, repO, t.p); 
 			}
 			// add the edge in any case
-			addTripleAndCheck(sourceP, t.p, repO); 
+			addTripleAndCheck(addedTripleSource, t.p, repO); 
 			// and we represent o by repO: nothing needed, it was already the case
 		}
 	}
@@ -293,7 +312,9 @@ public class WeakOrTypedWeakSummary extends Summary {
 
 	protected void addTripleAndCheck(Long s, long p, Long o) {
 		addTriple(s, p, o); 
-		//safetyCheck();
+		if (this.checkConsistency) {
+			consistencyChecks();
+		}
 	}
 
 	// This methods overrides that of Summary. It has some safety checks specific to W and TW summarization.

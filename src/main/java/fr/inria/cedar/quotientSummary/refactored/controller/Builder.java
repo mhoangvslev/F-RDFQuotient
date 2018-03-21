@@ -72,7 +72,11 @@ public class Builder {
 			}
 		}
 		if (args[0].toLowerCase().equals("loadsummarize")) {
-			try (Connection conn = loadRDFInPostgres(nextArguments)) {
+			// in this case args[1] is the summary type; the loader doesn't need this information
+			String[] filesToLoad = extractArguments(nextArguments); 
+			// the loader only gets the files to load
+			try (Connection conn = loadRDFInPostgres(filesToLoad)) {
+				// the summarizer also gets the summary name
 				summarizeGraphFromPostgres(conn, nextArguments); 
 				return;
 			}
@@ -138,7 +142,7 @@ public class Builder {
 		System.out.println("RDF graph summarized.");
 		sum.saveSummaryInPostgres(conn, args[1]);
 		sum.writeDecodedSummaryToNTFile(conn, args[1]);
-		//ws.writeSummaryToDotFile(conn, (args[0]+ "-toDot.txt"));  
+		sum.writeSummaryToDotFile(conn, args[1]);  
 	}
 
 	private static Summary createNewSummary(String summaryType) {
