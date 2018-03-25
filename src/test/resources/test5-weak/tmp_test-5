@@ -1,0 +1,6 @@
+http://qstest.org/node#1	http://qstest.org/property#1	http://qstest.org/node#2
+http://qstest.org/node#1	http://www.w3.org/1999/02/22-rdf-syntax-ns#type	http://qstest.org/class#1
+http://qstest.org/node#1	http://www.w3.org/1999/02/22-rdf-syntax-ns#type	http://qstest.org/class#2
+http://qstest.org/node#2	http://qstest.org/property#2	http://qstest.org/node#3
+http://qstest.org/node#3	http://www.w3.org/1999/02/22-rdf-syntax-ns#type	http://qstest.org/class#1
+http://qstest.org/node#3	http://www.w3.org/1999/02/22-rdf-syntax-ns#type	http://qstest.org/class#3

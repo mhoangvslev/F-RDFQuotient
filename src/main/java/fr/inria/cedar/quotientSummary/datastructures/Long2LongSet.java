@@ -67,4 +67,17 @@ final HashMap<Long, TreeSet<Long>> map;
 	public Set<Long> keys() {
 		return map.keySet();
 	}
+
+	public void add(long o, long newClassSetID) {
+		TreeSet<Long> setFor = map.get(o);
+		if (setFor == null) {
+			setFor = new TreeSet<Long>();
+			setFor.add(newClassSetID);
+		}
+		else {
+			if (!setFor.contains(newClassSetID)) {
+				setFor.add(newClassSetID); 
+			}
+		}
+	}
 }
