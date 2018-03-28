@@ -312,11 +312,11 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 
 	public void display(){
 		System.out.println("TYPED STRONG SUMMARY\nClass to class set IDs:");
-		//c2cs.display();
+		c2cs.display();
 		System.out.println("Class set IDs to class sets:");
-		//cs.display();
+		cs.display();
 		System.out.println("Nodes to class set IDs");
-		//n2cs.display();
+		n2cs.display();
 		System.out.println("Source cliques:");
 		sc.display();
 		System.out.println("Target cliques:");
@@ -362,6 +362,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	}
 
 	public void handleTypeTripleBeforeData(Triple t){
+		System.out.println("@@@ Type triple: " + t.toString()); 
 		Long prevClassSetOfS = this.n2cs.get(t.s);
 		TreeSet<Long> thisSubjectClassSet; 
 		if (prevClassSetOfS == null) { // this subject was untyped so far
@@ -404,7 +405,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		// store the representation of t.s:
 		rep.put(t.s, n2cs.get(t.s));
 		//Debugger.log(t.s + " represented by " + n2cs.get(t.s));
-		//display();
+		display();
 		this.numberOfTypeTriplesRead ++; 
 	}
 
@@ -509,7 +510,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	}
 
 	public void handleDataTriple(Triple t){
-		System.out.println("Triple " + t.toString());
+		System.out.println("@@@ handleDataTriple " + t.toString());
 		// 18 cases: (TS, USR, USN) x (TO, UOR, UON) x (PR, PN)  also multiplied by: which cliques are empty and their consequences on fusion
 		Long classSetS = n2cs.get(t.s);
 		Long classSetO = n2cs.get(t.o);

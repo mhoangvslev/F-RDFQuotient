@@ -186,7 +186,7 @@ public class Summary {
 	protected void showRep() {
 		StringBuffer sb = new StringBuffer();
 		showRepInBuffer(sb); 
-		Debugger.log(sb.toString());
+		System.out.println(sb.toString());
 	}
 	protected Long getNextSummaryNode(){
 		Long node = new Long(this.maxSummaryNode);

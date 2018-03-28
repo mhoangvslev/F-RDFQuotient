@@ -1,0 +1,8 @@
+digraph g{
+"http://quotientsummary.org/0" -> "http://quotientsummary.org/1" [label="http://qstest.org/property#1"];
+"http://quotientsummary.org/0" -> "http://quotientsummary.org/2" [label="http://qstest.org/property#2"];
+"http://qstest.org/class#1" [style = filled, color=darkseagreen];
+"http://quotientsummary.org/0" -> "http://qstest.org/class#1" [color=darkseagreen, label="rdf:type"];
+"http://quotientsummary.org/0" -> "http://quotientsummary.org/1" [label="http://qstest.org/property#3"];
+"http://quotientsummary.org/0" -> "http://quotientsummary.org/2" [label="http://qstest.org/property#4"];
+}

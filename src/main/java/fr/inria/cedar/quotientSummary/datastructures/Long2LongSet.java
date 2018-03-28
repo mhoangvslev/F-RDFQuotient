@@ -5,16 +5,16 @@ import java.util.Set;
 import java.util.TreeSet;
 
 public class Long2LongSet {
-final HashMap<Long, TreeSet<Long>> map;
-	
+	final HashMap<Long, TreeSet<Long>> map;
+
 	public Long2LongSet(){
 		map = new HashMap<>();
 	}
-	
+
 	public TreeSet<Long> get(long node){
 		return map.get(new Long(node));
 	}
-	
+
 	public void put(long item, long set){
 		TreeSet<Long> theSet = map.get(new Long(set));
 		if (theSet == null){
@@ -49,19 +49,23 @@ final HashMap<Long, TreeSet<Long>> map;
 			map.remove(l1);
 		}
 	}
-	
+
 	public void display(){
 		StringBuffer sb = new StringBuffer();
-		sb.append("==============: \n");
-		for (Long key: map.keySet()){
-			sb.append("#"+ key + "|{");
-			TreeSet<Long> values = map.get(key);
-			for (Long val: values){
-				sb.append(val + ", ");
-			}
-			sb.append("} ");
+		if (map.keySet().isEmpty()) {
+			sb.append("()"); 
 		}
-		System.out.println(sb + " (" + map.size() + " entries)");
+		else {
+			sb.append("==============: \n");
+			for (Long key: map.keySet()){
+				sb.append("#"+ key + "|{");
+				TreeSet<Long> values = map.get(key);
+				for (Long val: values){
+					sb.append(val + ", ");
+				}
+				sb.append("} "+ " (" + map.size() + " entries)");
+			}
+		}	
 	}
 
 	public Set<Long> keys() {
