@@ -57,7 +57,6 @@ public class WeakSummaryTest {
 
 	@Test
 	public void testweak1() {
-		weak(1); 
 		String referenceFileName = "src/test/resources/test1-weak/w-test-1-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
@@ -68,7 +67,6 @@ public class WeakSummaryTest {
 	}
 	@Test
 	public void testweak2() {
-		weak(2); 
 		String referenceFileName = "src/test/resources/test2-weak/w-test-2-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
@@ -78,8 +76,7 @@ public class WeakSummaryTest {
 		}
 	}
 	@Test
-	public void testweak3() {
-		weak(3); 
+	public void testweak3() { 
 		String referenceFileName = "src/test/resources/test3-weak/w-test-3-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
@@ -90,7 +87,6 @@ public class WeakSummaryTest {
 	}
 	@Test
 	public void testweak4() {
-		weak(4); 
 		String referenceFileName = "src/test/resources/test4-weak/w-test-4-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
@@ -101,7 +97,6 @@ public class WeakSummaryTest {
 	}
 	@Test
 	public void testweak5() {
-		weak(5); 
 		String referenceFileName = "src/test/resources/test5-weak/w-test-5-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
@@ -131,7 +126,6 @@ public class WeakSummaryTest {
 
 	@Test
 	public void testtypedweak1() {
-		typedweak(1); 
 		String referenceFileName = "src/test/resources/test1-typedweak/tw-test-1-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
@@ -142,7 +136,6 @@ public class WeakSummaryTest {
 	}
 	@Test
 	public void testtypedweak2() {
-		typedweak(2); 
 		String referenceFileName = "src/test/resources/test2-typedweak/tw-test-2-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
@@ -153,7 +146,6 @@ public class WeakSummaryTest {
 	}
 	@Test
 	public void testtypedweak3() {
-		typedweak(3); 
 		String referenceFileName = "src/test/resources/test3-typedweak/tw-test-3-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
@@ -164,7 +156,6 @@ public class WeakSummaryTest {
 	}
 	@Test
 	public void testtypedweak4() {
-		typedweak(4); 
 		String referenceFileName = "src/test/resources/test4-typedweak/tw-test-4-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
@@ -175,7 +166,6 @@ public class WeakSummaryTest {
 	}
 	@Test
 	public void testtypedweak5() {
-		typedweak(5); 
 		String referenceFileName = "src/test/resources/test5-typedweak/tw-test-5-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
