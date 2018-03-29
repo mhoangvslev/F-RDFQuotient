@@ -1,8 +1,12 @@
 package fr.inria.cedar.quotientSummary.controller;
 
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -10,7 +14,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+import org.apache.jena.riot.RDFDataMgr;
+
 import com.google.common.base.Preconditions;
+import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.RDFNode;
+import com.hp.hpl.jena.rdf.model.Resource;
+import com.hp.hpl.jena.rdf.model.Statement;
+import com.hp.hpl.jena.rdf.model.StmtIterator;
+import com.hp.hpl.jena.util.FileManager;
 
 import fr.inria.cedar.commons.miscellaneous.Debugger;
 import fr.inria.cedar.ontosql.db.UnsupportedDatabaseEngineException;
@@ -18,7 +31,9 @@ import fr.inria.cedar.ontosql.rdfdb.StorageSchema;
 import fr.inria.cedar.ontosql.rdfdb.constants.OntologyFormat;
 import fr.inria.cedar.ontosql.rdfdb.constraintsloader.ConstraintsEncoder;
 import fr.inria.cedar.ontosql.rdfdb.dataloading.Config;
+import fr.inria.cedar.ontosql.rdfdb.dataloading.DataLoading;
 import fr.inria.cedar.ontosql.rdfdb.dataloading.LoadTriplesToDatabase;
+import fr.inria.cedar.ontosql.rdfdb.dataloading.Parameters;
 import fr.inria.cedar.ontosql.rdfdb.dictionaryencoder.RDFGraphDictionaryEncoder;
 import fr.inria.cedar.ontosql.rdfdb.graphsaturator.RDFGraphSaturator;
 import fr.inria.cedar.ontosql.rdfdb.schemaconversor.RDFGraphSchemaConversor;
@@ -222,40 +237,21 @@ public class Builder {
 		Properties properties = new Properties();
 		properties.load(new FileReader(DEFAULT_CONFIG_FILE));
 		System.out.println(properties.toString()); 
-		Config config = new Config(properties);
-
-		//Creating database and loading triples
-		System.out.println("Creating database and loading triples...");
-		LoadTriplesToDatabase.process(DEFAULT_CONFIG_FILE, tripleFiles);
-		System.out.println("Data loaded");
-
-		//Data encoding
-		System.out.println("Encoding dictionary...");
-		RDFGraphDictionaryEncoder.process(DEFAULT_CONFIG_FILE);
-		System.out.println("Dictionary encoded");
-
-		//Encoding constraints into the dictionary
-		System.out.println("Encoding constraints into dictionary...");
-		ConstraintsEncoder.process(DEFAULT_CONFIG_FILE,OntologyFormat.RDFS, rdfsFiles);
-
-		//Saturation graph
-		if (config.isSaturationEnable()) {
-			System.out.println("Saturating graph...");
-			RDFGraphSaturator.process(DEFAULT_CONFIG_FILE,rdfsFiles);
-			System.out.println("Graph saturation finished");
-		}				
-
-		//Schema conversor
-		if(config.getStorageLayout().equals(StorageSchema.TABLE_PER_ROLE_AND_CONCEPT)){
-			System.out.println("Converting graph schema...");
-			RDFGraphSchemaConversor.process(DEFAULT_CONFIG_FILE);
-			System.out.println("Conversion finished");	
+		Parameters settings =  new Parameters();
+		settings.setPropertiesFileName(DEFAULT_CONFIG_FILE);
+		
+		if(rdfsFiles.isEmpty()){
+			for(String tripleFile:tripleFiles){
+				settings.setAllInFile(tripleFile);
+				DataLoading.process(settings);
+			}
 		}
-		//Statistic generation
-		if(config.getCreateStatisticsTablesFlag()){
-			System.out.println("Generating statistic tables...");
-			RDFGraphStatisticsGenerator.process(DEFAULT_CONFIG_FILE);
-			System.out.println("Statistic tables generated");
+		else{
+			for(String tripleFile:tripleFiles){
+				settings.setTripleFile(tripleFile);
+				settings.setRdfsFile(rdfsFiles.get(0));
+				DataLoading.process(settings);
+			}
 		}
 		System.out.println("Loading finished");
 
@@ -282,6 +278,7 @@ public class Builder {
 			throw new IllegalStateException("Unable to load RDF from " + fileName + " " + e.toString()); 
 		}
 	}
+	
 	
 	private static void printUsage() {
 		System.out.println("Usage:");

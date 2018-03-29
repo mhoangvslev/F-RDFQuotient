@@ -18,7 +18,9 @@ import fr.inria.cedar.ontosql.rdfdb.StorageSchema;
 import fr.inria.cedar.ontosql.rdfdb.constants.OntologyFormat;
 import fr.inria.cedar.ontosql.rdfdb.constraintsloader.ConstraintsEncoder;
 import fr.inria.cedar.ontosql.rdfdb.dataloading.Config;
+import fr.inria.cedar.ontosql.rdfdb.dataloading.DataLoading;
 import fr.inria.cedar.ontosql.rdfdb.dataloading.LoadTriplesToDatabase;
+import fr.inria.cedar.ontosql.rdfdb.dataloading.Parameters;
 import fr.inria.cedar.ontosql.rdfdb.dictionaryencoder.RDFGraphDictionaryEncoder;
 import fr.inria.cedar.ontosql.rdfdb.graphsaturator.RDFGraphSaturator;
 import fr.inria.cedar.ontosql.rdfdb.schemaconversor.RDFGraphSchemaConversor;
@@ -207,9 +209,23 @@ public class SummaryBuilder {
 		Properties properties = new Properties();
 		properties.load(new FileReader(DEFAULT_CONFIG_FILE));
 		System.out.println(properties.toString()); 
-		Config config = new Config(properties);
+		Parameters settings =  new Parameters();
+		settings.setPropertiesFileName(DEFAULT_CONFIG_FILE);
+		if(rdfsFiles.isEmpty()){
+			for(String tripleFile:tripleFiles){
+				settings.setAllInFile(tripleFile);
+				DataLoading.process(settings);
+			}
+		}
+		else{
+			for(String tripleFile:tripleFiles){
+				settings.setTripleFile(tripleFile);
+				settings.setRdfsFile(rdfsFiles.get(0));
+				DataLoading.process(settings);
+			}
+		}
 
-		//Creating database and loading triples
+		/*//Creating database and loading triples
 		System.out.println("Creating database and loading triples...");
 		LoadTriplesToDatabase.process(DEFAULT_CONFIG_FILE, tripleFiles);
 		System.out.println("Data loaded");
@@ -241,7 +257,7 @@ public class SummaryBuilder {
 			System.out.println("Generating statistic tables...");
 			RDFGraphStatisticsGenerator.process(DEFAULT_CONFIG_FILE);
 			System.out.println("Statistic tables generated");
-		}
+		}*/
 		System.out.println("Loading finished");
 
 		Properties connectionProps = new Properties();
