@@ -545,7 +545,7 @@ public class Summary {
 	 * @return
 	 */
 	private String getSummaryNodeURI(String uriPrefix, long n) {
-		return ("<" + uriPrefix + n + ">");
+		return ("<" + uriPrefix + this.getSummaryURIPrefix() + n + ">");
 	}
 	/**
 	 * This decodes the summary (replaces property codes with the original URIs or strings) 
@@ -573,8 +573,8 @@ public class Summary {
 
 			ArrayList<Triple> summEdges = this.getSummaryEdges(); 
 			for (Triple t: summEdges){
-				String subject = URIprefix + t.s; 
-				String object =  URIprefix + t.o; 
+				String subject = this.getSummaryNodeURI(URIprefix, t.s); 
+				String object =  this.getSummaryNodeURI(URIprefix, t.o); 
 				String property = getShortURIForDot(RDF2SQLEncoding.dictionaryDecode(t.p)); 
 				if (t.p == RDF2SQLEncoding.getTypeCode()) {
 					// if this is a type triple, decode the object, too: concretely, this changes the object string
@@ -857,6 +857,13 @@ public class Summary {
 
 	public String getSummaryTablePrefix() {
 		return this.summaryTablePrefix; 
+	}
+
+	public String getSummaryURIPrefix() {
+		if (this.summaryTablePrefix.length() < 2) {
+			throw new IllegalStateException("The method should not be called on an instance of the root Summary type"); 
+		}
+		return this.summaryTablePrefix.substring(0, this.summaryTablePrefix.length()-1); 
 	}
 
 }

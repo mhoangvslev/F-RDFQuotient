@@ -1,9 +1,11 @@
 digraph g{
-"http://quotientsummary.org/0" -> "http://quotientsummary.org/0" [label="http://qstest.org/property#1"];
-"http://quotientsummary.org/0" -> "http://quotientsummary.org/0" [label="http://qstest.org/property#2"];
-"http://qstest.org/class#1" [style = filled, color=darkseagreen];
-"http://quotientsummary.org/0" -> "http://qstest.org/class#1" [color=darkseagreen, label="...9/02/22-rdf-syntax-ns#type"];
-"http://quotientsummary.org/0" -> "http://quotientsummary.org/0" [label="http://qstest.org/property#6"];
-"http://quotientsummary.org/0" -> "http://quotientsummary.org/0" [label="http://qstest.org/property#3"];
-"http://quotientsummary.org/0" -> "http://quotientsummary.org/2" [label="http://qstest.org/property#4"];
+"<http://qs.org/w0>" -> "<http://qs.org/w1>" [label="<http://qstest.org/prop2>"];
+"<http://qs.org/w0>" -> "<http://qs.org/w0>" [label="<http://qstest.org/prop3>"];
+"<http://qs.org/w1>" -> "<http://qs.org/w1>" [label="<http://qstest.org/prop6>"];
+"<http://qs.org/w1>" -> "<http://qs.org/w6>" [label="<http://qstest.org/prop6>"];
+"<http://qs.org/w1>" -> "<http://qs.org/w5>" [label="<http://qstest.org/prop4>"];
+"<http://qs.org/w3>" -> "<http://qs.org/w4>" [label="<http://qstest.org/prop7>"];
+"<http://qstest.org/class1>" [style = filled, color=darkseagreen];
+"<http://qs.org/w4>" -> "<http://qstest.org/class1>" [color=darkseagreen, label="rdf:type"];
+"<http://qs.org/w4>" -> "<http://qs.org/w0>" [label="<http://qstest.org/prop1>"];
 }

@@ -8,6 +8,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 import org.apache.commons.io.FileUtils;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import fr.inria.cedar.quotientSummary.controller.Builder;
@@ -38,7 +39,7 @@ public class StrongSummaryTest
 		}
 	}
 	
-	@Test
+	@Ignore("Not ready yet")	 @Test 
 	public void testtypedstrong1() {
 		typedstrong(1); 
 		String referenceFileName = "src/test/resources/test1-typedstrong/ts-test-1-reference.nt";

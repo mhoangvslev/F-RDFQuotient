@@ -243,5 +243,4 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 		}
 	}
 
-
 }

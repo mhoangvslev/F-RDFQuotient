@@ -1,12 +1,12 @@
 digraph g{
-"http://quotientsummary.org/2" -> "http://quotientsummary.org/5" [label="http://qstest.org/property#1"];
-"http://qstest.org/class#1" [style = filled, color=darkseagreen];
-"http://quotientsummary.org/2" -> "http://qstest.org/class#1" [color=darkseagreen, label="rdf:type"];
-"http://qstest.org/class#2" [style = filled, color=darkseagreen];
-"http://quotientsummary.org/2" -> "http://qstest.org/class#2" [color=darkseagreen, label="rdf:type"];
-"http://qstest.org/class#1" [style = filled, color=darkseagreen];
-"http://quotientsummary.org/4" -> "http://qstest.org/class#1" [color=darkseagreen, label="rdf:type"];
-"http://qstest.org/class#3" [style = filled, color=darkseagreen];
-"http://quotientsummary.org/4" -> "http://qstest.org/class#3" [color=darkseagreen, label="rdf:type"];
-"http://quotientsummary.org/5" -> "http://quotientsummary.org/4" [label="http://qstest.org/property#2"];
+"<http://qstest.org/class1>" [style = filled, color=darkseagreen];
+"<http://qs.org/tw1>" -> "<http://qstest.org/class1>" [color=darkseagreen, label="rdf:type"];
+"<http://qstest.org/class3>" [style = filled, color=darkseagreen];
+"<http://qs.org/tw1>" -> "<http://qstest.org/class3>" [color=darkseagreen, label="rdf:type"];
+"<http://qstest.org/class1>" [style = filled, color=darkseagreen];
+"<http://qs.org/tw3>" -> "<http://qstest.org/class1>" [color=darkseagreen, label="rdf:type"];
+"<http://qstest.org/class2>" [style = filled, color=darkseagreen];
+"<http://qs.org/tw3>" -> "<http://qstest.org/class2>" [color=darkseagreen, label="rdf:type"];
+"<http://qs.org/tw3>" -> "<http://qs.org/tw4>" [label="<http://qstest.org/prop1>"];
+"<http://qs.org/tw4>" -> "<http://qs.org/tw1>" [label="<http://qstest.org/prop2>"];
 }
