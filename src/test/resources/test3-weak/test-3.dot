@@ -1,0 +1,11 @@
+digraph g{
+"<http://qstest.org/node#3>" -> "<http://qstest.org/node#4>" [label="...://qstest.org/property#p2>"];
+"<http://qstest.org/node#3>" -> "2" [label="...://qstest.org/property#p3>"];
+"<http://qstest.org/node#8>" -> "<http://qstest.org/node#1>" [label="...://qstest.org/property#p7>"];
+"<http://qstest.org/node#1>" -> "<http://qstest.org/class#1>" [label=".../02/22-rdf-syntax-ns#type>"];
+"<http://qstest.org/node#1>" -> "<http://qstest.org/node#3>" [label="...://qstest.org/property#p1>"];
+"<http://qstest.org/node#1>" -> "2" [label="...://qstest.org/property#p1>"];
+"<http://qstest.org/node#4>" -> "<http://qstest.org/node#5>" [label="...://qstest.org/property#p4>"];
+"<http://qstest.org/node#4>" -> "<http://qstest.org/node#7>" [label="...://qstest.org/property#p6>"];
+"<http://qstest.org/node#7>" -> "<http://qstest.org/node#8>" [label="...://qstest.org/property#p6>"];
+}

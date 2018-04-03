@@ -486,10 +486,10 @@ public class Summary {
 					object =  getSummaryNodeURI(URIprefix, t.o);
 				}
 				else { // otherwise, the object is a class or property: use the original URI
-					object = "<" + RDF2SQLEncoding.dictionaryDecode(t.o) + ">"; 
+					object =  RDF2SQLEncoding.dictionaryDecode(t.o); 
 				}   
 				Debugger.log(subject + " " + property + " " + object);
-				bw.write(subject + " <" + property + "> " + object + " . \n");
+				bw.write(subject + " " + property + " " + object + " . \n");
 			}
 			if (gatherStatistics) {
 				// write node cardinality statistics: 

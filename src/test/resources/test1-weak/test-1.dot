@@ -1,10 +1,9 @@
 digraph g{
-"http://qstest.org/class#1" [style = filled, color=darkseagreen];
-"http://qstest.org/node#1" -> "http://qstest.org/class#1" [color=darkseagreen, label="rdf:type"];
-"http://qstest.org/node#1" -> "1" [label="http://qstest.org/property#1"];
-"http://qstest.org/node#1" -> "2" [label="http://qstest.org/property#1"];
-"http://qstest.org/node#2" -> "3" [label="http://qstest.org/property#1"];
-"http://qstest.org/node#2" -> "4" [label="http://qstest.org/property#2"];
-"http://qstest.org/node#2" -> "5" [label="http://qstest.org/property#3"];
-"http://qstest.org/node#3" -> "6" [label="http://qstest.org/property#2"];
+"<http://qstest.org/node#3>" -> "6" [label="...://qstest.org/property#p2>"];
+"<http://qstest.org/node#2>" -> "3" [label="...://qstest.org/property#p1>"];
+"<http://qstest.org/node#2>" -> "4" [label="...://qstest.org/property#p1>"];
+"<http://qstest.org/node#2>" -> "5" [label="...://qstest.org/property#p3>"];
+"<http://qstest.org/node#1>" -> "<http://qstest.org/class#1>" [label=".../02/22-rdf-syntax-ns#type>"];
+"<http://qstest.org/node#1>" -> "1" [label="...://qstest.org/property#p1>"];
+"<http://qstest.org/node#1>" -> "2" [label="...://qstest.org/property#p1>"];
 }

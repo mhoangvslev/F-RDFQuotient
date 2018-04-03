@@ -1,0 +1,10 @@
+digraph g{
+"http://quotientsummary.org/0" -> "http://quotientsummary.org/0" [label="...://qstest.org/property#p3>"];
+"http://quotientsummary.org/0" -> "http://quotientsummary.org/1" [label="...://qstest.org/property#p2>"];
+"http://quotientsummary.org/1" -> "http://quotientsummary.org/6" [label="...://qstest.org/property#p4>"];
+"http://quotientsummary.org/1" -> "http://quotientsummary.org/1" [label="...://qstest.org/property#p6>"];
+"http://quotientsummary.org/1" -> "http://quotientsummary.org/7" [label="...://qstest.org/property#p6>"];
+"http://quotientsummary.org/3" -> "http://quotientsummary.org/4" [label="...://qstest.org/property#p7>"];
+"http://quotientsummary.org/4" -> "http://quotientsummary.org/0" [label="...://qstest.org/property#p1>"];
+"http://quotientsummary.org/4" -> "http://quotientsummary.org/5" [label=".../02/22-rdf-syntax-ns#type>"];
+}

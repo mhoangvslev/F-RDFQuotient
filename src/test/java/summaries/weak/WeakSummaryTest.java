@@ -19,7 +19,7 @@ public class WeakSummaryTest {
 
 	public File weak(int i) {
 		String inputFileName = "src/test/resources/test" + i + "-weak/test-" + i + ".nt"; 
-		String outputFileName = "src/test/resources/test" + i + "-weak/w-test-" + i + ".nt";
+		String outputFileName = "src/test/resources/test" + i + "-weak/w_test-" + i + ".nt";
 		try {		
 			Connection conn = Builder.loadSingleRDFInPostgres(inputFileName);	
 			//countConnections("1", conn); 
@@ -57,17 +57,20 @@ public class WeakSummaryTest {
 
 	@Test
 	public void testweak1() {
-		String referenceFileName = "src/test/resources/test1-weak/w-test-1-reference.nt";
+		String referenceFileName = "src/test/resources/test1-weak/w_test-1-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
-			assertTrue("Different summary weak 1", FileUtils.contentEquals(weak(1), expectedOutput));
+			boolean b = FileUtils.contentEquals(weak(1), expectedOutput); 
+			System.out.println("Files are equal: " + b); 
+			
+			assertTrue("Different summary weak 1", b); 
 		} catch (IOException e) {
 			throw new IllegalStateException("Unable to open .nt files in weak test 1 " + e.toString()); 
 		}
 	}
 	@Test
 	public void testweak2() {
-		String referenceFileName = "src/test/resources/test2-weak/w-test-2-reference.nt";
+		String referenceFileName = "src/test/resources/test2-weak/w_test-2-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
 			assertTrue("Different summary weak 2", FileUtils.contentEquals(weak(2), expectedOutput));
@@ -77,7 +80,7 @@ public class WeakSummaryTest {
 	}
 	@Test
 	public void testweak3() { 
-		String referenceFileName = "src/test/resources/test3-weak/w-test-3-reference.nt";
+		String referenceFileName = "src/test/resources/test3-weak/w_test-3-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
 			assertTrue("Different summary weak 3", FileUtils.contentEquals(weak(3), expectedOutput));
@@ -87,7 +90,7 @@ public class WeakSummaryTest {
 	}
 	@Test
 	public void testweak4() {
-		String referenceFileName = "src/test/resources/test4-weak/w-test-4-reference.nt";
+		String referenceFileName = "src/test/resources/test4-weak/w_test-4-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
 			assertTrue("Different summary weak 4", FileUtils.contentEquals(weak(4), expectedOutput));
@@ -97,7 +100,7 @@ public class WeakSummaryTest {
 	}
 	@Test
 	public void testweak5() {
-		String referenceFileName = "src/test/resources/test5-weak/w-test-5-reference.nt";
+		String referenceFileName = "src/test/resources/test5-weak/w_test-5-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
 			assertTrue("Different summary weak 5", FileUtils.contentEquals(weak(5), expectedOutput));
@@ -108,7 +111,7 @@ public class WeakSummaryTest {
 
 	public File typedweak(int i) {
 		String inputFileName = "src/test/resources/test" + i + "-typedweak/test-" + i + ".nt"; 
-		String outputFileName = "src/test/resources/test" + i + "-typedweak/tw-test-" + i + ".nt";
+		String outputFileName = "src/test/resources/test" + i + "-typedweak/tw_test-" + i + ".nt";
 		try {		
 			Connection conn = Builder.loadSingleRDFInPostgres(inputFileName);		
 			// the summarizer also gets the summary name
@@ -126,7 +129,7 @@ public class WeakSummaryTest {
 
 	@Test
 	public void testtypedweak1() {
-		String referenceFileName = "src/test/resources/test1-typedweak/tw-test-1-reference.nt";
+		String referenceFileName = "src/test/resources/test1-typedweak/tw_test-1-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
 			assertTrue("Different summary typedweak 1", FileUtils.contentEquals(typedweak(1), expectedOutput));
@@ -136,7 +139,7 @@ public class WeakSummaryTest {
 	}
 	@Test
 	public void testtypedweak2() {
-		String referenceFileName = "src/test/resources/test2-typedweak/tw-test-2-reference.nt";
+		String referenceFileName = "src/test/resources/test2-typedweak/tw_test-2-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
 			assertTrue("Different summary typedweak 2", FileUtils.contentEquals(typedweak(2), expectedOutput));
@@ -146,7 +149,7 @@ public class WeakSummaryTest {
 	}
 	@Test
 	public void testtypedweak3() {
-		String referenceFileName = "src/test/resources/test3-typedweak/tw-test-3-reference.nt";
+		String referenceFileName = "src/test/resources/test3-typedweak/tw_test-3-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
 			assertTrue("Different summary typedweak 3", FileUtils.contentEquals(typedweak(3), expectedOutput));
@@ -156,7 +159,7 @@ public class WeakSummaryTest {
 	}
 	@Test
 	public void testtypedweak4() {
-		String referenceFileName = "src/test/resources/test4-typedweak/tw-test-4-reference.nt";
+		String referenceFileName = "src/test/resources/test4-typedweak/tw_test-4-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
 			assertTrue("Different summary typedweak 4", FileUtils.contentEquals(typedweak(4), expectedOutput));
@@ -166,7 +169,7 @@ public class WeakSummaryTest {
 	}
 	@Test
 	public void testtypedweak5() {
-		String referenceFileName = "src/test/resources/test5-typedweak/tw-test-5-reference.nt";
+		String referenceFileName = "src/test/resources/test5-typedweak/tw_test-5-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
 			assertTrue("Different summary typedweak 5", FileUtils.contentEquals(typedweak(5), expectedOutput));

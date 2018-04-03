@@ -1,7 +1,7 @@
 digraph g{
-"http://quotientsummary.org/0" -> "http://quotientsummary.org/1" [label="http://qstest.org/property#1"];
-"http://quotientsummary.org/0" -> "http://quotientsummary.org/2" [label="http://qstest.org/property#2"];
-"http://qstest.org/class#1" [style = filled, color=darkseagreen];
-"http://quotientsummary.org/0" -> "http://qstest.org/class#1" [color=darkseagreen, label="...9/02/22-rdf-syntax-ns#type"];
-"http://quotientsummary.org/0" -> "http://quotientsummary.org/3" [label="http://qstest.org/property#3"];
+"http://quotientsummary.org/0" -> "http://quotientsummary.org/1" [label="...://qstest.org/property#p2>"];
+"http://quotientsummary.org/2" -> "http://quotientsummary.org/4" [label="...://qstest.org/property#p3>"];
+"http://quotientsummary.org/2" -> "http://quotientsummary.org/3" [label="...://qstest.org/property#p1>"];
+"<http://qstest.org/class#1>" [style = filled, color=darkseagreen];
+"http://quotientsummary.org/2" -> "<http://qstest.org/class#1>" [color=darkseagreen, label="rdf:type"];
 }
