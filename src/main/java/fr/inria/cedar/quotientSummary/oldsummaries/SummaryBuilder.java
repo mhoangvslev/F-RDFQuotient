@@ -213,13 +213,13 @@ public class SummaryBuilder {
 		settings.setPropertiesFileName(DEFAULT_CONFIG_FILE);
 		if(rdfsFiles.isEmpty()){
 			for(String tripleFile:tripleFiles){
-				settings.setAllInFile(tripleFile);
+				settings.getAllInFiles().add(tripleFile);
 				DataLoading.process(settings);
 			}
 		}
 		else{
 			for(String tripleFile:tripleFiles){
-				settings.setTripleFile(tripleFile);
+				settings.getTripleFiles().add(tripleFile);
 				settings.setRdfsFile(rdfsFiles.get(0));
 				DataLoading.process(settings);
 			}

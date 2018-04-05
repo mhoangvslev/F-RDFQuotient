@@ -1,12 +1,8 @@
 package fr.inria.cedar.quotientSummary.controller;
 
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -14,30 +10,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import org.apache.jena.riot.RDFDataMgr;
-
 import com.google.common.base.Preconditions;
-import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
-import com.hp.hpl.jena.rdf.model.RDFNode;
-import com.hp.hpl.jena.rdf.model.Resource;
-import com.hp.hpl.jena.rdf.model.Statement;
-import com.hp.hpl.jena.rdf.model.StmtIterator;
-import com.hp.hpl.jena.util.FileManager;
 
 import fr.inria.cedar.commons.miscellaneous.Debugger;
 import fr.inria.cedar.ontosql.db.UnsupportedDatabaseEngineException;
-import fr.inria.cedar.ontosql.rdfdb.StorageSchema;
-import fr.inria.cedar.ontosql.rdfdb.constants.OntologyFormat;
-import fr.inria.cedar.ontosql.rdfdb.constraintsloader.ConstraintsEncoder;
-import fr.inria.cedar.ontosql.rdfdb.dataloading.Config;
 import fr.inria.cedar.ontosql.rdfdb.dataloading.DataLoading;
-import fr.inria.cedar.ontosql.rdfdb.dataloading.LoadTriplesToDatabase;
 import fr.inria.cedar.ontosql.rdfdb.dataloading.Parameters;
-import fr.inria.cedar.ontosql.rdfdb.dictionaryencoder.RDFGraphDictionaryEncoder;
-import fr.inria.cedar.ontosql.rdfdb.graphsaturator.RDFGraphSaturator;
-import fr.inria.cedar.ontosql.rdfdb.schemaconversor.RDFGraphSchemaConversor;
-import fr.inria.cedar.ontosql.rdfgraphstatsgen.RDFGraphStatisticsGenerator;
 import fr.inria.cedar.quotientSummary.Summary;
 import fr.inria.cedar.quotientSummary.strong.StrongSummary;
 import fr.inria.cedar.quotientSummary.strong.TypedStrongSummary;
@@ -242,13 +220,13 @@ public class Builder {
 		
 		if(rdfsFiles.isEmpty()){
 			for(String tripleFile:tripleFiles){
-				settings.setAllInFile(tripleFile);
+				settings.getAllInFiles().add(tripleFile);
 				DataLoading.process(settings);
 			}
 		}
 		else{
 			for(String tripleFile:tripleFiles){
-				settings.setTripleFile(tripleFile);
+				settings.getTripleFiles().add(tripleFile);
 				settings.setRdfsFile(rdfsFiles.get(0));
 				DataLoading.process(settings);
 			}
@@ -265,7 +243,6 @@ public class Builder {
 		System.out.println("Connection URL is: " + connectionURL);
 		Preconditions.checkState(conn != null, "No connection for " + connectionURL); 
 		return conn; 
-
 	}
 
 	// Connection balance: +1

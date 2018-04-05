@@ -362,7 +362,7 @@ public class Summary {
 	 * @param rdfFileName
 	 * @throws SQLException
 	 */
-	public void saveSummaryInPostgres(Connection conn, String rdfFileName) {
+	public void saveSummaryInPostgres(Connection conn, String rdfFileName)  {
 		System.out.println("Saving " + this.getClass().getName() + " in Postgres...");
 		Statement stmt; 
 		try {
