@@ -10,7 +10,7 @@ public class WeakSummaryTest {
 
 	@Test
 	public void testWeakSummarizationOfRDFNTFile() {
-		SummaryBuilder.loadInPostgresAndSummarize("/Users/ioanamanolescu/DATASETS/lubm1m.nt"); 
+		SummaryBuilder.loadInPostgresAndSummarize("resources/rdf-nt-files/model-03_17.nt"); 
 		//resources/rdf-nt-files/model-03_17.nt");		
 	}
 	
