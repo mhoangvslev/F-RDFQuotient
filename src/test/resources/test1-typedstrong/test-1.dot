@@ -1,0 +1,10 @@
+digraph g{
+"http://qstest.org/class#1" [style = filled, color=darkseagreen];
+"http://qstest.org/node#1" -> "http://qstest.org/class#1" [color=darkseagreen, label="rdf:type"];
+"http://qstest.org/node#1" -> "1" [label="http://qstest.org/property#1"];
+"http://qstest.org/node#1" -> "2" [label="http://qstest.org/property#1"];
+"http://qstest.org/node#2" -> "3" [label="http://qstest.org/property#1"];
+"http://qstest.org/node#2" -> "4" [label="http://qstest.org/property#2"];
+"http://qstest.org/node#2" -> "5" [label="http://qstest.org/property#3"];
+"http://qstest.org/node#3" -> "6" [label="http://qstest.org/property#2"];
+}

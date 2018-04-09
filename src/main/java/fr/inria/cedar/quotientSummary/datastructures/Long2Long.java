@@ -13,20 +13,20 @@ public class Long2Long{
 
 	// from the ID of a clique, to the list of IDs of all the nodes
 	final HashMap<Long, ArrayList<Long>> inverse;
-	
+
 	public Long2Long(){
 		map = new HashMap<>();
 		inverse = new HashMap<>();
 	}
-	
+
 	public Long get(long node){
 		return map.get(new Long(node));
 	}
-	
+
 	public ArrayList<Long> getInverse(Long l){
 		return inverse.get(l);
 	}
-	
+
 	public void put(Long node, Long clique){
 		map.put(node, clique);
 		ArrayList<Long> nodesForC = inverse.get(clique);
@@ -39,21 +39,26 @@ public class Long2Long{
 
 	public void display() {
 		StringBuffer sb = new StringBuffer();
-		sb.append("----------: \n");
-		for (Long key: map.keySet()){
-			sb.append("#"+ key + "|");
-			sb.append(map.get(key) + " "); 
+		if (map.keySet().isEmpty()) {
+			sb.append("()"); 
 		}
-		sb.append("Inverse:");
-		for (Long value: inverse.keySet()){
-			sb.append("*" + value + "|");
-			for (Long key: inverse.get(value)){
-				sb.append(key+",");
+		else {
+			sb.append("----------: \n");
+			for (Long key: map.keySet()){
+				sb.append("#"+ key + "|");
+				sb.append(map.get(key) + " "); 
 			}
-			sb.setLength(sb.length()-1);
-			sb.append("| "); 
+			sb.append("Inverse:");
+			for (Long value: inverse.keySet()){
+				sb.append("*" + value + "|");
+				for (Long key: inverse.get(value)){
+					sb.append(key+",");
+				}
+				sb.setLength(sb.length()-1);
+				sb.append("| "); 
+			}
 		}
-		Debugger.log(sb.toString());
+		System.out.println(sb.toString());
 	}
 
 	/**
@@ -68,7 +73,7 @@ public class Long2Long{
 		this.display();
 		ArrayList<Long> keys1 = inverse.get(v1);
 		ArrayList<Long> keys2 = inverse.get(v2);
-		
+
 		if ((keys1 != null) && (keys2 != null)){
 			for (Long l: keys1){
 				keys2.add(l);

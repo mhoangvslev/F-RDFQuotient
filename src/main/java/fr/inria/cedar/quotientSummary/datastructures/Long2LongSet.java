@@ -1,44 +1,42 @@
 package fr.inria.cedar.quotientSummary.datastructures;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
+import java.util.TreeSet;
 
 public class Long2LongSet {
-	// clique ID --> set of properties
-	// or: class set ID --> set of types
-	final HashMap<Long, ArrayList<Long>> map;
-	
+	final HashMap<Long, TreeSet<Long>> map;
+
 	public Long2LongSet(){
 		map = new HashMap<>();
 	}
-	
-	public ArrayList<Long> get(long node){
+
+	public TreeSet<Long> get(long node){
 		return map.get(new Long(node));
 	}
-	
-	public void put(long property, long clique){
-		ArrayList<Long> theClique = map.get(new Long(clique));
-		if (theClique == null){
-			theClique = new ArrayList<>();
-			map.put(clique,  theClique);
+
+	public void put(long item, long set){
+		TreeSet<Long> theSet = map.get(new Long(set));
+		if (theSet == null){
+			theSet = new TreeSet<>();
+			map.put(set,  theSet);
 		}
-		if (theClique.indexOf(property)==-1){
-			theClique.add(new Long(property));
+		if (!theSet.contains(item)){
+			theSet.add(new Long(item));
 		}
 	}
 	public void remove(Long node){
 		map.remove(node);
 	}
-	public void put(long property, ArrayList<Long> clique){
-		map.put(property, clique);
+	public void put(long property, TreeSet<Long> item){
+		map.put(property, item);
 	}
 
 	// merges the entry of the first param into the entry of the second
 	// then removes the entry of the first
 	public void fuseKeyInto(Long l1, Long l2) {
-		ArrayList<Long> ll1 = map.get(l1);
-		ArrayList<Long> ll2 = map.get(l2);
+		TreeSet<Long> ll1 = map.get(l1);
+		TreeSet<Long> ll2 = map.get(l2);
 		if ((ll1 != null) && (ll2 != null)){
 			// added all content of l1 into l2
 			for (Long i1: ll1){
@@ -51,22 +49,39 @@ public class Long2LongSet {
 			map.remove(l1);
 		}
 	}
-	
+
 	public void display(){
 		StringBuffer sb = new StringBuffer();
-		sb.append("==============: \n");
-		for (Long key: map.keySet()){
-			sb.append("#"+ key + "|{");
-			ArrayList<Long> values = map.get(key);
-			for (Long val: values){
-				sb.append(val + ", ");
-			}
-			sb.append("} ");
+		if (map.keySet().isEmpty()) {
+			sb.append("()"); 
 		}
-		System.out.println(sb + " (" + map.size() + " entries)");
+		else {
+			sb.append("==============: \n");
+			for (Long key: map.keySet()){
+				sb.append("#"+ key + "|{");
+				TreeSet<Long> values = map.get(key);
+				for (Long val: values){
+					sb.append(val + ", ");
+				}
+				sb.append("} "+ " (" + map.size() + " entries)");
+			}
+		}	
 	}
 
 	public Set<Long> keys() {
 		return map.keySet();
+	}
+
+	public void add(long o, long newClassSetID) {
+		TreeSet<Long> setFor = map.get(o);
+		if (setFor == null) {
+			setFor = new TreeSet<Long>();
+			setFor.add(newClassSetID);
+		}
+		else {
+			if (!setFor.contains(newClassSetID)) {
+				setFor.add(newClassSetID); 
+			}
+		}
 	}
 }

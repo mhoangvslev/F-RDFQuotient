@@ -4,7 +4,7 @@
 
 	<groupId>fr.inria.cedar</groupId>
 	<artifactId>quotientSummary</artifactId>
-	<version>1.1</version>
+	<version>1.2</version>
 
 	<packaging>jar</packaging>
 
@@ -19,8 +19,14 @@
 		<dependency>
 			<groupId>fr.inria.cedar.ontosql</groupId>
 			<artifactId>ontosql-rdfdb</artifactId>
-			<version>1.0.0</version>
+			<version>1.0.1</version>
 		</dependency>
+		<dependency>
+      <groupId>mysql</groupId>
+      <artifactId>mysql-connector-java</artifactId>
+      <version>5.1.33</version>
+      <optional>true</optional>
+    </dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>

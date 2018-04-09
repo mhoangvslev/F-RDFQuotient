@@ -1,0 +1,53 @@
+package summaries.typedstrong;
+
+import static org.junit.Assert.assertTrue;
+
+import java.io.File;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
+
+import org.apache.commons.io.FileUtils;
+import org.junit.Ignore;
+import org.junit.Test;
+
+import fr.inria.cedar.quotientSummary.controller.Builder;
+
+/**
+ * Unit test for simple StrongSummarization.
+ */
+public class StrongSummaryTest 
+{
+
+	public File typedstrong(int i) {
+		String inputFileName = "src/test/resources/test" + i + "-typedstrong/test-" + i + ".nt"; 
+		String outputFileName = "src/test/resources/test" + i + "-typedstrong/ts-test-" + i + ".nt";
+		try {		
+			Connection conn = Builder.loadSingleRDFInPostgres(inputFileName);	
+			//countConnections("1", conn); 
+			// the summarizer also gets the summary name
+			String[] args = {"typedstrong", inputFileName}; 
+			Builder.summarizeGraphFromPostgres(conn, args); 
+			//countConnections("2", conn); 
+			conn.close();
+			return new File(outputFileName);
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in typedstrong test "+ i + " " + e.toString()); 
+		} catch (SQLException e) {
+			throw new IllegalStateException("SQL error while summarizing " + e.toString()); 
+		}
+	}
+	
+	@Ignore("Not ready yet")	 @Test 
+	public void testtypedstrong1() {
+		typedstrong(1); 
+		String referenceFileName = "src/test/resources/test1-typedstrong/ts-test-1-reference.nt";
+		File expectedOutput = new File(referenceFileName);
+		try {
+			assertTrue("Different summary typedstrong 1", FileUtils.contentEquals(typedstrong(1), expectedOutput));
+		} catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in typedstrong test 1 " + e.toString()); 
+		}
+	}
+}

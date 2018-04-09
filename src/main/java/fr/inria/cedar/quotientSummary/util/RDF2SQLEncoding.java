@@ -81,25 +81,30 @@ public class RDF2SQLEncoding {
 
 	public static void setRDFBuiltInPropertyCodes() {
 		setTypeCode();
+		System.out.println("rdf:type code is " + typeCode); 
 		setSubClassCode();
+		System.out.println("rdfs:subclass  code is: " + subClassCode); 
 		setSubPropertyCode();
+		System.out.println("rdfs:subproperty code is: " + subPropertyCode); 
 		setDomainCode();
+		System.out.println("rdfs:domain code is: " + domainCode); 
 		setRangeCode();
+		System.out.println("rdfs:range code is: " + rangeCode); 
 	}
 	private static void setTypeCode()  {
-		typeCode = dictionaryEncode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
+		typeCode = dictionaryEncode("<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>");
 	}
 	private static void setSubClassCode() {
-		subClassCode = dictionaryEncode("http://www.w3.org/2000/01/rdf-schema#subClassOf");
+		subClassCode = dictionaryEncode("<http://www.w3.org/2000/01/rdf-schema#subClassOf>");
 	}
 	private static void setSubPropertyCode()  {
-		subPropertyCode = dictionaryEncode("http://www.w3.org/2000/01/rdf-schema#subPropertyOf");
+		subPropertyCode = dictionaryEncode("<http://www.w3.org/2000/01/rdf-schema#subPropertyOf>");
 	}
 	private static void setDomainCode() {
-		domainCode = dictionaryEncode("http://www.w3.org/2000/01/rdf-schema#domain");
+		domainCode = dictionaryEncode("<http://www.w3.org/2000/01/rdf-schema#domain>");
 	}
 	private static void setRangeCode()  {
-		rangeCode = dictionaryEncode("http://www.w3.org/2000/01/rdf-schema#range");
+		rangeCode = dictionaryEncode("<http://www.w3.org/2000/01/rdf-schema#range>");
 	}
 
 	/**
