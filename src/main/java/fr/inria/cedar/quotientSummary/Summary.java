@@ -528,7 +528,7 @@ public class Summary {
 			throw new IllegalStateException("Was not able to extract a core component of the file name " 
 					+ rdfFileName); 
 		}
-		return rdfFileName.substring(lastSlashPosition+1,  lastDotPosition); 
+		return rdfFileName.substring(lastSlashPosition+1,  lastDotPosition+3); 
 	}
 	private String getNTSummaryFileName(String rdfFileName) {
 		String coreRDFFileName = getCoreRDFFileName(rdfFileName);

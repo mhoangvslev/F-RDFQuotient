@@ -92,6 +92,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 		//Debugger.setFlag(true);
 		long start = System.currentTimeMillis(); 
 		String dataTriplesFileName = args[0];
+		System.out.println(" dataTriplesFileName "+dataTriplesFileName);
 		// this is needed to find the constants associated to special RDF properties
 		RDF2SQLEncoding.setUp(conn); 
 		long typeConstantCode = RDF2SQLEncoding.getTypeCode(); 
