@@ -48,6 +48,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 	 * @param conn
 	 */
 	public  TypedWeakSummary (Connection conn) {
+		this.summaryTablePrefix = TYPED_WEAK_SUMMARY_PREFIX; 
 		Debugger.log("Reading TypedWeak summary from Postgres, setting up special URIs from the dictionary");
 		RDF2SQLEncoding.setUp(conn); 
 		String getSummaryTriples = getSQLQueryForSummaryTriples();

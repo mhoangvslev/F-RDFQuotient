@@ -82,6 +82,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	 * @param conn
 	 */
 	public  TypedStrongSummary (Connection conn) {
+		this.summaryTablePrefix = TYPED_STRONG_SUMMARY_PREFIX; 
 		Debugger.log("Reading TypedStrong summary from Postgres, setting up special URIs from the dictionary");
 		RDF2SQLEncoding.setUp(conn); 
 		String getSummaryTriples = getSQLQueryForSummaryTriples();

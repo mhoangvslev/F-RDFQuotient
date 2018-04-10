@@ -24,6 +24,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 	 * @param conn
 	 */
 	public  WeakSummary (Connection conn) {
+		this.summaryTablePrefix = WEAK_SUMMARY_PREFIX; 
 		Debugger.log("Reading Weak summary from Postgres, setting up special URIs from the dictionary");
 		RDF2SQLEncoding.setUp(conn); 
 		String getSummaryTriples = getSQLQueryForSummaryTriples();
@@ -40,7 +41,8 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 			}
 		}
 		catch(SQLException e) {
-			throw new IllegalStateException("Unable to read Weak summary from Postgres " + e.getStackTrace()); 
+			throw new IllegalStateException("Unable to read Weak summary from Postgres " + getSummaryTriples + 
+					" " + e.toString() ); 
 		}
 		System.out.println("Read Weak summary from Postgres"); 
 	}

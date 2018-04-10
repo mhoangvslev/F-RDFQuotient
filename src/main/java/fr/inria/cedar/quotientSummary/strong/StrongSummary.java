@@ -16,6 +16,8 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 	 * @param conn
 	 */
 	public  StrongSummary (Connection conn) {
+
+		this.summaryTablePrefix = STRONG_SUMMARY_PREFIX; 
 		Debugger.log("Reading Strong summary from Postgres, setting up special URIs from the dictionary");
 		RDF2SQLEncoding.setUp(conn); 
 		String getSummaryTriples = getSQLQueryForSummaryTriples();
@@ -39,7 +41,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 
 	public StrongSummary() {
 		super(); 
-		this.summaryTablePrefix = "s_"; 
+		this.summaryTablePrefix = STRONG_SUMMARY_PREFIX; 
 	}
 
 	/** This implementation should be shared by Weak and Strong

@@ -822,7 +822,7 @@ public class Summary {
 	}
 
 	protected String getSQLQueryForSummaryTriples() {
-		return ("select *  from " + getSummaryTablePrefix() + "_encoded_summary"); 
+		return ("select *  from " + getSummaryTablePrefix() + "encoded_summary"); 
 	}
 	
 	public static Summary readSummaryFromPostgres(Connection conn) {
