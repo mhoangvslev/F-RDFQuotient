@@ -20,8 +20,7 @@ import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 public class WeakSummary extends WeakOrTypedWeakSummary {
 
 	/**
-	 * This must be used to read a summary from Postgres. It is based on the core summary population method of the root summary class,
-	 * then we just steal its edges.
+	 * This must be used to read a W summary from Postgres. 
 	 * @param conn
 	 */
 	public  WeakSummary (Connection conn) {

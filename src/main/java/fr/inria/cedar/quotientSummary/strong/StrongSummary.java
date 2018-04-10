@@ -12,7 +12,7 @@ import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 public class StrongSummary extends StrongOrTypedStrongSummary {
 
 	/**
-	 * This must be used to read a summary from Postgres. 
+	 * This must be used to read a S summary from Postgres. 
 	 * @param conn
 	 */
 	public  StrongSummary (Connection conn) {

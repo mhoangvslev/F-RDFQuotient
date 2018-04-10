@@ -832,15 +832,6 @@ public class Summary {
 		return sum; 
 	}
 
-//	/**
-//	 * This method is needed by specialization classes when they are read from Postgres.
-//	 * They need to 
-//	 * @return
-//	 */
-//	public HashMap<Long, HashMap<Long, ArrayList<Long>>> getEdgesAsInternallyStored() {
-//		return this.edges; 
-//	}
-
 	public String getSummaryTablePrefix() {
 		return this.summaryTablePrefix; 
 	}
