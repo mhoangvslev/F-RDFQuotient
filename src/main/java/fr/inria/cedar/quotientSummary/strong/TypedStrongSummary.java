@@ -83,8 +83,25 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	 * @param conn
 	 */
 	public  TypedStrongSummary (Connection conn) {
-		Summary s = Summary.readSummaryFromPostgres(conn);
-		this.edges = s.getEdgesAsInternallyStored(); 
+		Debugger.log("Reading TypedStrong summary from Postgres, setting up special URIs from the dictionary");
+		RDF2SQLEncoding.setUp(conn); 
+		String getSummaryTriples = getSQLQueryForSummaryTriples();
+		try{
+			Statement getTriples = conn.createStatement(); 
+			// Debugger.log("Created statement");
+			ResultSet rs = getTriples.executeQuery(getSummaryTriples); 
+			// Debugger.log("Asking for summary triples")
+			while (rs.next()) {
+				Long s = rs.getLong(1);
+				Long p = rs.getLong(2); 
+				Long o = rs.getLong(3);
+				this.addTriple(s, p, o);
+			}
+		}
+		catch(SQLException e) {
+			throw new IllegalStateException("Unable to read Typed Strong summary from Postgres " + e.getStackTrace()); 
+		}
+		System.out.println("Read Typed Strong summary from Postgres"); 
 	}
 
 	/**

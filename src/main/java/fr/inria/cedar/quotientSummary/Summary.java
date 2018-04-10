@@ -821,39 +821,25 @@ public class Summary {
 		throw new IllegalStateException("This method is not defined for " + this.getClass().getName());  
 	}
 
+	protected String getSQLQueryForSummaryTriples() {
+		return ("select *  from " + getSummaryTablePrefix() + "_encoded_summary"); 
+	}
+	
 	public static Summary readSummaryFromPostgres(Connection conn) {
 		Summary sum = new Summary(); 
 		Debugger.log("Trying to read summary from Postgres");
 		RDF2SQLEncoding.setUp(conn); 
-		Debugger.log("Set up special URIs from dictionary"); 
-		String getSummaryTriples = ("select *  from encoded_summary"); 
-		try{
-			Statement getTriples = conn.createStatement(); 
-			// Debugger.log("Created statement");
-			ResultSet rs = getTriples.executeQuery(getSummaryTriples); 
-			// Debugger.log("Asking for summary triples")
-			while (rs.next()) {
-				Long s = rs.getLong(1);
-				Long p = rs.getLong(2); 
-				Long o = rs.getLong(3);
-				sum.addTriple(s, p, o);
-			}
-		}
-		catch(SQLException e) {
-			throw new IllegalStateException("Unable to read summary from Postgres"); 
-		}
-		System.out.println("Read summary from Postgres"); 
 		return sum; 
 	}
 
-	/**
-	 * This method is needed by specialization classes when they are read from Postgres.
-	 * They need to 
-	 * @return
-	 */
-	public HashMap<Long, HashMap<Long, ArrayList<Long>>> getEdgesAsInternallyStored() {
-		return this.edges; 
-	}
+//	/**
+//	 * This method is needed by specialization classes when they are read from Postgres.
+//	 * They need to 
+//	 * @return
+//	 */
+//	public HashMap<Long, HashMap<Long, ArrayList<Long>>> getEdgesAsInternallyStored() {
+//		return this.edges; 
+//	}
 
 	public String getSummaryTablePrefix() {
 		return this.summaryTablePrefix; 
