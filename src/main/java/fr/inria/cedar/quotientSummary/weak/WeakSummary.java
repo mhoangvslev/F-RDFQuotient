@@ -27,7 +27,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 		this.summaryTablePrefix = WEAK_SUMMARY_PREFIX; 
 		Debugger.log("Reading Weak summary from Postgres, setting up special URIs from the dictionary");
 		RDF2SQLEncoding.setUp(conn); 
-		String getSummaryTriples = getSQLQueryForSummaryTriples();
+		String getSummaryTriples = getSummaryTriplesSQLQuery();
 		try{
 			Statement getTriples = conn.createStatement(); 
 			// Debugger.log("Created statement");

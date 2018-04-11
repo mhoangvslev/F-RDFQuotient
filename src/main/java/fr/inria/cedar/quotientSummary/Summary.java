@@ -821,10 +821,13 @@ public class Summary {
 		throw new IllegalStateException("This method is not defined for " + this.getClass().getName());  
 	}
 
-	protected String getSQLQueryForSummaryTriples() {
+	protected String getSummaryTriplesSQLQuery() {
 		return ("select *  from " + getSummaryTablePrefix() + "encoded_summary"); 
 	}
-	
+	public String getEncodedRepSQLQuery() {
+		return ("select summarynode from " + getSummaryTablePrefix() + 
+				"encoded_rep where graphnode=?"); 
+	}
 	public static Summary readSummaryFromPostgres(Connection conn) {
 		Summary sum = new Summary(); 
 		Debugger.log("Trying to read summary from Postgres");

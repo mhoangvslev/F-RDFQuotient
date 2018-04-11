@@ -20,7 +20,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 		this.summaryTablePrefix = STRONG_SUMMARY_PREFIX; 
 		Debugger.log("Reading Strong summary from Postgres, setting up special URIs from the dictionary");
 		RDF2SQLEncoding.setUp(conn); 
-		String getSummaryTriples = getSQLQueryForSummaryTriples();
+		String getSummaryTriples = getSummaryTriplesSQLQuery();
 		try{
 			Statement getTriples = conn.createStatement(); 
 			// Debugger.log("Created statement");
