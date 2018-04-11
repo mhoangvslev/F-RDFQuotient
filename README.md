@@ -1,4 +1,4 @@
-To store an RDF file in postgres, dictionary-encode it there, summarize it (weak summary for now) and 
+To store an RDF file in postgres, dictionary-encode it there, summarize it (weak and typed weak summary for now) and 
 store the (encoded) summary in Postgres, call SummaryBuilder with e.g.
 
 loadsummarize pathToNTfile
