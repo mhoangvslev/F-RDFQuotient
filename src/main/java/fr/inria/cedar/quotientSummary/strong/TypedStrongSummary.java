@@ -26,8 +26,6 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 
 	HashMap<Long, HashMap<Long, Long>> untypedSummaryNodes; // source clique --> target clique --> summary node
 
-	private long TYPE; // the number to be used for the type property
-	private boolean firstType;
 	private char TARGET=1;
 	private char SOURCE=0;
 
@@ -43,22 +41,22 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	private final char US_NS_TO_RP = 6;
 	private final char US_NS_UO_RO_RP = 7;
 	private final char US_NS_UO_NO_RP = 8;
-	private final char TS_UO_RO_NP = 10;
-	private final char TS_UO_NO_NP = 11;
-	private final char US_RS_TO_NP = 12;
-	private final char US_RS_UO_RO_NP = 13;
-	private final char US_RS_UO_NO_NP = 14; 
-	private final char US_NS_TO_NP = 15;
-	private final char US_NS_UO_RO_NP = 16;
-	private final char US_NS_UO_NO_NP = 17;
+	private final char TS_UO_RO_NP = 9;
+	private final char TS_UO_NO_NP = 10;
+	private final char US_RS_TO_NP = 11;
+	private final char US_RS_UO_RO_NP = 12;
+	private final char US_RS_UO_NO_NP = 13; 
+	private final char US_NS_TO_NP = 14;
+	private final char US_NS_UO_RO_NP = 15;
+	private final char US_NS_UO_NO_NP = 16;
 
 
 	// a subject that is typed has been represented before the data triples are traversed.
 	// such a subject representative should never be merged with the source of a data property
 	// nor should it involve the source and target of the data property
-	protected final static char TRS_RO = 9;
-	protected final static char TRS_TRO = 10;
-	protected final static char TRS_UO = 11;
+	//protected final static char TRS_RO = 9;
+	//protected final static char TRS_TRO = 10;
+	//protected final static char TRS_UO = 11;
 
 	public TypedStrongSummary(){
 		super(); 
@@ -67,11 +65,10 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		c2cs = new Long2LongSet();
 		rep = new Long2Long();
 		n2cs = new Long2Long(); 
-		untypedSummaryNodes = new HashMap<>();
+		untypedSummaryNodes = new HashMap<Long, HashMap<Long, Long>>(); 
 		minCliqueID = -1;
 		emptySCCount = Long.MAX_VALUE;
 		emptyTCCount = Long.MAX_VALUE; 
-		firstType=true;
 		numberOfDataTriplesRead=0;
 		numberOfTypeTriplesRead=0; 
 		this.summaryTablePrefix = TYPED_STRONG_SUMMARY_PREFIX; 
@@ -118,9 +115,16 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		// this is needed to find the constants associated to special RDF properties
 		RDF2SQLEncoding.setUp(conn); 
 		long typeConstantCode = RDF2SQLEncoding.getTypeCode(); 
-		if (typeConstantCode != -1) {
-			this.typeTriplesExist = true; 
+		if (typeConstantCode != -1) { 
+			this.typeTriplesExist = true;
+			// we need to be sure that integers which we invent to represent nodes
+			// will not collide with the codes already given to classes and properties 
+			// (which, in this implementation, for simplicity, are preserved).
+			long maxClassOrPropertyCode = getMaximumCodeForClassOrPropertyNodes(conn); 
+			this.jumpSummaryNodeCount(maxClassOrPropertyCode);
 		}
+		
+		
 		//System.out.println("TypedWeak: Looking for type triples"); 
 		String getTypedTriplesString = ("select *  from encoded_triples where p=" + typeConstantCode); 
 		try {
@@ -129,7 +133,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 			ResultSet rs = getTypedTriples.executeQuery(getTypedTriplesString);
 			while (rs.next()){		
 				Triple t = new Triple(rs.getInt(1), rs.getInt(2), rs.getInt(3)); 
-				//System.out.println("### Type triple " + t.toString());
+				System.out.println("### Type triple " + t.toString());
 				this.handleTypeTripleBeforeData(t);
 				globalTripleCount ++; 
 			}
@@ -156,7 +160,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 			globalTripleCount = 0;
 			while (rs.next()){
 				Triple t = new Triple(rs.getLong(1), rs.getLong(2), rs.getLong(3)); 
-				//Debugger.log("#### Triple " + t.toString());
+				System.out.println("#### Data triple " + t.toString());
 				if ((t.p == RDF2SQLEncoding.getSubClassCode()) ||
 						(t.p == RDF2SQLEncoding.getSubPropertyCode()) ||
 						(t.p == RDF2SQLEncoding.getDomainCode()) ||
@@ -184,7 +188,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	}
 
 
-	String caseName(char c){
+	String caseName(char c){ // 17 cases
 		switch(c){
 		case TS_TO: { return "TS_TO"; }
 		case TS_UO_RO_RP: { return "TS_UO_RO_RP"; }
@@ -207,7 +211,11 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		throw new IllegalStateException("Unrecognized case " + c); 
 	}
 
+	// 17 cases
 	private char decode(Long classSetS, Long classSetO, Long sourceCliqueS, Long sourceCliqueO, Long sourceCliqueP){
+		System.out.println("classSetS: " + classSetS + " classSetO: " + classSetO + 
+				" sourceCliqueS: " + sourceCliqueS + " sourceCliqueO: " + sourceCliqueO + 
+				" sourceCliqueP: " + sourceCliqueP); 
 		if (classSetS != null){ // TS
 			if (classSetO != null){ // TS, TO
 				return TS_TO; 
@@ -227,7 +235,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 			// TS, UO, NO, NP
 			return TS_UO_NO_NP; 
 		}
-		// US
+		// if we got here, classSetS is null, thus US
 		if (sourceCliqueS != null){// US, RS
 			if (classSetO != null){ // US, RS, TO
 				if (sourceCliqueP != null){// US, RS, TO, RP
@@ -251,6 +259,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 			// US, RS, UO, NO, NP 
 			return US_RS_UO_NO_NP; 
 		}
+		// if we got here, we are in US, NS
 		if (classSetO != null){ // US, NS, TO
 			if (sourceCliqueP != null){// US, NS, TO, RP
 				return US_NS_TO_RP;
@@ -330,23 +339,15 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	public void display(){
 		System.out.println("TYPED STRONG SUMMARY\nClass to class set IDs:");
 		c2cs.display();
-		System.out.println("Class set IDs to class sets:");
-		cs.display();
-		System.out.println("Nodes to class set IDs");
-		n2cs.display();
-		System.out.println("Source cliques:");
-		sc.display();
-		System.out.println("Target cliques:");
-		tc.display();
-		System.out.println("Nodes to source cliques");
-		n2sc.display();
-		System.out.println("Nodes to target cliques");
-		n2tc.display();
-		System.out.println("Property to source cliques: ");
-		p2sc.display();
-		System.out.println("Property to target cliques: ");
-		p2tc.display();
-		System.out.println("Representation function for untyped nodes: ");
+		System.out.println("Class set IDs to class sets: " + cs.display()); 
+		System.out.println("Nodes to class set IDs: " + n2cs.display()); 
+		System.out.println("Source cliques: " + sc.display());  
+		System.out.println("Target cliques: " + tc.display()); 
+		System.out.println("Nodes to source cliques: " + n2sc.display()); 
+		System.out.println("Nodes to target cliques: " + n2tc.display());
+		System.out.println("Property to source cliques: " + p2sc.display());
+		System.out.println("Property to target cliques: " + p2tc.display()); 
+		System.out.println("Representation function: ");
 		showRep();
 		System.out.println("Summary: ");
 		for (Triple t: this.getSummaryEdges()){
@@ -365,9 +366,16 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 			if (thisNodeSC == null){
 				throw new IllegalStateException("Null source clique");
 			}
+			System.out.println("n2sc: " + node + "->" + thisNodeSC); 
 			Long thisNodeTC = n2tc.get(node);
 			if (thisNodeTC == null){
 				throw new IllegalStateException("Null target clique for " + node); 
+			}
+			if (untypedSummaryNodes == null) {
+				throw new IllegalStateException("Untyped summary nodes"); 
+			}
+			if (untypedSummaryNodes.get(thisNodeSC) == null) {
+				throw new IllegalStateException("Unknown source clique " + thisNodeSC); 
 			}
 			Long summaryNode = untypedSummaryNodes.get(thisNodeSC).get(thisNodeTC);
 			if(summaryNode == null){
@@ -379,7 +387,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	}
 
 	public void handleTypeTripleBeforeData(Triple t){
-		System.out.println("@@@ Type triple: " + t.toString()); 
+		//System.out.println("@@@ Type triple: " + t.toString()); 
 		Long prevClassSetOfS = this.n2cs.get(t.s);
 		TreeSet<Long> thisSubjectClassSet; 
 		if (prevClassSetOfS == null) { // this subject was untyped so far
@@ -527,7 +535,6 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	}
 
 	public void handleDataTriple(Triple t){
-		System.out.println("@@@ handleDataTriple " + t.toString());
 		// 18 cases: (TS, USR, USN) x (TO, UOR, UON) x (PR, PN)  also multiplied by: which cliques are empty and their consequences on fusion
 		Long classSetS = n2cs.get(t.s);
 		Long classSetO = n2cs.get(t.o);
@@ -544,7 +551,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 
 		char caseNumber = decode(classSetS, classSetO, sourceCliqueS, sourceCliqueO, sourceCliqueP); 
 
-		System.out.println("Case " + this.caseName(caseNumber));
+		//System.out.println("Case " + this.caseName(caseNumber));
 		switch(caseNumber){
 		case TS_TO: {          handleDataTriple_TS_TO(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); break; }
 		case TS_UO_RO_RP: {    handleDataTriple_TS_UO_RO_RP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); break; }
@@ -574,14 +581,17 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 			Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
 		long psc = makeAndAddNewSourceClique(t.p); 
 		long ptc = makeAndAddNewTargetClique(t.p); 
-		p2sc.put(t.p, psc); 
-		p2tc.put(t.p, ptc);
 		long emptyTargetCliqueID = getEmptyTargetCliqueID();
 		long repS = getOrCreateSummaryNode(psc, emptyTargetCliqueID);
+		n2sc.put(t.s, psc);
+		n2tc.put(t.s, emptyTargetCliqueID);
 		rep.put(t.s, repS);
 		long emptySourceCliqueID = getEmptySourceCliqueID();
-		long repO = getOrCreateSummaryNode(ptc, emptySourceCliqueID);
+		long repO = getOrCreateSummaryNode(emptySourceCliqueID, ptc);
+		n2sc.put(t.o, emptySourceCliqueID);
+		n2tc.put(t.o, ptc);
 		rep.put(t.o, repO); 
+		this.addTriple(repS, t.p, repO);
 	}
 
 	// untyped, unrepresented subject
@@ -591,7 +601,6 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 			Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
 		// create p's source clique
 		long psc = makeAndAddNewSourceClique(t.p); 
-		p2sc.put(t.p, psc); 
 		// represent s by the source clique of P and the empty target clique:
 		long emptyTargetCliqueID = getEmptyTargetCliqueID();
 		long repS = getOrCreateSummaryNode(psc, emptyTargetCliqueID);
@@ -612,15 +621,13 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 			Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
 		// create p's source clique
 		long psc = makeAndAddNewSourceClique(t.p); 
-		p2sc.put(t.p, psc); 
 		// represent s by the source clique of P and the empty target clique:
 		long emptyTargetCliqueID = getEmptyTargetCliqueID();
 		long repS = getOrCreateSummaryNode(psc, emptyTargetCliqueID);
 		rep.put(t.s, repS);
 		// the target clique of p needs to be created and initialized with p alone
 		// because now that we have seen p, we cannot give it just a source clique
-		long ptc = makeAndAddNewSourceClique(t.p);
-		p2tc.put(t.p, ptc);
+		makeAndAddNewSourceClique(t.p);
 		this.addTriple(repS, t.p, rep.get(t.o)); 
 	}
 
@@ -632,9 +639,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		// add p to the source clique of t.s
 		long ssc = n2sc.get(t.s); 
 		addPropertyToSourceClique(t.p, ssc); 
-		p2sc.put(t.p, ssc); 
 		long ptc = makeAndAddNewSourceClique(t.p); 
-		p2tc.put(t.p, ptc);
 		long repO = getOrCreateSummaryNode(ssc, ptc);
 		rep.put(t.o, repO);
 		n2tc.put(t.o, ptc);
@@ -648,8 +653,6 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 			Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
 		addPropertyToSourceClique(t.p, sourceCliqueS);
 		addPropertyToTargetClique(t.p, targetCliqueO);
-		p2sc.put(t.p, sourceCliqueS);
-		p2tc.put(t.p, targetCliqueO);
 		// neither the representatives nor the source, target cliques of t.s and t.o change
 		this.addTriple(rep.get(t.s), t.p, rep.get(t.o));
 	}
@@ -663,7 +666,6 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		addPropertyToSourceClique(t.p, ssc); 
 		p2sc.put(t.p, ssc);
 		long ptc = makeAndAddNewSourceClique(t.p); 
-		p2tc.put(t.p, ptc);
 		// no representatives will be changed; the cliques of the source node don't change either
 		this.addTriple(rep.get(t.s), t.p, rep.get(t.o));
 	}
@@ -675,13 +677,11 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 			Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
 		long psc = makeAndAddNewSourceClique(t.p);
 		long ptc = makeAndAddNewTargetClique(t.p); 
-		p2sc.put(t.p, psc);
-		p2tc.put(t.p, ptc);
 		// cliques of t.o: 
 		n2tc.put(t.o, ptc);
 		n2sc.put(t.o, getEmptySourceCliqueID());
 		// represent t.o:
-		long repO = getOrCreateSummaryNode(ptc, getEmptySourceCliqueID()); 
+		long repO = getOrCreateSummaryNode(getEmptySourceCliqueID(), ptc); 
 		rep.put(t.o, repO);
 		// add triple:
 		this.addTriple(rep.get(t.s), t.p, rep.get(t.o));
@@ -695,7 +695,6 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 			Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
 		// p gets a new source clique as it was unknown, and its (typed) subject doesn't impact psc 
 		long psc = makeAndAddNewSourceClique(t.p); 
-		p2sc.put(t.p, psc);
 		// adding p to o's target clique
 		ArrayList<Long> tco = tc.get(targetCliqueO);
 		tco.add(t.p); 
@@ -775,7 +774,9 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	private void helper_UO_NO_RP(Triple t, Long sourceCliqueP, Long targetCliqueP) {
 		// represent t.o as empty source clique + target clique of p
 		Long emptySourceCliqueO = getEmptySourceCliqueID(); 
+		System.out.println("helper_UO_NO_RP Looking for the node of source clique " + emptySourceCliqueO + " and target clique " + targetCliqueP); 
 		Long repO = getOrCreateSummaryNode(emptySourceCliqueO, targetCliqueP);
+		System.out.println("helper_UO_NO_RP Found: " + repO); 
 		rep.put(t.o, repO);
 		n2tc.put(t.o, targetCliqueP);
 		n2sc.put(t.o, emptySourceCliqueO);
@@ -925,14 +926,15 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		assert(sourceClique != null & targetClique != null); 
 		HashMap<Long, Long> targetCliquesForThisSourceClique = this.untypedSummaryNodes.get(sourceClique); 
 		if (targetCliquesForThisSourceClique == null){
-			targetCliquesForThisSourceClique = new HashMap<>();
+			targetCliquesForThisSourceClique = new HashMap<Long, Long>();
 			this.untypedSummaryNodes.put(sourceClique, targetCliquesForThisSourceClique); 
 		}
 		Long node = targetCliquesForThisSourceClique.get(targetClique);
 		if (node == null){
-			Debugger.log("Created " + this.maxSummaryNode + " for source clique " + sourceClique + " and target clique " + targetClique); 
-			node = getNextSummaryNode(); // from the parent method
+			//System.out.println("Created " + this.maxSummaryNode + " for source clique " + sourceClique + " and target clique " + targetClique); 
+			node = getNextSummaryNode(); // from the Summary class
 			this.untypedSummaryNodes.get(sourceClique).put(targetClique, node);
+			//System.out.println("Put in untypedSummaryNodes " + sourceClique + "->" + targetClique + "->" + node);
 		}
 		return node; 
 	}
@@ -942,7 +944,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		if (this.emptySCCount == Long.MAX_VALUE){ // the empty source clique has not been created yet
 			ArrayList<Long> emptySC = new ArrayList<>();
 			res = minCliqueID; // we invent a new source clique
-			Debugger.log("ooooo> Initialized the empty source clique at: " + res);
+			//Debugger.log("ooooo> Initialized the empty source clique at: " + res);
 			this.emptySCCount = minCliqueID; 
 			// add this to sc
 			sc.put(minCliqueID, emptySC);
@@ -1018,7 +1020,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	}
 
 	/**
-	 * Creates a new source clique with just p; updates sc
+	 * Creates a new source clique with just p; updates sc and p2sc
 	 * @param p
 	 * @return
 	 */

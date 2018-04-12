@@ -20,6 +20,7 @@ public class StrongSummaryTest
 {
 
 	public File typedstrong(int i) {
+		System.out.println("Typed Strong test");
 		String inputFileName = "src/test/resources/test" + i + "-typedstrong/test-" + i + ".nt"; 
 		String outputFileName = "src/test/resources/test" + i + "-typedstrong/ts-test-" + i + ".nt";
 		try {		
@@ -39,7 +40,7 @@ public class StrongSummaryTest
 		}
 	}
 	
-	@Ignore("Not ready yet")	 @Test 
+	@Test 
 	public void testtypedstrong1() {
 		typedstrong(1); 
 		String referenceFileName = "src/test/resources/test1-typedstrong/ts-test-1-reference.nt";

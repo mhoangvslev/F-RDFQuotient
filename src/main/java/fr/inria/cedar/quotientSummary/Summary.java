@@ -57,7 +57,7 @@ public class Summary {
 	protected static String TYPED_STRONG_SUMMARY_PREFIX="ts_";
 
 	protected boolean checkConsistency = false; 
-	
+
 	public Summary(){
 		rep = new Long2Long();
 		edges = new HashMap<Long, HashMap<Long, ArrayList<Long>>>();
@@ -192,6 +192,33 @@ public class Summary {
 		Long node = new Long(this.maxSummaryNode);
 		this.maxSummaryNode++;
 		return node; 
+	}
+	/**
+	 * This method is needed in order to avoid collisions between
+	 * IDs assigned for class sets, and IDs assigned based on property cliques.
+	 * @param n
+	 */
+	protected void jumpSummaryNodeCount(long n) {
+		this.maxSummaryNode += n;
+	}
+
+	protected long getMaximumCodeForClassOrPropertyNodes(Connection conn) {
+		long maxClassOrPropertyCode = 0; 
+		long typeConstantCode = RDF2SQLEncoding.getTypeCode(); 
+		try{
+			String jumpRepString = ("select max(o) from encoded_triples t1 where p=" + typeConstantCode);
+			ResultSet rs = conn.createStatement().executeQuery(jumpRepString);
+			while (rs.next()) {
+				maxClassOrPropertyCode = rs.getLong(1);
+				break;
+			}
+			rs.close();
+
+		}
+		catch(SQLException e) {
+			throw new IllegalStateException("Unable to determine the highest dictionary code for a type " + e.toString());
+		}
+		return (maxClassOrPropertyCode + 1); 
 	}
 
 	// replaces in summary edges, not in rep
@@ -599,7 +626,7 @@ public class Summary {
 			throw new IllegalStateException("Unable to open the DOT file to for the summary: " + e.toString()); 
 		}
 		System.out.println("Summary written to DOT file " + dotFileName + "."); 
-			
+
 		String pathToDot = properties.getProperty("pathToDot"); 
 		try {
 			String pngFileName = dotFileName.substring(0, dotFileName.length() - 4) + ".png"; 
@@ -696,7 +723,7 @@ public class Summary {
 
 		}
 		System.out.println("RDF graph written to DOT file " + dotFileName + "."); 
-			
+
 		String pathToDot = properties.getProperty("pathToDot"); 
 		try {
 			String pngFileName = dotFileName.substring(0, dotFileName.length() - 4) + ".png"; 
@@ -707,7 +734,7 @@ public class Summary {
 			System.out.println("Could not turn .dot file into .png (check the pathToDot value in summarization.properties)" + e.toString());
 		} 
 	}
-	
+
 	public ArrayList<Triple> getSummaryEdges() {
 		ArrayList<Triple> res = new ArrayList<>();
 		for (Long s: edges.keySet()){
