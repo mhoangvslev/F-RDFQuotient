@@ -873,4 +873,13 @@ public class Summary {
 		return this.summaryTablePrefix.substring(0, this.summaryTablePrefix.length()-1); 
 	}
 
+	protected void showClique(ArrayList<Long> arrayList) {
+		StringBuffer sb = new StringBuffer(); 
+		sb.append("[");
+		for (Long l: arrayList) {
+			sb.append(l + " ");
+		}
+		sb.append("]"); 
+		System.out.println(new String(sb)); 
+	}
 }

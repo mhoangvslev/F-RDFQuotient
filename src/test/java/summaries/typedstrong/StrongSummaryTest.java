@@ -42,13 +42,22 @@ public class StrongSummaryTest
 	
 	@Test 
 	public void testtypedstrong1() {
-		typedstrong(1); 
 		String referenceFileName = "src/test/resources/test1-typedstrong/ts-test-1-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
 			assertTrue("Different summary typedstrong 1", FileUtils.contentEquals(typedstrong(1), expectedOutput));
 		} catch (IOException e) {
 			throw new IllegalStateException("Unable to open .nt files in typedstrong test 1 " + e.toString()); 
+		}
+	}
+	@Test 
+	public void testtypedstrong2() {
+		String referenceFileName = "src/test/resources/test2-typedstrong/ts-test-2-reference.nt";
+		File expectedOutput = new File(referenceFileName);
+		try {
+			assertTrue("Different summary typedstrong 2", FileUtils.contentEquals(typedstrong(2), expectedOutput));
+		} catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in typedstrong test 2 " + e.toString()); 
 		}
 	}
 }

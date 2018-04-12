@@ -211,76 +211,88 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		throw new IllegalStateException("Unrecognized case " + c); 
 	}
 
-	// 17 cases
-	private char decode(Long classSetS, Long classSetO, Long sourceCliqueS, Long sourceCliqueO, Long sourceCliqueP){
-		System.out.println("classSetS: " + classSetS + " classSetO: " + classSetO + 
-				" sourceCliqueS: " + sourceCliqueS + " sourceCliqueO: " + sourceCliqueO + 
-				" sourceCliqueP: " + sourceCliqueP); 
-		if (classSetS != null){ // TS
-			if (classSetO != null){ // TS, TO
-				return TS_TO; 
+	private char decode(Long classSetS, Long repS, Long classSetO, Long repO, Long sourceCliqueP) {
+		if (classSetS != null) { //TS (also represented)
+			if (classSetO != null) { // TO (also represented)
+				return TS_TO;  
 			}
-			//TS, UO
-			if (sourceCliqueO != null){// TS, UO, RO
-				if (sourceCliqueP != null){// TS, UO, RO, RP
-					return TS_UO_RO_RP; 
+			else {//UO
+				if (repO != null) {//RO
+					if (sourceCliqueP != null) {//RP
+						return TS_UO_RO_RP; 
+					}
+					else { // NP
+						return TS_UO_RO_NP; 
+					}
 				}
-				// TS, UO, RO, NP
-				return TS_UO_RO_NP; 
-			}
-			// TS, UO, NO
-			if (sourceCliqueP != null){ // TS, UO, NO, RP
-				return TS_UO_NO_RP;
-			}
-			// TS, UO, NO, NP
-			return TS_UO_NO_NP; 
-		}
-		// if we got here, classSetS is null, thus US
-		if (sourceCliqueS != null){// US, RS
-			if (classSetO != null){ // US, RS, TO
-				if (sourceCliqueP != null){// US, RS, TO, RP
-					return US_RS_TO_RP;
+				else { // NO
+					if (sourceCliqueP != null) {//RP
+						return TS_UO_NO_RP; 
+					}
+					else {
+						return TS_UO_NO_NP; 
+					}
 				}
-				// US, RS, TO, NP
-				return US_RS_TO_NP; 
 			}
-			// US, RS, UO
-			if (sourceCliqueO != null){ //US, RS, UO, RO
-				if (sourceCliqueP != null){ //US, RS, UO, RO, RP
-					return US_RS_UO_RO_RP; 
+		}
+		else { // US
+			if (repS != null) {//US, RS
+				if (classSetO != null) { // TO (also represented)
+					if (sourceCliqueP != null) {
+						return US_RS_TO_RP; 
+					}
+					else {
+						return US_RS_TO_NP; 
+					}
 				}
-				//US, RS, UO, RO, NP
-				return US_RS_UO_RO_NP; 
+				else { // US, RS, UO
+					if (repO != null) { //RO
+						if (sourceCliqueP != null) {
+							return US_RS_UO_RO_RP; 
+						}
+						else {
+							return US_RS_UO_RO_NP; 
+						}
+					}
+					else { // NO
+						if (sourceCliqueP != null) {
+							return US_RS_UO_NO_RP; 
+						}
+						else {
+							return US_RS_UO_NO_NP; 
+						}
+					}
+				}
 			}
-			// US, RS, UO, NO
-			if (sourceCliqueP != null){ // US, RS, UO, NO, RP
-				return US_RS_UO_NO_RP;
+			else { //US, NS
+				if (classSetO != null) {// TO, also represented
+					if (sourceCliqueP != null) {
+						return US_NS_TO_RP; 
+					}
+					else {
+						return US_NS_TO_NP; 
+					}
+				}
+				else { // UO
+					if (repO != null) { // RO
+						if (sourceCliqueP != null) { // RP
+							return US_NS_UO_RO_RP; 
+						}
+						else {
+							return US_NS_UO_RO_NP;
+						}
+					}
+					else { // NO
+						if (sourceCliqueP != null) { // RP
+							return US_NS_UO_NO_RP; 
+						}
+						else {
+							return US_NS_UO_NO_NP; 
+						}
+					}
+				}
 			}
-			// US, RS, UO, NO, NP 
-			return US_RS_UO_NO_NP; 
 		}
-		// if we got here, we are in US, NS
-		if (classSetO != null){ // US, NS, TO
-			if (sourceCliqueP != null){// US, NS, TO, RP
-				return US_NS_TO_RP;
-			}
-			// US, NS, TO, NP
-			return US_NS_TO_NP; 
-		}
-		// US, NS, UO
-		if (sourceCliqueO != null){ //US, NS, UO, RO
-			if (sourceCliqueP != null){ //US, NS, UO, RO, RP
-				return US_NS_UO_RO_RP; 
-			}
-			//US, NS, UO, RO, NP
-			return US_NS_UO_RO_NP; 
-		}
-		// US, NS, UO, NO
-		if (sourceCliqueP != null){ // US, NS, UO, NO, RP
-			return US_NS_UO_NO_RP;
-		}
-		// US, NS, UO, NO, NP 
-		return US_NS_UO_NO_NP; 
 	}
 
 
@@ -547,11 +559,15 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		Long sourceCliqueP = p2sc.get(t.p);
 		Long targetCliqueP = p2tc.get(t.p);
 
+		Long repO = rep.get(t.o);
+		Long repS = rep.get(t.s);
+		
+		//TODO comment this out to improve performance when debugging is finished
 		checkSymmetry(sourceCliqueS, targetCliqueS, sourceCliqueO, targetCliqueO, sourceCliqueP, targetCliqueP); 
 
-		char caseNumber = decode(classSetS, classSetO, sourceCliqueS, sourceCliqueO, sourceCliqueP); 
+		char caseNumber = decode(classSetS, repS, classSetO, repO, sourceCliqueP); 
 
-		//System.out.println("Case " + this.caseName(caseNumber));
+		System.out.println("Case " + this.caseName(caseNumber));
 		switch(caseNumber){
 		case TS_TO: {          handleDataTriple_TS_TO(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); break; }
 		case TS_UO_RO_RP: {    handleDataTriple_TS_UO_RO_RP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); break; }
@@ -640,8 +656,9 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		long ssc = n2sc.get(t.s); 
 		addPropertyToSourceClique(t.p, ssc); 
 		long ptc = makeAndAddNewSourceClique(t.p); 
-		long repO = getOrCreateSummaryNode(ssc, ptc);
+		long repO = getOrCreateSummaryNode(this.getEmptySourceCliqueID(), ptc);
 		rep.put(t.o, repO);
+		n2sc.put(t.o, this.getEmptySourceCliqueID());
 		n2tc.put(t.o, ptc);
 		this.addTriple(rep.get(t.s), t.p, repO);
 	}
@@ -774,7 +791,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	private void helper_UO_NO_RP(Triple t, Long sourceCliqueP, Long targetCliqueP) {
 		// represent t.o as empty source clique + target clique of p
 		Long emptySourceCliqueO = getEmptySourceCliqueID(); 
-		System.out.println("helper_UO_NO_RP Looking for the node of source clique " + emptySourceCliqueO + " and target clique " + targetCliqueP); 
+		System.out.println("helper_UO_NO_RP To represent " + t.o + ", looking for the node of empty source clique " + emptySourceCliqueO + " and target clique " + targetCliqueP); 
 		Long repO = getOrCreateSummaryNode(emptySourceCliqueO, targetCliqueP);
 		System.out.println("helper_UO_NO_RP Found: " + repO); 
 		rep.put(t.o, repO);
@@ -791,8 +808,11 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		// see what we do with t.s:
 		Long newRepS = rep.get(t.s); 
 		if (sourceCliqueS != sourceCliqueP) { // the source clique of P was not that of S
+			//System.out.println("Source clique of " + t.s + "=" + sourceCliqueS + " differs from that of " + t.p + " which is " + sourceCliqueP ); 
 			Long fusedCliqueS = fuseCliquesIntoCreatedFirst(sourceCliqueS, sourceCliqueP, SOURCE);
+			//System.out.println("Fused them in into the one created first: " + fusedCliqueS); 
 			newRepS = getOrCreateSummaryNode(fusedCliqueS, targetCliqueS); 
+			//System.out.println("This leads the new representative of " + t.s + ": " + newRepS);
 			rep.put(t.s, newRepS);
 			n2tc.put(newRepS, targetCliqueS);
 			n2sc.put(newRepS, fusedCliqueS);
@@ -884,17 +904,30 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 			Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
 		Long repS = rep.get(t.s);
 		Long repO = rep.get(t.o);
+		if (repO == null) {
+			throw new IllegalStateException("repO"); 
+		}
 		Long newTCo = targetCliqueO; 
 		Long newRepO = repO; 
 		if (targetCliqueO != targetCliqueP) {
+			System.out.println("Fusing repO");
 			newTCo = fuseCliquesIntoCreatedFirst(targetCliqueO, targetCliqueP, TARGET); 
 			newRepO = getOrCreateSummaryNode(sourceCliqueO, newTCo); 
+			if (newRepO == null) {
+				throw new IllegalStateException("repO"); 
+			}
 			n2tc.put(newRepO, newTCo);
 			n2sc.put(newRepO, sourceCliqueO);
 			rep.put(t.o, newRepO);
 		}
 		// adding triple:
-		this.addTriple(repS, t.p, newRepO); 
+		if (repS == null) {
+			throw new IllegalStateException("repS");
+		}
+		if (rep.get(t.o) == null) {
+			throw new IllegalStateException("repO"); 
+		}
+		this.addTriple(repS, t.p, rep.get(t.o)); 
 	}
 
 	private void handleDataTriple_TS_TO(Triple t, Long classSetS, Long classSetO, Long sourceCliqueS,
@@ -1043,8 +1076,11 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		p2sc.put(p, sourceCliqueID);
 		if (!(sc.get(sourceCliqueID).contains(p))){
 			sc.get(sourceCliqueID).add(p);
-		}		
+		}	
+		System.out.println("New source clique " + sourceCliqueID);
+		showClique(sc.get(sourceCliqueID)); 
 	}
+
 
 	/**
 	 * Initializes a target clique for property p
@@ -1072,7 +1108,9 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		p2tc.put(p, targetCliqueID);
 		if (!(tc.get(targetCliqueID).contains(p))){
 			tc.get(targetCliqueID).add(p);
-		}		
+		}
+		System.out.println("New target clique " + targetCliqueID);
+		showClique(tc.get(targetCliqueID)); 
 	}
 
 
