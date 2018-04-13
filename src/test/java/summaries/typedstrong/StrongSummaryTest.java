@@ -60,4 +60,14 @@ public class StrongSummaryTest
 			throw new IllegalStateException("Unable to open .nt files in typedstrong test 2 " + e.toString()); 
 		}
 	}
+	@Test 
+	public void testtypedstrong3() {
+		String referenceFileName = "src/test/resources/test3-typedstrong/ts-test-3-reference.nt";
+		File expectedOutput = new File(referenceFileName);
+		try {
+			assertTrue("Different summary typedstrong 3", FileUtils.contentEquals(typedstrong(3), expectedOutput));
+		} catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in typedstrong test 3 " + e.toString()); 
+		}
+	}
 }

@@ -21,6 +21,7 @@ import java.util.Set;
 import fr.inria.cedar.commons.miscellaneous.Debugger;
 import fr.inria.cedar.quotientSummary.datastructures.Long2Long;
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
+import fr.inria.cedar.quotientSummary.util.DOTAuxiliary;
 import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 
 public class Summary {
@@ -58,6 +59,8 @@ public class Summary {
 
 	protected boolean checkConsistency = false; 
 
+	protected DOTAuxiliary dax; 
+	
 	public Summary(){
 		rep = new Long2Long();
 		edges = new HashMap<Long, HashMap<Long, ArrayList<Long>>>();
@@ -72,6 +75,7 @@ public class Summary {
 			throw new IllegalStateException("Unable to initialize summary properties"); 
 		}
 		this.summaryTablePrefix = ROOT_SUMMARY_PREFIX; 
+		this.dax = new DOTAuxiliary(); 
 	}
 	/**
 	 * Reads an integer-encoded triple out of a string (a line)
@@ -602,21 +606,36 @@ public class Summary {
 			for (Triple t: summEdges){
 				String subject = this.getSummaryNodeURI(URIprefix, t.s); 
 				String object =  this.getSummaryNodeURI(URIprefix, t.o); 
+				String subjectInDot = subject.replaceAll("\"", "");
+				String objectInDot; 
 				String property = getShortURIForDot(RDF2SQLEncoding.dictionaryDecode(t.p)); 
 				if (t.p == RDF2SQLEncoding.getTypeCode()) {
 					// if this is a type triple, decode the object, too: concretely, this changes the object string
-					object = getShortURIForDot(RDF2SQLEncoding.dictionaryDecode(t.o)); 
+					object = getShortURIForDot(RDF2SQLEncoding.dictionaryDecode(t.o));
+					objectInDot = object.replaceAll("\"", "");
 					property = "rdf:type"; 
-					bw.write("\"" + object.replaceAll("\"", "") + "\" [style = filled, color=darkseagreen];\n");  
-					bw.write("\"" + subject.replaceAll("\"", "") + "\"" + " -> \""+ 
-							object.replaceAll("\"", "") + 
-							"\" [color=darkseagreen, label=\"" +  property.replaceAll("\"", "")+ "\"];\n");
+					if (dax.unknownSummaryNode(t.s)) {
+						bw.write("\"" + subjectInDot + "\" [style = filled, color="+ dax.getSummaryNodeColor(t.s) + "];\n");  
+					}
+					bw.write("\"" + objectInDot + "\" [fontcolor=white, style = filled, color=black];\n");  
+					bw.write("\"" + subjectInDot + "\"" + " -> \""+ 
+							objectInDot + 
+							"\" [label=\"" +  property.replaceAll("\"", "")+ "\"];\n");
 				}
 				else{// in all cases, print the edge: 
 					//System.out.println(subject + " " + property + " " + object);
-					bw.write("\"" + getShortURIForDot(subject).replaceAll("\"", "") + "\"" + " -> \""+ 
-							getShortURIForDot(object).replaceAll("\"", "") + 
-							"\" [label=\"" +  getShortURIForDot(property).replaceAll("\"", "")+ "\"];\n");
+					subjectInDot = getShortURIForDot(subject).replaceAll("\"", "");
+					if (dax.unknownSummaryNode(t.s)) {
+						bw.write("\"" + subjectInDot + "\" [style = filled, color="+ dax.getSummaryNodeColor(t.s) + "];\n");  
+					}
+					objectInDot = getShortURIForDot(object).replaceAll("\"", ""); 
+					if (dax.unknownSummaryNode(t.o)) {
+						bw.write("\"" + objectInDot + "\" [style = filled, color="+ dax.getSummaryNodeColor(t.o) + "];\n");  
+					}
+					String propertyInDot = getShortURIForDot(property).replaceAll("\"", ""); 
+					bw.write("\"" + subjectInDot + "\"" + " -> \""+ 
+							objectInDot + 
+							"\" [label=\"" + propertyInDot + "\"];\n");
 				}
 			}
 			bw.write("}\n"); 
@@ -692,25 +711,50 @@ public class Summary {
 		try {
 			BufferedWriter bw = new BufferedWriter(new FileWriter (new File(dotFileName))); 
 			bw.write("digraph g{\n");
-			ResultSet rs = con.createStatement().executeQuery("select * from triples limit 25"); 
+			ResultSet rs = con.createStatement().executeQuery("select * from triples limit 25");
 			while (rs.next()) {
 				String subject = rs.getString(1); 
+				Long s = RDF2SQLEncoding.dictionaryEncode(subject); 
+				Long sRep = rep.get(s); 
+				
 				String object =  rs.getString(3); 
+				Long o = RDF2SQLEncoding.dictionaryEncode(object); 
+				Long oRep = rep.get(o); 
+				
 				String property = rs.getString(2);
-				if (property.equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")){ 
+				
+				String subjectForDot = getShortURIForDot(subject).replaceAll("\"", ""); 
+				String objectForDot = getShortURIForDot(object).replaceAll("\"", ""); 
+				String propertyForDot = getShortURIForDot(property).replaceAll("\"", ""); 
+				
+				//System.out.println("|" + property + "|"); 
+				
+				if (property.equals(	"<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>")){ 
 					// if this is a type triple, decode the object, too: concretely, this changes the object string
 					object = getShortURIForDot(object); 
 					property = "rdf:type"; 
-					bw.write("\"" + object.replaceAll("\"", "") + "\" [style = filled, color=darkseagreen];\n");  
-					bw.write("\"" + subject.replaceAll("\"", "") + "\"" + " -> \""+ 
-							object.replaceAll("\"", "") + 
-							"\" [color=darkseagreen, label=\"" +  property.replaceAll("\"", "")+ "\"];\n");
+					if (dax.unknownRDFNode(s)) {
+						//System.out.println("S1 " + s + " (" + subject + ") represented by  " + sRep);
+						bw.write("\"" + subjectForDot + "\" [style = filled, color="+ dax.getSummaryNodeColor(sRep) + "];\n");  	
+					}
+					bw.write("\"" + objectForDot + "\" [fontcolor=white, style = filled, color=black];\n");  
+					bw.write("\"" + subjectForDot + "\"" + " -> \""+ 
+							objectForDot + 
+							"\" [color=black, label=\"" +  propertyForDot+ "\"];\n");
 				}
 				else{// in all cases, print the edge: 
 					//System.out.println(subject + " " + property + " " + object);
-					bw.write("\"" + getShortURIForDot(subject).replaceAll("\"", "") + "\"" + " -> \""+ 
-							getShortURIForDot(object).replaceAll("\"", "") + 
-							"\" [label=\"" +  getShortURIForDot(property).replaceAll("\"", "")+ "\"];\n");
+					if (dax.unknownRDFNode(s)) {
+						//System.out.println("S2 " + s + " (" + subject + ") represented by  " + sRep);
+						bw.write("\"" + subjectForDot + "\" [style = filled, color="+ dax.getSummaryNodeColor(sRep) + "];\n");  	
+					}
+					if (dax.unknownRDFNode(o)) {
+						//System.out.println("O " + o + " (" + object + ") represented by " + oRep);
+						bw.write("\"" + objectForDot + "\" [style = filled, color="+ dax.getSummaryNodeColor(oRep) + "];\n");  	
+					}
+					bw.write("\"" + subjectForDot+ "\"" + " -> \""+ 
+							objectForDot + 
+							"\" [label=\"" +  propertyForDot+ "\"];\n");
 				}
 			}
 			bw.write("}\n"); 

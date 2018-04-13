@@ -1,12 +1,19 @@
 digraph g{
-"<http://qstest.org/class1>" [style = filled, color=darkseagreen];
-"<http://qs.org/tw0>" -> "<http://qstest.org/class1>" [color=darkseagreen, label="rdf:type"];
+"<http://qs.org/tw0>" [style = filled, color=antiquewhite1];
+"<http://qstest.org/class1>" [fontcolor=white, style = filled, color=black];
+"<http://qs.org/tw0>" -> "<http://qstest.org/class1>" [label="rdf:type"];
+"<http://qs.org/tw1>" [style = filled, color=aquamarine1];
 "<http://qs.org/tw0>" -> "<http://qs.org/tw1>" [label="<http://qstest.org/prop1>"];
+"<http://qs.org/tw3>" [style = filled, color=cornflowerblue];
 "<http://qs.org/tw0>" -> "<http://qs.org/tw3>" [label="<http://qstest.org/prop1>"];
+"<http://qs.org/tw2>" [style = filled, color=gold];
 "<http://qs.org/tw1>" -> "<http://qs.org/tw2>" [label="<http://qstest.org/prop2>"];
 "<http://qs.org/tw1>" -> "<http://qs.org/tw3>" [label="<http://qstest.org/prop3>"];
 "<http://qs.org/tw2>" -> "<http://qs.org/tw2>" [label="<http://qstest.org/prop6>"];
+"<http://qs.org/tw6>" [style = filled, color=tomato];
 "<http://qs.org/tw2>" -> "<http://qs.org/tw6>" [label="<http://qstest.org/prop6>"];
+"<http://qs.org/tw5>" [style = filled, color=chartreuse];
 "<http://qs.org/tw2>" -> "<http://qs.org/tw5>" [label="<http://qstest.org/prop4>"];
+"<http://qs.org/tw4>" [style = filled, color=cadetblue1];
 "<http://qs.org/tw4>" -> "<http://qs.org/tw0>" [label="<http://qstest.org/prop7>"];
 }

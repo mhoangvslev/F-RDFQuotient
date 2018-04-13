@@ -466,7 +466,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		}
 		return -1;
 	}
-
+ 
 	public void postHandleTypeTriples() {
 		for (Long node: this.n2cs.getNodes()) {
 			for (Long thisClass: this.cs.get(this.n2cs.get(node))) {
@@ -510,27 +510,18 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 
 	/**
 	 * Updates tc, n2tc, p2tc, summary (edges)
-	 * @param sourceCliqueOld
-	 * @param sourceCliqueNew
+	 * @param targetCliqueOld
+	 * @param targetCliqueNew
 	 */
 	private void fuseTargetCliques(Long targetCliqueOld, Long targetCliqueNew){
 		Debugger.log("FuseTargetCliques: " + targetCliqueOld + " into " + targetCliqueNew);
-		if (targetCliqueNew == this.emptyTCCount){
-			throw new Error("Should not use the empty target clique in a place where we had something else"); 
-		}
+		
 		// Do not display here as this requires rep to be fully filled and rep cannot be filled for new nodes before the fusion. So some nodes may be missing.
 		//display();
 		// then make targetCliqueO the same as targetCliqueP (keep smaller)
 		// add properties of target clique of o, to those of the target clique of p
 		ArrayList<Long> realTCNew = this.tc.get(targetCliqueNew);
 		ArrayList<Long> realTCOld = this.tc.get(targetCliqueOld);
-
-		if (realTCNew == null){
-			this.tc.display();
-			throw new Error("After reading " + this.numberOfDataTriplesRead + 
-					" data triples, there is no clique on the new target clique " + targetCliqueNew); 
-
-		}
 
 		if (realTCOld != null){
 			for (Long l: realTCOld){
@@ -624,8 +615,8 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		// o is already represented but its target clique did not include p (given that p was not known)
 		// we need to add p to this target clique
 		// then adjust t.o's representation
-		addPropertyToTargetClique(t.p, targetCliqueO); 
-		p2tc.put(t.p, targetCliqueO);
+		Long newTargetCliqueO = addPropertyToTargetClique(t.p, targetCliqueO); 
+		n2tc.put(t.o, newTargetCliqueO);
 		this.addTriple(repS, t.p, rep.get(t.o));
 		
 	}
@@ -637,10 +628,12 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 			Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
 		// create p's source clique
 		long psc = makeAndAddNewSourceClique(t.p); 
-		// represent s by the source clique of P and the empty target clique:
+		// represent s by the source clique of p and the empty target clique:
 		long emptyTargetCliqueID = getEmptyTargetCliqueID();
 		long repS = getOrCreateSummaryNode(psc, emptyTargetCliqueID);
 		rep.put(t.s, repS);
+		n2sc.put(t.s, psc);
+		n2tc.put(t.s, emptyTargetCliqueID);
 		// the target clique of p needs to be created and initialized with p alone
 		// because now that we have seen p, we cannot give it just a source clique
 		makeAndAddNewSourceClique(t.p);
@@ -652,10 +645,11 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	// unknown property
 	private void handleDataTriple_US_RS_UO_NO_NP(Triple t, Long classSetS, Long classSetO, Long sourceCliqueS,
 			Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
-		// add p to the source clique of t.s
+		// add p to the source clique of t.s; the clique ID changes if it was the empty source clique:
 		long ssc = n2sc.get(t.s); 
-		addPropertyToSourceClique(t.p, ssc); 
-		long ptc = makeAndAddNewSourceClique(t.p); 
+		Long newSourceClique = addPropertyToSourceClique(t.p, ssc); 
+		n2sc.put(t.s, newSourceClique);
+		long ptc = makeAndAddNewTargetClique(t.p); 
 		long repO = getOrCreateSummaryNode(this.getEmptySourceCliqueID(), ptc);
 		rep.put(t.o, repO);
 		n2sc.put(t.o, this.getEmptySourceCliqueID());
@@ -668,8 +662,10 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	// unknown property: it should be bound to these modified cliques
 	private void handleDataTriple_US_RS_UO_RO_NP(Triple t, Long classSetS, Long classSetO, Long sourceCliqueS,
 			Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
-		addPropertyToSourceClique(t.p, sourceCliqueS);
-		addPropertyToTargetClique(t.p, targetCliqueO);
+		Long newSourceCliqueS = 	addPropertyToSourceClique(t.p, sourceCliqueS);
+		n2sc.put(t.s, newSourceCliqueS);
+		Long newTargetCliqueO = addPropertyToTargetClique(t.p, targetCliqueO);
+		n2tc.put(t.o, newTargetCliqueO);
 		// neither the representatives nor the source, target cliques of t.s and t.o change
 		this.addTriple(rep.get(t.s), t.p, rep.get(t.o));
 	}
@@ -680,9 +676,9 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	private void handleDataTriple_US_RS_TO_NP(Triple t, Long classSetS, Long classSetO, Long sourceCliqueS,
 			Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
 		long ssc = n2sc.get(t.s); 
-		addPropertyToSourceClique(t.p, ssc); 
-		p2sc.put(t.p, ssc);
-		long ptc = makeAndAddNewSourceClique(t.p); 
+		Long newSourceClique = addPropertyToSourceClique(t.p, ssc); 
+		n2sc.put(t.s, newSourceClique);
+		makeAndAddNewSourceClique(t.p); 
 		// no representatives will be changed; the cliques of the source node don't change either
 		this.addTriple(rep.get(t.s), t.p, rep.get(t.o));
 	}
@@ -706,20 +702,20 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	}
 
 	// typed, represented subject won't change
-	// untyped, represented object, with a source clique which needs to change as p was unknown
+	// untyped, represented object, with a target clique which needs to change as p was unknown
 	// unknown property
 	private void handleDataTriple_TS_UO_RO_NP(Triple t, Long classSetS, Long classSetO, Long sourceCliqueS,
 			Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
 		// p gets a new source clique as it was unknown, and its (typed) subject doesn't impact psc 
-		long psc = makeAndAddNewSourceClique(t.p); 
+		makeAndAddNewSourceClique(t.p); 
 		// adding p to o's target clique
-		ArrayList<Long> tco = tc.get(targetCliqueO);
-		tco.add(t.p); 
-		p2tc.put(t.p, targetCliqueO);
+		Long resultingTargetClique = addPropertyToTargetClique(t.p, targetCliqueO); 
+		p2tc.put(t.p, resultingTargetClique);
 		// node representatives do not change:
 		// add triple: 
 		this.addTriple(rep.get(t.s), t.p, rep.get(t.o));
 	}
+	
 
 	/**
 	 * Helper method which represents an (untyped) unrepresented subject 
@@ -842,7 +838,12 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 			newSCs = fuseCliquesIntoCreatedFirst(sourceCliqueS, sourceCliqueP, SOURCE);
 		}
 		if (targetCliqueO != targetCliqueP) {
-			oRepChanged = true; 
+			oRepChanged = true;
+			System.out.println("Object node " + t.o + " has the target clique:");
+			showClique(tc.get(targetCliqueO));
+			System.out.println("while the property " + t.p + " has the target clique: "); 
+			showClique(tc.get(targetCliqueP));
+			System.out.println("Fusing them into the one created first"); 
 			newTCo = fuseCliquesIntoCreatedFirst(targetCliqueO, targetCliqueP, TARGET); 
 		}
 		if (sRepChanged) {
@@ -900,17 +901,18 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	// typed, represented subject
 	// untyped, represented object
 	// represented property
+	// we need to unify the target clique of O with the target clique of P
 	private void handleDataTriple_TS_UO_RO_RP(Triple t, Long classSetS, Long classSetO, Long sourceCliqueS,
 			Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
 		Long repS = rep.get(t.s);
 		Long repO = rep.get(t.o);
-		if (repO == null) {
-			throw new IllegalStateException("repO"); 
-		}
 		Long newTCo = targetCliqueO; 
 		Long newRepO = repO; 
 		if (targetCliqueO != targetCliqueP) {
-			System.out.println("Fusing repO");
+			System.out.println("Fusing target clique O: " + targetCliqueO + " with target clique P: " + targetCliqueP);
+			this.showClique(tc.get(targetCliqueO));
+			this.showClique(tc.get(targetCliqueP));
+			System.out.println("Empty target clique is: " + this.getEmptyTargetCliqueID());
 			newTCo = fuseCliquesIntoCreatedFirst(targetCliqueO, targetCliqueP, TARGET); 
 			newRepO = getOrCreateSummaryNode(sourceCliqueO, newTCo); 
 			if (newRepO == null) {
@@ -1009,20 +1011,20 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	/**
 	 * Clique IDs are negative. So, the higher value is the one created first. We will keep the higher value and replace the 
 	 * lower value with this higher value.
+	 * An exception is made if one of the cliques is the empty clique: in this case, fusion systematically
+	 * takes the other clique.
 	 * Updates sc, tc, n2tc, p2sc, p2tc, summary (edges)
 	 */
 	private Long fuseCliquesIntoCreatedFirst(Long c1, Long c2, char code) {
 		if (code == SOURCE){
-			if (c2 == this.emptySCCount){
-				throw new Error("Do not replace with empty source clique!"); 
-			}
-			if (c1 > c2){
+			// if c2 is the empty source clique OR (c2 was created before c1), replace c2 with c1
+			if ((c1 > c2) || (c2.equals(this.getEmptySourceCliqueID()))){
 				// this method treats its first parameter as "old" and the second as "new" 
 				fuseSourceCliques(c2, c1);
 				return c1; 
 			}
 			else{
-				if (c2 > c1){
+				if ((c2 > c1) || (c1.equals(this.getEmptySourceCliqueID()))){
 					fuseSourceCliques(c1, c2);
 					return c2; 
 				}
@@ -1030,16 +1032,13 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		}
 		else{
 			if (code == TARGET){
-				if (c2 == this.emptyTCCount){
-					throw new Error("Do not replace with empty target clique!"); 
-				}
-				if (c1 > c2){
+				if ((c1 > c2) || (c2.equals(this.getEmptyTargetCliqueID()))){
 					// this method treats its first parameter as "old" and the second as "new" 
 					fuseTargetCliques(c2, c1);
 					return c1; 
 				}
 				else{
-					if (c2 > c1){
+					if ((c2 > c1) || (c1.equals(this.getEmptyTargetCliqueID()))){
 						fuseTargetCliques(c1, c2);
 						return c2; 
 					}
@@ -1072,13 +1071,23 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	 * @param p
 	 * @param sourceCliqueID
 	 */
-	private void addPropertyToSourceClique(Long p, Long sourceCliqueID) {
-		p2sc.put(p, sourceCliqueID);
-		if (!(sc.get(sourceCliqueID).contains(p))){
-			sc.get(sourceCliqueID).add(p);
-		}	
-		System.out.println("New source clique " + sourceCliqueID);
-		showClique(sc.get(sourceCliqueID)); 
+	private Long addPropertyToSourceClique(Long p, Long sourceCliqueID) {
+		if (sourceCliqueID.equals(this.getEmptySourceCliqueID())) {
+			// we cannot add p to the empty source clique because that one
+			// needs to be unique and just represent the empty clique, throughout
+			Long newSourceCliqueID = this.makeAndAddNewSourceClique(p);
+			p2sc.put(p, newSourceCliqueID);
+			return newSourceCliqueID; 
+		}
+		else {
+			p2sc.put(p, sourceCliqueID);
+			if (!(sc.get(sourceCliqueID).contains(p))){
+				sc.get(sourceCliqueID).add(p);
+			}	
+			return sourceCliqueID; 
+			//System.out.println("New source clique " + sourceCliqueID);
+			//showClique(sc.get(sourceCliqueID)); 
+		}
 	}
 
 
@@ -1094,7 +1103,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		actualTargetClique.add(p);
 		tc.put(targetCliqueID, actualTargetClique);
 		p2tc.put(p,  targetCliqueID);
-		Debugger.log("Added the new target clique for: " + targetCliqueID + " with property " + p);
+		System.out.println("Added the new target clique " + targetCliqueID + " which is [" + p + "]");
 		minCliqueID --;
 		return targetCliqueID; 
 	}
@@ -1104,13 +1113,23 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	 * @param p
 	 * @param targetCliqueID
 	 */
-	private void addPropertyToTargetClique(Long p, Long targetCliqueID) {
-		p2tc.put(p, targetCliqueID);
-		if (!(tc.get(targetCliqueID).contains(p))){
-			tc.get(targetCliqueID).add(p);
+	private Long addPropertyToTargetClique(Long p, Long targetCliqueID) {
+		if (targetCliqueID.equals(this.getEmptyTargetCliqueID())) {
+			// existingTC was empty. In this case, we need to create a new
+			// target clique and put just p inside, and return that one.
+			Long newTargetClique = this.makeAndAddNewTargetClique(p);
+			p2tc.put(p, newTargetClique);
+			return newTargetClique; 
 		}
-		System.out.println("New target clique " + targetCliqueID);
-		showClique(tc.get(targetCliqueID)); 
+		else {// existingTC was not empty. It suffices to add p to it. 
+			if (!(tc.get(targetCliqueID).contains(p))){
+				tc.get(targetCliqueID).add(p);
+			}
+			p2tc.put(p, targetCliqueID);
+			//System.out.println("New target clique " + targetCliqueID);
+			//showClique(tc.get(targetCliqueID)); 
+			return targetCliqueID; 
+		}
 	}
 
 

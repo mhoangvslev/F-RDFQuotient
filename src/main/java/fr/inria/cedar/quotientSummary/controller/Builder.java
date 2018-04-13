@@ -138,8 +138,8 @@ public class Builder {
 		System.out.println("RDF graph summarized.");
 		sum.saveSummaryInPostgres(conn, args[1]);
 		sum.writeDecodedSummaryToNTFile(conn, args[1]);
-		sum.writeRDFGraphToDotFile(conn, args[1]);
 		sum.writeSummaryToDotFile(conn, args[1]);  
+		sum.writeRDFGraphToDotFile(conn, args[1]);
 	}
 
 	private static Summary createNewSummary(String summaryType) {

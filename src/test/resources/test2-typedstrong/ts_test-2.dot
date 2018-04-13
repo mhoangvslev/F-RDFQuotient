@@ -1,7 +1,11 @@
 digraph g{
-"<http://qstest.org/class1>" [style = filled, color=darkseagreen];
-"<http://qs.org/ts6>" -> "<http://qstest.org/class1>" [color=darkseagreen, label="rdf:type"];
+"<http://qs.org/ts6>" [style = filled, color=antiquewhite1];
+"<http://qstest.org/class1>" [fontcolor=white, style = filled, color=black];
+"<http://qs.org/ts6>" -> "<http://qstest.org/class1>" [label="rdf:type"];
+"<http://qs.org/ts10>" [style = filled, color=aquamarine1];
 "<http://qs.org/ts6>" -> "<http://qs.org/ts10>" [label="<http://qstest.org/prop1>"];
+"<http://qs.org/ts7>" [style = filled, color=cornflowerblue];
+"<http://qs.org/ts8>" [style = filled, color=gold];
 "<http://qs.org/ts7>" -> "<http://qs.org/ts8>" [label="<http://qstest.org/prop2>"];
 "<http://qs.org/ts7>" -> "<http://qs.org/ts10>" [label="<http://qstest.org/prop3>"];
 "<http://qs.org/ts7>" -> "<http://qs.org/ts10>" [label="<http://qstest.org/prop1>"];

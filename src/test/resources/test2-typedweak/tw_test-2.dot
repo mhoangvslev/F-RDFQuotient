@@ -1,8 +1,13 @@
 digraph g{
-"4" [style = filled, color=darkseagreen];
-"<http://qs.org/tw0>" -> "4" [color=darkseagreen, label="rdf:type"];
+"<http://qs.org/tw0>" [style = filled, color=antiquewhite1];
+"4" [fontcolor=white, style = filled, color=black];
+"<http://qs.org/tw0>" -> "4" [label="rdf:type"];
+"<http://qs.org/tw6>" [style = filled, color=aquamarine1];
 "<http://qs.org/tw0>" -> "<http://qs.org/tw6>" [label="<http://qstest.org/prop1>"];
+"<http://qs.org/tw1>" [style = filled, color=cornflowerblue];
+"<http://qs.org/tw2>" [style = filled, color=gold];
 "<http://qs.org/tw1>" -> "<http://qs.org/tw2>" [label="<http://qstest.org/prop2>"];
+"<http://qs.org/tw4>" [style = filled, color=tomato];
 "<http://qs.org/tw1>" -> "<http://qs.org/tw4>" [label="<http://qstest.org/prop3>"];
 "<http://qs.org/tw1>" -> "<http://qs.org/tw4>" [label="<http://qstest.org/prop1>"];
 "<http://qs.org/tw1>" -> "<http://qs.org/tw2>" [label="<http://qstest.org/prop4>"];
