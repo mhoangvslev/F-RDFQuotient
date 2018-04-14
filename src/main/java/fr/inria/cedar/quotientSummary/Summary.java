@@ -29,10 +29,12 @@ public class Summary {
 
 	protected boolean typeTriplesExist = false; 
 
+	// data, schema and type triples:
 	// for each subject
 	//     for each property
 	//         the set of objects such that (subject, property, object) is in the summary
 	protected HashMap<Long, HashMap<Long, ArrayList<Long>>> edges; 
+	
 	// for each summary node, the number of graph nodes it represents
 	protected HashMap<Long, Long> summaryNodeStatistics; 
 	// for each summary edge, the number of graph edge it represents
@@ -144,42 +146,27 @@ public class Summary {
 		}
 	}
 
-	protected boolean isDataProperty(Long p) {
-		long n = RDF2SQLEncoding.getTypeCode(); 
-		if (n != -1) {
-			if (p.equals(n)) {
-				return false; 
+	// we need to be sure that integers which we invent to represent nodes
+	// will not collide with the codes already given to classes and properties 
+	// (which, in this implementation, for simplicity, are preserved).		
+	protected void avoidCollisionsWhenAssigningSummaryNodes(Connection conn) {
+		long maxClassOrPropertyCode = 0; 
+		long typeConstantCode = RDF2SQLEncoding.getTypeCode(); 
+		try{
+			String jumpRepString = ("select max(o) from encoded_triples t1 where p=" + typeConstantCode); 
+			ResultSet rs = conn.createStatement().executeQuery(jumpRepString);
+			while (rs.next()) {
+				maxClassOrPropertyCode = rs.getLong(1);
+				break;
 			}
-		}
-		n = RDF2SQLEncoding.getSubClassCode(); 
-		if (n != -1) {
-			if (p.equals(n)) {
-				return false; 
-			}
-		}
-		n = RDF2SQLEncoding.getSubPropertyCode(); 
-		if (n != -1) {
-			if (p.equals(n)) {
-				return false; 
-			}
-		}
-		n = RDF2SQLEncoding.getDomainCode(); 
-		if (n != -1) {
-			if (p.equals(n)) {
-				return false; 
-			}
-		}
-		n = RDF2SQLEncoding.getRangeCode(); 
-		if (n != -1) {
-			if (p.equals(n)) {
-				return false; 
-			}
-		}
-		//Debugger.log(p + " isDataProperty, here are the standard URI codes: " + typeConstantCode + " " + subClassCode + " " + subPropertyCode + 
-		//		" " + domainCode + " " + rangeCode);
-		return true; 
-	}
+			rs.close();
 
+		}
+		catch(SQLException e) {
+			throw new IllegalStateException("Unable to determine the highest dictionary code for a type " + e.toString());
+		}
+		this.jumpSummaryNodeCount(maxClassOrPropertyCode+1);
+	}
 	protected void showRepInBuffer(StringBuffer sb) {
 		sb.append("|| rep:  ");
 		for (Long node: this.rep.getNodes()){
@@ -204,25 +191,6 @@ public class Summary {
 	 */
 	protected void jumpSummaryNodeCount(long n) {
 		this.maxSummaryNode += n;
-	}
-
-	protected long getMaximumCodeForClassOrPropertyNodes(Connection conn) {
-		long maxClassOrPropertyCode = 0; 
-		long typeConstantCode = RDF2SQLEncoding.getTypeCode(); 
-		try{
-			String jumpRepString = ("select max(o) from encoded_triples t1 where p=" + typeConstantCode);
-			ResultSet rs = conn.createStatement().executeQuery(jumpRepString);
-			while (rs.next()) {
-				maxClassOrPropertyCode = rs.getLong(1);
-				break;
-			}
-			rs.close();
-
-		}
-		catch(SQLException e) {
-			throw new IllegalStateException("Unable to determine the highest dictionary code for a type " + e.toString());
-		}
-		return (maxClassOrPropertyCode + 1); 
 	}
 
 	// replaces in summary edges, not in rep
@@ -361,22 +329,24 @@ public class Summary {
 			throw new IllegalStateException("Could not compute edge representation statistics from Postgres"); 
 		}
 	}
-
-	// inserts a schema triple directly in edges, with no fusion or other replacements
-	protected void copySchemaTriple(Long s, Long p, Long o) {
-		HashMap<Long, ArrayList<Long>> schemasForThisS = edges.get(s);
-		if (schemasForThisS == null) {
-			schemasForThisS = new HashMap<Long, ArrayList<Long>> (); 
-			edges.put(s, schemasForThisS); 
-		}
-		ArrayList<Long> objectsForThisSAndP = schemasForThisS.get(p);
-		if (objectsForThisSAndP == null) {
-			objectsForThisSAndP = new ArrayList<Long>();
-		}
-		if (!objectsForThisSAndP.contains(o)){
-			objectsForThisSAndP.add(o); 
-		}
-	}
+//
+//	// inserts a schema triple directly in edges, with no fusion or other replacements
+//	protected void copySchemaTriple(Long s, Long p, Long o) {
+//		System.out.println("Copying schema triple " + s + " " + p + " " + o);
+//		HashMap<Long, ArrayList<Long>> schemasForThisS = edges.get(s);
+//		if (schemasForThisS == null) {
+//			schemasForThisS = new HashMap<Long, ArrayList<Long>> (); 
+//			edges.put(s, schemasForThisS); 
+//		}
+//		ArrayList<Long> objectsForThisSAndP = schemasForThisS.get(p);
+//		if (objectsForThisSAndP == null) {
+//			objectsForThisSAndP = new ArrayList<Long>();
+//		}
+//		if (!objectsForThisSAndP.contains(o)){
+//			objectsForThisSAndP.add(o); 
+//		}
+//		System.out.println("Exiting copy, there are now " + getSummaryEdges().size() + " summary triples"); 
+//	}
 
 
 	protected void handleTypeTripleAfterData(Triple t) {
@@ -444,6 +414,7 @@ public class Summary {
 			try (PreparedStatement insertInSummary= conn.prepareStatement(insertIntoSummary)) {
 				ArrayList<Triple> edges = this.getSummaryEdges(); 
 				for (Triple t: edges) {
+					System.out.println("Saving in Postgres edge: " + t.toString());
 					insertInSummary.setLong(1, t.s);
 					insertInSummary.setLong(2, t.p);
 					insertInSummary.setLong(3, t.o);
@@ -510,15 +481,25 @@ public class Summary {
 			BufferedWriter bw = new BufferedWriter(new FileWriter (new File(summaryNTFileName))); 
 			// write summary triples: 
 			for (Triple t: summEdges){
-				String subject = getSummaryNodeURI(URIprefix, t.s); 
-				String property = RDF2SQLEncoding.dictionaryDecode(t.p);
-				String object; 
-				if (isDataProperty(t.p)) { // if data property, invent/retrieve an URI for the object
+				//System.out.println("Summary triple: " + t.toString() ); 
+				String subject="", property="", object=""; 
+				if (RDF2SQLEncoding.isDataProperty(t.p)) { // data 
+					subject = getSummaryNodeURI(URIprefix, t.s); 
+					property = RDF2SQLEncoding.dictionaryDecode(t.p); 
 					object =  getSummaryNodeURI(URIprefix, t.o);
 				}
-				else { // otherwise, the object is a class or property: use the original URI
-					object =  RDF2SQLEncoding.dictionaryDecode(t.o); 
-				}   
+				else {
+					if (RDF2SQLEncoding.isSchemaProperty(t.p)) { // schema
+						subject =  RDF2SQLEncoding.dictionaryDecode(t.s); 
+						property =  RDF2SQLEncoding.dictionaryDecode(t.p); 
+						object =  RDF2SQLEncoding.dictionaryDecode(t.o); 
+					}
+					else { // type
+						subject = getSummaryNodeURI(URIprefix, t.s);
+						property =  RDF2SQLEncoding.dictionaryDecode(t.p); 
+						object =  RDF2SQLEncoding.dictionaryDecode(t.o); 
+					}
+				}	 
 				Debugger.log(subject + " " + property + " " + object);
 				bw.write(subject + " " + property + " " + object + " . \n");
 			}
@@ -602,41 +583,57 @@ public class Summary {
 			BufferedWriter bw = new BufferedWriter(new FileWriter (new File(dotFileName))); 
 			bw.write("digraph g{\n");
 
-			ArrayList<Triple> summEdges = this.getSummaryEdges(); 
+			ArrayList<Triple> summEdges = this.getSummaryEdges();
 			for (Triple t: summEdges){
-				String subject = this.getSummaryNodeURI(URIprefix, t.s); 
-				String object =  this.getSummaryNodeURI(URIprefix, t.o); 
-				String subjectInDot = subject.replaceAll("\"", "");
-				String objectInDot; 
-				String property = getShortURIForDot(RDF2SQLEncoding.dictionaryDecode(t.p)); 
-				if (t.p == RDF2SQLEncoding.getTypeCode()) {
-					// if this is a type triple, decode the object, too: concretely, this changes the object string
-					object = getShortURIForDot(RDF2SQLEncoding.dictionaryDecode(t.o));
-					objectInDot = object.replaceAll("\"", "");
-					property = "rdf:type"; 
-					if (dax.unknownSummaryNode(t.s)) {
-						bw.write("\"" + subjectInDot + "\" [style = filled, color="+ dax.getSummaryNodeColor(t.s) + "];\n");  
-					}
-					bw.write("\"" + objectInDot + "\" [fontcolor=white, style = filled, color=black];\n");  
-					bw.write("\"" + subjectInDot + "\"" + " -> \""+ 
-							objectInDot + 
-							"\" [label=\"" +  property.replaceAll("\"", "")+ "\"];\n");
-				}
-				else{// in all cases, print the edge: 
-					//System.out.println(subject + " " + property + " " + object);
+				String subject, property, object, subjectInDot, propertyInDot, objectInDot; 
+				// in all cases, edge labels are preserved:
+				property = getShortURIForDot(RDF2SQLEncoding.dictionaryDecode(t.p)); 
+				propertyInDot = property.replaceAll("\"", "");
+				
+				if (RDF2SQLEncoding.isDataProperty(t.p)) { // data
+					subject = this.getSummaryNodeURI(URIprefix, t.s); 
 					subjectInDot = getShortURIForDot(subject).replaceAll("\"", "");
 					if (dax.unknownSummaryNode(t.s)) {
 						bw.write("\"" + subjectInDot + "\" [style = filled, color="+ dax.getSummaryNodeColor(t.s) + "];\n");  
 					}
+					object = this.getSummaryNodeURI(URIprefix, t.o);
 					objectInDot = getShortURIForDot(object).replaceAll("\"", ""); 
 					if (dax.unknownSummaryNode(t.o)) {
 						bw.write("\"" + objectInDot + "\" [style = filled, color="+ dax.getSummaryNodeColor(t.o) + "];\n");  
 					}
-					String propertyInDot = getShortURIForDot(property).replaceAll("\"", ""); 
-					bw.write("\"" + subjectInDot + "\"" + " -> \""+ 
-							objectInDot + 
-							"\" [label=\"" + propertyInDot + "\"];\n");
 				}
+				else {
+					if (RDF2SQLEncoding.isSchemaProperty(t.p)) { // schema
+						subject = getShortURIForDot(RDF2SQLEncoding.dictionaryDecode(t.s));
+						subjectInDot = subject.replaceAll("\"", "");
+						property = getShortURIForDot(RDF2SQLEncoding.dictionaryDecode(t.p));
+						propertyInDot = property.replaceAll("\"", "");
+						object = getShortURIForDot(RDF2SQLEncoding.dictionaryDecode(t.o));
+						objectInDot = object.replaceAll("\"", "");
+						if (dax.unknownSummaryNode(t.s)) {
+							bw.write("\"" + subjectInDot + "\" [fontcolor=white, style = filled, color=black];\n");  
+						}
+						if (dax.unknownSummaryNode(t.o)) {
+							bw.write("\"" + objectInDot + "\" [fontcolor=white, style = filled, color=black];\n");  
+						}
+					}
+					else { // type
+						subject = this.getSummaryNodeURI(URIprefix, t.s);
+						subjectInDot = subject.replaceAll("\"", "");
+						object = getShortURIForDot(RDF2SQLEncoding.dictionaryDecode(t.o));
+						objectInDot = object.replaceAll("\"", "");
+						property = "rdf:type"; 
+						if (dax.unknownSummaryNode(t.s)) {
+							bw.write("\"" + subjectInDot + "\" [style = filled, color="+ dax.getSummaryNodeColor(t.s) + "];\n");  
+						}
+						bw.write("\"" + objectInDot + "\" [fontcolor=white, style = filled, color=black];\n");  
+					}
+				}
+				// write the triple in all cases: 
+				bw.write("\"" + subjectInDot + "\"" + " -> \""+ 
+						objectInDot + 
+						"\" [label=\"" +  propertyInDot + "\"];\n");
+	
 			}
 			bw.write("}\n"); 
 			bw.close(); 
@@ -722,40 +719,50 @@ public class Summary {
 				Long oRep = rep.get(o); 
 				
 				String property = rs.getString(2);
+				Long p = RDF2SQLEncoding.dictionaryEncode(property); 
 				
 				String subjectForDot = getShortURIForDot(subject).replaceAll("\"", ""); 
 				String objectForDot = getShortURIForDot(object).replaceAll("\"", ""); 
 				String propertyForDot = getShortURIForDot(property).replaceAll("\"", ""); 
 				
-				//System.out.println("|" + property + "|"); 
-				
-				if (property.equals(	"<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>")){ 
-					// if this is a type triple, decode the object, too: concretely, this changes the object string
-					object = getShortURIForDot(object); 
-					property = "rdf:type"; 
+				//System.out.println("(" + subject + " " +  property + " " + object + ")"); 
+				if (RDF2SQLEncoding.isDataProperty(p)) {
 					if (dax.unknownRDFNode(s)) {
-						//System.out.println("S1 " + s + " (" + subject + ") represented by  " + sRep);
-						bw.write("\"" + subjectForDot + "\" [style = filled, color="+ dax.getSummaryNodeColor(sRep) + "];\n");  	
-					}
-					bw.write("\"" + objectForDot + "\" [fontcolor=white, style = filled, color=black];\n");  
-					bw.write("\"" + subjectForDot + "\"" + " -> \""+ 
-							objectForDot + 
-							"\" [color=black, label=\"" +  propertyForDot+ "\"];\n");
-				}
-				else{// in all cases, print the edge: 
-					//System.out.println(subject + " " + property + " " + object);
-					if (dax.unknownRDFNode(s)) {
-						//System.out.println("S2 " + s + " (" + subject + ") represented by  " + sRep);
+						//System.out.println("Data-S " + s + " (" + subject + ") represented by  " + sRep + " colored " + dax.getSummaryNodeColor(sRep));
 						bw.write("\"" + subjectForDot + "\" [style = filled, color="+ dax.getSummaryNodeColor(sRep) + "];\n");  	
 					}
 					if (dax.unknownRDFNode(o)) {
-						//System.out.println("O " + o + " (" + object + ") represented by " + oRep);
+						//System.out.println("Data-O " + o + " (" + object + ") represented by " + oRep + " colored " + dax.getSummaryNodeColor(oRep));
 						bw.write("\"" + objectForDot + "\" [style = filled, color="+ dax.getSummaryNodeColor(oRep) + "];\n");  	
 					}
-					bw.write("\"" + subjectForDot+ "\"" + " -> \""+ 
-							objectForDot + 
-							"\" [label=\"" +  propertyForDot+ "\"];\n");
 				}
+				else {
+					if (RDF2SQLEncoding.isSchemaProperty(p)) {
+						propertyForDot = getShortURIForDot(property).replaceAll("\"", "");
+						if (dax.unknownRDFNode(s)) {
+							//System.out.println("SCH1 " + s + " (" + subject + ") represented by  " + sRep);
+							bw.write("\"" + subjectForDot + "\" [fontcolor=white, style = filled, color=black];\n");  	
+						}
+						if (dax.unknownRDFNode(o)) {
+							//System.out.println("SCH2 " + s + " (" + subject + ") represented by  " + sRep);
+							bw.write("\"" + objectForDot + "\" [fontcolor=white, style = filled, color=black];\n");  	
+						}	
+					}
+					else { // type
+						if (dax.unknownRDFNode(s)) {
+							//System.out.println("TYP1 " + s + " (" + subject + ") represented by  " + sRep);
+							bw.write("\"" + subjectForDot + "\" [style = filled, color="+ dax.getSummaryNodeColor(sRep) + "];\n");  	
+						}
+						if (dax.unknownRDFNode(o)) {
+							//System.out.println("TYP2 " + o + " (" + object + ") represented by  " + oRep);		
+							bw.write("\"" + objectForDot + "\" [fontcolor=white, style = filled, color=black];\n");  
+						}
+					}
+				}
+				bw.write("\"" + subjectForDot+ "\"" + " -> \""+ 
+						objectForDot + 
+						"\" [label=\"" +  propertyForDot+ "\"];\n");
+	
 			}
 			bw.write("}\n"); 
 			bw.close(); 
@@ -783,9 +790,6 @@ public class Summary {
 		ArrayList<Triple> res = new ArrayList<>();
 		for (Long s: edges.keySet()){
 			HashMap<Long, ArrayList<Long>> triplesOfThisSubject = edges.get(s); 
-			if (triplesOfThisSubject == null){
-				throw new Error("No triples whose subject is " + s); 
-			}
 			for (Long p: triplesOfThisSubject.keySet()){
 				ArrayList<Long> objectsOfThisSandP = triplesOfThisSubject.get(p);
 				for (Long o: objectsOfThisSandP){

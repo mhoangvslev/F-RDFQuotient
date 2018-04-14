@@ -116,6 +116,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 		long typeConstantCode = RDF2SQLEncoding.getTypeCode(); 
 		if (typeConstantCode != -1) {
 			this.typeTriplesExist = true; 
+			avoidCollisionsWhenAssigningSummaryNodes(conn); 
 		}
 		String getUntypedTriplesString = ("select *  from encoded_triples where p <> " + typeConstantCode); 
 		try{
@@ -126,14 +127,15 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 			globalTripleCount = 0;
 			while (rs.next()){
 				Triple t = new Triple(rs.getInt(1), rs.getInt(2), rs.getInt(3)); 
-				Debugger.log("#### Triple " + t.toString());
 				if ((t.p == RDF2SQLEncoding.getSubClassCode()) ||
 						(t.p == RDF2SQLEncoding.getSubPropertyCode()) ||
 						(t.p == RDF2SQLEncoding.getDomainCode()) ||
 						(t.p == RDF2SQLEncoding.getRangeCode())) {
-					copySchemaTriple(t.s, t.p, t.o); 
+					System.out.println("#### Schema triple " + t.toString());
+					addTriple(t.s, t.p, t.o); 
 				}
 				else{
+					System.out.println("#### Data triple " + t.toString());
 					handleDataTriple(t); 
 				}
 				//Files.write(Paths.get("output.txt"), (globalTripleCount + ": " + new String(s + " " + p + " " + o + "\n")).getBytes(), StandardOpenOption.APPEND); 
@@ -141,6 +143,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 				//if ((globalTripleCount % 1000 == 0)) {//|| (globalTripleCount > 28800)) {
 				//	System.out.println(globalTripleCount + " triples");
 				//}
+				System.out.println("Summary now has " + getSummaryEdges().size() + " triples");
 			}
 			rs.close();
 			getUntypedTriples.close();
@@ -158,9 +161,11 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 			ResultSet rs = getTypedTriples.executeQuery(getTypedTriplesString);
 			while (rs.next()){		
 				Triple t = new Triple(rs.getInt(1), rs.getInt(2), rs.getInt(3)); 
-				//Debugger.log("#### Type triple " + t.toString());
+				System.out.println("#### Type triple " + t.toString());
 				this.handleTypeTripleAfterData(t);
 				globalTripleCount ++; 
+				System.out.println("Summary now has " + getSummaryEdges().size() + " triples");
+				
 			}
 			rs.close();
 			getTypedTriples.close();
@@ -244,7 +249,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 			}
 			for (Long p: triplesOfThisSubject.keySet()){
 				ArrayList<Long> objectsOfThisSandP = triplesOfThisSubject.get(p);
-				if ((objectsOfThisSandP.size() > 1) && isDataProperty(p)){
+				if ((objectsOfThisSandP.size() > 1) && RDF2SQLEncoding.isDataProperty(p)){
 					throw new IllegalStateException("Subject " + s + " has more than one edge with label " + p); 
 				}
 				for (Long o: objectsOfThisSandP){

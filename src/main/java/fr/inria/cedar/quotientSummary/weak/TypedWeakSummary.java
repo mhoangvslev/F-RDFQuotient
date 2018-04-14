@@ -86,6 +86,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		long typeConstantCode = RDF2SQLEncoding.getTypeCode(); 
 		if (typeConstantCode != -1) {
 			this.typeTriplesExist = true; 
+			avoidCollisionsWhenAssigningSummaryNodes(conn); 
 		}
 		//System.out.println("TypedWeak: Looking for type triples"); 
 		String getTypedTriplesString = ("select *  from encoded_triples where p=" + typeConstantCode); 
@@ -125,7 +126,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 						(t.p == RDF2SQLEncoding.getSubPropertyCode()) ||
 						(t.p == RDF2SQLEncoding.getDomainCode()) ||
 						(t.p == RDF2SQLEncoding.getRangeCode())) {
-					copySchemaTriple(t.s, t.p, t.o); 
+					addTriple(t.s, t.p, t.o); 
 				}
 				else{
 					handleDataTriple(t); 
@@ -415,7 +416,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 			}
 			for (Long p: triplesOfThisSubject.keySet()){
 				ArrayList<Long> objectsOfThisSandP = triplesOfThisSubject.get(p);
-				if ((objectsOfThisSandP.size() > 1) && isDataProperty(p)
+				if ((objectsOfThisSandP.size() > 1) && RDF2SQLEncoding.isDataProperty(p)
 						&& (n2cs.get(s) == null)) { // only check for untyped nodes 
 					throw new IllegalStateException("Subject " + s + " has more than one edge with label " + p); 
 				}

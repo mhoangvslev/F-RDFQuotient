@@ -161,12 +161,24 @@ public class RDF2SQLEncoding {
 		}
 	}
 
-	public static boolean isSpecialProperty(Long p) {
-		if ((p == typeCode) || (p == subPropertyCode) || (p == subClassCode) || 
-				(p == domainCode) || (p == rangeCode)) {
+	public static boolean isSchemaProperty(Long p) {
+		if (((p == subPropertyCode) && (subPropertyCode != -1)) || 
+				((p == subClassCode) && (subClassCode != -1)) || 
+				((p == domainCode) && (domainCode != -1)) || 
+				((p == rangeCode) && (rangeCode != -1))) {
 			return true; 
 		}
 		return false;
+	}
+	
+	public static boolean isSpecialProperty(Long p) {
+		if (((p == typeCode) && (typeCode != -1)) || isSchemaProperty(p)) {
+			return true; 
+		}
+		return false;
+	}
+	public static boolean isDataProperty(Long p) {
+		return (!(isSpecialProperty(p)));
 	}
 
 	public static DecodedTriple decode(Triple t)  {

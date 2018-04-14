@@ -117,11 +117,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		long typeConstantCode = RDF2SQLEncoding.getTypeCode(); 
 		if (typeConstantCode != -1) { 
 			this.typeTriplesExist = true;
-			// we need to be sure that integers which we invent to represent nodes
-			// will not collide with the codes already given to classes and properties 
-			// (which, in this implementation, for simplicity, are preserved).
-			long maxClassOrPropertyCode = getMaximumCodeForClassOrPropertyNodes(conn); 
-			this.jumpSummaryNodeCount(maxClassOrPropertyCode);
+			avoidCollisionsWhenAssigningSummaryNodes(conn); 
 		}
 		
 		
@@ -165,7 +161,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 						(t.p == RDF2SQLEncoding.getSubPropertyCode()) ||
 						(t.p == RDF2SQLEncoding.getDomainCode()) ||
 						(t.p == RDF2SQLEncoding.getRangeCode())) {
-					copySchemaTriple(t.s, t.p, t.o); 
+					addTriple(t.s, t.p, t.o); 
 				}
 				else{
 					handleDataTriple(t); 

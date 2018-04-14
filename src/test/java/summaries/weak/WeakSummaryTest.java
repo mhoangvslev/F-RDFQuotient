@@ -110,6 +110,29 @@ public class WeakSummaryTest {
 		}
 	}
 
+	@Test
+	public void testweak6() {
+		String referenceFileName = "src/test/resources/test6-weak/w_test-6-reference.nt";
+		File expectedOutput = new File(referenceFileName);
+		try {
+			assertTrue("Different summary weak 6", FileUtils.contentEquals(weak(6), expectedOutput));
+		} catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in weak test 6 " + e.toString()); 
+		}
+	}
+	
+
+	@Test
+	public void testweak7() {
+		String referenceFileName = "src/test/resources/test7-weak/w_test-7-reference.nt";
+		File expectedOutput = new File(referenceFileName);
+		try {
+			assertTrue("Different summary weak 7", FileUtils.contentEquals(weak(7), expectedOutput));
+		} catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in weak test 7 " + e.toString()); 
+		}
+	}
+	
 	public File typedweak(int i) {
 		String inputFileName = "src/test/resources/test" + i + "-typedweak/test-" + i + ".nt"; 
 		String outputFileName = "src/test/resources/test" + i + "-typedweak/tw_test-" + i + ".nt";
