@@ -61,6 +61,8 @@ public class Summary {
 
 	protected boolean checkConsistency = false; 
 
+	protected long triplesSummarizedSoFar = 0; 
+	
 	protected DOTAuxiliary dax; 
 	
 	public Summary(){
@@ -329,25 +331,6 @@ public class Summary {
 			throw new IllegalStateException("Could not compute edge representation statistics from Postgres"); 
 		}
 	}
-//
-//	// inserts a schema triple directly in edges, with no fusion or other replacements
-//	protected void copySchemaTriple(Long s, Long p, Long o) {
-//		System.out.println("Copying schema triple " + s + " " + p + " " + o);
-//		HashMap<Long, ArrayList<Long>> schemasForThisS = edges.get(s);
-//		if (schemasForThisS == null) {
-//			schemasForThisS = new HashMap<Long, ArrayList<Long>> (); 
-//			edges.put(s, schemasForThisS); 
-//		}
-//		ArrayList<Long> objectsForThisSAndP = schemasForThisS.get(p);
-//		if (objectsForThisSAndP == null) {
-//			objectsForThisSAndP = new ArrayList<Long>();
-//		}
-//		if (!objectsForThisSAndP.contains(o)){
-//			objectsForThisSAndP.add(o); 
-//		}
-//		System.out.println("Exiting copy, there are now " + getSummaryEdges().size() + " summary triples"); 
-//	}
-
 
 	protected void handleTypeTripleAfterData(Triple t) {
 		throw new IllegalStateException("Not implemented at this level"); 
@@ -559,6 +542,18 @@ public class Summary {
 	private String getSummaryNodeURI(String uriPrefix, long n) {
 		return ("<" + uriPrefix + this.getSummaryURIPrefix() + n + ">");
 	}
+	
+	public void drawSummaryAndGraph(Connection con, String fullRDFFileName) {
+		this.drawSummaryAndGraph(con, fullRDFFileName, "");
+	}
+	protected void drawSummaryAndGraph(Connection con, String fullRDFFileName,
+			String suffix) {
+		String summaryDotFileName = getDotFileName(fullRDFFileName, suffix); 
+		writeSummaryToDotFile(con, summaryDotFileName);
+		String graphDotFileName = getRDFDotFileName(fullRDFFileName, suffix); 
+		writeRDFGraphToDotFile(con, graphDotFileName);
+	}
+	
 	/**
 	 * This decodes the summary (replaces property codes with the original URIs or strings) 
 	 * based on a dictionary table in Postgres
@@ -567,9 +562,8 @@ public class Summary {
 	 * @throws IOException 
 	 * @throws FileNotFoundException 
 	 */
-	public void writeSummaryToDotFile(Connection con, String fullRDFFileName) {
-		String dotFileName = getDotFileName(fullRDFFileName); 
-
+	protected void writeSummaryToDotFile(Connection con, String dotFileName) {
+		dax.resetColors(); 
 		Properties properties = new Properties();	
 		try {
 			properties.load(new FileReader(SUMMARY_CONFIG_FILE));
@@ -658,27 +652,36 @@ public class Summary {
 	 * Given a path to an .nt RDF data file, computes a file name by inserting the
 	 * prefix encoding the summary type before the main file name, and replacing 
 	 * the trailing .nt with .dot
+	 * 
+	 * It also inserts the suffix with a "-" before the ".".
 	 *  
 	 * @param fullRDFFileName
+	 * @param suffix 
 	 * @return
 	 */
-	private String getDotFileName(String fullRDFFileName) {
+	private String getDotFileName(String fullRDFFileName, String suffix) {
 		String coreRDFFileName = getCoreRDFFileName(fullRDFFileName); 
 		String dotFileName = fullRDFFileName.replaceFirst(coreRDFFileName, 
 				(this.summaryTablePrefix+coreRDFFileName));
-		dotFileName = dotFileName.substring(0, dotFileName.length() - 3) + ".dot"; // replace .nt with .dot
+		dotFileName = dotFileName.substring(0, dotFileName.length() - 3) 
+				+ suffix 
+				+ ".dot"; // replace .nt with .dot
 		return dotFileName; 
 	}
 
 	/** 
 	 * Given a path to an .nt RDF data file, computes a file name by  replacing 
-	 * the trailing .nt with .dot
+	 * the trailing .nt with .dot.
+	 * 
+	 * It also adds the suffix just before the "."
 	 *  
 	 * @param fullRDFFileName
+	 * @param suffix 
 	 * @return
 	 */
-	private String getRDFDotFileName(String fullRDFFileName) {
-		return (fullRDFFileName.substring(0, fullRDFFileName.length() - 3)) + ".dot"; 
+	private String getRDFDotFileName(String fullRDFFileName, String suffix) {
+		return (fullRDFFileName.substring(0, fullRDFFileName.length() - 3)) + 
+				suffix + ".dot"; 
 	}
 	/**
 	 * URIs can be too long, thus they may need to be shortened in a .dot file.
@@ -695,9 +698,7 @@ public class Summary {
 		}	
 	}
 
-	public void writeRDFGraphToDotFile(Connection con, String fullRDFFileName) {
-		String dotFileName = getRDFDotFileName(fullRDFFileName); 
-
+	public void writeRDFGraphToDotFile(Connection con, String dotFileName) {
 		Properties properties = new Properties();	
 		try {
 			properties.load(new FileReader(SUMMARY_CONFIG_FILE));
@@ -708,7 +709,10 @@ public class Summary {
 		try {
 			BufferedWriter bw = new BufferedWriter(new FileWriter (new File(dotFileName))); 
 			bw.write("digraph g{\n");
-			ResultSet rs = con.createStatement().executeQuery("select * from triples limit 25");
+			long triplesToDraw = Math.min(25, triplesSummarizedSoFar);
+			// To debug W with intermediary drawings, add: where p <> '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>'
+			// to ensure the right subset of triples is shown 
+			ResultSet rs = con.createStatement().executeQuery("select * from triples  limit " + triplesToDraw);
 			while (rs.next()) {
 				String subject = rs.getString(1); 
 				Long s = RDF2SQLEncoding.dictionaryEncode(subject); 
@@ -717,7 +721,7 @@ public class Summary {
 				String object =  rs.getString(3); 
 				Long o = RDF2SQLEncoding.dictionaryEncode(object); 
 				Long oRep = rep.get(o); 
-				
+	
 				String property = rs.getString(2);
 				Long p = RDF2SQLEncoding.dictionaryEncode(property); 
 				
@@ -732,7 +736,9 @@ public class Summary {
 						bw.write("\"" + subjectForDot + "\" [style = filled, color="+ dax.getSummaryNodeColor(sRep) + "];\n");  	
 					}
 					if (dax.unknownRDFNode(o)) {
-						//System.out.println("Data-O " + o + " (" + object + ") represented by " + oRep + " colored " + dax.getSummaryNodeColor(oRep));
+						//System.out.println("Data-O " + o + " (" + object + ")");
+						//System.out.println("represented by " + oRep + " colored " +
+						//		dax.getSummaryNodeColor(oRep));
 						bw.write("\"" + objectForDot + "\" [style = filled, color="+ dax.getSummaryNodeColor(oRep) + "];\n");  	
 					}
 				}
@@ -803,7 +809,7 @@ public class Summary {
 
 	public void display(String fullRDFFileName){
 		writeEncodedSummaryToFile(getNTSummaryFileName(fullRDFFileName));
-		writeEncodedSummaryToDotFile(getDotFileName(fullRDFFileName));  
+		writeEncodedSummaryToDotFile(getDotFileName(fullRDFFileName, ""));  
 	}
 
 	public void writeEncodedSummaryToFile(String fileName){
@@ -909,7 +915,7 @@ public class Summary {
 		RDF2SQLEncoding.setUp(conn); 
 		return sum; 
 	}
-
+	
 	public String getSummaryTablePrefix() {
 		return this.summaryTablePrefix; 
 	}

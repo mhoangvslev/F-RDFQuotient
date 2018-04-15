@@ -14,12 +14,12 @@ digraph g{
 "<http://qstest.org/class2>" [fontcolor=white, style = filled, color=black];
 "<http://qstest.org/class3>" [fontcolor=white, style = filled, color=black];
 "<http://qstest.org/class2>" -> "<http://qstest.org/class3>" [label=".../01/rdf-schema#subClassOf>"];
-"<http://qs.org/w6>" [style = filled, color=antiquewhite1];
-"<http://qs.org/w7>" [style = filled, color=aquamarine1];
+"<http://qs.org/w6>" [style = filled, color=cadetblue1];
+"<http://qs.org/w7>" [style = filled, color=blueviolet];
 "<http://qs.org/w6>" -> "<http://qs.org/w7>" [label="<http://qstest.org/prop2>"];
 "<http://qstest.org/class1>" [fontcolor=white, style = filled, color=black];
 "<http://qs.org/w6>" -> "<http://qstest.org/class1>" [label=".../02/22-rdf-syntax-ns#type>"];
-"<http://qs.org/w9>" [style = filled, color=cornflowerblue];
+"<http://qs.org/w9>" [style = filled, color=magenta];
 "<http://qs.org/w6>" -> "<http://qs.org/w9>" [label="<http://qstest.org/prop3>"];
 "<http://qs.org/w6>" -> "<http://qs.org/w9>" [label="<http://qstest.org/prop1>"];
 "<http://qs.org/w6>" -> "<http://qs.org/w7>" [label="<http://qstest.org/prop4>"];

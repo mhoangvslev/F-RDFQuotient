@@ -6,6 +6,7 @@ import java.util.HashMap;
 import fr.inria.cedar.commons.miscellaneous.Debugger;
 import fr.inria.cedar.quotientSummary.Summary;
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
+import fr.inria.cedar.quotientSummary.util.Substitutions;
 
 public class WeakOrTypedWeakSummary extends Summary {
 	HashMap<Long, Long> ps; // for each property, the property source
@@ -24,10 +25,6 @@ public class WeakOrTypedWeakSummary extends Summary {
 	protected final static char RS_UP_RO = 6;
 	protected final static char RS_RP_UO = 7;
 	protected final static char RS_RP_RO = 8;
-	
-
-	// for debugging
-	long globalTripleCount; 
 
 	protected long numberOfDataTriplesRead; 
 	protected long numberOfTypeTriplesRead; 
@@ -117,97 +114,153 @@ public class WeakOrTypedWeakSummary extends Summary {
 		Long repS = rep.get(t.s); 
 		Long repO = rep.get(t.o); 
 
-		if (sourceP < repS){ // addedTripleSource is sourceP
-			replaceAll(repS, sourceP, t.p);
-			if (targetP < repO){
-				if (addedTripleSource == repO) {
-					addedTripleSource = targetP; 
-				}
-				replaceAll(repO, targetP, t.p); // replace repO with targetP; addedTripleTarget is targetP
-				this.addTripleAndCheck(addedTripleSource, t.p, addedTripleTarget);
-			}
-			else{//repO <= targetP
-				if (targetP > repO){ // replace targetP with repO
-					if (addedTripleSource == targetP) {
-						addedTripleSource = repO; 
-					}
-					replaceAll(targetP, repO, t.p);
-				}	
-				this.addTripleAndCheck(addedTripleSource, t.p, addedTripleTarget);
-			}
+		Substitutions subs = new Substitutions(sourceP, repS, targetP, repO);
+		System.out.println("Substitutions: " + subs.toString());
+		
+		// update added triple source and target, if needed
+		Long possibleNewAddedTripleSource = subs.get(addedTripleSource);
+		if (possibleNewAddedTripleSource != null) {
+			addedTripleSource = possibleNewAddedTripleSource; 
 		}
-		else{// sourceP >= repS
-			if (sourceP > repS){
-				if (addedTripleTarget == sourceP) {
-					addedTripleTarget = repS; 
-				}
-				replaceAll(sourceP, repS, t.p);
-			}
-			if (targetP < repO){
-				if (addedTripleSource == repO) {
-					addedTripleSource = targetP; 
-				}
-				replaceAll(repO, targetP, t.p); 
-				this.addTripleAndCheck(addedTripleSource, t.p, addedTripleTarget);
-			}
-			else{ // repO <= targetP
-				if (targetP > repO){ // replace if not equal
-					if (addedTripleSource == targetP) {
-						addedTripleSource = repO; 
-					}
-					replaceAll(targetP, repO, t.p); 
-				}
-				// add this triple in any case
-				this.addTripleAndCheck(addedTripleSource, t.p, addedTripleTarget);
-			}
+		Long possibleNewAddedTripleTarget = subs.get(addedTripleTarget);
+		if (possibleNewAddedTripleTarget != null) {
+			addedTripleTarget = possibleNewAddedTripleTarget; 
 		}
+		// apply replacements, if any
+		applySubstitutions(subs, t.p); 
+		// try to add the resulting triple
+		this.addTripleAndCheck(addedTripleSource, t.p, addedTripleTarget);
+		
+		
+//		if (sourceP < repS){ // addedTripleSource is sourceP
+//			System.out.println("RS_RP_RO sourceP=" + sourceP + "<repS=" +repS);
+//			System.out.println("Replacing repS="+repS + " with sourceP=" + sourceP);
+//			replaceAll(repS, sourceP, t.p);
+//			//System.out.println("At this point, summary is:" + this.toString());
+//			if (targetP < repO){
+//				System.out.println("RS_RP_RO targetP=" + targetP + "<repO=" +repO);	
+//				if (addedTripleSource == repO) {
+//					addedTripleSource = targetP; 
+//					System.out.println("RS_RP_RO Added triple source becomes " + targetP);
+//				}
+//				System.out.println("Replacing repO=" + repO + " with targetP=" + targetP);
+//				replaceAll(repO, targetP, t.p); // replace repO with targetP; addedTripleTarget is targetP
+//				//System.out.println("At this point, summary is: " + this.toString());
+//				this.addTripleAndCheck(addedTripleSource, t.p, addedTripleTarget);
+//			}
+//			else{//repO <= targetP
+//				System.out.println("RS_RP_RO targetP=" + targetP + ">=repO=" +repO);
+//				
+//				if (targetP > repO){ // replace targetP with repO
+//					if (addedTripleSource == targetP) {
+//						addedTripleSource = repO; 
+//						System.out.println("RS_RP_RO Added triple source becomes " + repO);
+//					}
+//					System.out.println("Replacing targetP=" + targetP + " with repO=" + repO);
+//					replaceAll(targetP, repO, t.p);
+//				}	
+//				this.addTripleAndCheck(addedTripleSource, t.p, addedTripleTarget);
+//			}
+//		}
+//		else{// sourceP >= repS
+//			System.out.println("RS_RP_RO sourceP=" + sourceP + ">=repS=" +repS);
+//			if (sourceP > repS){
+//				if (addedTripleTarget == sourceP) {
+//					addedTripleTarget = repS; 
+//				}
+//				replaceAll(sourceP, repS, t.p);
+//			}
+//			if (targetP < repO){
+//				if (addedTripleSource == repO) {
+//					addedTripleSource = targetP; 
+//				}
+//				replaceAll(repO, targetP, t.p); 
+//				this.addTripleAndCheck(addedTripleSource, t.p, addedTripleTarget);
+//			}
+//			else{ // repO <= targetP
+//				if (targetP > repO){ // replace if not equal
+//					if (addedTripleSource == targetP) {
+//						addedTripleSource = repO; 
+//					}
+//					replaceAll(targetP, repO, t.p); 
+//				}
+//				// add this triple in any case
+//				this.addTripleAndCheck(addedTripleSource, t.p, addedTripleTarget);
+//			}
+//		}
 
 	}
 
+	private void applySubstitutions(Substitutions subs, Long p) {
+		for (Long n: subs.getNodesToBeReplaced()) {
+			replaceAll(n, subs.get(n), p); 
+		}
+	}
+
+	// the subject and property have been represented, not the object. In this case we must:
+	// - fuse the source of p with the representative of s. 
+	// By convention, we will keep the *** smaller *** one. 
+	// - represent the object by the target of the property 		
 	protected void handleDataTriple_RS_RP_UO(Triple t) {
 		//Debugger.log("================== RS_RP_UO on " + t.toString() + " starts on");
 		//Debugger.log(this.toString()); 
 		//safetyCheck(); 
-
-		// the subject and property have been represented, not the object. In this case we must:
-		// - represent the object by the target of the property 
-		// - fuse the source of p with the representative of s. By convention, we will keep the *** smaller *** one. 
-		// - the fusion may also impact the representative of o.
-		
-		Long targetP = pt.get(t.p); 
-		rep.put(t.o, targetP);
-		Long addedTripleTarget = targetP; // this may be a collateral damage of fusion and replacements
-		// in this case it needs to change, to follow the fusion and replacement
-		
 		Long sourceP = ps.get(t.p);
 		long repS = rep.get(t.s); 
-		//Debugger.log("RS_RP_UO 1. repS: " + repS + " sourceP: " + sourceP + " we should keep the smaller"); 
-		//Debugger.log("RS_RP_UO 2. targetP: " + targetP);
-		if (repS < sourceP){ // we keep repS, replace sourceP with repS all over
-			if (addedTripleTarget == sourceP) {
-				addedTripleTarget = repS;
-			}
-			//Debugger.log("RS_RP_UO 3. Replacing " + sourceP + " with " + repS); 
-			replaceAll(sourceP, repS, t.p); 
-			//Debugger.log("RS_RP_UO 4. After replacement but before triple addition (1)\n" + this.toString());
-			addTripleAndCheck(repS, t.p, addedTripleTarget); 
-			//Debugger.log("RS_RP_UO 5. After replacement and triple addition (1)\n" + this.toString());
+		Long addedTripleSubject = repS; 
+		
+		Long targetP = pt.get(t.p); // we have no repO
+		Long addedTripleTarget = targetP;
+		
+		// if repS and/or addedTripleTarget have been impacted by a substitution, do it
+		Substitutions subs = new Substitutions(repS, sourceP); 
+		Long possibleNewTripleSubject = subs.get(addedTripleSubject); 
+		if (possibleNewTripleSubject != null) {
+			addedTripleSubject = possibleNewTripleSubject; 
 		}
-		else{ 
-			if (repS > sourceP ) { // we keep sourceP, replace repS with sourceP all over
-				if (addedTripleTarget == repS) {
-					addedTripleTarget = sourceP; 
-				}
-				//Debugger.log("RS_RP_UO 6. Replacing " + repS + " with " + sourceP); 
-				replaceAll(repS, sourceP, t.p);
-				//Debugger.log("RS_RP_UO 7. After replacement but before triple addition (2)\n" + this.toString());
-			}
-			// add the edge in any case
-			addTripleAndCheck(sourceP, t.p, addedTripleTarget); 
-			//Debugger.log("RS_RP_UO 8. After replacement and addition of " + sourceP + " " + t.p + " " + targetP);
-			//Debugger.log(this.toString());
-			//consistentyChecks();
+		Long possibleNewTripleTarget = subs.get(addedTripleTarget);
+		if (possibleNewTripleTarget != null) {
+			addedTripleTarget = possibleNewTripleTarget; 
 		}
+		
+		applySubstitutions(subs, t.p); 
+		addTripleAndCheck(addedTripleSubject, t.p, addedTripleTarget);
+		rep.put(t.o, addedTripleTarget);
+		
+//		Long targetP = pt.get(t.p); 
+//		rep.put(t.o, targetP);
+//		Long addedTripleTarget = targetP; // this may be a collateral damage of fusion and replacements
+//		// in this case it needs to change, to follow the fusion and replacement
+//		
+//		Long sourceP = ps.get(t.p);
+//		long repS = rep.get(t.s); 
+//		//Debugger.log("RS_RP_UO 1. repS: " + repS + " sourceP: " + sourceP + " we should keep the smaller"); 
+//		//Debugger.log("RS_RP_UO 2. targetP: " + targetP);
+//		if (repS < sourceP){ // we keep repS, replace sourceP with repS all over
+//			if (addedTripleTarget == sourceP) {
+//				addedTripleTarget = repS;
+//			}
+//			//Debugger.log("RS_RP_UO 3. Replacing " + sourceP + " with " + repS); 
+//			replaceAll(sourceP, repS, t.p); 
+//			//Debugger.log("RS_RP_UO 4. After replacement but before triple addition (1)\n" + this.toString());
+//			addTripleAndCheck(repS, t.p, addedTripleTarget); 
+//			//Debugger.log("RS_RP_UO 5. After replacement and triple addition (1)\n" + this.toString());
+//		}
+//		else{ 
+//			if (repS > sourceP ) { // we keep sourceP, replace repS with sourceP all over
+//				if (addedTripleTarget == repS) {
+//					addedTripleTarget = sourceP; 
+//				}
+//				//Debugger.log("RS_RP_UO 6. Replacing " + repS + " with " + sourceP); 
+//				replaceAll(repS, sourceP, t.p);
+//				//Debugger.log("RS_RP_UO 7. After replacement but before triple addition (2)\n" + this.toString());
+//			}
+//			// add the edge in any case
+//			addTripleAndCheck(sourceP, t.p, addedTripleTarget); 
+//			//Debugger.log("RS_RP_UO 8. After replacement and addition of " + sourceP + " " + t.p + " " + targetP);
+//			//Debugger.log(this.toString());
+//			//consistentyChecks();
+//		}
 	}
 
 	protected void consistencyChecks() {
@@ -238,39 +291,63 @@ public class WeakOrTypedWeakSummary extends Summary {
 		addTripleAndCheck(sourceP, t.p, targetP); 
 	}
 
+	// the property and the object have been seen, not the subject. 
+	// In this case we must:
+	// - represent the subject by the source of the property	
+	// - fuse the target of p with the representative of o. 
+	// By convention we will keep the *** smaller *** one. 
+	
 	protected void handleDataTriple_US_RP_RO(Triple t) {
 		//Debugger.log("US_RP_RO");
-		// the property and the object have been seen, not the subject. In this case we must:
-
-		// - represent the subject by the source of the property	
-		Long sourceP = ps.get(t.p); 
-		rep.put(t.s, sourceP); 
-
-		Long addedTripleSource = sourceP; 
-		// this may change as collateral damage of fusions below
 		
-		// - fuse the target of p with the representative of o. By convention we will keep the *** smaller *** one. 
+		Long sourceP = ps.get(t.p); 
+		Long addedTripleSource = sourceP; 
+		
 		Long targetP = pt.get(t.p); 
 		Long repO = rep.get(t.o); 
-		if (repO > targetP){ // we keep targetP, we need to replace repO  with targetP, all over the summary
-			if (addedTripleSource == repO) {
-				addedTripleSource = targetP; 
-			}
-			replaceAll(repO, targetP, t.p); 
-			addTripleAndCheck(addedTripleSource, t.p, targetP); 
+		Long addedTripleTarget = targetP; // initialize with any of them
+		
+		Substitutions subs = new Substitutions(repO, targetP);
+		Long possibleNewTripleSource = subs.get(addedTripleSource);
+		if (possibleNewTripleSource != null) {
+			addedTripleSource = possibleNewTripleSource;
 		}
-		else{ 
-			if (repO < targetP){
-				if (addedTripleSource == targetP) {
-					addedTripleSource = repO; 
-				}
-				// we keep repO, we need to replace targetP with repO all over in the summary
-				replaceAll(targetP, repO, t.p); 
-			}
-			// add the edge in any case
-			addTripleAndCheck(addedTripleSource, t.p, repO); 
-			// and we represent o by repO: nothing needed, it was already the case
+		Long possibleNewTripleTarget = subs.get(addedTripleTarget);
+		if (possibleNewTripleTarget != null) {
+			addedTripleTarget = possibleNewTripleTarget;
 		}
+		
+		applySubstitutions(subs, t.p);
+	
+		rep.put(t.s, addedTripleSource);
+		addTripleAndCheck(addedTripleSource, t.p, addedTripleTarget); 
+		
+//		Long sourceP = ps.get(t.p); 
+//		rep.put(t.s, sourceP); 
+//
+//		Long addedTripleSource = sourceP; 
+//		Long targetP = pt.get(t.p); 
+//		Long repO = rep.get(t.o); 
+//		
+//		if (repO > targetP){ // we keep targetP, we need to replace repO  with targetP, all over the summary
+//			if (addedTripleSource == repO) {
+//				addedTripleSource = targetP; 
+//			}
+//			replaceAll(repO, targetP, t.p); 
+//			addTripleAndCheck(addedTripleSource, t.p, targetP); 
+//		}
+//		else{ 
+//			if (repO < targetP){
+//				if (addedTripleSource == targetP) {
+//					addedTripleSource = repO; 
+//				}
+//				// we keep repO, we need to replace targetP with repO all over in the summary
+//				replaceAll(targetP, repO, t.p); 
+//			}
+//			// add the edge in any case
+//			addTripleAndCheck(addedTripleSource, t.p, repO); 
+//			// and we represent o by repO: nothing needed, it was already the case
+//		}
 	}
 
 	protected void handleDataTriple_US_RP_UO(Triple t) {

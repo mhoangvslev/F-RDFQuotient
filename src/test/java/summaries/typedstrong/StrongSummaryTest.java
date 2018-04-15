@@ -61,13 +61,43 @@ public class StrongSummaryTest
 		}
 	}
 	@Test 
-	public void testtypedstrong3() {
-		String referenceFileName = "src/test/resources/test3-typedstrong/ts-test-3-reference.nt";
+	public void testtypedstrong4() {
+		String referenceFileName = "src/test/resources/test4-typedstrong/ts-test-4-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
-			assertTrue("Different summary typedstrong 3", FileUtils.contentEquals(typedstrong(3), expectedOutput));
+			assertTrue("Different summary typedstrong 4", FileUtils.contentEquals(typedstrong(4), expectedOutput));
 		} catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in typedstrong test 3 " + e.toString()); 
+			throw new IllegalStateException("Unable to open .nt files in typedstrong test 4 " + e.toString()); 
+		}
+	}
+	@Test 
+	public void testtypedstrong5() {
+		String referenceFileName = "src/test/resources/test5-typedstrong/ts-test-5-reference.nt";
+		File expectedOutput = new File(referenceFileName);
+		try {
+			assertTrue("Different summary typedstrong 5", FileUtils.contentEquals(typedstrong(5), expectedOutput));
+		} catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in typedstrong test 5 " + e.toString()); 
+		}
+	}
+	@Test 
+	public void testtypedstrong6() {
+		String referenceFileName = "src/test/resources/test6-typedstrong/ts-test-6-reference.nt";
+		File expectedOutput = new File(referenceFileName);
+		try {
+			assertTrue("Different summary typedstrong 6", FileUtils.contentEquals(typedstrong(6), expectedOutput));
+		} catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in typedstrong test 6 " + e.toString()); 
+		}
+	}
+	@Test 
+	public void testtypedstrong7() {
+		String referenceFileName = "src/test/resources/test7-typedstrong/ts-test-7-reference.nt";
+		File expectedOutput = new File(referenceFileName);
+		try {
+			assertTrue("Different summary typedstrong 7", FileUtils.contentEquals(typedstrong(7), expectedOutput));
+		} catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in typedstrong test 7 " + e.toString()); 
 		}
 	}
 }

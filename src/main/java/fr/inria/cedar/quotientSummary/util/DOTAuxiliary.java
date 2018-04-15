@@ -6,10 +6,10 @@ import java.util.TreeSet;
 public class DOTAuxiliary{
 	public static String[] svgColorNames = {"antiquewhite1", "aquamarine1", 
 			"cornflowerblue", "gold", "tomato", "chartreuse", "cadetblue1",
-			"antiqueblue3", "blueviolet", "lightpink", "magenta",
-			"yellow", "plum", "wheat", "mediumpurple1", "coral",
+			"blueviolet", "lightpink", "magenta", "yellow",
+			 "plum", "wheat", "mediumpurple1", "coral",
 			"lightgoldenrod", "orange", "khaki1", "orangered", "navy",
-			"magenta",};
+			"lightpink", "magenta", "cyan", "firebrick"};
 
 	// color index for each summary node (may cycle if there are more summary nodes than colors)
 	public  HashMap<Long, Integer> coloredSummaryNodes;
@@ -29,13 +29,11 @@ public class DOTAuxiliary{
 	public  String getSummaryNodeColor(long summaryNodeCode) {
 		Integer colorForThisNode = coloredSummaryNodes.get(summaryNodeCode);
 		if (colorForThisNode == null) {
-			nextSummaryColorToGive++;
-			if (nextSummaryColorToGive == svgColorNames.length) {
-				nextSummaryColorToGive = 0; 
-			}
-			coloredSummaryNodes.put(new Long(summaryNodeCode), nextSummaryColorToGive); 
+			int modulo = (int)(summaryNodeCode % (svgColorNames.length)); 
+			coloredSummaryNodes.put(new Long(summaryNodeCode), 
+					modulo); 
 			//Debugger.log("-<-<-<-<-<-< Assigned " + svgColorNames[nextSummaryColorToGive] + " for " + summaryNodeCode);
-			return svgColorNames[nextSummaryColorToGive];
+			return svgColorNames[modulo];
 		}
 		else {
 			//Debugger.log("-<-<-<-<-<-< Retrieved " + svgColorNames[colorForThisNode] + " for " + summaryNodeCode);
@@ -54,6 +52,12 @@ public class DOTAuxiliary{
 		//Debugger.log("-o-o-o-o-o-o- " + RDFNodeCode + " unknown: " + b);
 		coloredRDFNodes.add(RDFNodeCode);
 		return b;
+	}
+
+	public void resetColors() {
+		coloredSummaryNodes = new HashMap<Long, Integer>();
+		coloredRDFNodes = new TreeSet<Long>();
+		nextSummaryColorToGive = -1; 
 	}
 
 }

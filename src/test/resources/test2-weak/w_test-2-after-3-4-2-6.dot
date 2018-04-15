@@ -1,0 +1,7 @@
+digraph g{
+"<http://qs.org/w13>" [style = filled, color=mediumpurple1];
+"<http://qs.org/w16>" [style = filled, color=orange];
+"<http://qs.org/w13>" -> "<http://qs.org/w16>" [label="<http://qstest.org/prop1>"];
+"<http://qs.org/w14>" [style = filled, color=coral];
+"<http://qs.org/w13>" -> "<http://qs.org/w14>" [label="<http://qstest.org/prop2>"];
+}

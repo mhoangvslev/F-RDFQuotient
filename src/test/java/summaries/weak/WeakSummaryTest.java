@@ -201,6 +201,24 @@ public class WeakSummaryTest {
 			throw new IllegalStateException("Unable to open .nt files in typedweak test 5 " + e.toString()); 
 		}
 	}
-
-
+	@Test
+	public void testtypedweak6() {
+		String referenceFileName = "src/test/resources/test6-typedweak/tw_test-6-reference.nt";
+		File expectedOutput = new File(referenceFileName);
+		try {
+			assertTrue("Different summary typedweak 6", FileUtils.contentEquals(typedweak(6), expectedOutput));
+		} catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in typedweak test 6 " + e.toString()); 
+		}
+	}
+	@Test
+	public void testtypedweak7() {
+		String referenceFileName = "src/test/resources/test7-typedweak/tw_test-7-reference.nt";
+		File expectedOutput = new File(referenceFileName);
+		try {
+			assertTrue("Different summary typedweak 7", FileUtils.contentEquals(typedweak(7), expectedOutput));
+		} catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in typedweak test 7 " + e.toString()); 
+		}
+	}
 }

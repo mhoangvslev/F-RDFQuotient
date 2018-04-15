@@ -1,14 +1,14 @@
 digraph g{
-"<http://qstest.org/node3>" [style = filled, color=antiquewhite1];
-"6" [style = filled, color=aquamarine1];
+"<http://qstest.org/node3>" [style = filled, color=cadetblue1];
+"6" [style = filled, color=blueviolet];
 "<http://qstest.org/node3>" -> "6" [label="<http://qstest.org/prop2>"];
 "<http://qstest.org/node3>" -> "6" [label="<http://qstest.org/prop4>"];
-"<http://qstest.org/node1>" [style = filled, color=antiquewhite1];
+"<http://qstest.org/node1>" [style = filled, color=cadetblue1];
 "<http://qstest.org/class1>" [fontcolor=white, style = filled, color=black];
 "<http://qstest.org/node1>" -> "<http://qstest.org/class1>" [label=".../02/22-rdf-syntax-ns#type>"];
-"1" [style = filled, color=cornflowerblue];
+"1" [style = filled, color=magenta];
 "<http://qstest.org/node1>" -> "1" [label="<http://qstest.org/prop1>"];
-"2" [style = filled, color=cornflowerblue];
+"2" [style = filled, color=magenta];
 "<http://qstest.org/node1>" -> "2" [label="<http://qstest.org/prop1>"];
 "<http://qstest.org/class2>" [fontcolor=white, style = filled, color=black];
 "<http://qstest.org/class1>" -> "<http://qstest.org/class2>" [label=".../01/rdf-schema#subClassOf>"];
@@ -19,12 +19,12 @@ digraph g{
 "<http://qstest.org/prop1>" -> "<http://qstest.org/class3>" [label="...2000/01/rdf-schema#domain>"];
 "<http://qstest.org/class4>" [fontcolor=white, style = filled, color=black];
 "<http://qstest.org/prop1>" -> "<http://qstest.org/class4>" [label=".../2000/01/rdf-schema#range>"];
-"<http://qstest.org/node2>" [style = filled, color=antiquewhite1];
-"3" [style = filled, color=cornflowerblue];
+"<http://qstest.org/node2>" [style = filled, color=cadetblue1];
+"3" [style = filled, color=magenta];
 "<http://qstest.org/node2>" -> "3" [label="<http://qstest.org/prop1>"];
-"4" [style = filled, color=aquamarine1];
+"4" [style = filled, color=blueviolet];
 "<http://qstest.org/node2>" -> "4" [label="<http://qstest.org/prop2>"];
-"5" [style = filled, color=cornflowerblue];
+"5" [style = filled, color=magenta];
 "<http://qstest.org/node2>" -> "5" [label="<http://qstest.org/prop3>"];
 "<http://qstest.org/node2>" -> "5" [label="<http://qstest.org/prop1>"];
 "<http://qstest.org/class2>" -> "<http://qstest.org/class3>" [label=".../01/rdf-schema#subClassOf>"];
