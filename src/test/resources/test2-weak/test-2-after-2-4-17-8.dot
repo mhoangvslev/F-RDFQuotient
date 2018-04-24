@@ -1,0 +1,8 @@
+digraph g{
+"<http://qstest.org/node3>" [style = filled, color=mediumpurple1];
+"6" [style = filled, color=coral];
+"<http://qstest.org/node3>" -> "6" [label="<http://qstest.org/prop2>"];
+"<http://qstest.org/node2>" [style = filled, color=lightgoldenrod];
+"3" [style = filled, color=orange];
+"<http://qstest.org/node2>" -> "3" [label="<http://qstest.org/prop1>"];
+}

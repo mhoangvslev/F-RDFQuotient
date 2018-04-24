@@ -8,15 +8,15 @@ public class Long2LongList {
 	// clique ID --> set of properties
 	// or: class set ID --> set of types
 	final HashMap<Long, ArrayList<Long>> map;
-	
+
 	public Long2LongList(){
 		map = new HashMap<>();
 	}
-	
+
 	public ArrayList<Long> get(long node){
 		return map.get(new Long(node));
 	}
-	
+
 	public void put(long property, long clique){
 		ArrayList<Long> theClique = map.get(new Long(clique));
 		if (theClique == null){
@@ -51,19 +51,21 @@ public class Long2LongList {
 			map.remove(l1);
 		}
 	}
-	
-	public void display(){
+
+	public String display(){
 		StringBuffer sb = new StringBuffer();
-		sb.append("==============: \n");
-		for (Long key: map.keySet()){
-			sb.append("#"+ key + "|{");
-			ArrayList<Long> values = map.get(key);
-			for (Long val: values){
-				sb.append(val + ", ");
+		if (map.size() > 0) {
+			sb.append("\n==============: \n");
+			for (Long key: map.keySet()){
+				sb.append("#"+ key + "|{");
+				ArrayList<Long> values = map.get(key);
+				for (Long val: values){
+					sb.append(val + ", ");
+				}
+				sb.append("} ");
 			}
-			sb.append("} ");
 		}
-		System.out.println(sb + " (" + map.size() + " entries)");
+		return new String(sb);  
 	}
 
 	public Set<Long> keys() {

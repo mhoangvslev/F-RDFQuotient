@@ -507,7 +507,7 @@ public class Summarization {
 
 			ArrayList<Triple> summEdges = this.getSummaryEdges(); 
 			for (Triple t: summEdges){
-				String subject = URIprefix + t.s; 
+				String subject = URIprefix + t.s;  
 				String object =  URIprefix + t.o; 
 				String property = RDF2SQLEncoding.dictionaryDecode(t.p); 
 				if (t.p == RDF2SQLEncoding.getTypeCode()) {

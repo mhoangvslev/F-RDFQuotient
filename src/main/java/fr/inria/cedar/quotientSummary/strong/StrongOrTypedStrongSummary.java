@@ -1,11 +1,8 @@
 package fr.inria.cedar.quotientSummary.strong;
 
-import java.util.HashMap;
-
 import fr.inria.cedar.quotientSummary.Summary;
 import fr.inria.cedar.quotientSummary.datastructures.Long2Long;
 import fr.inria.cedar.quotientSummary.datastructures.Long2LongList;
-import fr.inria.cedar.quotientSummary.datastructures.Long2LongSet;
 
 public class StrongOrTypedStrongSummary extends Summary {
 	Long2LongList sc; // for each source clique ID,  a source clique

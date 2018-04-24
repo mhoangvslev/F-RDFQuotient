@@ -1,10 +1,14 @@
 digraph g{
-"http://quotientsummary.org/0" -> "http://quotientsummary.org/1" [label="http://qstest.org/property#1"];
-"http://quotientsummary.org/0" -> "http://quotientsummary.org/2" [label="http://qstest.org/property#1"];
-"http://qstest.org/class#1" [style = filled, color=darkseagreen];
-"http://quotientsummary.org/0" -> "http://qstest.org/class#1" [color=darkseagreen, label="rdf:type"];
-"http://quotientsummary.org/3" -> "http://quotientsummary.org/2" [label="http://qstest.org/property#1"];
-"http://quotientsummary.org/3" -> "http://quotientsummary.org/4" [label="http://qstest.org/property#2"];
-"http://quotientsummary.org/3" -> "http://quotientsummary.org/5" [label="http://qstest.org/property#3"];
-"http://quotientsummary.org/6" -> "http://quotientsummary.org/7" [label="http://qstest.org/property#2"];
+"<http://qs.org/ts2>" [style = filled, color=antiquewhite1];
+"<http://qs.org/ts6>" [style = filled, color=aquamarine1];
+"<http://qs.org/ts2>" -> "<http://qs.org/ts6>" [label="...://qstest.org/property#p1>"];
+"<http://qstest.org/class#1>" [fontcolor=white, style = filled, color=black];
+"<http://qs.org/ts2>" -> "<http://qstest.org/class#1>" [label="rdf:type"];
+"<http://qs.org/ts3>" [style = filled, color=cornflowerblue];
+"<http://qs.org/ts4>" [style = filled, color=gold];
+"<http://qs.org/ts3>" -> "<http://qs.org/ts4>" [label="...://qstest.org/property#p2>"];
+"<http://qs.org/ts5>" [style = filled, color=tomato];
+"<http://qs.org/ts7>" [style = filled, color=chartreuse];
+"<http://qs.org/ts5>" -> "<http://qs.org/ts7>" [label="...://qstest.org/property#p3>"];
+"<http://qs.org/ts5>" -> "<http://qs.org/ts6>" [label="...://qstest.org/property#p1>"];
 }

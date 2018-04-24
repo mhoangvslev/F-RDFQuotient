@@ -1,12 +1,15 @@
 digraph g{
-"<http://qs.org/w0>" -> "<http://qs.org/w1>" [label="<http://qstest.org/prop2>"];
-"<http://qstest.org/class1>" [style = filled, color=darkseagreen];
-"<http://qs.org/w1>" -> "<http://qstest.org/class1>" [color=darkseagreen, label="rdf:type"];
-"<http://qstest.org/class3>" [style = filled, color=darkseagreen];
-"<http://qs.org/w1>" -> "<http://qstest.org/class3>" [color=darkseagreen, label="rdf:type"];
-"<http://qstest.org/class1>" [style = filled, color=darkseagreen];
-"<http://qs.org/w2>" -> "<http://qstest.org/class1>" [color=darkseagreen, label="rdf:type"];
-"<http://qstest.org/class2>" [style = filled, color=darkseagreen];
-"<http://qs.org/w2>" -> "<http://qstest.org/class2>" [color=darkseagreen, label="rdf:type"];
-"<http://qs.org/w2>" -> "<http://qs.org/w0>" [label="<http://qstest.org/prop1>"];
+"<http://qs.org/w10>" [style = filled, color=yellow];
+"<http://qs.org/w11>" [style = filled, color=plum];
+"<http://qs.org/w10>" -> "<http://qs.org/w11>" [label="<http://qstest.org/prop2>"];
+"<http://qstest.org/class1>" [fontcolor=white, style = filled, color=black];
+"<http://qs.org/w11>" -> "<http://qstest.org/class1>" [label=".../02/22-rdf-syntax-ns#type>"];
+"<http://qstest.org/class3>" [fontcolor=white, style = filled, color=black];
+"<http://qs.org/w11>" -> "<http://qstest.org/class3>" [label=".../02/22-rdf-syntax-ns#type>"];
+"<http://qs.org/w12>" [style = filled, color=wheat];
+"<http://qstest.org/class1>" [fontcolor=white, style = filled, color=black];
+"<http://qs.org/w12>" -> "<http://qstest.org/class1>" [label=".../02/22-rdf-syntax-ns#type>"];
+"<http://qstest.org/class2>" [fontcolor=white, style = filled, color=black];
+"<http://qs.org/w12>" -> "<http://qstest.org/class2>" [label=".../02/22-rdf-syntax-ns#type>"];
+"<http://qs.org/w12>" -> "<http://qs.org/w10>" [label="<http://qstest.org/prop1>"];
 }

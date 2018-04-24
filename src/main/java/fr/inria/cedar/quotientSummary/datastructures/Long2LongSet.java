@@ -50,13 +50,10 @@ public class Long2LongSet {
 		}
 	}
 
-	public void display(){
+	public String display(){
 		StringBuffer sb = new StringBuffer();
-		if (map.keySet().isEmpty()) {
-			sb.append("()"); 
-		}
-		else {
-			sb.append("==============: \n");
+		if (!map.keySet().isEmpty()) {
+			sb.append("\n==============: \n");
 			for (Long key: map.keySet()){
 				sb.append("#"+ key + "|{");
 				TreeSet<Long> values = map.get(key);
@@ -66,6 +63,7 @@ public class Long2LongSet {
 				sb.append("} "+ " (" + map.size() + " entries)");
 			}
 		}	
+		return new String(sb); 
 	}
 
 	public Set<Long> keys() {

@@ -11,27 +11,53 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.TreeSet;
 
 import fr.inria.cedar.commons.miscellaneous.Debugger;
-import fr.inria.cedar.quotientSummary.Summary;
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
 import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 
 public class WeakSummary extends WeakOrTypedWeakSummary {
 
+	// these serve to represent the nodes that may have types but no
+	// data property
+	long typeOnlyNodeID; 
+	// we will add each typed node here and remove it as soon
+	// as it is a source or target of data triples.
+	TreeSet<Long> typedNodesNoData; 
+	
 	/**
-	 * This must be used to read a summary from Postgres. It is based on the core summary population method of the root summary class,
-	 * then we just steal its edges.
+	 * This must be used to read a W summary from Postgres. 
 	 * @param conn
 	 */
 	public  WeakSummary (Connection conn) {
-		Summary s = Summary.readSummaryFromPostgres(conn);
-		this.edges = s.getEdgesAsInternallyStored(); 
+		this.summaryTablePrefix = WEAK_SUMMARY_PREFIX; 
+		Debugger.log("Reading Weak summary from Postgres, setting up special URIs from the dictionary");
+		RDF2SQLEncoding.setUp(conn); 
+		String getSummaryTriples = getSummaryTriplesSQLQuery();
+		try{
+			Statement getTriples = conn.createStatement(); 
+			// Debugger.log("Created statement");
+			ResultSet rs = getTriples.executeQuery(getSummaryTriples); 
+			// Debugger.log("Asking for summary triples")
+			while (rs.next()) {
+				Long s = rs.getLong(1);
+				Long p = rs.getLong(2); 
+				Long o = rs.getLong(3);
+				this.addTriple(s, p, o);
+			}
+		}
+		catch(SQLException e) {
+			throw new IllegalStateException("Unable to read Weak summary from Postgres " + getSummaryTriples + 
+					" " + e.toString() ); 
+		}
+		System.out.println("Read Weak summary from Postgres"); 
 	}
 
 	public WeakSummary() {
 		super(); 
 		this.summaryTablePrefix = WEAK_SUMMARY_PREFIX; 
+		typeOnlyNodeID = -1; 
 	}
 
 	/**
@@ -92,36 +118,43 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 		//Debugger.setFlag(true);
 		long start = System.currentTimeMillis(); 
 		String dataTriplesFileName = args[0];
+		System.out.println(" dataTriplesFileName "+dataTriplesFileName);
 		// this is needed to find the constants associated to special RDF properties
 		RDF2SQLEncoding.setUp(conn); 
 		long typeConstantCode = RDF2SQLEncoding.getTypeCode(); 
 		if (typeConstantCode != -1) {
 			this.typeTriplesExist = true; 
+			avoidCollisionsWhenAssigningSummaryNodes(conn); 
 		}
+		this.triplesSummarizedSoFar = 0; 
 		String getUntypedTriplesString = ("select *  from encoded_triples where p <> " + typeConstantCode); 
 		try{
 			conn.setAutoCommit(false);
 			Statement getUntypedTriples = conn.createStatement(); 
 			getUntypedTriples.setFetchSize(10000);
 			ResultSet rs = getUntypedTriples.executeQuery(getUntypedTriplesString);
-			globalTripleCount = 0;
 			while (rs.next()){
 				Triple t = new Triple(rs.getInt(1), rs.getInt(2), rs.getInt(3)); 
-				Debugger.log("#### Triple " + t.toString());
 				if ((t.p == RDF2SQLEncoding.getSubClassCode()) ||
 						(t.p == RDF2SQLEncoding.getSubPropertyCode()) ||
 						(t.p == RDF2SQLEncoding.getDomainCode()) ||
 						(t.p == RDF2SQLEncoding.getRangeCode())) {
-					copySchemaTriple(t.s, t.p, t.o); 
+					//System.out.println("#### Schema triple " + t.toString());
+					addTriple(t.s, t.p, t.o); 
 				}
 				else{
+					//System.out.println("#### Data triple " + t.toString());
 					handleDataTriple(t); 
 				}
+				//System.out.println("Summary has become: " + this.toString());
+				triplesSummarizedSoFar ++; 
+				//this.drawSummaryAndGraph(conn, dataTriplesFileName, ("-after-" + 
+				//triplesSummarizedSoFar + "-"+ t.s + "-" + t.p + "-" + t.o));
 				//Files.write(Paths.get("output.txt"), (globalTripleCount + ": " + new String(s + " " + p + " " + o + "\n")).getBytes(), StandardOpenOption.APPEND); 
-				globalTripleCount++; 
 				//if ((globalTripleCount % 1000 == 0)) {//|| (globalTripleCount > 28800)) {
 				//	System.out.println(globalTripleCount + " triples");
 				//}
+				//System.out.println("Summary now has " + getSummaryEdges().size() + " triples");
 			}
 			rs.close();
 			getUntypedTriples.close();
@@ -130,7 +163,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 			throw new IllegalStateException("Postgres error encountered while summarizing data triples " + e.toString()); 
 		}
 		long afterDataTriples = System.currentTimeMillis(); 
-		System.out.println("Summarized " + globalTripleCount + " data triples in " + (afterDataTriples - start) + " ms.");
+		System.out.println("Summarized " + triplesSummarizedSoFar + " data triples in " + (afterDataTriples - start) + " ms.");
 
 		String getTypedTriplesString = ("select *  from encoded_triples where p=" + typeConstantCode); 
 		try {
@@ -139,9 +172,12 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 			ResultSet rs = getTypedTriples.executeQuery(getTypedTriplesString);
 			while (rs.next()){		
 				Triple t = new Triple(rs.getInt(1), rs.getInt(2), rs.getInt(3)); 
-				//Debugger.log("#### Type triple " + t.toString());
+				//System.out.println("#### Type triple " + t.toString());
 				this.handleTypeTripleAfterData(t);
-				globalTripleCount ++; 
+				triplesSummarizedSoFar ++; 
+				//this.drawSummaryAndGraph(conn, dataTriplesFileName, ("-after-" + t.s + "-" + t.p + "-" + t.o));
+				//System.out.println("Summary now has " + getSummaryEdges().size() + " triples");
+				
 			}
 			rs.close();
 			getTypedTriples.close();
@@ -149,7 +185,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 		catch(SQLException e) {
 			throw new IllegalStateException("Postgres error encountered while summarizing type triples: " + e.toString()); 
 		}
-		System.out.println("Summarized " + globalTripleCount + " triples in " + (System.currentTimeMillis() - start)  + " ms."); 
+		System.out.println("Summarized " + triplesSummarizedSoFar + " triples in " + (System.currentTimeMillis() - start)  + " ms."); 
 		this.display(dataTriplesFileName);
 	}
 
@@ -213,7 +249,8 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 				this.typeOnlyNodeID = getNextSummaryNode();
 				typeOnlyNodeAlreadySeen=true;
 			}
-			addTriple(typeOnlyNodeID, t.p, t.o); 
+			addTriple(typeOnlyNodeID, t.p, t.o);
+			rep.put(t.s, typeOnlyNodeID);
 		}
 		this.numberOfTypeTriplesRead++;
 	}
@@ -225,7 +262,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 			}
 			for (Long p: triplesOfThisSubject.keySet()){
 				ArrayList<Long> objectsOfThisSandP = triplesOfThisSubject.get(p);
-				if ((objectsOfThisSandP.size() > 1) && isDataProperty(p)){
+				if ((objectsOfThisSandP.size() > 1) && RDF2SQLEncoding.isDataProperty(p)){
 					throw new IllegalStateException("Subject " + s + " has more than one edge with label " + p); 
 				}
 				for (Long o: objectsOfThisSandP){

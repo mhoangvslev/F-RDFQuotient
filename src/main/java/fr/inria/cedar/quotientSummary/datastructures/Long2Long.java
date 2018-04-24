@@ -37,13 +37,10 @@ public class Long2Long{
 		nodesForC.add(node);
 	}
 
-	public void display() {
+	public String display() {
 		StringBuffer sb = new StringBuffer();
-		if (map.keySet().isEmpty()) {
-			sb.append("()"); 
-		}
-		else {
-			sb.append("----------: \n");
+		if (!map.keySet().isEmpty()) {
+			sb.append("\n----------: \n");
 			for (Long key: map.keySet()){
 				sb.append("#"+ key + "|");
 				sb.append(map.get(key) + " "); 
@@ -58,7 +55,7 @@ public class Long2Long{
 				sb.append("| "); 
 			}
 		}
-		System.out.println(sb.toString());
+		return sb.toString();
 	}
 
 	/**
