@@ -1,0 +1,10 @@
+<http://inria.fr/person01> <http://inria.fr/name> "Brigitte Macron" .
+<http://inria.fr/person01> <http://inria.fr/married> <http://inria.fr/person02> .
+<http://inria.fr/person01> <http://inria.fr/friend> <http://inria.fr/person03> .
+<http://inria.fr/person02> <http://inria.fr/name> "Emmanuel Macron" .
+<http://inria.fr/person02> <http://inria.fr/friend> <http://inria.fr/person03> .
+<http://inria.fr/person02> <http://inria.fr/president> <http://inria.fr/country01> .
+<http://inria.fr/person03> <http://inria.fr/name> "Édouard Philippe" .
+<http://inria.fr/person03> <http://inria.fr/primeMinister> <http://inria.fr/country01> .
+<http://inria.fr/country01> <http://inria.fr/name> "France" .
+<http://inria.fr/country01> <http://inria.fr/capitale> "Paris" .
