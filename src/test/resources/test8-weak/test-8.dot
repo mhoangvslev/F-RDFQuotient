@@ -1,0 +1,21 @@
+digraph g{
+"<http://inria.fr/person02>" [style = filled, color=antiquewhite1];
+"Emmanuel Macron" [style = filled, color=aquamarine1];
+"<http://inria.fr/person02>" -> "Emmanuel Macron" [label="<http://inria.fr/name>"];
+"<http://inria.fr/person03>" [style = filled, color=antiquewhite1];
+"<http://inria.fr/person02>" -> "<http://inria.fr/person03>" [label="<http://inria.fr/friend>"];
+"<http://inria.fr/country01>" [style = filled, color=antiquewhite1];
+"<http://inria.fr/person02>" -> "<http://inria.fr/country01>" [label="<http://inria.fr/president>"];
+"<http://inria.fr/person01>" [style = filled, color=antiquewhite1];
+"Brigitte Macron" [style = filled, color=aquamarine1];
+"<http://inria.fr/person01>" -> "Brigitte Macron" [label="<http://inria.fr/name>"];
+"<http://inria.fr/person01>" -> "<http://inria.fr/person02>" [label="<http://inria.fr/married>"];
+"<http://inria.fr/person01>" -> "<http://inria.fr/person03>" [label="<http://inria.fr/friend>"];
+"France" [style = filled, color=aquamarine1];
+"<http://inria.fr/country01>" -> "France" [label="<http://inria.fr/name>"];
+"Paris" [style = filled, color=tomato];
+"<http://inria.fr/country01>" -> "Paris" [label="<http://inria.fr/capitale>"];
+"Édouard Philippe" [style = filled, color=aquamarine1];
+"<http://inria.fr/person03>" -> "Édouard Philippe" [label="<http://inria.fr/name>"];
+"<http://inria.fr/person03>" -> "<http://inria.fr/country01>" [label="...://inria.fr/primeMinister>"];
+}
