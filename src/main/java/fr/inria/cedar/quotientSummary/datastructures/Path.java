@@ -56,13 +56,13 @@ public class Path implements Comparable<Path> {
 			return false;
 		}
 		Path p2 = (Path) other; 
-		for (Triple t: triples) {
-			if (!p2.contains(t)){
-				return false; 
-			}
+		if (triples.size() != p2.triples.size()) {
+			return false; 
 		}
-		for (Triple t: p2.getTriples()) {
-			if (!triples.contains(t)) {
+		for (int i = 0; i < triples.size(); i ++) {
+			Triple t = triples.get(i);
+			Triple tOther = p2.triples.get(i);
+			if (!t.equals(tOther)) {
 				return false; 
 			}
 		}

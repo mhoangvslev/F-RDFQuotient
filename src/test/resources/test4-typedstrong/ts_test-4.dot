@@ -1,29 +1,29 @@
 digraph g{
-"<http://qs.org/ts18>" [style = filled, color=antiquewhite1];
+"<http://qs.org/ts18>" [style = filled, color=orangered];
 "<http://qstest.org/class1>" [fontcolor=white, style = filled, color=black];
 "<http://qs.org/ts18>" -> "<http://qstest.org/class1>" [label=".../02/22-rdf-syntax-ns#type>"];
 "<http://qstest.org/class3>" [fontcolor=white, style = filled, color=black];
 "<http://qs.org/ts18>" -> "<http://qstest.org/class3>" [label=".../02/22-rdf-syntax-ns#type>"];
-"<http://qs.org/ts23>" [style = filled, color=aquamarine1];
+"<http://qs.org/ts23>" [style = filled, color=firebrick];
 "<http://qs.org/ts18>" -> "<http://qs.org/ts23>" [label="<http://qstest.org/prop3>"];
-"<http://qs.org/ts20>" [style = filled, color=cornflowerblue];
+"<http://qs.org/ts20>" [style = filled, color=lightpink];
 "<http://qstest.org/class1>" [fontcolor=white, style = filled, color=black];
 "<http://qs.org/ts20>" -> "<http://qstest.org/class1>" [label=".../02/22-rdf-syntax-ns#type>"];
 "<http://qstest.org/class2>" [fontcolor=white, style = filled, color=black];
 "<http://qs.org/ts20>" -> "<http://qstest.org/class2>" [label=".../02/22-rdf-syntax-ns#type>"];
-"<http://qs.org/ts24>" [style = filled, color=gold];
+"<http://qs.org/ts24>" [style = filled, color=antiquewhite1];
 "<http://qs.org/ts20>" -> "<http://qs.org/ts24>" [label="<http://qstest.org/prop1>"];
-"<http://qs.org/ts22>" [style = filled, color=tomato];
+"<http://qs.org/ts22>" [style = filled, color=cyan];
 "<http://qs.org/ts22>" -> "<http://qs.org/ts23>" [label="<http://qstest.org/prop4>"];
 "<http://qstest.org/class1>" [fontcolor=white, style = filled, color=black];
 "<http://qs.org/ts22>" -> "<http://qstest.org/class1>" [label=".../02/22-rdf-syntax-ns#type>"];
 "<http://qstest.org/class3>" [fontcolor=white, style = filled, color=black];
 "<http://qs.org/ts22>" -> "<http://qstest.org/class3>" [label=".../02/22-rdf-syntax-ns#type>"];
-"<http://qs.org/ts26>" [style = filled, color=chartreuse];
+"<http://qs.org/ts26>" [style = filled, color=cornflowerblue];
 "<http://qs.org/ts23>" -> "<http://qs.org/ts26>" [label="<http://qstest.org/prop7>"];
 "<http://qs.org/ts24>" -> "<http://qs.org/ts18>" [label="<http://qstest.org/prop2>"];
-"<http://qs.org/ts25>" [style = filled, color=cadetblue1];
+"<http://qs.org/ts25>" [style = filled, color=aquamarine1];
 "<http://qs.org/ts25>" -> "<http://qs.org/ts22>" [label="<http://qstest.org/prop5>"];
-"<http://qs.org/ts27>" [style = filled, color=blueviolet];
+"<http://qs.org/ts27>" [style = filled, color=gold];
 "<http://qs.org/ts27>" -> "<http://qs.org/ts25>" [label="<http://qstest.org/prop6>"];
 }

@@ -31,7 +31,7 @@ public class Triple {
 	@Override
 	public boolean equals(Object other){
 		Triple t2 = ((Triple)other);
-		if (s == t2.s && p == t2.p && this.o == t2.o){
+		if ((s == t2.s) && (p == t2.p) && (this.o == t2.o)){
 			return true; 
 		}
 		return false; 
