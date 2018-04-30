@@ -13,9 +13,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 	Long2Long p2tc; // property to target clique
 
 	long minCliqueID;
-	// for debugging
-	long globalTripleCount; 
-
+	
 	protected long numberOfDataTriplesRead; 
 	protected long numberOfTypeTriplesRead; 
 

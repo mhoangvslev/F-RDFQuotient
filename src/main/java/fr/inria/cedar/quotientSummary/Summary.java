@@ -699,6 +699,7 @@ public class Summary {
 	}
 
 	public void writeRDFGraphToDotFile(Connection con, String dotFileName) {
+		//System.out.println("Writing RDF graph to DOT...");
 		Properties properties = new Properties();	
 		try {
 			properties.load(new FileReader(SUMMARY_CONFIG_FILE));
@@ -713,6 +714,7 @@ public class Summary {
 			// To debug W with intermediary drawings, add: where p <> '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>'
 			// to ensure the right subset of triples is shown 
 			ResultSet rs = con.createStatement().executeQuery("select * from triples  limit " + triplesToDraw);
+			//System.out.println("Opened cursor on triples... getting at most " + triplesSummarizedSoFar);
 			while (rs.next()) {
 				String subject = rs.getString(1); 
 				Long s = RDF2SQLEncoding.dictionaryEncode(subject); 
@@ -729,7 +731,7 @@ public class Summary {
 				String objectForDot = getShortURIForDot(object).replaceAll("\"", ""); 
 				String propertyForDot = getShortURIForDot(property).replaceAll("\"", ""); 
 				
-				//System.out.println("(" + subject + " " +  property + " " + object + ")"); 
+				//System.out.println("Triple! (" + subject + " " +  property + " " + object + ")"); 
 				if (RDF2SQLEncoding.isDataProperty(p)) {
 					if (dax.unknownRDFNode(s)) {
 						//System.out.println("Data-S " + s + " (" + subject + ") represented by  " + sRep + " colored " + dax.getSummaryNodeColor(sRep));

@@ -50,22 +50,30 @@ public class Path implements Comparable<Path> {
 		return (triples.indexOf(t)>=0); 
 	}
 	
+	/**
+	 * This does not appear to be called by HashMap.contains(Path).
+	 * Instead, the compare method is called. 
+	 */
 	@Override
 	public boolean equals(Object other){
 		if (!(other instanceof Path)) {
 			return false;
 		}
 		Path p2 = (Path) other; 
+		//System.out.println("Checking if " + this.toString() + " equals " + other.toString());
 		if (triples.size() != p2.triples.size()) {
+			System.out.println("false");
 			return false; 
 		}
 		for (int i = 0; i < triples.size(); i ++) {
 			Triple t = triples.get(i);
 			Triple tOther = p2.triples.get(i);
 			if (!t.equals(tOther)) {
+				System.out.println("False at " + i);
 				return false; 
 			}
 		}
+		System.out.println("true"); 
 		return true; 
 	}
 
@@ -80,14 +88,43 @@ public class Path implements Comparable<Path> {
 
 	@Override
 	public int compareTo(Path p2) {
-		for (Triple t: triples) {
-			if (!p2.contains(t)){
-				return -1; 
-			}
+		//Debbugger.log("Comparing " + this.toString() + " and " + p2.toString());
+		if(this.triples.size() < p2.triples.size()) {
+			return -1;
 		}
-		for (Triple t: p2.getTriples()) {
-			if (!triples.contains(t)) {
-				return 1; 
+		if (this.triples.size() > p2.triples.size()) {
+			return 1;
+		}
+		for (int i = 0; i < triples.size(); i ++) {
+			Triple t = triples.get(i);
+			Triple t2 = p2.triples.get(i);
+			if (t.s < t2.s) {
+				return -1;
+			}
+			else {
+				if (t.s > t2.s) {
+					return 1; 
+				}
+				else {
+					if (t.p < t2.p) {
+						return -1;
+					}
+					else {
+						if (t.p > t2.p) {
+							return 1;
+						}
+						else {
+							if (t.o < t2.o) {
+								return -1;
+							}
+							else {
+								if (t.o > t2.o) {
+									return 1;
+								}
+							}
+						}
+					}
+				}
 			}
 		}
 		return 0; 
@@ -107,4 +144,5 @@ public class Path implements Comparable<Path> {
 		}
 		return path; 
 	}
+
 }

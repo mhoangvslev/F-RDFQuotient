@@ -129,9 +129,10 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 			ResultSet rs = getTypedTriples.executeQuery(getTypedTriplesString);
 			while (rs.next()){		
 				Triple t = new Triple(rs.getInt(1), rs.getInt(2), rs.getInt(3)); 
-				System.out.println("### Type triple " + t.toString());
+				//Debugger.log("### Type triple " + t.toString());
 				this.handleTypeTripleBeforeData(t);
-				globalTripleCount ++; 
+				triplesSummarizedSoFar ++; 
+				this.numberOfTypeTriplesRead ++;
 			}
 			rs.close();
 			getTypedTriples.close();
@@ -139,12 +140,13 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		catch(SQLException e) {
 			throw new IllegalStateException("Postgres error encountered while summarizing type triples: " + e.toString()); 
 		}
-		System.out.println("Class sets created in " + (System.currentTimeMillis() - start) + " ms.");
+		long endOfClassSetCreation = System.currentTimeMillis(); 
+		System.out.println("Class sets created in " + (endOfClassSetCreation - start) + " ms.");
 		this.postHandleTypeTriples();
-		long typeTripleCount = globalTripleCount; 
-		System.out.println("Summarized " + typeTripleCount + " type triples in " + (System.currentTimeMillis() - start)  + " ms."); 
+		long startData = System.currentTimeMillis(); 
+		System.out.println("Summarized " + this.numberOfTypeTriplesRead + " type triples in " + (startData - start)  + " ms."); 
 
-		this.display();
+		//this.display();
 		
 		// now all the non-type triples
 		String getUntypedTriplesString = ("select *  from encoded_triples where p <> " + typeConstantCode); 
@@ -153,10 +155,9 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 			Statement getUntypedTriples = conn.createStatement(); 
 			getUntypedTriples.setFetchSize(10000);
 			ResultSet rs = getUntypedTriples.executeQuery(getUntypedTriplesString);
-			globalTripleCount = 0;
 			while (rs.next()){
 				Triple t = new Triple(rs.getLong(1), rs.getLong(2), rs.getLong(3)); 
-				System.out.println("#### Data triple " + t.toString());
+				//Debugger.log("#### Data triple " + t.toString());
 				if ((t.p == RDF2SQLEncoding.getSubClassCode()) ||
 						(t.p == RDF2SQLEncoding.getSubPropertyCode()) ||
 						(t.p == RDF2SQLEncoding.getDomainCode()) ||
@@ -167,7 +168,8 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 					handleDataTriple(t); 
 				}
 				//Files.write(Paths.get("output.txt"), (globalTripleCount + ": " + new String(s + " " + p + " " + o + "\n")).getBytes(), StandardOpenOption.APPEND); 
-				globalTripleCount++; 
+				triplesSummarizedSoFar++;
+				this.numberOfDataTriplesRead++;
 				//if ((globalTripleCount % 1000 == 0)) {//|| (globalTripleCount > 28800)) {
 				//	System.out.println(globalTripleCount + " triples");
 				//}
@@ -178,8 +180,8 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		catch(SQLException e) {
 			throw new IllegalStateException("Postgres error encountered while summarizing data triples " + e.toString()); 
 		}
-
-		System.out.println("Summarized " + globalTripleCount + " triples in " + (System.currentTimeMillis() - start)  + " ms."); 
+		System.out.println("Summarized " + this.numberOfDataTriplesRead + " data triples in " + (System.currentTimeMillis() - startData)  + " ms."); 
+		System.out.println("Summarized " + this.triplesSummarizedSoFar + " triples overall in " + (System.currentTimeMillis() - start)  + " ms."); 
 		this.display(dataTriplesFileName);
 	}
 
@@ -438,7 +440,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		// store the representation of t.s:
 		rep.put(t.s, n2cs.get(t.s));
 		//Debugger.log(t.s + " represented by " + n2cs.get(t.s));
-		display();
+		//display();
 		this.numberOfTypeTriplesRead ++; 
 	}
 
@@ -469,7 +471,6 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 				//System.out.println("Adding triple " + thisClass + " type " + RDF2SQLEncoding.dictionaryDecode(thisClass));
 				this.addTriple(rep.get(node), RDF2SQLEncoding.getTypeCode(), thisClass);
 				//checkTypeIsObject(); 
-				globalTripleCount ++; 
 			}
 		}
 	}
@@ -550,11 +551,11 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		Long repS = rep.get(t.s);
 		
 		//TODO comment this out to improve performance when debugging is finished
-		checkSymmetry(sourceCliqueS, targetCliqueS, sourceCliqueO, targetCliqueO, sourceCliqueP, targetCliqueP); 
+		//checkSymmetry(sourceCliqueS, targetCliqueS, sourceCliqueO, targetCliqueO, sourceCliqueP, targetCliqueP); 
 
 		char caseNumber = decode(classSetS, repS, classSetO, repO, sourceCliqueP); 
 
-		System.out.println("Case " + this.caseName(caseNumber));
+		//Debugger.log("Case " + this.caseName(caseNumber));
 		switch(caseNumber){
 		case TS_TO: {          handleDataTriple_TS_TO(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); break; }
 		case TS_UO_RO_RP: {    handleDataTriple_TS_UO_RO_RP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); break; }
@@ -575,7 +576,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		case US_NS_UO_NO_NP: { handleDataTriple_US_NS_UO_NO_NP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); break; }
 		default: throw new IllegalStateException("Unknown case;"); 
 		}
-		this.display();
+		//this.display();
 	}
 	// untyped, non represented subject
 	// untyped, non represented object
@@ -783,9 +784,9 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	private void helper_UO_NO_RP(Triple t, Long sourceCliqueP, Long targetCliqueP) {
 		// represent t.o as empty source clique + target clique of p
 		Long emptySourceCliqueO = getEmptySourceCliqueID(); 
-		System.out.println("helper_UO_NO_RP To represent " + t.o + ", looking for the node of empty source clique " + emptySourceCliqueO + " and target clique " + targetCliqueP); 
+		//Debugger.log("helper_UO_NO_RP To represent " + t.o + ", looking for the node of empty source clique " + emptySourceCliqueO + " and target clique " + targetCliqueP); 
 		Long repO = getOrCreateSummaryNode(emptySourceCliqueO, targetCliqueP);
-		System.out.println("helper_UO_NO_RP Found: " + repO); 
+		//Debugger.log("helper_UO_NO_RP Found: " + repO); 
 		rep.put(t.o, repO);
 		n2tc.put(t.o, targetCliqueP);
 		n2sc.put(t.o, emptySourceCliqueO);
@@ -835,11 +836,11 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		}
 		if (targetCliqueO != targetCliqueP) {
 			oRepChanged = true;
-			System.out.println("Object node " + t.o + " has the target clique:");
+			//Debugger.log("Object node " + t.o + " has the target clique:");
 			showClique(tc.get(targetCliqueO));
-			System.out.println("while the property " + t.p + " has the target clique: "); 
+			//Debugger.log("while the property " + t.p + " has the target clique: "); 
 			showClique(tc.get(targetCliqueP));
-			System.out.println("Fusing them into the one created first"); 
+			//Debugger.log("Fusing them into the one created first"); 
 			newTCo = fuseCliquesIntoCreatedFirst(targetCliqueO, targetCliqueP, TARGET); 
 		}
 		if (sRepChanged) {
@@ -905,10 +906,10 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		Long newTCo = targetCliqueO; 
 		Long newRepO = repO; 
 		if (targetCliqueO != targetCliqueP) {
-			System.out.println("Fusing target clique O: " + targetCliqueO + " with target clique P: " + targetCliqueP);
+			//Debugger.log("Fusing target clique O: " + targetCliqueO + " with target clique P: " + targetCliqueP);
 			this.showClique(tc.get(targetCliqueO));
 			this.showClique(tc.get(targetCliqueP));
-			System.out.println("Empty target clique is: " + this.getEmptyTargetCliqueID());
+			//Debugger.log("Empty target clique is: " + this.getEmptyTargetCliqueID());
 			newTCo = fuseCliquesIntoCreatedFirst(targetCliqueO, targetCliqueP, TARGET); 
 			newRepO = getOrCreateSummaryNode(sourceCliqueO, newTCo); 
 			if (newRepO == null) {
@@ -1099,7 +1100,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		actualTargetClique.add(p);
 		tc.put(targetCliqueID, actualTargetClique);
 		p2tc.put(p,  targetCliqueID);
-		System.out.println("Added the new target clique " + targetCliqueID + " which is [" + p + "]");
+		//Debugger.log("Added the new target clique " + targetCliqueID + " which is [" + p + "]");
 		minCliqueID --;
 		return targetCliqueID; 
 	}
