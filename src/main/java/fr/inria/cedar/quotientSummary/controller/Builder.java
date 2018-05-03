@@ -140,6 +140,7 @@ public class Builder {
 		sum.saveSummaryInPostgres(conn, args[1]);
 		sum.writeDecodedSummaryToNTFile(conn, args[1]);
 		sum.drawSummaryAndGraph(conn, args[1]);
+		System.out.println(sum.getRunStatistics().toString());
 	}
 
 	private static Summary createNewSummary(String summaryType) {

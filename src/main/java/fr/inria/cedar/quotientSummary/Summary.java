@@ -206,11 +206,9 @@ public class Summary {
 		Debugger.log(this.toString());
 		// replace oldNode wherever it existed as an object: 
 		for (long s: edges.keySet()) {
-
 			HashMap<Long, ArrayList<Long>> triplesOfThisSubject = edges.get(s);
 
 			for (long propOfThisSubject: triplesOfThisSubject.keySet()) {
-
 				ArrayList<Long> objectsForThisSubjectAndProperty = triplesOfThisSubject.get(propOfThisSubject);
 				ArrayList<Long> newObjectsForThisSubjectAndProperty = new ArrayList<>();
 				boolean arrayChanged = false;
@@ -913,6 +911,23 @@ public class Summary {
 		if (this.summaryTablePrefix.length() < 2)
 			throw new IllegalStateException("The method should not be called on an instance of the root Summary type");
 		return this.summaryTablePrefix.substring(0, this.summaryTablePrefix.length() - 1);
+	}
+
+	public HashMap<String, Long> getRunStatistics() {
+		HashMap<String, Long> stats = new HashMap<>();
+
+		stats.put("summaryEdgesSavingTime", summaryEdgesSavingTime);
+		stats.put("representationFunctionSavingTime", representationFunctionSavingTime);
+
+		stats.put("classSetCreationTime", classSetCreationTime);
+		stats.put("typeTriplesSummarizationTime", typeTriplesSummarizationTime);
+		stats.put("dataTriplesSummarizationTime", dataTriplesSummarizationTime);
+		stats.put("allTriplesSummarizationTime", allTriplesSummarizationTime);
+
+		stats.put("inputGraphSize", triplesSummarizedSoFar);
+		stats.put("outputGraphSize", new Long(getSummaryEdges().size()));
+
+		return stats;
 	}
 
 	protected void showClique(ArrayList<Long> arrayList) {
