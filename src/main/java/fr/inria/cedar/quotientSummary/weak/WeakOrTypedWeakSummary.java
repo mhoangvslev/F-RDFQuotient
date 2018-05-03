@@ -115,62 +115,6 @@ public class WeakOrTypedWeakSummary extends Summary {
 		// try to add the resulting triple
 		this.addTripleAndCheck(addedTripleSource, t.p, addedTripleTarget);
 
-//		if (sourceP < repS){ // addedTripleSource is sourceP
-//			System.out.println("RS_RP_RO sourceP=" + sourceP + "<repS=" +repS);
-//			System.out.println("Replacing repS="+repS + " with sourceP=" + sourceP);
-//			replaceAll(repS, sourceP, t.p);
-//			//System.out.println("At this point, summary is:" + this.toString());
-//			if (targetP < repO){
-//				System.out.println("RS_RP_RO targetP=" + targetP + "<repO=" +repO);	
-//				if (addedTripleSource == repO) {
-//					addedTripleSource = targetP; 
-//					System.out.println("RS_RP_RO Added triple source becomes " + targetP);
-//				}
-//				System.out.println("Replacing repO=" + repO + " with targetP=" + targetP);
-//				replaceAll(repO, targetP, t.p); // replace repO with targetP; addedTripleTarget is targetP
-//				//System.out.println("At this point, summary is: " + this.toString());
-//				this.addTripleAndCheck(addedTripleSource, t.p, addedTripleTarget);
-//			}
-//			else{//repO <= targetP
-//				System.out.println("RS_RP_RO targetP=" + targetP + ">=repO=" +repO);
-//				
-//				if (targetP > repO){ // replace targetP with repO
-//					if (addedTripleSource == targetP) {
-//						addedTripleSource = repO; 
-//						System.out.println("RS_RP_RO Added triple source becomes " + repO);
-//					}
-//					System.out.println("Replacing targetP=" + targetP + " with repO=" + repO);
-//					replaceAll(targetP, repO, t.p);
-//				}	
-//				this.addTripleAndCheck(addedTripleSource, t.p, addedTripleTarget);
-//			}
-//		}
-//		else{// sourceP >= repS
-//			System.out.println("RS_RP_RO sourceP=" + sourceP + ">=repS=" +repS);
-//			if (sourceP > repS){
-//				if (addedTripleTarget == sourceP) {
-//					addedTripleTarget = repS; 
-//				}
-//				replaceAll(sourceP, repS, t.p);
-//			}
-//			if (targetP < repO){
-//				if (addedTripleSource == repO) {
-//					addedTripleSource = targetP; 
-//				}
-//				replaceAll(repO, targetP, t.p); 
-//				this.addTripleAndCheck(addedTripleSource, t.p, addedTripleTarget);
-//			}
-//			else{ // repO <= targetP
-//				if (targetP > repO){ // replace if not equal
-//					if (addedTripleSource == targetP) {
-//						addedTripleSource = repO; 
-//					}
-//					replaceAll(targetP, repO, t.p); 
-//				}
-//				// add this triple in any case
-//				this.addTripleAndCheck(addedTripleSource, t.p, addedTripleTarget);
-//			}
-//		}
 	}
 
 	private void applySubstitutions(Substitutions subs, Long p) {
@@ -206,40 +150,6 @@ public class WeakOrTypedWeakSummary extends Summary {
 		addTripleAndCheck(addedTripleSubject, t.p, addedTripleTarget);
 		rep.put(t.o, addedTripleTarget);
 
-//		Long targetP = pt.get(t.p); 
-//		rep.put(t.o, targetP);
-//		Long addedTripleTarget = targetP; // this may be a collateral damage of fusion and replacements
-//		// in this case it needs to change, to follow the fusion and replacement
-//		
-//		Long sourceP = ps.get(t.p);
-//		long repS = rep.get(t.s); 
-//		//Debugger.log("RS_RP_UO 1. repS: " + repS + " sourceP: " + sourceP + " we should keep the smaller"); 
-//		//Debugger.log("RS_RP_UO 2. targetP: " + targetP);
-//		if (repS < sourceP){ // we keep repS, replace sourceP with repS all over
-//			if (addedTripleTarget == sourceP) {
-//				addedTripleTarget = repS;
-//			}
-//			//Debugger.log("RS_RP_UO 3. Replacing " + sourceP + " with " + repS); 
-//			replaceAll(sourceP, repS, t.p); 
-//			//Debugger.log("RS_RP_UO 4. After replacement but before triple addition (1)\n" + this.toString());
-//			addTripleAndCheck(repS, t.p, addedTripleTarget); 
-//			//Debugger.log("RS_RP_UO 5. After replacement and triple addition (1)\n" + this.toString());
-//		}
-//		else{ 
-//			if (repS > sourceP ) { // we keep sourceP, replace repS with sourceP all over
-//				if (addedTripleTarget == repS) {
-//					addedTripleTarget = sourceP; 
-//				}
-//				//Debugger.log("RS_RP_UO 6. Replacing " + repS + " with " + sourceP); 
-//				replaceAll(repS, sourceP, t.p);
-//				//Debugger.log("RS_RP_UO 7. After replacement but before triple addition (2)\n" + this.toString());
-//			}
-//			// add the edge in any case
-//			addTripleAndCheck(sourceP, t.p, addedTripleTarget); 
-//			//Debugger.log("RS_RP_UO 8. After replacement and addition of " + sourceP + " " + t.p + " " + targetP);
-//			//Debugger.log(this.toString());
-//			//consistentyChecks();
-//		}
 	}
 
 	protected void consistencyChecks() {
@@ -295,34 +205,6 @@ public class WeakOrTypedWeakSummary extends Summary {
 		applySubstitutions(subs, t.p);
 
 		rep.put(t.s, addedTripleSource);
-		addTripleAndCheck(addedTripleSource, t.p, addedTripleTarget);
-
-//		Long sourceP = ps.get(t.p); 
-//		rep.put(t.s, sourceP); 
-//
-//		Long addedTripleSource = sourceP; 
-//		Long targetP = pt.get(t.p); 
-//		Long repO = rep.get(t.o); 
-//		
-//		if (repO > targetP){ // we keep targetP, we need to replace repO  with targetP, all over the summary
-//			if (addedTripleSource == repO) {
-//				addedTripleSource = targetP; 
-//			}
-//			replaceAll(repO, targetP, t.p); 
-//			addTripleAndCheck(addedTripleSource, t.p, targetP); 
-//		}
-//		else{ 
-//			if (repO < targetP){
-//				if (addedTripleSource == targetP) {
-//					addedTripleSource = repO; 
-//				}
-//				// we keep repO, we need to replace targetP with repO all over in the summary
-//				replaceAll(targetP, repO, t.p); 
-//			}
-//			// add the edge in any case
-//			addTripleAndCheck(addedTripleSource, t.p, repO); 
-//			// and we represent o by repO: nothing needed, it was already the case
-//		}
 	}
 
 	protected void handleDataTriple_US_RP_UO(Triple t) {
