@@ -205,6 +205,8 @@ public class WeakOrTypedWeakSummary extends Summary {
 		applySubstitutions(subs, t.p);
 
 		rep.put(t.s, addedTripleSource);
+		addTripleAndCheck(addedTripleSource, t.p, addedTripleTarget);
+
 	}
 
 	protected void handleDataTriple_US_RP_UO(Triple t) {

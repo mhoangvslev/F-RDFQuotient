@@ -1,97 +1,118 @@
 package summaries.typedstrong;
 
-import static org.junit.Assert.assertTrue;
-
+import fr.inria.cedar.quotientSummary.controller.Builder;
 import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
-
 import org.apache.commons.io.FileUtils;
+import static org.junit.Assert.assertTrue;
 import org.junit.Test;
-
-import fr.inria.cedar.quotientSummary.controller.Builder;
 
 public class StrongSummaryTests {
 	public File strong(int i) {
 		System.out.println("Typed Strong test");
-		String inputFileName = "src/test/resources/test" + i + "-strong/test-" + i + ".nt"; 
+		String inputFileName = "src/test/resources/test" + i + "-strong/test-" + i + ".nt";
 		String outputFileName = "src/test/resources/test" + i + "-strong/ts-test-" + i + ".nt";
-		try {		
-			Connection conn = Builder.loadSingleRDFInPostgres(inputFileName);	
+		try {
+			Connection conn = Builder.loadSingleRDFInPostgres(inputFileName);
 			//countConnections("1", conn); 
 			// the summarizer also gets the summary name
-			String[] args = {"strong", inputFileName}; 
-			Builder.summarizeGraphFromPostgres(conn, args); 
+			String[] args = {"strong", inputFileName};
+			Builder.summarizeGraphFromPostgres(conn, args);
 			//countConnections("2", conn); 
 			conn.close();
 			return new File(outputFileName);
 		}
 		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in strong test "+ i + " " + e.toString()); 
-		} catch (SQLException e) {
-			throw new IllegalStateException("SQL error while summarizing " + e.toString()); 
+			throw new IllegalStateException("Unable to open .nt files in strong test " + i + " " + e.toString());
+		}
+		catch (SQLException e) {
+			throw new IllegalStateException("SQL error while summarizing " + e.toString());
 		}
 	}
-	
-	@Test 
+
+	@Test
 	public void teststrong1() {
 		String referenceFileName = "src/test/resources/test1-strong/ts-test-1-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
 			assertTrue("Different summary strong 1", FileUtils.contentEquals(strong(1), expectedOutput));
-		} catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in strong test 1 " + e.toString()); 
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in strong test 1 " + e.toString());
 		}
 	}
-	@Test 
+
+	@Test
 	public void teststrong2() {
 		String referenceFileName = "src/test/resources/test2-strong/ts-test-2-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
 			assertTrue("Different summary strong 2", FileUtils.contentEquals(strong(2), expectedOutput));
-		} catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in strong test 2 " + e.toString()); 
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in strong test 2 " + e.toString());
 		}
 	}
-	@Test 
+	
+	@Test
+	public void teststrong3() {
+		String referenceFileName = "src/test/resources/test2-strong/ts-test-3-reference.nt";
+		File expectedOutput = new File(referenceFileName);
+		try {
+			assertTrue("Different summary strong 3", FileUtils.contentEquals(strong(3), expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in strong test 3 " + e.toString());
+		}
+	}
+
+	@Test
 	public void teststrong4() {
 		String referenceFileName = "src/test/resources/test4-strong/ts-test-4-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
 			assertTrue("Different summary strong 4", FileUtils.contentEquals(strong(4), expectedOutput));
-		} catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in strong test 4 " + e.toString()); 
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in strong test 4 " + e.toString());
 		}
 	}
-	@Test 
+
+	@Test
 	public void teststrong5() {
 		String referenceFileName = "src/test/resources/test5-strong/ts-test-5-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
 			assertTrue("Different summary strong 5", FileUtils.contentEquals(strong(5), expectedOutput));
-		} catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in strong test 5 " + e.toString()); 
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in strong test 5 " + e.toString());
 		}
 	}
-	@Test 
+
+	@Test
 	public void teststrong6() {
 		String referenceFileName = "src/test/resources/test6-strong/ts-test-6-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
 			assertTrue("Different summary strong 6", FileUtils.contentEquals(strong(6), expectedOutput));
-		} catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in strong test 6 " + e.toString()); 
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in strong test 6 " + e.toString());
 		}
 	}
-	@Test 
+
+	@Test
 	public void teststrong7() {
 		String referenceFileName = "src/test/resources/test7-strong/ts-test-7-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
 			assertTrue("Different summary strong 7", FileUtils.contentEquals(strong(7), expectedOutput));
-		} catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in strong test 7 " + e.toString()); 
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in strong test 7 " + e.toString());
 		}
 	}
 }

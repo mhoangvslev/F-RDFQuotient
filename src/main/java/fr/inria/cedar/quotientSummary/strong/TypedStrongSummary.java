@@ -1,32 +1,26 @@
 package fr.inria.cedar.quotientSummary.strong;
 
-import java.io.IOException;
+import fr.inria.cedar.commons.miscellaneous.Debugger;
+import fr.inria.cedar.quotientSummary.datastructures.Long2Long;
+import fr.inria.cedar.quotientSummary.datastructures.Long2LongSet;
+import fr.inria.cedar.quotientSummary.datastructures.Triple;
+import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.TreeSet;
-
-import fr.inria.cedar.commons.miscellaneous.Debugger;
-import fr.inria.cedar.quotientSummary.Summary;
-import fr.inria.cedar.quotientSummary.datastructures.Long2Long;
-import fr.inria.cedar.quotientSummary.datastructures.Long2LongList;
-import fr.inria.cedar.quotientSummary.datastructures.Long2LongSet;
-import fr.inria.cedar.quotientSummary.datastructures.Triple;
-import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 
 public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	// The following three attribute serve to identify and store the class sets for RDF resources
 	Long2LongSet cs; // for each class set ID, a class set	
 	Long2Long n2cs; // for each node, its class set ID. This is also the rep function for typed nodes
 	Long2LongSet c2cs; // class to enclosing class sets
-
 	// case classification
 	// T: typed, U: untyped (apply to S and O)
 	// R: already represented, N: not already represented (apply to S, P, O)
-	protected final char TS_TO = 0; 
+	protected final char TS_TO = 0;
 	protected final char TS_UO_RO_RP = 1;
 	protected final char TS_UO_NO_RP = 2;
 	protected final char US_RS_TO_RP = 3;
@@ -35,9 +29,9 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	protected final char TS_UO_NO_NP = 10;
 	protected final char US_RS_TO_NP = 11;
 	protected final char US_NS_TO_NP = 14;
-	
-	public TypedStrongSummary(){
-		super(); 
+
+	public TypedStrongSummary() {
+		super();
 		cs = new Long2LongSet();
 		n2sc = new Long2Long();
 		c2cs = new Long2LongSet();
@@ -218,29 +212,29 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	}
 
 	private char decode(Long classSetS, Long repS, Long classSetO, Long repO, Long sourceCliqueP) {
-		if (classSetS != null) // TS (also represented)
+		if (classSetS != null) //TS (also represented)
 			if (classSetO != null) // TO (also represented)
 				return TS_TO;
-			else //UO
-				if (repO != null) // RO
-					if (sourceCliqueP != null) // RP
+			else//UO
+				if (repO != null)//RO
+					if (sourceCliqueP != null)//RP
 						return TS_UO_RO_RP;
 					else // NP
 						return TS_UO_RO_NP;
 				else // NO
-					if (sourceCliqueP != null) // RP
+					if (sourceCliqueP != null)//RP
 						return TS_UO_NO_RP;
 					else
 						return TS_UO_NO_NP;
 		else // US
-			if (repS != null) // US, RS
+			if (repS != null)//US, RS
 				if (classSetO != null) // TO (also represented)
 					if (sourceCliqueP != null)
 						return US_RS_TO_RP;
 					else
 						return US_RS_TO_NP;
 				else // US, RS, UO
-					if (repO != null) // RO
+					if (repO != null) //RO
 						if (sourceCliqueP != null)
 							return US_RS_UO_RO_RP;
 						else
@@ -250,8 +244,8 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 							return US_RS_UO_NO_RP;
 						else
 							return US_RS_UO_NO_NP;
-			else // US, NS
-				if (classSetO != null) // TO, also represented
+			else //US, NS
+				if (classSetO != null)// TO, also represented
 					if (sourceCliqueP != null)
 						return US_NS_TO_RP;
 					else
@@ -435,8 +429,8 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	protected void handleTypeTripleAfterData(Triple t) {
 		throw new IllegalStateException("This method does not belong to " + this.getClass().getName());
 	}
-	
-	public void handleDataTriple(Triple t){
+
+	public void handleDataTriple(Triple t) {
 		// 18 cases: (TS, USR, USN) x (TO, UOR, UON) x (PR, PN)  also multiplied by: which cliques are empty and their consequences on fusion
 		Long classSetS = n2cs.get(t.s);
 		Long classSetO = n2cs.get(t.o);
@@ -457,29 +451,81 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		char caseNumber = decode(classSetS, repS, classSetO, repO, sourceCliqueP);
 
 		//Debugger.log("Case " + this.caseName(caseNumber));
-		switch(caseNumber){
-		case TS_TO: {          handleDataTriple_TS_TO(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); break; }
-		case TS_UO_RO_RP: {    handleDataTriple_TS_UO_RO_RP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); break; }
-		case TS_UO_NO_RP: {    handleDataTriple_TS_UO_NO_RP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); break; }
-		case US_RS_TO_RP: {    handleDataTriple_US_RS_TO_RP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); break; }
-		case US_RS_UO_RO_RP: { handleDataTriple_US_RS_UO_RO_RP(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); break; }
-		case US_RS_UO_NO_RP: { handleDataTriple_US_RS_UO_NO_RP(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); break; }
-		case US_NS_TO_RP: {    handleDataTriple_US_NS_TO_RP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); break; }
-		case US_NS_UO_RO_RP: { handleDataTriple_US_NS_UO_RO_RP(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); break; }
-		case US_NS_UO_NO_RP: { handleDataTriple_US_NS_UO_NO_RP(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); break; }
-		case TS_UO_RO_NP: {    handleDataTriple_TS_UO_RO_NP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); break; }
-		case TS_UO_NO_NP: {    handleDataTriple_TS_UO_NO_NP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); break; }
-		case US_RS_TO_NP: {    handleDataTriple_US_RS_TO_NP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); break; }
-		case US_RS_UO_RO_NP: { handleDataTriple_US_RS_UO_RO_NP(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); break; }
-		case US_RS_UO_NO_NP: { handleDataTriple_US_RS_UO_NO_NP(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); break; }
-		case US_NS_TO_NP: {    handleDataTriple_US_NS_TO_NP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); break; }
-		case US_NS_UO_RO_NP: { handleDataTriple_US_NS_UO_RO_NP(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); break; }
-		case US_NS_UO_NO_NP: { handleDataTriple_US_NS_UO_NO_NP(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP); break; }
-		default: throw new IllegalStateException("Unknown case;"); 
+		switch (caseNumber) {
+			case TS_TO: {
+				handleDataTriple_TS_TO(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				break;
+			}
+			case TS_UO_RO_RP: {
+				handleDataTriple_TS_UO_RO_RP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				break;
+			}
+			case TS_UO_NO_RP: {
+				handleDataTriple_TS_UO_NO_RP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				break;
+			}
+			case US_RS_TO_RP: {
+				handleDataTriple_US_RS_TO_RP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				break;
+			}
+			case US_RS_UO_RO_RP: {
+				handleDataTriple_US_RS_UO_RO_RP(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				break;
+			}
+			case US_RS_UO_NO_RP: {
+				handleDataTriple_US_RS_UO_NO_RP(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				break;
+			}
+			case US_NS_TO_RP: {
+				handleDataTriple_US_NS_TO_RP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				break;
+			}
+			case US_NS_UO_RO_RP: {
+				handleDataTriple_US_NS_UO_RO_RP(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				break;
+			}
+			case US_NS_UO_NO_RP: {
+				handleDataTriple_US_NS_UO_NO_RP(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				break;
+			}
+			case TS_UO_RO_NP: {
+				handleDataTriple_TS_UO_RO_NP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				break;
+			}
+			case TS_UO_NO_NP: {
+				handleDataTriple_TS_UO_NO_NP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				break;
+			}
+			case US_RS_TO_NP: {
+				handleDataTriple_US_RS_TO_NP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				break;
+			}
+			case US_RS_UO_RO_NP: {
+				handleDataTriple_US_RS_UO_RO_NP(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				break;
+			}
+			case US_RS_UO_NO_NP: {
+				handleDataTriple_US_RS_UO_NO_NP(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				break;
+			}
+			case US_NS_TO_NP: {
+				handleDataTriple_US_NS_TO_NP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				break;
+			}
+			case US_NS_UO_RO_NP: {
+				handleDataTriple_US_NS_UO_RO_NP(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				break;
+			}
+			case US_NS_UO_NO_NP: {
+				handleDataTriple_US_NS_UO_NO_NP(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				break;
+			}
+			default:
+				throw new IllegalStateException("Unknown case;");
 		}
 		//this.display();
 	}
-	
+
 	// untyped, unrepresented subject
 	// typed (thus represented) object
 	// unknown property
@@ -516,9 +562,9 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	// untyped, unrepresented object
 	// unknown property: both its cliques need to be created
 	private void handleDataTriple_TS_UO_NO_NP(Triple t, Long classSetS, Long classSetO, Long sourceCliqueS,
-			Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
+											  Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
 		long psc = makeAndAddNewSourceClique(t.p);//TODO check this -- bug? 
-		long ptc = makeAndAddNewTargetClique(t.p); 
+		long ptc = makeAndAddNewTargetClique(t.p);
 		// cliques of t.o: 
 		n2tc.put(t.o, ptc);
 		n2sc.put(t.o, getEmptySourceCliqueID());
@@ -557,7 +603,6 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		this.addTriple(rep.get(t.s), t.p, rep.get(t.o));
 	}
 
-	
 	// untyped, represented subject
 	// typed, represented object
 	// represented property
@@ -632,50 +677,12 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	}
 
 	private void checkSymmetry(Long sourceCliqueS, Long targetCliqueS, Long sourceCliqueO, Long targetCliqueO,
-			Long sourceCliqueP, Long targetCliqueP) {
-		if ( (sourceCliqueS == null && targetCliqueS != null) || (sourceCliqueS != null && targetCliqueS == null)){
-			throw new Error("Subject has only one of the two cliques"); 
-		}
-		Long node = targetCliquesForThisSourceClique.get(targetClique);
-		if (node == null) {
-			//System.out.println("Created " + this.maxSummaryNode + " for source clique " + sourceClique + " and target clique " + targetClique); 
-			node = getNextSummaryNode(); // from the Summary class
-			this.untypedSummaryNodes.get(sourceClique).put(targetClique, node);
-			//System.out.println("Put in untypedSummaryNodes " + sourceClique + "->" + targetClique + "->" + node);
-		}
-		return node;
+							   Long sourceCliqueP, Long targetCliqueP) {
+		if ((sourceCliqueS == null && targetCliqueS != null) || (sourceCliqueS != null && targetCliqueS == null))
+			throw new Error("Subject has only one of the two cliques");
+		if ((sourceCliqueO == null && targetCliqueO != null) || (sourceCliqueO != null && targetCliqueO == null))
+			throw new Error("Object has only one of the two cliques");
+		if ((sourceCliqueP == null && targetCliqueP != null) || (sourceCliqueP != null && targetCliqueP == null))
+			throw new Error("Property has only one of the two cliques");
 	}
-
-	private Long getEmptySourceCliqueID() {
-		Long res;
-		if (this.emptySCCount == Long.MAX_VALUE) { // the empty source clique has not been created yet
-			ArrayList<Long> emptySC = new ArrayList<>();
-			res = minCliqueID; // we invent a new source clique
-			//Debugger.log("ooooo> Initialized the empty source clique at: " + res);
-			this.emptySCCount = minCliqueID;
-			// add this to sc
-			sc.put(minCliqueID, emptySC);
-			minCliqueID--;
-		}
-		else // the empty source clique has already been created, just copy it 
-			res = this.emptySCCount;
-		return res;
-	}
-
-	private Long getEmptyTargetCliqueID() {
-		Long res;
-		if (this.emptyTCCount == Long.MAX_VALUE) { // the empty source clique has not been created yet
-			ArrayList<Long> emptyTC = new ArrayList<>();
-			res = minCliqueID; // we invent a new source clique
-			Debugger.log("ooooo> Initialized the empty target clique at: " + res);
-			this.emptyTCCount = minCliqueID;
-			// add this to tc
-			tc.put(minCliqueID, emptyTC);
-			minCliqueID--;
-		}
-		else // the empty source clique has already been created, just copy it 
-			res = this.emptyTCCount;
-		return res;
-	}
-
 }
