@@ -212,22 +212,22 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	}
 
 	private char decode(Long classSetS, Long repS, Long classSetO, Long repO, Long sourceCliqueP) {
-		if (classSetS != null) //TS (also represented)
+		if (classSetS != null) // TS (also represented)
 			if (classSetO != null) // TO (also represented)
 				return TS_TO;
-			else//UO
-				if (repO != null)//RO
-					if (sourceCliqueP != null)//RP
+			else // UO
+				if (repO != null) // RO
+					if (sourceCliqueP != null) // RP
 						return TS_UO_RO_RP;
 					else // NP
 						return TS_UO_RO_NP;
 				else // NO
-					if (sourceCliqueP != null)//RP
+					if (sourceCliqueP != null) // RP
 						return TS_UO_NO_RP;
 					else
 						return TS_UO_NO_NP;
 		else // US
-			if (repS != null)//US, RS
+			if (repS != null) // US, RS
 				if (classSetO != null) // TO (also represented)
 					if (sourceCliqueP != null)
 						return US_RS_TO_RP;
@@ -244,8 +244,8 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 							return US_RS_UO_NO_RP;
 						else
 							return US_RS_UO_NO_NP;
-			else //US, NS
-				if (classSetO != null)// TO, also represented
+			else // US, NS
+				if (classSetO != null) // TO, also represented
 					if (sourceCliqueP != null)
 						return US_NS_TO_RP;
 					else

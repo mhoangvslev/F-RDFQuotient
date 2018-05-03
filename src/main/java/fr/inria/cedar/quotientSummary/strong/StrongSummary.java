@@ -199,9 +199,9 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 	}
 
 	private char decode(Long repS, Long repO, Long sourceCliqueP) {
-		if (repS != null)//US, RS
+		if (repS != null) // US, RS
 			// US, RS, UO
-			if (repO != null) //RO
+			if (repO != null) // RO
 				if (sourceCliqueP != null)
 					return US_RS_UO_RO_RP;
 				else
@@ -211,7 +211,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 					return US_RS_UO_NO_RP;
 				else
 					return US_RS_UO_NO_NP;
-		else //US, NS
+		else // US, NS
 			if (repO != null) // RO
 				if (sourceCliqueP != null) // RP
 					return US_NS_UO_RO_RP;
