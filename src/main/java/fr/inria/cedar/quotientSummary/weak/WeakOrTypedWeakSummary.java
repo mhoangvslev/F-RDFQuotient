@@ -9,7 +9,7 @@ import java.util.HashMap;
 
 public class WeakOrTypedWeakSummary extends Summary {
 	HashMap<Long, Long> ps; // for each property, the property source
-	HashMap<Long, Long> pt; // for each property, the property source	
+	HashMap<Long, Long> pt; // for each property, the property source
 	long minSummaryNode;
 	// below:
 	// U means unrepresented (so far) 
@@ -125,7 +125,7 @@ public class WeakOrTypedWeakSummary extends Summary {
 	// the subject and property have been represented, not the object. In this case we must:
 	// - fuse the source of p with the representative of s. 
 	// By convention, we will keep the *** smaller *** one. 
-	// - represent the object by the target of the property 		
+	// - represent the object by the target of the property
 	protected void handleDataTriple_RS_RP_UO(Triple t) {
 		//Debugger.log("================== RS_RP_UO on " + t.toString() + " starts on");
 		//Debugger.log(this.toString()); 
@@ -181,7 +181,7 @@ public class WeakOrTypedWeakSummary extends Summary {
 
 	// the property and the object have been seen, not the subject. 
 	// In this case we must:
-	// - represent the subject by the source of the property	
+	// - represent the subject by the source of the property
 	// - fuse the target of p with the representative of o. 
 	// By convention we will keep the *** smaller *** one. 
 	protected void handleDataTriple_US_RP_RO(Triple t) {
@@ -279,8 +279,8 @@ public class WeakOrTypedWeakSummary extends Summary {
 			sb.append(t.toString());
 			sb.append("\n");
 		}
-		//sb.append("rep:\n");
-		//this.showRepInBuffer(sb);
+//		sb.append("rep:\n");
+//		this.showRepInBuffer(sb);
 //		sb.append("\nProperty sources:\n");
 //		for (Long l: ps.keySet()) {
 //			sb.append(l + ": " + ps.get(l));

@@ -58,7 +58,7 @@ public class StrongSummaryTests {
 			throw new IllegalStateException("Unable to open .nt files in strong test 2 " + e.toString());
 		}
 	}
-	
+
 	@Test
 	@Ignore
 	public void teststrong3() {

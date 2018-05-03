@@ -13,15 +13,13 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.TreeSet;
 
 public class WeakSummary extends WeakOrTypedWeakSummary {
-	// these serve to represent the nodes that may have types but no
-	// data property
-	long typeOnlyNodeID;
-	// we will add each typed node here and remove it as soon
-	// as it is a source or target of data triples.
-	TreeSet<Long> typedNodesNoData;
+	public WeakSummary() {
+		super();
+		this.summaryTablePrefix = WEAK_SUMMARY_PREFIX;
+		typeOnlyNodeID = -1;
+	}
 
 	/**
 	 * This must be used to read a W summary from Postgres.
@@ -52,12 +50,6 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 		System.out.println("Read Weak summary from Postgres");
 	}
 
-	public WeakSummary() {
-		super();
-		this.summaryTablePrefix = WEAK_SUMMARY_PREFIX;
-		typeOnlyNodeID = -1;
-	}
-
 	/**
 	 * @param typeTriplesFile
 	 * @param dataTriplesFile
@@ -66,7 +58,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 	public void summarizeFromTripleFiles(String typeTriplesFile, String dataTriplesFile) {
 		long start = System.currentTimeMillis();
 		try {
-			//  Second file: data triples	
+			//  Second file: data triples
 			try (BufferedReader br = new BufferedReader(new FileReader(new File(dataTriplesFile)))) {
 				while (br.ready()) {
 					String spo = br.readLine();
@@ -97,8 +89,8 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 		catch (IOException e) {
 			throw new IllegalStateException("Unable to open file " + dataTriplesFile + " or " + typeTriplesFile + ": " + e.toString());
 		}
-		long stop = System.currentTimeMillis();
-		System.out.println("Weak summarization took: " + (stop - start));
+		allTriplesSummarizationTime = System.currentTimeMillis() - start;
+		System.out.println("Summarized in " + allTriplesSummarizationTime + " ms.");
 		display(dataTriplesFile); // this prints out and makes a DOT file
 	}
 
@@ -121,7 +113,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 			this.typeTriplesExist = true;
 			avoidCollisionsWhenAssigningSummaryNodes(conn);
 		}
-		this.triplesSummarizedSoFar = 0;
+		triplesSummarizedSoFar = 0;
 		String getUntypedTriplesString = ("select *  from encoded_triples where p <> " + typeConstantCode);
 		try {
 			conn.setAutoCommit(false);
@@ -155,8 +147,8 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 		catch (SQLException e) {
 			throw new IllegalStateException("Postgres error encountered while summarizing data triples " + e.toString());
 		}
-		long afterDataTriples = System.currentTimeMillis();
-		System.out.println("Summarized " + triplesSummarizedSoFar + " data triples in " + (afterDataTriples - start) + " ms.");
+		dataTriplesSummarizationTime = System.currentTimeMillis() - start;
+		System.out.println("Summarized " + triplesSummarizedSoFar + " data triples in " + (dataTriplesSummarizationTime - start) + " ms.");
 
 		String getTypedTriplesString = ("select *  from encoded_triples where p=" + typeConstantCode);
 		try {
@@ -178,7 +170,8 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 		catch (SQLException e) {
 			throw new IllegalStateException("Postgres error encountered while summarizing type triples: " + e.toString());
 		}
-		System.out.println("Summarized " + triplesSummarizedSoFar + " triples in " + (System.currentTimeMillis() - start) + " ms.");
+		allTriplesSummarizationTime = System.currentTimeMillis() - start;
+		System.out.println("Summarized " + triplesSummarizedSoFar + " triples in " + allTriplesSummarizationTime + " ms.");
 		this.display(dataTriplesFileName);
 	}
 

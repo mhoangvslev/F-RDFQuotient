@@ -34,8 +34,10 @@ public class Summary {
 	protected HashMap<Long, Long> summaryNodeStatistics;
 	// for each summary edge, the number of graph edge it represents
 	protected HashMap<Triple, Long> summaryEdgeStatistics;
-	protected boolean typeOnlyNodeAlreadySeen;
+	// these serve to represent the nodes that may have types but no
+	// data property
 	protected long typeOnlyNodeID;
+	protected boolean typeOnlyNodeAlreadySeen;
 	protected Triple lastReadTriple;
 	protected long maxSummaryNode;
 	protected Properties properties;
@@ -51,6 +53,13 @@ public class Summary {
 	protected boolean checkConsistency = false;
 	protected long triplesSummarizedSoFar = 0;
 	protected DOTAuxiliary dax;
+	// stats
+	protected long summaryEdgesSavingTime;
+	protected long representationFunctionSavingTime;
+	protected long classSetCreationTime;
+	protected long typeTriplesSummarizationTime;
+	protected long dataTriplesSummarizationTime;
+	protected long allTriplesSummarizationTime;
 
 	public Summary() {
 		rep = new Long2Long();
@@ -137,7 +146,7 @@ public class Summary {
 
 	// we need to be sure that integers which we invent to represent nodes
 	// will not collide with the codes already given to classes and properties 
-	// (which, in this implementation, for simplicity, are preserved).		
+	// (which, in this implementation, for simplicity, are preserved).
 	protected void avoidCollisionsWhenAssigningSummaryNodes(Connection conn) {
 		long maxClassOrPropertyCode = 0;
 		long typeConstantCode = RDF2SQLEncoding.getTypeCode();
@@ -358,7 +367,8 @@ public class Summary {
 			//			stmt.executeUpdate("create index indRepS on encoded_rep(graphNode); ");
 			//		} This gives some erros in the JDBC driver, perhaps it is not implemented properly.
 			conn.commit();
-			System.out.println("Saved representation function in " + (System.currentTimeMillis() - start) + " ms.");
+			representationFunctionSavingTime = System.currentTimeMillis() - start;
+			System.out.println("Saved representation function in " + representationFunctionSavingTime + " ms.");
 		}
 		catch (SQLException e) {
 			throw new IllegalStateException("Could not insert summary triples in "
@@ -389,7 +399,8 @@ public class Summary {
 				//			}
 				conn.commit();
 				insertInSummary.close();
-				System.out.println("Summary edges saved in " + (System.currentTimeMillis() - start) + " ms.");
+				summaryEdgesSavingTime = System.currentTimeMillis() - start;
+				System.out.println("Summary edges saved in " + summaryEdgesSavingTime + " ms.");
 				System.out.println("Summary saved in Postgres.");
 			}
 		}
@@ -737,7 +748,7 @@ public class Summary {
 							//System.out.println("TYP1 " + s + " (" + subject + ") represented by  " + sRep);
 							bw.write("\"" + subjectForDot + "\" [style = filled, color=" + dax.getSummaryNodeColor(sRep) + "];\n");
 						if (dax.unknownRDFNode(o))
-							//System.out.println("TYP2 " + o + " (" + object + ") represented by  " + oRep);		
+							//System.out.println("TYP2 " + o + " (" + object + ") represented by  " + oRep);	
 							bw.write("\"" + objectForDot + "\" [fontcolor=white, style = filled, color=black];\n");
 					}
 				bw.write("\"" + subjectForDot + "\"" + " -> \""

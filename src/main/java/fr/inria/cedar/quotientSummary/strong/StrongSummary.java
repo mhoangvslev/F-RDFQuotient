@@ -9,13 +9,17 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 public class StrongSummary extends StrongOrTypedStrongSummary {
+	public StrongSummary() {
+		super();
+		this.summaryTablePrefix = STRONG_SUMMARY_PREFIX;
+	}
+
 	/**
 	 * This must be used to read a S summary from Postgres.
 	 *
 	 * @param conn
 	 */
 	public StrongSummary(Connection conn) {
-
 		this.summaryTablePrefix = STRONG_SUMMARY_PREFIX;
 		Debugger.log("Reading Strong summary from Postgres, setting up special URIs from the dictionary");
 		RDF2SQLEncoding.setUp(conn);
@@ -38,11 +42,6 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 		System.out.println("Read Strong summary from Postgres");
 	}
 
-	public StrongSummary() {
-		super();
-		this.summaryTablePrefix = STRONG_SUMMARY_PREFIX;
-	}
-
 	/**
 	 * Summarizes an RDF graph assuming the data triples are in Postgres
 	 *
@@ -62,7 +61,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 			this.typeTriplesExist = true;
 			avoidCollisionsWhenAssigningSummaryNodes(conn);
 		}
-		this.triplesSummarizedSoFar = 0;
+		triplesSummarizedSoFar = 0;
 		String getUntypedTriplesString = ("select *  from encoded_triples where p <> " + typeConstantCode);
 		try {
 			conn.setAutoCommit(false);
@@ -96,8 +95,8 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 		catch (SQLException e) {
 			throw new IllegalStateException("Postgres error encountered while summarizing data triples " + e.toString());
 		}
-		long afterDataTriples = System.currentTimeMillis();
-		System.out.println("Summarized " + triplesSummarizedSoFar + " data triples in " + (afterDataTriples - start) + " ms.");
+		dataTriplesSummarizationTime = System.currentTimeMillis() - start;
+		System.out.println("Summarized " + triplesSummarizedSoFar + " data triples in " + (dataTriplesSummarizationTime - start) + " ms.");
 
 		String getTypedTriplesString = ("select *  from encoded_triples where p=" + typeConstantCode);
 		try {
@@ -119,7 +118,9 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 		catch (SQLException e) {
 			throw new IllegalStateException("Postgres error encountered while summarizing type triples: " + e.toString());
 		}
-		System.out.println("Summarized " + triplesSummarizedSoFar + " triples in " + (System.currentTimeMillis() - start) + " ms.");
+
+		allTriplesSummarizationTime = System.currentTimeMillis() - start;
+		System.out.println("Summarized " + triplesSummarizedSoFar + " triples in " + allTriplesSummarizationTime + " ms.");
 		this.display(dataTriplesFileName);
 	}
 

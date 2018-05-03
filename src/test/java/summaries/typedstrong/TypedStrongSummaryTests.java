@@ -58,7 +58,7 @@ public class TypedStrongSummaryTests {
 			throw new IllegalStateException("Unable to open .nt files in typedstrong test 2 " + e.toString());
 		}
 	}
-	
+
 	@Test
 	public void testtypedstrong3() {
 		String referenceFileName = "src/test/resources/test2-typedstrong/ts-test-3-reference.nt";

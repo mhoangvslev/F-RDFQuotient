@@ -19,7 +19,7 @@ import java.util.TreeSet;
 
 public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 	// The following three attribute serve to identify and store the class sets for RDF resources
-	Long2LongSet cs; // for each class set ID, a class set	
+	Long2LongSet cs; // for each class set ID, a class set
 	Long2Long n2cs; // for each node, its class set ID. This is also the rep function for typed nodes
 	Long2LongSet c2cs; // class to enclosing class sets
 	// a subject that is typed has been represented before the data triples are traversed.
@@ -66,6 +66,56 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 	}
 
 	/**
+	 * @param typeTriplesFile
+	 * @param dataTriplesFile
+	 */
+	@Override
+	public void summarizeFromTripleFiles(String typeTriplesFile, String dataTriplesFile) {
+		long start = System.currentTimeMillis();
+		try {
+			// First file: type triples
+			try (BufferedReader br = new BufferedReader(new FileReader(new File(typeTriplesFile)))) {
+				while (br.ready()) {
+					String spo = br.readLine();
+					Triple t = readTriple(spo);
+					//t.display();
+					handleTypeTripleAfterData(t);
+					//System.out.println();
+				}
+			}
+			//System.out.println("=== After weak type triple summarization of " + typeTriplesFile + ": =================================== ");
+			//display();
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Could not exploit file " + typeTriplesFile);
+		}
+		// this is the one who actually puts type triples in the summary
+		postHandleTypeTriples();
+
+		// Second file: data triples
+		try (BufferedReader br = new BufferedReader(new FileReader(new File(dataTriplesFile)))) {
+			while (br.ready()) {
+				String spo = br.readLine();
+				Triple t = readTriple(spo);
+				//System.out.println("\n");
+				//t.display();
+				handleDataTriple(t);
+				//display();
+				//System.out.println();
+			}
+		}
+		//System.out.println("=== After weak data triple summarization of "+ dataTriplesFile + ": ==================================");
+		//display();
+
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open file " + dataTriplesFile + " or " + typeTriplesFile + ": " + e.toString());
+		}
+		allTriplesSummarizationTime = System.currentTimeMillis() - start;
+		System.out.println("Summarized in " + allTriplesSummarizationTime + " ms.");
+		display(dataTriplesFile); // this prints out and makes a DOT file
+	}
+
+	/**
 	 * Summarizes an RDF graph assuming the data triples are in Postgres
 	 *
 	 * @param conn
@@ -102,11 +152,16 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		catch (SQLException e) {
 			throw new IllegalStateException("Postgres error encountered while summarizing type triples: " + e.toString());
 		}
-		System.out.println("Class sets created in " + (System.currentTimeMillis() - start) + " ms.");
+		classSetCreationTime = System.currentTimeMillis() - start;
+		System.out.println("Class sets created in " + classSetCreationTime + " ms.");
+
+		start = System.currentTimeMillis();
 		this.postHandleTypeTriples();
 		long typeTripleCount = triplesSummarizedSoFar;
-		System.out.println("Summarized " + typeTripleCount + " type triples in " + (System.currentTimeMillis() - start) + " ms.");
+		typeTriplesSummarizationTime = System.currentTimeMillis() - start;
+		System.out.println("Summarized " + numberOfTypeTriplesRead + " type triples in " + typeTriplesSummarizationTime + " ms.");
 
+		start = System.currentTimeMillis();
 		// now all the non-type triples
 		String getUntypedTriplesString = ("select *  from encoded_triples where p <> " + typeConstantCode);
 		try {
@@ -136,8 +191,11 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		catch (SQLException e) {
 			throw new IllegalStateException("Postgres error encountered while summarizing data triples " + e.toString());
 		}
+		dataTriplesSummarizationTime = System.currentTimeMillis() - start;
+		System.out.println("Summarized " + numberOfDataTriplesRead + " data triples in " + dataTriplesSummarizationTime + " ms.");
 
-		System.out.println("Summarized " + triplesSummarizedSoFar + " triples in " + (System.currentTimeMillis() - start) + " ms.");
+		allTriplesSummarizationTime = classSetCreationTime + typeTriplesSummarizationTime + dataTriplesSummarizationTime;
+		System.out.println("Summarized " + triplesSummarizedSoFar + " triples overall in " + allTriplesSummarizationTime + " ms.");
 		this.display(dataTriplesFileName);
 	}
 
@@ -273,57 +331,6 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		if (addToSummary)
 			//Debugger.log("Added triple " + source + " "+ t.p + " " + target); 
 			addTripleAndCheck(source, t.p, target);
-	}
-
-	/**
-	 * @param typeTriplesFile
-	 * @param dataTriplesFile
-	 */
-	@Override
-	public void summarizeFromTripleFiles(String typeTriplesFile, String dataTriplesFile) {
-		long start = System.currentTimeMillis();
-		try {
-
-			// First file: type triples
-			try (BufferedReader br = new BufferedReader(new FileReader(new File(typeTriplesFile)))) {
-				while (br.ready()) {
-					String spo = br.readLine();
-					Triple t = readTriple(spo);
-					//t.display();
-					handleTypeTripleAfterData(t);
-					//System.out.println();
-				}
-			}
-			//System.out.println("=== After weak type triple summarization of " + typeTriplesFile + ": =================================== ");
-			//display();
-		}
-		catch (IOException e) {
-			throw new IllegalStateException("Could not exploit file " + typeTriplesFile);
-		}
-		// this is the one who actually puts type triples in the summary	
-		postHandleTypeTriples();
-
-		//  Second file: data triples	
-		try (BufferedReader br = new BufferedReader(new FileReader(new File(dataTriplesFile)))) {
-			while (br.ready()) {
-				String spo = br.readLine();
-				Triple t = readTriple(spo);
-				//System.out.println("\n");
-				//t.display();
-				handleDataTriple(t);
-				//display();
-				//System.out.println();
-			}
-		}
-		//System.out.println("=== After weak data triple summarization of "+ dataTriplesFile + ": ==================================");
-		//display();
-
-		catch (IOException e) {
-			throw new IllegalStateException("Unable to open file " + dataTriplesFile + " or " + typeTriplesFile + ": " + e.toString());
-		}
-		long stop = System.currentTimeMillis();
-		System.out.println("Typed weak summarization took: " + (stop - start));
-		display(dataTriplesFile); // this prints out and makes a DOT file
 	}
 
 	public void handleTypeTripleBeforeData(Triple t) {
