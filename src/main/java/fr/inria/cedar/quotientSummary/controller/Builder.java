@@ -152,7 +152,6 @@ public class Builder {
 		return null;
 	}
 
-
 	private static Summary readSummaryFromPostgres(String summaryType, Connection conn) {
 		String lowerCaseSummaryType = summaryType.toLowerCase();
 		switch(lowerCaseSummaryType) {

@@ -16,7 +16,7 @@ import fr.inria.cedar.quotientSummary.controller.Builder;
 /**
  * Unit test for simple StrongSummarization.
  */
-public class StrongSummaryTest 
+public class TypedStrongSummaryTests 
 {
 
 	public File typedstrong(int i) {
@@ -40,7 +40,7 @@ public class StrongSummaryTest
 		}
 	}
 	
-	@Test 
+	@Test @Ignore 
 	public void testtypedstrong1() {
 		String referenceFileName = "src/test/resources/test1-typedstrong/ts-test-1-reference.nt";
 		File expectedOutput = new File(referenceFileName);
@@ -50,7 +50,7 @@ public class StrongSummaryTest
 			throw new IllegalStateException("Unable to open .nt files in typedstrong test 1 " + e.toString()); 
 		}
 	}
-	@Test 
+	@Test @Ignore
 	public void testtypedstrong2() {
 		String referenceFileName = "src/test/resources/test2-typedstrong/ts-test-2-reference.nt";
 		File expectedOutput = new File(referenceFileName);
@@ -60,7 +60,7 @@ public class StrongSummaryTest
 			throw new IllegalStateException("Unable to open .nt files in typedstrong test 2 " + e.toString()); 
 		}
 	}
-	@Test 
+	@Test @Ignore
 	public void testtypedstrong4() {
 		String referenceFileName = "src/test/resources/test4-typedstrong/ts-test-4-reference.nt";
 		File expectedOutput = new File(referenceFileName);
@@ -70,7 +70,7 @@ public class StrongSummaryTest
 			throw new IllegalStateException("Unable to open .nt files in typedstrong test 4 " + e.toString()); 
 		}
 	}
-	@Test 
+	@Test @Ignore
 	public void testtypedstrong5() {
 		String referenceFileName = "src/test/resources/test5-typedstrong/ts-test-5-reference.nt";
 		File expectedOutput = new File(referenceFileName);
@@ -80,7 +80,7 @@ public class StrongSummaryTest
 			throw new IllegalStateException("Unable to open .nt files in typedstrong test 5 " + e.toString()); 
 		}
 	}
-	@Test 
+	@Test @Ignore
 	public void testtypedstrong6() {
 		String referenceFileName = "src/test/resources/test6-typedstrong/ts-test-6-reference.nt";
 		File expectedOutput = new File(referenceFileName);
@@ -90,7 +90,7 @@ public class StrongSummaryTest
 			throw new IllegalStateException("Unable to open .nt files in typedstrong test 6 " + e.toString()); 
 		}
 	}
-	@Test 
+	@Test @Ignore
 	public void testtypedstrong7() {
 		String referenceFileName = "src/test/resources/test7-typedstrong/ts-test-7-reference.nt";
 		File expectedOutput = new File(referenceFileName);
