@@ -1,5 +1,15 @@
 package fr.inria.cedar.quotientSummary.controller;
 
+import com.google.common.base.Preconditions;
+import fr.inria.cedar.commons.miscellaneous.Debugger;
+import fr.inria.cedar.ontosql.db.UnsupportedDatabaseEngineException;
+import fr.inria.cedar.ontosql.rdfdb.dataloading.DataLoading;
+import fr.inria.cedar.ontosql.rdfdb.dataloading.Parameters;
+import fr.inria.cedar.quotientSummary.Summary;
+import fr.inria.cedar.quotientSummary.strong.StrongSummary;
+import fr.inria.cedar.quotientSummary.strong.TypedStrongSummary;
+import fr.inria.cedar.quotientSummary.weak.TypedWeakSummary;
+import fr.inria.cedar.quotientSummary.weak.WeakSummary;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -10,258 +20,255 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import com.google.common.base.Preconditions;
-
-import fr.inria.cedar.commons.miscellaneous.Debugger;
-import fr.inria.cedar.ontosql.db.UnsupportedDatabaseEngineException;
-import fr.inria.cedar.ontosql.rdfdb.dataloading.DataLoading;
-import fr.inria.cedar.ontosql.rdfdb.dataloading.Parameters;
-import fr.inria.cedar.quotientSummary.Summary;
-import fr.inria.cedar.quotientSummary.strong.StrongSummary;
-import fr.inria.cedar.quotientSummary.strong.TypedStrongSummary;
-import fr.inria.cedar.quotientSummary.weak.TypedWeakSummary;
-import fr.inria.cedar.quotientSummary.weak.WeakSummary;
-
 public class Builder {
-
 	public Builder() {
 		try {
-			getConnection(); 
-		} catch(Exception e) {
-			e.printStackTrace(); 
+			getConnection();
+		}
+		catch (UnsupportedDatabaseEngineException | IOException | SQLException e) {
+			e.printStackTrace();
 		}
 	}
-
 	// Default properties file
-	private static final String DEFAULT_CONFIG_FILE = System.getProperty("user.dir")+"/conf/dataLoading.properties";
-	
+	private static final String DEFAULT_CONFIG_FILE = System.getProperty("user.dir") + "/conf/dataLoading.properties";
+
 	/**
-	 * 
+	 *
 	 * @param args
-	 * args[0] determines what will be done:
-	 * 	load: load the data in Postgres
-	 *  summarize: summarize the data from Postgres
-	 *  loadSummarize: load the data in Postgres and summarize it from there
-	 *  summarizeEncodedFile: build the summary out of integer-encoded triples in a file. 
+	 *             args[0] determines what will be done:
+	 *             load: load the data in Postgres
+	 *             summarize: summarize the data from Postgres
+	 *             loadSummarize: load the data in Postgres and summarize it from there
+	 *             summarizeEncodedFile: build the summary out of integer-encoded triples in a file.
+	 *
 	 * @throws IOException
-	 * @throws SQLException 
-	 * @throws UnsupportedDatabaseEngineException 
+	 * @throws SQLException
+	 * @throws UnsupportedDatabaseEngineException
 	 */
-	public static void main(String[] args) throws IOException, UnsupportedDatabaseEngineException, SQLException
-	{
+	public static void main(String[] args) throws IOException, UnsupportedDatabaseEngineException, SQLException {
 		if (args.length == 0) {
 			printUsage();
-			return; 
+			return;
 		}
-		String[] nextArguments = extractArguments(args); 
+		String[] nextArguments = extractArguments(args);
 		if (args[0].toLowerCase().equals("load")) {
-			loadRDFInPostgres(nextArguments).close(); 
-			return; 
+			loadRDFInPostgres(nextArguments).close();
+			return;
 		}
-		if (args[0].toLowerCase().equals("summarize")) {
+		if (args[0].toLowerCase().equals("summarize"))
 			try (Connection conn = getConnection()) {
-				summarizeGraphFromPostgres(conn, nextArguments); 
+				summarizeGraphFromPostgres(conn, nextArguments);
 				conn.close();
 				return;
 			}
-		}
 		if (args[0].toLowerCase().equals("loadsummarize")) {
 			// in this case args[1] is the summary type; the loader doesn't need this information
-			String[] filesToLoad = extractArguments(nextArguments); 
+			String[] filesToLoad = extractArguments(nextArguments);
 			// the loader only gets the files to load
 			try (Connection conn = loadRDFInPostgres(filesToLoad)) {
 				// the summarizer also gets the summary name
-				summarizeGraphFromPostgres(conn, nextArguments); 
+				summarizeGraphFromPostgres(conn, nextArguments);
 				conn.close();
 				return;
 			}
 		}
-		printUsage(); 
+		printUsage();
 	}
-
 
 	public static void loadInPostgresAndSummarize(String[] args) {
 		Connection conn;
 		try {
 			conn = loadRDFInPostgres(args);
-		} catch (IOException | UnsupportedDatabaseEngineException | SQLException e) {
-			throw new IllegalStateException("Could not load "); 
-		} 
+		}
+		catch (IOException | UnsupportedDatabaseEngineException | SQLException e) {
+			throw new IllegalStateException("Could not load ");
+		}
 		try {
 			summarizeGraphFromPostgres(conn, args);
 			conn.close();
-		} catch (SQLException | IOException e) {
-			throw new IllegalStateException("Could not summarize"); 
+		}
+		catch (SQLException | IOException e) {
+			throw new IllegalStateException("Could not summarize");
 		}
 	}
-	
+
 	/**
-	 * This returns the connection to the Postgres database where the dictionary-encoded RDF graph is / will be stored. 
+	 * This returns the connection to the Postgres database where the dictionary-encoded RDF graph is / will be stored.
+	 *
 	 * @return the connection
-	 * @throws IOException 
-	 * @throws FileNotFoundException 
-	 * @throws UnsupportedDatabaseEngineException 
-	 * @throws SQLException 
+	 *
+	 * @throws IOException
+	 * @throws FileNotFoundException
+	 * @throws UnsupportedDatabaseEngineException
+	 * @throws SQLException
 	 */
 	// connection balance: +1
 	private static Connection getConnection() throws FileNotFoundException, IOException, UnsupportedDatabaseEngineException, SQLException {
 		// first fill in the connection properties from the default config file
 		Properties properties = new Properties();
 		properties.load(new FileReader(DEFAULT_CONFIG_FILE));
-		System.out.println(properties.toString()); 
+		System.out.println(properties.toString());
 
 		// then add the specific properties of this loader
 		Properties connectionProps = new Properties();
 		connectionProps.put("user", properties.getProperty("database.user"));
-		connectionProps.put("password", properties.getProperty("database.password")); 
+		connectionProps.put("password", properties.getProperty("database.password"));
 
-		String connectionURL = "jdbc:postgresql://" + properties.getProperty("database.host") + 
-				":" + properties.getProperty("database.port") + "/" + properties.getProperty("database.name"); 
-		Connection conn = DriverManager.getConnection(connectionURL, connectionProps); 
+		String connectionURL = "jdbc:postgresql://" + properties.getProperty("database.host")
+							   + ":" + properties.getProperty("database.port") + "/" + properties.getProperty("database.name");
+		Connection conn = DriverManager.getConnection(connectionURL, connectionProps);
 		System.out.println("Connection URL is: " + connectionURL);
-		Preconditions.checkState(conn != null, "No connection for " + connectionURL); 
-		return conn; 
+		Preconditions.checkState(conn != null, "No connection for " + connectionURL);
+		return conn;
 	}
-
 
 	/**
 	 * Supposes the graph has already been loaded
+	 *
+	 * @param conn
 	 * @param args
-	 * @throws IOException 
-	 * @throws SQLException 
+	 *
+	 * @throws IOException
+	 * @throws SQLException
 	 */
 	// connection balance: 0
 	public static void summarizeGraphFromPostgres(Connection conn, String[] args) throws SQLException, IOException {
-		Summary sum = createNewSummary(args[0]); 
+		Summary sum = createNewSummary(args[0]);
 		Debugger.turnOff();
-		sum.summarizeFromRDBMS(conn, extractArguments(args)); 
+		sum.summarizeFromRDBMS(conn, extractArguments(args));
 		System.out.println("RDF graph summarized.");
 		sum.saveSummaryInPostgres(conn, args[1]);
 		sum.writeDecodedSummaryToNTFile(conn, args[1]);
-		sum.drawSummaryAndGraph(conn, args[1]);  
+		sum.drawSummaryAndGraph(conn, args[1]);
 	}
 
 	private static Summary createNewSummary(String summaryType) {
 		String lowerCaseSummaryType = summaryType.toLowerCase();
-		switch(lowerCaseSummaryType) {
-			case("weak"): return new WeakSummary(); 
-			case("strong"): return new StrongSummary();
-			case("typedweak"): return new TypedWeakSummary(); 
-			case("typedstrong"): return new TypedStrongSummary(); 
+		switch (lowerCaseSummaryType) {
+			case ("weak"):
+				return new WeakSummary();
+			case ("strong"):
+				return new StrongSummary();
+			case ("typedweak"):
+				return new TypedWeakSummary();
+			case ("typedstrong"):
+				return new TypedStrongSummary();
 		}
 		return null;
 	}
-
 
 	private static Summary readSummaryFromPostgres(String summaryType, Connection conn) {
 		String lowerCaseSummaryType = summaryType.toLowerCase();
-		switch(lowerCaseSummaryType) {
-			case("weak"): return new WeakSummary(conn); 
-			case("strong"): return new StrongSummary(conn);
-			case("typedweak"): return new TypedWeakSummary(conn); 
-			case("typedstrong"): return new TypedStrongSummary(conn); 
+		switch (lowerCaseSummaryType) {
+			case ("weak"):
+				return new WeakSummary(conn);
+			case ("strong"):
+				return new StrongSummary(conn);
+			case ("typedweak"):
+				return new TypedWeakSummary(conn);
+			case ("typedstrong"):
+				return new TypedStrongSummary(conn);
 		}
 		return null;
 	}
 
-
 	/**
 	 * Small helper function to extract all but the first argument
+	 *
 	 * @param args
+	 *
 	 * @return
 	 */
 	private static String[] extractArguments(String[] args) {
-		String[] suffix = new String[args.length - 1]; 
-		for (int i = 0; i < suffix.length; i ++){
-			suffix[i] = args[i+1]; 
-		}
+		String[] suffix = new String[args.length - 1];
+		for (int i = 0; i < suffix.length; i++)
+			suffix[i] = args[i + 1];
 		return suffix;
 	}
 
 	/** This method loads data in Postgres through the ontoSQL loader.
+	 *
 	 * @param args a list of file names
+	 *
 	 * @return
+	 *
 	 * @throws FileNotFoundException
 	 * @throws IOException
 	 * @throws UnsupportedDatabaseEngineException
 	 * @throws SQLException
-	 * Convention: 
-	 * 		if there are at least two files
-     *		then the first file contains the data and the last contains the schema
-	 *		otherwise (only one file) that file contains everything (data and schema)
-	 **/
+	 *                                            Convention:
+	 *                                            if there are at least two files
+	 *                                            then the first file contains the data and the last contains the schema
+	 *                                            otherwise (only one file) that file contains everything (data and schema)
+	 * */
 	// connection balance: +1
 	public static Connection loadRDFInPostgres(String[] args) throws FileNotFoundException, IOException, UnsupportedDatabaseEngineException, SQLException {
 
-		System.out.println(System.getProperty("user.dir")); 
+		System.out.println(System.getProperty("user.dir"));
 
 		List<String> tripleFiles = new ArrayList<>();
-		List<String> rdfsFiles = new ArrayList<>(); 
+		List<String> rdfsFiles = new ArrayList<>();
 
-		int fileNo; 
+		int fileNo;
 		for (fileNo = 0; fileNo < args.length; fileNo++) {
-			String s = args[fileNo]; 	
+			String s = args[fileNo];
 			if ((fileNo == 0) || ((args.length > 1) && (fileNo < args.length - 1))) {
-				System.out.println("Triple file: " +s);
-				tripleFiles.add(s); 
+				System.out.println("Triple file: " + s);
+				tripleFiles.add(s);
 			}
-			else{
-				System.out.println("Schema file: " +s);
-				rdfsFiles.add(s); 
+			else {
+				System.out.println("Schema file: " + s);
+				rdfsFiles.add(s);
 			}
 		}
-		
+
 		Properties properties = new Properties();
 		properties.load(new FileReader(DEFAULT_CONFIG_FILE));
-		System.out.println(properties.toString()); 
-		Parameters settings =  new Parameters();
+		System.out.println(properties.toString());
+		Parameters settings = new Parameters();
 		settings.setPropertiesFileName(DEFAULT_CONFIG_FILE);
-		
-		if(rdfsFiles.isEmpty()){
-			for(String tripleFile:tripleFiles){
+
+		if (rdfsFiles.isEmpty())
+			for (String tripleFile: tripleFiles) {
 				settings.getAllInFiles().add(tripleFile);
 				DataLoading.process(settings);
 			}
-		}
-		else{
-			for(String tripleFile:tripleFiles){
+		else
+			for (String tripleFile: tripleFiles) {
 				settings.getTripleFiles().add(tripleFile);
 				settings.setRdfsFile(rdfsFiles.get(0));
 				DataLoading.process(settings);
 			}
-		}
 		System.out.println("Loading finished");
 
 		Properties connectionProps = new Properties();
 		connectionProps.put("user", properties.getProperty("database.user"));
-		connectionProps.put("password", properties.getProperty("database.password")); 
+		connectionProps.put("password", properties.getProperty("database.password"));
 
-		String connectionURL = "jdbc:postgresql://" + properties.getProperty("database.host") + 
-				":" + properties.getProperty("database.port") + "/" + properties.getProperty("database.name"); 
-		Connection conn = DriverManager.getConnection(connectionURL, connectionProps); 
+		String connectionURL = "jdbc:postgresql://" + properties.getProperty("database.host")
+							   + ":" + properties.getProperty("database.port") + "/" + properties.getProperty("database.name");
+		Connection conn = DriverManager.getConnection(connectionURL, connectionProps);
 		System.out.println("Connection URL is: " + connectionURL);
-		Preconditions.checkState(conn != null, "No connection for " + connectionURL); 
-		return conn; 
+		Preconditions.checkState(conn != null, "No connection for " + connectionURL);
+		return conn;
 	}
 
 	// Connection balance: +1
 	public static Connection loadSingleRDFInPostgres(String fileName) {
-		String[] files = {fileName}; 
+		String[] files = {fileName};
 		try {
-			return loadRDFInPostgres(files); 
+			return loadRDFInPostgres(files);
 		}
-		catch(Exception e) {
-			throw new IllegalStateException("Unable to load RDF from " + fileName + " " + e.toString()); 
+		catch (UnsupportedDatabaseEngineException | IOException | SQLException e) {
+			throw new IllegalStateException("Unable to load RDF from " + fileName + " " + e.toString());
 		}
 	}
-	
-	
+
 	private static void printUsage() {
 		System.out.println("Usage:");
 		System.out.println("args[0]=load: loads the data in Postgres");
-		System.out.println("args[0]=summarize: summarize the data from Postgres"); 
+		System.out.println("args[0]=summarize: summarize the data from Postgres");
 		System.out.println("args[0]=loadSummarize: load the data in Postgres and summarize it from there");
-		System.out.println("args[0]=summarizeEncodedFile: build the summary out of integer-encoded triples in a file"); 
+		System.out.println("args[0]=summarizeEncodedFile: build the summary out of integer-encoded triples in a file");
 	}
-
 }

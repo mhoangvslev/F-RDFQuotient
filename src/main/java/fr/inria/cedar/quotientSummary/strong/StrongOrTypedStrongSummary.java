@@ -11,17 +11,14 @@ public class StrongOrTypedStrongSummary extends Summary {
 	Long2Long n2tc; // for each node, its target clique ID
 	Long2Long p2sc; // property to source clique
 	Long2Long p2tc; // property to target clique
-
 	long minCliqueID;
-	
-	protected long numberOfDataTriplesRead; 
-	protected long numberOfTypeTriplesRead; 
-
+	protected long numberOfDataTriplesRead;
+	protected long numberOfTypeTriplesRead;
 	protected long emptySCCount; // le numéro de la clique vide
 	protected long emptyTCCount; // le numéro de la clique vide
-	
-	public StrongOrTypedStrongSummary(){
-		super(); 
+
+	public StrongOrTypedStrongSummary() {
+		super();
 		sc = new Long2LongList();
 		tc = new Long2LongList();
 		n2sc = new Long2Long();
@@ -31,8 +28,8 @@ public class StrongOrTypedStrongSummary extends Summary {
 		rep = new Long2Long();
 		minCliqueID = -1;
 		emptySCCount = Long.MAX_VALUE;
-		emptyTCCount = Long.MAX_VALUE; 
-		numberOfDataTriplesRead=0;
-		numberOfTypeTriplesRead=0; 
+		emptyTCCount = Long.MAX_VALUE;
+		numberOfDataTriplesRead = 0;
+		numberOfTypeTriplesRead = 0;
 	}
 }

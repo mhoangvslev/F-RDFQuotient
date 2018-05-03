@@ -7,28 +7,29 @@ import java.util.TreeSet;
 public class Long2LongSet {
 	final HashMap<Long, TreeSet<Long>> map;
 
-	public Long2LongSet(){
+	public Long2LongSet() {
 		map = new HashMap<>();
 	}
 
-	public TreeSet<Long> get(long node){
-		return map.get(new Long(node));
+	public TreeSet<Long> get(long node) {
+		return map.get(node);
 	}
 
-	public void put(long item, long set){
-		TreeSet<Long> theSet = map.get(new Long(set));
-		if (theSet == null){
+	public void put(long item, long set) {
+		TreeSet<Long> theSet = map.get(set);
+		if (theSet == null) {
 			theSet = new TreeSet<>();
-			map.put(set,  theSet);
+			map.put(set, theSet);
 		}
-		if (!theSet.contains(item)){
-			theSet.add(new Long(item));
-		}
+		if (!theSet.contains(item))
+			theSet.add(item);
 	}
-	public void remove(Long node){
+
+	public void remove(Long node) {
 		map.remove(node);
 	}
-	public void put(long property, TreeSet<Long> item){
+
+	public void put(long property, TreeSet<Long> item) {
 		map.put(property, item);
 	}
 
@@ -37,33 +38,30 @@ public class Long2LongSet {
 	public void fuseKeyInto(Long l1, Long l2) {
 		TreeSet<Long> ll1 = map.get(l1);
 		TreeSet<Long> ll2 = map.get(l2);
-		if ((ll1 != null) && (ll2 != null)){
+		if ((ll1 != null) && (ll2 != null)) {
 			// added all content of l1 into l2
-			for (Long i1: ll1){
-				if (!ll2.contains(i1)){
-					ll2.add(i1);	
-				}
-			}
+			for (Long i1: ll1)
+				if (!ll2.contains(i1))
+					ll2.add(i1);
 			// the (augmented) ll2 is already the value associated to l2; 
 			// value l1 needs to disappear:
 			map.remove(l1);
 		}
 	}
 
-	public String display(){
+	public String display() {
 		StringBuffer sb = new StringBuffer();
 		if (!map.keySet().isEmpty()) {
 			sb.append("\n==============: \n");
-			for (Long key: map.keySet()){
-				sb.append("#"+ key + "|{");
+			for (Long key: map.keySet()) {
+				sb.append("#").append(key).append("|{");
 				TreeSet<Long> values = map.get(key);
-				for (Long val: values){
-					sb.append(val + ", ");
-				}
-				sb.append("} "+ " (" + map.size() + " entries)");
+				for (Long val: values)
+					sb.append(val).append(", ");
+				sb.append("}  (").append(map.size()).append(" entries)");
 			}
-		}	
-		return new String(sb); 
+		}
+		return new String(sb);
 	}
 
 	public Set<Long> keys() {
@@ -73,13 +71,11 @@ public class Long2LongSet {
 	public void add(long o, long newClassSetID) {
 		TreeSet<Long> setFor = map.get(o);
 		if (setFor == null) {
-			setFor = new TreeSet<Long>();
+			setFor = new TreeSet<>();
 			setFor.add(newClassSetID);
 		}
-		else {
-			if (!setFor.contains(newClassSetID)) {
-				setFor.add(newClassSetID); 
-			}
-		}
+		else
+			if (!setFor.contains(newClassSetID))
+				setFor.add(newClassSetID);
 	}
 }

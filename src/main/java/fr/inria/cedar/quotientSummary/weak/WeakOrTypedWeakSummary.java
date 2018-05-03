@@ -1,18 +1,16 @@
 package fr.inria.cedar.quotientSummary.weak;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-
 import fr.inria.cedar.commons.miscellaneous.Debugger;
 import fr.inria.cedar.quotientSummary.Summary;
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
 import fr.inria.cedar.quotientSummary.util.Substitutions;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 public class WeakOrTypedWeakSummary extends Summary {
 	HashMap<Long, Long> ps; // for each property, the property source
 	HashMap<Long, Long> pt; // for each property, the property source	
-
-	long minSummaryNode; 
+	long minSummaryNode;
 	// below:
 	// U means unrepresented (so far) 
 	// R means represented (so far) 
@@ -25,81 +23,69 @@ public class WeakOrTypedWeakSummary extends Summary {
 	protected final static char RS_UP_RO = 6;
 	protected final static char RS_RP_UO = 7;
 	protected final static char RS_RP_RO = 8;
+	protected long numberOfDataTriplesRead;
+	protected long numberOfTypeTriplesRead;
 
-	protected long numberOfDataTriplesRead; 
-	protected long numberOfTypeTriplesRead; 
-	
-	public WeakOrTypedWeakSummary(){
-		super(); 
-		ps = new HashMap<Long, Long>(); 
-		pt = new HashMap<Long, Long>(); 
+	public WeakOrTypedWeakSummary() {
+		super();
+		ps = new HashMap<>();
+		pt = new HashMap<>();
 
-		numberOfDataTriplesRead=0;
-		numberOfTypeTriplesRead=0; 
-		minSummaryNode = -1; 
+		numberOfDataTriplesRead = 0;
+		numberOfTypeTriplesRead = 0;
+		minSummaryNode = -1;
 
 	}
 
-	public void summarizeFromTripleFiles(String typeTriplesFile, String dataTriplesFile, String method){
-		summarizeFromTripleFiles(typeTriplesFile, dataTriplesFile); 
+	public void summarizeFromTripleFiles(String typeTriplesFile, String dataTriplesFile, String method) {
+		summarizeFromTripleFiles(typeTriplesFile, dataTriplesFile);
 	}
 
 	public void summarizeFromTripleFiles(String typeTriplesFile, String dataTriplesFile) {
-		throw new Error("Not implemented at this level"); 
+		throw new Error("Not implemented at this level");
 	}
-	
 
 	protected char identifyTripleSummarizationCase(boolean sRepresented, boolean pRepresented, boolean oRepresented) {
-		if (sRepresented){
-			if (pRepresented){
-				if (oRepresented){
-					return RS_RP_RO; 
-				}
-				return RS_RP_UO; 
+		if (sRepresented) {
+			if (pRepresented) {
+				if (oRepresented)
+					return RS_RP_RO;
+				return RS_RP_UO;
 			}
-			if (oRepresented){
+			if (oRepresented)
 				return RS_UP_RO;
-			}
-			return RS_UP_UO; 
+			return RS_UP_UO;
 		}
-		if (pRepresented){
-			if (oRepresented){
-				return US_RP_RO; 
-			}
-			return US_RP_UO; 
+		if (pRepresented) {
+			if (oRepresented)
+				return US_RP_RO;
+			return US_RP_UO;
 		}
-		if (oRepresented){
-			return US_UP_RO; 
-		}
-		return US_UP_UO; 
+		if (oRepresented)
+			return US_UP_RO;
+		return US_UP_UO;
 	}
-	
-	
 
-	protected void replaceAll(Long oldNode, Long newNode, Long forProperty){
+	protected void replaceAll(Long oldNode, Long newNode, Long forProperty) {
 		//Debugger.log("WTW REPLACE-ALL " + oldNode + " with " + newNode + " for property " + forProperty + " in: ");
 		//Debugger.log(this.toString());
 		replaceInSummary(oldNode, newNode);
 		//Debugger.log("Representation was: "); 
 		//showRep(); 
-		rep.replaceValue(oldNode, newNode); 
+		rep.replaceValue(oldNode, newNode);
 		// now we need to replace oldNode with newNode in the property source and target. It does not suffice to do it for one property.
-		if (ps.containsValue(oldNode)) {
-			for (Long prop: ps.keySet()) {
-				if (ps.get(prop).equals(oldNode)){
-					ps.replace(prop, newNode); 
+		if (ps.containsValue(oldNode))
+			for (Long prop: ps.keySet())
+				if (ps.get(prop).equals(oldNode)) {
+					ps.replace(prop, newNode);
 					Debugger.log("Now source of " + prop + " is " + ps.get(forProperty));
 				}
-			}
-		}
-		if (pt.containsValue(oldNode)) {
-			for (Long prop: pt.keySet()) {
-				if (pt.get(prop).equals(oldNode)){
-					pt.replace(prop, newNode); 
+		if (pt.containsValue(oldNode))
+			for (Long prop: pt.keySet())
+				if (pt.get(prop).equals(oldNode)) {
+					pt.replace(prop, newNode);
 					Debugger.log("Now target of " + prop + " is " + ps.get(forProperty));
 				}
-			}
-		}
 	}
 
 	protected void handleDataTriple_RS_RP_RO(Triple t) {
@@ -108,30 +94,27 @@ public class WeakOrTypedWeakSummary extends Summary {
 		// - fuse the subject of p with the representative of s (keep the smallest)
 		// - fuse the object of p with the representative of s (keep the smallest)
 		Long sourceP = ps.get(t.p);
-		Long addedTripleSource = sourceP; 
-		Long targetP = pt.get(t.p); 
-		Long addedTripleTarget = targetP; 
-		Long repS = rep.get(t.s); 
-		Long repO = rep.get(t.o); 
+		Long addedTripleSource = sourceP;
+		Long targetP = pt.get(t.p);
+		Long addedTripleTarget = targetP;
+		Long repS = rep.get(t.s);
+		Long repO = rep.get(t.o);
 
 		Substitutions subs = new Substitutions(sourceP, repS, targetP, repO);
 		System.out.println("Substitutions: " + subs.toString());
-		
+
 		// update added triple source and target, if needed
 		Long possibleNewAddedTripleSource = subs.get(addedTripleSource);
-		if (possibleNewAddedTripleSource != null) {
-			addedTripleSource = possibleNewAddedTripleSource; 
-		}
+		if (possibleNewAddedTripleSource != null)
+			addedTripleSource = possibleNewAddedTripleSource;
 		Long possibleNewAddedTripleTarget = subs.get(addedTripleTarget);
-		if (possibleNewAddedTripleTarget != null) {
-			addedTripleTarget = possibleNewAddedTripleTarget; 
-		}
+		if (possibleNewAddedTripleTarget != null)
+			addedTripleTarget = possibleNewAddedTripleTarget;
 		// apply replacements, if any
-		applySubstitutions(subs, t.p); 
+		applySubstitutions(subs, t.p);
 		// try to add the resulting triple
 		this.addTripleAndCheck(addedTripleSource, t.p, addedTripleTarget);
-		
-		
+
 //		if (sourceP < repS){ // addedTripleSource is sourceP
 //			System.out.println("RS_RP_RO sourceP=" + sourceP + "<repS=" +repS);
 //			System.out.println("Replacing repS="+repS + " with sourceP=" + sourceP);
@@ -188,13 +171,11 @@ public class WeakOrTypedWeakSummary extends Summary {
 //				this.addTripleAndCheck(addedTripleSource, t.p, addedTripleTarget);
 //			}
 //		}
-
 	}
 
 	private void applySubstitutions(Substitutions subs, Long p) {
-		for (Long n: subs.getNodesToBeReplaced()) {
-			replaceAll(n, subs.get(n), p); 
-		}
+		for (Long n: subs.getNodesToBeReplaced())
+			replaceAll(n, subs.get(n), p);
 	}
 
 	// the subject and property have been represented, not the object. In this case we must:
@@ -206,27 +187,25 @@ public class WeakOrTypedWeakSummary extends Summary {
 		//Debugger.log(this.toString()); 
 		//safetyCheck(); 
 		Long sourceP = ps.get(t.p);
-		long repS = rep.get(t.s); 
-		Long addedTripleSubject = repS; 
-		
+		long repS = rep.get(t.s);
+		Long addedTripleSubject = repS;
+
 		Long targetP = pt.get(t.p); // we have no repO
 		Long addedTripleTarget = targetP;
-		
+
 		// if repS and/or addedTripleTarget have been impacted by a substitution, do it
-		Substitutions subs = new Substitutions(repS, sourceP); 
-		Long possibleNewTripleSubject = subs.get(addedTripleSubject); 
-		if (possibleNewTripleSubject != null) {
-			addedTripleSubject = possibleNewTripleSubject; 
-		}
+		Substitutions subs = new Substitutions(repS, sourceP);
+		Long possibleNewTripleSubject = subs.get(addedTripleSubject);
+		if (possibleNewTripleSubject != null)
+			addedTripleSubject = possibleNewTripleSubject;
 		Long possibleNewTripleTarget = subs.get(addedTripleTarget);
-		if (possibleNewTripleTarget != null) {
-			addedTripleTarget = possibleNewTripleTarget; 
-		}
-		
-		applySubstitutions(subs, t.p); 
+		if (possibleNewTripleTarget != null)
+			addedTripleTarget = possibleNewTripleTarget;
+
+		applySubstitutions(subs, t.p);
 		addTripleAndCheck(addedTripleSubject, t.p, addedTripleTarget);
 		rep.put(t.o, addedTripleTarget);
-		
+
 //		Long targetP = pt.get(t.p); 
 //		rep.put(t.o, targetP);
 //		Long addedTripleTarget = targetP; // this may be a collateral damage of fusion and replacements
@@ -264,7 +243,7 @@ public class WeakOrTypedWeakSummary extends Summary {
 	}
 
 	protected void consistencyChecks() {
-		throw new IllegalStateException("This check is not defined here, define it in specialized classes"); 
+		throw new IllegalStateException("This check is not defined here, define it in specialized classes");
 	}
 
 	protected void handleDataTriple_RS_UP_RO(Triple t) {
@@ -272,23 +251,22 @@ public class WeakOrTypedWeakSummary extends Summary {
 		// the subject and object have been represented, not the property
 		// represent the property by the subject and object codes
 		Long sourceP = rep.get(t.s);
-		Long targetP = rep.get(t.o); 
+		Long targetP = rep.get(t.o);
 		ps.put(t.p, sourceP);
 		pt.put(t.p, targetP);
-		addTripleAndCheck(sourceP, t.p, targetP); 
+		addTripleAndCheck(sourceP, t.p, targetP);
 	}
-
 
 	protected void handleDataTriple_RS_UP_UO(Triple t) {
 		//Debugger.log("RS_UP_UO");
 		// the subject has been represented, not the object nor the property
 		// we need to create the property target, represent o by this
-		Long sourceP = rep.get(t.s); 
-		Long targetP = this.getNextSummaryNode(); 
-		rep.put(t.o, targetP); 
+		Long sourceP = rep.get(t.s);
+		Long targetP = this.getNextSummaryNode();
+		rep.put(t.o, targetP);
 		ps.put(t.p, sourceP);
-		pt.put(t.p, targetP); 
-		addTripleAndCheck(sourceP, t.p, targetP); 
+		pt.put(t.p, targetP);
+		addTripleAndCheck(sourceP, t.p, targetP);
 	}
 
 	// the property and the object have been seen, not the subject. 
@@ -296,32 +274,29 @@ public class WeakOrTypedWeakSummary extends Summary {
 	// - represent the subject by the source of the property	
 	// - fuse the target of p with the representative of o. 
 	// By convention we will keep the *** smaller *** one. 
-	
 	protected void handleDataTriple_US_RP_RO(Triple t) {
 		//Debugger.log("US_RP_RO");
-		
-		Long sourceP = ps.get(t.p); 
-		Long addedTripleSource = sourceP; 
-		
-		Long targetP = pt.get(t.p); 
-		Long repO = rep.get(t.o); 
+
+		Long sourceP = ps.get(t.p);
+		Long addedTripleSource = sourceP;
+
+		Long targetP = pt.get(t.p);
+		Long repO = rep.get(t.o);
 		Long addedTripleTarget = targetP; // initialize with any of them
-		
+
 		Substitutions subs = new Substitutions(repO, targetP);
 		Long possibleNewTripleSource = subs.get(addedTripleSource);
-		if (possibleNewTripleSource != null) {
+		if (possibleNewTripleSource != null)
 			addedTripleSource = possibleNewTripleSource;
-		}
 		Long possibleNewTripleTarget = subs.get(addedTripleTarget);
-		if (possibleNewTripleTarget != null) {
+		if (possibleNewTripleTarget != null)
 			addedTripleTarget = possibleNewTripleTarget;
-		}
-		
+
 		applySubstitutions(subs, t.p);
-	
+
 		rep.put(t.s, addedTripleSource);
-		addTripleAndCheck(addedTripleSource, t.p, addedTripleTarget); 
-		
+		addTripleAndCheck(addedTripleSource, t.p, addedTripleTarget);
+
 //		Long sourceP = ps.get(t.p); 
 //		rep.put(t.s, sourceP); 
 //
@@ -355,67 +330,68 @@ public class WeakOrTypedWeakSummary extends Summary {
 		// the property has been seen so far, not the subject nor the object
 		// in this case we need to represent s by the source of p and o by the target of p
 		Long pSource = ps.get(t.p);
-		Long pTarget = pt.get(t.p); 
+		Long pTarget = pt.get(t.p);
 		rep.put(t.s, pSource);
-		rep.put(t.o, pTarget); 
-		addTripleAndCheck(pSource, t.p, pTarget); 
+		rep.put(t.o, pTarget);
+		addTripleAndCheck(pSource, t.p, pTarget);
 	}
 
 	protected void handleDataTriple_US_UP_RO(Triple t) {
 		//Debugger.log("US_UP_RO");
 		// only the object has been seen so far: it must have been seen as the target of *another* property.  
 		// We need to: mark the target of p as the target of that property: 
-		Long pTarget = rep.get(t.o); 
-		pt.put(t.p, pTarget); 
+		Long pTarget = rep.get(t.o);
+		pt.put(t.p, pTarget);
 
 		// create source for p; represent the subject by that source; 
-		Long pSource = this.getNextSummaryNode(); 
+		Long pSource = this.getNextSummaryNode();
 		ps.put(t.p, pSource);
 		rep.put(t.s, pSource);
-		addTripleAndCheck(pSource, t.p, pTarget); 
+		addTripleAndCheck(pSource, t.p, pTarget);
 	}
 
 	protected void handleDataTriple_US_UP_UO(Triple t) {
 		//Debugger.log("US_UP_UO");
 		// nothing has been seen so far
-		Long pSource = this.getNextSummaryNode(); 
-		Long pTarget = this.getNextSummaryNode(); 
+		Long pSource = this.getNextSummaryNode();
+		Long pTarget = this.getNextSummaryNode();
 		ps.put(t.p, pSource);
 		pt.put(t.p, pTarget);
 		rep.put(t.s, pSource);
 		rep.put(t.o, pTarget);
-		addTripleAndCheck(pSource, t.p, pTarget); 
+		addTripleAndCheck(pSource, t.p, pTarget);
 	}
 
 	protected void addTripleAndCheck(Long s, long p, Long o) {
-		addTriple(s, p, o); 
-		if (this.checkConsistency) {
+		addTriple(s, p, o);
+		if (this.checkConsistency)
 			consistencyChecks();
-		}
 	}
 
 	// This methods overrides that of Summary. It has some safety checks specific to W and TW summarization.
+	@Override
 	public ArrayList<Triple> getSummaryEdges() {
 		ArrayList<Triple> res = new ArrayList<>();
-		for (Long s: edges.keySet()){
-			HashMap<Long, ArrayList<Long>> triplesOfThisSubject = edges.get(s); 
-			if (triplesOfThisSubject == null){
-				throw new Error("No triples whose subject is " + s); 
-			}
-			for (Long p: triplesOfThisSubject.keySet()){
+		for (Long s: edges.keySet()) {
+			HashMap<Long, ArrayList<Long>> triplesOfThisSubject = edges.get(s);
+			if (triplesOfThisSubject == null)
+				throw new Error("No triples whose subject is " + s);
+			for (Long p: triplesOfThisSubject.keySet()) {
 				ArrayList<Long> objectsOfThisSandP = triplesOfThisSubject.get(p);
-				for (Long o: objectsOfThisSandP){
+				for (Long o: objectsOfThisSandP) {
 					Triple t = new Triple(s, p, o);
 					res.add(t);
 				}
 			}
 		}
-		return res; 
+		return res;
 	}
+
 	// This method overrides that of Summary. Some of the printout is specific to W and TW.
-	public String toString(){
+	@Override
+	public String toString() {
 		StringBuffer sb = new StringBuffer();
-		for (Triple t: getSummaryEdges()){
+		for (Triple t: getSummaryEdges()) {
 			sb.append(t.toString());
 			sb.append("\n");
 		}
@@ -431,8 +407,6 @@ public class WeakOrTypedWeakSummary extends Summary {
 //			sb.append(l + ": " + pt.get(l));
 //			sb.append(" "); 
 //		}
-		return new String(sb); 
+		return new String(sb);
 	}
-
-	
 }
