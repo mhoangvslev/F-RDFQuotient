@@ -7,7 +7,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import org.apache.commons.io.FileUtils;
 import static org.junit.Assert.assertTrue;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -37,7 +36,6 @@ public class TypedStrongSummaryTests {
 	}
 
 	@Test
-	@Ignore
 	public void testtypedstrong1() {
 		String referenceFileName = "src/test/resources/test1-typedstrong/ts-test-1-reference.nt";
 		File expectedOutput = new File(referenceFileName);
@@ -50,7 +48,6 @@ public class TypedStrongSummaryTests {
 	}
 
 	@Test
-	@Ignore
 	public void testtypedstrong2() {
 		String referenceFileName = "src/test/resources/test2-typedstrong/ts-test-2-reference.nt";
 		File expectedOutput = new File(referenceFileName);
@@ -63,7 +60,6 @@ public class TypedStrongSummaryTests {
 	}
 	
 	@Test
-	@Ignore
 	public void testtypedstrong3() {
 		String referenceFileName = "src/test/resources/test2-typedstrong/ts-test-3-reference.nt";
 		File expectedOutput = new File(referenceFileName);
@@ -76,7 +72,6 @@ public class TypedStrongSummaryTests {
 	}
 
 	@Test
-	@Ignore
 	public void testtypedstrong4() {
 		String referenceFileName = "src/test/resources/test4-typedstrong/ts-test-4-reference.nt";
 		File expectedOutput = new File(referenceFileName);
@@ -89,7 +84,6 @@ public class TypedStrongSummaryTests {
 	}
 
 	@Test
-	@Ignore
 	public void testtypedstrong5() {
 		String referenceFileName = "src/test/resources/test5-typedstrong/ts-test-5-reference.nt";
 		File expectedOutput = new File(referenceFileName);
@@ -102,7 +96,6 @@ public class TypedStrongSummaryTests {
 	}
 
 	@Test
-	@Ignore
 	public void testtypedstrong6() {
 		String referenceFileName = "src/test/resources/test6-typedstrong/ts-test-6-reference.nt";
 		File expectedOutput = new File(referenceFileName);
@@ -115,7 +108,6 @@ public class TypedStrongSummaryTests {
 	}
 
 	@Test
-	@Ignore
 	public void testtypedstrong7() {
 		String referenceFileName = "src/test/resources/test7-typedstrong/ts-test-7-reference.nt";
 		File expectedOutput = new File(referenceFileName);

@@ -7,6 +7,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import org.apache.commons.io.FileUtils;
 import static org.junit.Assert.assertTrue;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class StrongSummaryTests {
@@ -33,8 +34,9 @@ public class StrongSummaryTests {
 	}
 
 	@Test
+	@Ignore
 	public void teststrong1() {
-		String referenceFileName = "src/test/resources/test1-strong/ts-test-1-reference.nt";
+		String referenceFileName = "src/test/resources/test1-strong/s-test-1-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
 			assertTrue("Different summary strong 1", FileUtils.contentEquals(strong(1), expectedOutput));
@@ -45,8 +47,9 @@ public class StrongSummaryTests {
 	}
 
 	@Test
+	@Ignore
 	public void teststrong2() {
-		String referenceFileName = "src/test/resources/test2-strong/ts-test-2-reference.nt";
+		String referenceFileName = "src/test/resources/test2-strong/s-test-2-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
 			assertTrue("Different summary strong 2", FileUtils.contentEquals(strong(2), expectedOutput));
@@ -57,8 +60,9 @@ public class StrongSummaryTests {
 	}
 	
 	@Test
+	@Ignore
 	public void teststrong3() {
-		String referenceFileName = "src/test/resources/test2-strong/ts-test-3-reference.nt";
+		String referenceFileName = "src/test/resources/test2-strong/s-test-3-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
 			assertTrue("Different summary strong 3", FileUtils.contentEquals(strong(3), expectedOutput));
@@ -69,8 +73,9 @@ public class StrongSummaryTests {
 	}
 
 	@Test
+	@Ignore
 	public void teststrong4() {
-		String referenceFileName = "src/test/resources/test4-strong/ts-test-4-reference.nt";
+		String referenceFileName = "src/test/resources/test4-strong/s-test-4-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
 			assertTrue("Different summary strong 4", FileUtils.contentEquals(strong(4), expectedOutput));
@@ -81,8 +86,9 @@ public class StrongSummaryTests {
 	}
 
 	@Test
+	@Ignore
 	public void teststrong5() {
-		String referenceFileName = "src/test/resources/test5-strong/ts-test-5-reference.nt";
+		String referenceFileName = "src/test/resources/test5-strong/s-test-5-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
 			assertTrue("Different summary strong 5", FileUtils.contentEquals(strong(5), expectedOutput));
@@ -93,8 +99,9 @@ public class StrongSummaryTests {
 	}
 
 	@Test
+	@Ignore
 	public void teststrong6() {
-		String referenceFileName = "src/test/resources/test6-strong/ts-test-6-reference.nt";
+		String referenceFileName = "src/test/resources/test6-strong/s-test-6-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
 			assertTrue("Different summary strong 6", FileUtils.contentEquals(strong(6), expectedOutput));
@@ -105,8 +112,9 @@ public class StrongSummaryTests {
 	}
 
 	@Test
+	@Ignore
 	public void teststrong7() {
-		String referenceFileName = "src/test/resources/test7-strong/ts-test-7-reference.nt";
+		String referenceFileName = "src/test/resources/test7-strong/s-test-7-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
 			assertTrue("Different summary strong 7", FileUtils.contentEquals(strong(7), expectedOutput));
