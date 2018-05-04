@@ -1,0 +1,8 @@
+digraph g{
+"<http://qstest.org/node1>" [style = filled, color=cornflowerblue];
+"<http://qstest.org/class#1>" [fontcolor=white, style = filled, color=black];
+"<http://qstest.org/node1>" -> "<http://qstest.org/class#1>" [label=".../02/22-rdf-syntax-ns#type>"];
+"<http://qstest.org/node1>" [style = filled, color=cornflowerblue];
+"<http://qstest.org/class#1>" [fontcolor=white, style = filled, color=black];
+"<http://qstest.org/node1>" -> "<http://qstest.org/class#1>" [label=".../02/22-rdf-syntax-ns#type>"];
+}

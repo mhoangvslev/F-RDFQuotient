@@ -101,7 +101,7 @@ public class WeakOrTypedWeakSummary extends Summary {
 		Long repO = rep.get(t.o);
 
 		Substitutions subs = new Substitutions(sourceP, repS, targetP, repO);
-		System.out.println("Substitutions: " + subs.toString());
+		//System.out.println("Substitutions: " + subs.toString());
 
 		// update added triple source and target, if needed
 		Long possibleNewAddedTripleSource = subs.get(addedTripleSource);
@@ -117,7 +117,7 @@ public class WeakOrTypedWeakSummary extends Summary {
 
 	}
 
-	private void applySubstitutions(Substitutions subs, Long p) {
+	protected void applySubstitutions(Substitutions subs, Long p) {
 		for (Long n: subs.getNodesToBeReplaced())
 			replaceAll(n, subs.get(n), p);
 	}
@@ -188,36 +188,50 @@ public class WeakOrTypedWeakSummary extends Summary {
 		//Debugger.log("US_RP_RO");
 
 		Long sourceP = ps.get(t.p);
+		if (sourceP == null){
+			sourceP = this.getNextSummaryNode();
+			ps.put(t.p, sourceP); 
+		}
 		Long addedTripleSource = sourceP;
-
-		Long targetP = pt.get(t.p);
-		Long repO = rep.get(t.o);
-		Long addedTripleTarget = targetP; // initialize with any of them
-
-		Substitutions subs = new Substitutions(repO, targetP);
-		Long possibleNewTripleSource = subs.get(addedTripleSource);
-		if (possibleNewTripleSource != null)
-			addedTripleSource = possibleNewTripleSource;
-		Long possibleNewTripleTarget = subs.get(addedTripleTarget);
-		if (possibleNewTripleTarget != null)
-			addedTripleTarget = possibleNewTripleTarget;
-
-		applySubstitutions(subs, t.p);
-
 		rep.put(t.s, addedTripleSource);
+		
+		Long repO = rep.get(t.o);
+		Long targetP = pt.get(t.p);
+		Long addedTripleTarget = targetP; // initialize with any of them
+		if (targetP != null){ // in this case we need to fuse repO with targetP			
+			Substitutions subs = new Substitutions(repO, targetP);
+			Long possibleNewTripleSource = subs.get(addedTripleSource);
+			if (possibleNewTripleSource != null)
+				addedTripleSource = possibleNewTripleSource;
+			Long possibleNewTripleTarget = subs.get(addedTripleTarget);
+			if (possibleNewTripleTarget != null)
+				addedTripleTarget = possibleNewTripleTarget;
+			applySubstitutions(subs, t.p);
+		}
+		else{ // target of p was null, just take repO as target 
+			targetP = repO;
+			pt.put(t.p, repO); 
+		}
 		addTripleAndCheck(addedTripleSource, t.p, addedTripleTarget);
-
 	}
 
 	protected void handleDataTriple_US_RP_UO(Triple t) {
 		//Debugger.log("US_RP_UO");
 		// the property has been seen so far, not the subject nor the object
 		// in this case we need to represent s by the source of p and o by the target of p
-		Long pSource = ps.get(t.p);
-		Long pTarget = pt.get(t.p);
-		rep.put(t.s, pSource);
-		rep.put(t.o, pTarget);
-		addTripleAndCheck(pSource, t.p, pTarget);
+		Long sourceP = ps.get(t.p);
+		if (sourceP == null){
+			sourceP = this.getNextSummaryNode();
+			ps.put(t.p, sourceP); 
+		}
+		Long targetP = pt.get(t.p);
+		if (targetP == null){
+			targetP = this.getNextSummaryNode();
+			pt.put(t.p, targetP); 
+		}
+		rep.put(t.s, sourceP);
+		rep.put(t.o, targetP);
+		addTripleAndCheck(sourceP, t.p, targetP);
 	}
 
 	protected void handleDataTriple_US_UP_RO(Triple t) {

@@ -51,7 +51,7 @@ public class Substitutions {
 		for (int i = 0; i < l1.size(); i++) {
 			Long n1 = l1.get(i);
 			Long n2 = l2.get(i);
-			//System.out.println("Comparing " + n1 + " " + n2);
+			System.out.println("Comparing " + n1 + " " + n2);
 			Long n1aux = substitutions.get(n1);
 			Long n2aux = substitutions.get(n2);
 			if (n1 > n2) // we should replace n1 by n2,
