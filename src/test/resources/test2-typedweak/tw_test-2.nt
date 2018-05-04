@@ -1,4 +1,4 @@
-<http://qs.org/tw16> <http://qstest.org/prop1> <http://qs.org/tw22> . 
+<http://qs.org/tw16> <http://qstest.org/prop1> <http://qs.org/tw20> . 
 <http://qs.org/tw16> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://qstest.org/class#1> . 
 <http://qs.org/tw16> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://qstest.org/class#3> . 
 <http://qs.org/tw16> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://qstest.org/class#2> . 
