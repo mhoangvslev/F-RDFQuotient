@@ -21,6 +21,9 @@ import java.util.List;
 import java.util.Properties;
 
 public class Builder {
+	// Default properties file
+	private static final String DEFAULT_CONFIG_FILE = System.getProperty("user.dir") + "/conf/dataLoading.properties";
+
 	public Builder() {
 		try {
 			getConnection();
@@ -29,17 +32,15 @@ public class Builder {
 			e.printStackTrace();
 		}
 	}
-	// Default properties file
-	private static final String DEFAULT_CONFIG_FILE = System.getProperty("user.dir") + "/conf/dataLoading.properties";
 
 	/**
 	 *
 	 * @param args
-	 *             args[0] determines what will be done:
-	 *             load: load the data in Postgres
-	 *             summarize: summarize the data from Postgres
-	 *             loadSummarize: load the data in Postgres and summarize it from there
-	 *             summarizeEncodedFile: build the summary out of integer-encoded triples in a file.
+	 *   args[0] determines what will be done:
+	 *     load: load the data in Postgres
+	 *     summarize: summarize the data from Postgres
+	 *     loadSummarize: load the data in Postgres and summarize it from there
+	 *     summarizeEncodedFile: build the summary out of integer-encoded triples in a file.
 	 *
 	 * @throws IOException
 	 * @throws SQLException
@@ -51,45 +52,29 @@ public class Builder {
 			return;
 		}
 		String[] nextArguments = extractArguments(args);
-		if (args[0].toLowerCase().equals("load")) {
-			loadRDFInPostgres(nextArguments).close();
-			return;
-		}
-		if (args[0].toLowerCase().equals("summarize"))
-			try (Connection conn = getConnection()) {
-				summarizeGraphFromPostgres(conn, nextArguments);
-				conn.close();
+		switch (args[0].toLowerCase()) {
+			case "load":
+				try (Connection conn = loadRDFInPostgres(nextArguments)) {
+				}
 				return;
-			}
-		if (args[0].toLowerCase().equals("loadsummarize")) {
-			// in this case args[1] is the summary type; the loader doesn't need this information
-			String[] filesToLoad = extractArguments(nextArguments);
-			// the loader only gets the files to load
-			try (Connection conn = loadRDFInPostgres(filesToLoad)) {
-				// the summarizer also gets the summary name
-				summarizeGraphFromPostgres(conn, nextArguments);
-				conn.close();
+			case "summarize":
+				try (Connection conn = getConnection()) {
+					summarizeGraphFromPostgres(conn, nextArguments);
+				}
 				return;
-			}
+			case "loadsummarize":
+				// in this case args[1] is the summary type; the loader doesn't need this information
+				String[] filesToLoad = extractArguments(nextArguments);
+				// the loader only gets the files to load
+				try (Connection conn = loadRDFInPostgres(filesToLoad)) {
+					// the summarizer also gets the summary name
+					summarizeGraphFromPostgres(conn, nextArguments);
+				}
+				return;
+			default:
+				break;
 		}
 		printUsage();
-	}
-
-	public static void loadInPostgresAndSummarize(String[] args) {
-		Connection conn;
-		try {
-			conn = loadRDFInPostgres(args);
-		}
-		catch (IOException | UnsupportedDatabaseEngineException | SQLException e) {
-			throw new IllegalStateException("Could not load ");
-		}
-		try {
-			summarizeGraphFromPostgres(conn, args);
-			conn.close();
-		}
-		catch (SQLException | IOException e) {
-			throw new IllegalStateException("Could not summarize");
-		}
 	}
 
 	/**
@@ -122,55 +107,12 @@ public class Builder {
 		return conn;
 	}
 
-	/**
-	 * Supposes the graph has already been loaded
-	 *
-	 * @param conn
-	 * @param args
-	 *
-	 * @throws IOException
-	 * @throws SQLException
-	 */
-	// connection balance: 0
-	public static void summarizeGraphFromPostgres(Connection conn, String[] args) throws SQLException, IOException {
-		Summary sum = createNewSummary(args[0]);
-		Debugger.turnOff();
-		sum.summarizeFromRDBMS(conn, extractArguments(args));
-		System.out.println("RDF graph summarized.");
-		sum.saveSummaryInPostgres(conn, args[1]);
-		sum.writeDecodedSummaryToNTFile(conn, args[1]);
-		sum.drawSummaryAndGraph(conn, args[1]);
-		System.out.println(sum.getRunStatistics().toString());
-	}
-
-	private static Summary createNewSummary(String summaryType) {
-		String lowerCaseSummaryType = summaryType.toLowerCase();
-		switch (lowerCaseSummaryType) {
-			case ("weak"):
-				return new WeakSummary();
-			case ("strong"):
-				return new StrongSummary();
-			case ("typedweak"):
-				return new TypedWeakSummary();
-			case ("typedstrong"):
-				return new TypedStrongSummary();
-		}
-		return null;
-	}
-
-	private static Summary readSummaryFromPostgres(String summaryType, Connection conn) {
-		String lowerCaseSummaryType = summaryType.toLowerCase();
-		switch (lowerCaseSummaryType) {
-			case ("weak"):
-				return new WeakSummary(conn);
-			case ("strong"):
-				return new StrongSummary(conn);
-			case ("typedweak"):
-				return new TypedWeakSummary(conn);
-			case ("typedstrong"):
-				return new TypedStrongSummary(conn);
-		}
-		return null;
+	private static void printUsage() {
+		System.out.println("Usage:");
+		System.out.println("args[0]=load: loads the data in Postgres");
+		System.out.println("args[0]=summarize: summarize the data from Postgres");
+		System.out.println("args[0]=loadSummarize: load the data in Postgres and summarize it from there");
+		System.out.println("args[0]=summarizeEncodedFile: build the summary out of integer-encoded triples in a file");
 	}
 
 	/**
@@ -197,14 +139,13 @@ public class Builder {
 	 * @throws IOException
 	 * @throws UnsupportedDatabaseEngineException
 	 * @throws SQLException
-	 *                                            Convention:
-	 *                                            if there are at least two files
-	 *                                            then the first file contains the data and the last contains the schema
-	 *                                            otherwise (only one file) that file contains everything (data and schema)
-	 * */
+	 *   Convention:
+	 *     if there are at least two files
+	 *     then the first file contains the data and the last contains the schema
+	 *     otherwise (only one file) that file contains everything (data and schema)
+	 */
 	// connection balance: +1
 	public static Connection loadRDFInPostgres(String[] args) throws FileNotFoundException, IOException, UnsupportedDatabaseEngineException, SQLException {
-
 		System.out.println(System.getProperty("user.dir"));
 
 		List<String> tripleFiles = new ArrayList<>();
@@ -265,11 +206,54 @@ public class Builder {
 		}
 	}
 
-	private static void printUsage() {
-		System.out.println("Usage:");
-		System.out.println("args[0]=load: loads the data in Postgres");
-		System.out.println("args[0]=summarize: summarize the data from Postgres");
-		System.out.println("args[0]=loadSummarize: load the data in Postgres and summarize it from there");
-		System.out.println("args[0]=summarizeEncodedFile: build the summary out of integer-encoded triples in a file");
+	/**
+	 * Supposes the graph has already been loaded
+	 *
+	 * @param conn
+	 * @param args
+	 *
+	 * @throws IOException
+	 * @throws SQLException
+	 */
+	// connection balance: 0
+	public static void summarizeGraphFromPostgres(Connection conn, String[] args) throws SQLException, IOException {
+		Summary sum = createNewSummary(args[0]);
+		Debugger.turnOff();
+		sum.summarizeFromRDBMS(conn, extractArguments(args));
+		System.out.println("RDF graph summarized.");
+		sum.saveSummaryInPostgres(conn, args[1]);
+		sum.writeDecodedSummaryToNTFile(conn, args[1]);
+		sum.drawSummaryAndGraph(conn, args[1]);
+		System.out.println(sum.getRunStatistics().toString());
+	}
+
+	private static Summary createNewSummary(String summaryType) {
+		String lowerCaseSummaryType = summaryType.toLowerCase();
+		switch (lowerCaseSummaryType) {
+			case "weak":
+				return new WeakSummary();
+			case "strong":
+				return new StrongSummary();
+			case "typedweak":
+				return new TypedWeakSummary();
+			case "typedstrong":
+				return new TypedStrongSummary();
+		}
+		return null;
+	}
+
+	private static Summary readSummaryFromPostgres(String summaryType, Connection conn) {
+		String lowerCaseSummaryType = summaryType.toLowerCase();
+		switch (lowerCaseSummaryType) {
+			case "weak":
+				return new WeakSummary(conn);
+			case "strong":
+				return new StrongSummary(conn);
+			case "typedweak":
+				return new TypedWeakSummary(conn);
+			case "typedstrong":
+				return new TypedStrongSummary(conn);
+		}
+		return null;
 	}
 }
