@@ -1,5 +1,0 @@
-digraph g{
-"<http://qs.org/tw2>" [style = filled, color=cornflowerblue];
-"<http://qstest.org/class#1>" [fontcolor=white, style = filled, color=black];
-"<http://qs.org/tw2>" -> "<http://qstest.org/class#1>" [label=".../02/22-rdf-syntax-ns#type>"];
-}

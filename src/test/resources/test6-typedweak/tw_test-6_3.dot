@@ -1,9 +1,0 @@
-digraph g{
-"<http://qs.org/tw6>" [style = filled, color=cadetblue1];
-"<http://qstest.org/class1>" [fontcolor=white, style = filled, color=black];
-"<http://qs.org/tw6>" -> "<http://qstest.org/class1>" [label=".../02/22-rdf-syntax-ns#type>"];
-"<http://qs.org/tw7>" [style = filled, color=blueviolet];
-"<http://qs.org/tw8>" [style = filled, color=lightpink];
-"<http://qs.org/tw7>" -> "<http://qs.org/tw8>" [label="<http://qstest.org/prop2>"];
-"<http://qs.org/tw7>" -> "<http://qs.org/tw8>" [label="<http://qstest.org/prop4>"];
-}
