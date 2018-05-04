@@ -223,4 +223,37 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 				else
 					return US_NS_UO_NO_NP;
 	}
+	
+	/**
+	 * This is used only when drawing the graph using Dot. 
+	 * Different summaries need to traverse their triples in different orders, thus the two cursors which differ between the typed and untyped summaries.
+	 * Returns the first cursor, over the non-type triples
+	 * @param conn
+	 * @return
+	 */
+	protected ResultSet getGraphTriplesCursor1ForDotDrawing(Connection conn, long triplesToDraw) {
+		try{
+			return conn.createStatement().executeQuery("select * from triples where p<>'<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' limit " + triplesToDraw);
+			
+		}
+		catch(SQLException e){
+			throw new IllegalStateException("Could not get a cursor on the graph triples for drawing"); 
+		}
+	}
+	/**
+	 * This is used only when drawing the graph using Dot. 
+	 * Different summaries need to traverse their triples in different orders, thus the two cursors which differ between the typed and untyped summaries.
+	 * Returns the second cursor, over the type triples.
+	 * @param conn
+	 * @return
+	 */
+	protected ResultSet getGraphTriplesCursor2ForDotDrawing(Connection conn, long triplesToDraw) {
+		try{
+			return conn.createStatement().executeQuery("select * from triples where p='<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' limit " + triplesToDraw);
+		}
+		catch(SQLException e){
+			throw new IllegalStateException("Could not get a cursor on the graph triples for drawing"); 
+		}
+	}
+	
 }

@@ -16,7 +16,9 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	// The following three attribute serve to identify and store the class sets for RDF resources
 	Long2LongSet cs; // for each class set ID, a class set	
 	Long2Long n2cs; // for each node, its class set ID. This is also the rep function for typed nodes
-	Long2LongSet c2cs; // class to enclosing class sets
+	Long2LongSet n2c; // for each node, the set of types we know so far for this node
+	HashMap<TreeSet<Long>, Long> cs2csID; // for each set of types known so far, the ID of that set
+	
 	// case classification
 	// T: typed, U: untyped (apply to S and O)
 	// R: already represented, N: not already represented (apply to S, P, O)
@@ -34,9 +36,11 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		super();
 		cs = new Long2LongSet();
 		n2sc = new Long2Long();
-		c2cs = new Long2LongSet();
 		rep = new Long2Long();
 		n2cs = new Long2Long();
+		
+		n2c = new Long2LongSet();
+		cs2csID = new HashMap<TreeSet<Long>, Long>();
 		untypedSummaryNodes = new HashMap<>();
 		minCliqueID = -1;
 		emptySCCount = Long.MAX_VALUE;
@@ -118,6 +122,9 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		long startData = System.currentTimeMillis();
 		System.out.println("Summarized " + this.numberOfTypeTriplesRead + " type triples in " + (startData - start) + " ms.");
 
+		//this.drawSummaryAndGraph(conn, dataTriplesFileName, ("_" + triplesSummarizedSoFar));
+		
+		
 		//this.display();
 		// now all the non-type triples
 		String getUntypedTriplesString = ("select *  from encoded_triples where p <> " + typeConstantCode);
@@ -136,12 +143,10 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 					addTriple(t.s, t.p, t.o);
 				else
 					handleDataTriple(t);
-				//Files.write(Paths.get("output.txt"), (globalTripleCount + ": " + new String(s + " " + p + " " + o + "\n")).getBytes(), StandardOpenOption.APPEND); 
 				triplesSummarizedSoFar++;
 				this.numberOfDataTriplesRead++;
-				//if ((globalTripleCount % 1000 == 0)) {//|| (globalTripleCount > 28800)) {
-				//	System.out.println(globalTripleCount + " triples");
-				//}
+
+				//this.drawSummaryAndGraph(conn, dataTriplesFileName, ("_" + triplesSummarizedSoFar));
 			}
 			rs.close();
 			getUntypedTriples.close();
@@ -309,9 +314,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	}
 
 	public void display() {
-		System.out.println("TYPED STRONG SUMMARY\nClass to class set IDs:");
-		c2cs.display();
-		System.out.println("Class set IDs to class sets: " + cs.display());
+		System.out.println("TYPED STRONG SUMMARY\nClass set IDs to class sets: " + cs.display());
 		System.out.println("Nodes to class set IDs: " + n2cs.display());
 		System.out.println("Source cliques: " + sc.display());
 		System.out.println("Target cliques: " + tc.display());
@@ -321,9 +324,30 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		System.out.println("Property to target cliques: " + p2tc.display());
 		System.out.println("Representation function: ");
 		showRep();
+		System.out.println("Cs to cs ID: ");
+		showClassSets();
 		System.out.println("Summary: ");
 		for (Triple t: this.getSummaryEdges())
 			t.display();
+	}
+
+	private String showLongSet(TreeSet<Long> s){
+		StringBuffer sb = new StringBuffer();
+		sb.append("{");
+		for (Long e: s){
+			sb.append(e + " ");
+		}
+		sb.append("}");
+		return new String(sb);
+	}
+	private void showClassSets() {
+		for (TreeSet<Long> cs: cs2csID.keySet()){
+			StringBuffer thisCSBuffer = new StringBuffer();
+			thisCSBuffer.append(showLongSet(cs));
+			thisCSBuffer.append("-->");
+			thisCSBuffer.append(cs2csID.get(cs));
+			System.out.println(thisCSBuffer.toString());
+		}
 	}
 
 	public void showRepThroughCliques() {
@@ -353,76 +377,57 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 
 	public void handleTypeTripleBeforeData(Triple t) {
 		//System.out.println("@@@ Type triple: " + t.toString()); 
-		Long prevClassSetOfS = this.n2cs.get(t.s);
-		TreeSet<Long> thisSubjectClassSet;
-		if (prevClassSetOfS == null) { // this subject was untyped so far
-			prevClassSetOfS = getNextSummaryNode();
-			n2cs.put(t.s, prevClassSetOfS);
-			thisSubjectClassSet = new TreeSet<>();
-			thisSubjectClassSet.add(t.o);
-			cs.put(prevClassSetOfS, thisSubjectClassSet);
-			c2cs.add(t.o, prevClassSetOfS);
+			
+		TreeSet<Long> classSetOfThisNode = n2c.get(t.s); 
+		if (classSetOfThisNode == null){ // this is the first time we encounter the node: create a class set with exactly this type
+			Long newClassSetID = this.getNextSummaryNode(); 
+			classSetOfThisNode = new TreeSet<Long>();
+			classSetOfThisNode.add(t.o); 
+			n2c.put(t.s, classSetOfThisNode);
+			cs.put(newClassSetID, classSetOfThisNode);
+			cs2csID.put(classSetOfThisNode, newClassSetID);
+			n2cs.put(t.s, newClassSetID);
 		}
-		else { // the subject was typed, then cs should also know about it
-			thisSubjectClassSet = cs.get(prevClassSetOfS);
-			if (thisSubjectClassSet.contains(t.o)) {
-				// do nothing -- we knew s was of type o
-				//Debugger.log("Already knew " + t.s + " was of type " + t.o);
+		else{ // we already had some types for t.s
+			if (classSetOfThisNode.contains(t.o)){
+				// do nothing
 			}
-			else {
-				// the class set of s needs to change get also o
-				TreeSet<Long> newClassSetOfS = new TreeSet<>();
-				newClassSetOfS.addAll(thisSubjectClassSet);
-				newClassSetOfS.add(t.o);
-				//Either the union of the class plus t.o already existed:
-				long existingClassSetID = classSetID(newClassSetOfS, t.o);
-				if (existingClassSetID >= 0)
-					// then we need to connect t.s to that
-					n2cs.put(t.s, existingClassSetID); //Debugger.log("Attached " + t.s + " to the existing class set " + existingClassSetID);
-				else {
-					//we need to create a new class set, move t.s to that class set, 
-					// detach t.s from its previous class set
-					long newClassSetID = getNextSummaryNode();
-					cs.put(newClassSetID, newClassSetOfS);
-					n2cs.put(t.s, newClassSetID);
-					c2cs.add(t.o, newClassSetID);
-					//Debugger.log("Attached " + t.s + " to the newly created class set " + newClassSetID);
-				}
+			else{				
+				TreeSet<Long> newClassSetOfThisNode = new TreeSet<Long>();
+				newClassSetOfThisNode.addAll(classSetOfThisNode);
+				newClassSetOfThisNode.add(t.o); 
+				
+				Long newClassSetID = cs2csID.get(newClassSetOfThisNode);
+				if (newClassSetID == null){
+					// this class set was not already known. We create it.
+					newClassSetID = this.getNextSummaryNode();
+					cs.put(newClassSetID, newClassSetOfThisNode); // installs the new class set
+					cs2csID.put(newClassSetOfThisNode, newClassSetID); // installs the new class set
+					
+				}	
+				// whether or not newClassSetID was known:
+				n2cs.put(t.s, newClassSetID); // erases/replaces previously known class set ID
+				n2c.put(t.s, newClassSetOfThisNode); // erases/replaces previously known class set
 			}
 		}
-		// store the representation of t.s:
-		rep.put(t.s, n2cs.get(t.s));
-		//Debugger.log(t.s + " represented by " + n2cs.get(t.s));
-		//display();
-		this.numberOfTypeTriplesRead++;
+		//display(); 
 	}
+
 
 	/**
-	 * Tries to see if the given class set has already been encountered.
-	 * For efficiency, the method also gets @givenClass, so that it can look
-	 * only in the class sets that include it.
-	 *
-	 * @param givenClassSet
-	 * @param givenClass
-	 *
-	 * @return the ID of the class set if it was already known, otherwise -1
+	 * This method adds the type triples in the summary, based on the structures previously filled in while traversing those triples.
+	 * It is called only once and will output all the type triples of the summary.
 	 */
-	private long classSetID(TreeSet<Long> givenClassSet, long givenClass) {
-		TreeSet<Long> possibleSets = c2cs.get(givenClass);
-		if (possibleSets != null)
-			for (long possibleSetNo: possibleSets) {
-				TreeSet<Long> possibleSet = cs.get(possibleSetNo);
-				if (possibleSet.equals(givenClassSet))
-					return possibleSetNo;
-			}
-		return -1;
-	}
-
 	public void postHandleTypeTriples() {
-		for (Long node: this.n2cs.getNodes())
-			for (Long thisClass: this.cs.get(this.n2cs.get(node)))
-				//System.out.println("Adding triple " + thisClass + " type " + RDF2SQLEncoding.dictionaryDecode(thisClass));
-				this.addTriple(rep.get(node), RDF2SQLEncoding.getTypeCode(), thisClass); //checkTypeIsObject(); 
+		//System.out.println("POST HANDLE TYPE TRIPLES");
+		for (Long node: this.n2cs.getNodes()){
+			Long thisClassSetID = this.n2cs.get(node);
+			TreeSet<Long> thisClassSet = this.cs.get(thisClassSetID);
+			for (Long thisClass: thisClassSet){
+				this.addTriple(thisClassSetID, RDF2SQLEncoding.getTypeCode(), thisClass);
+				rep.put(node, thisClassSetID);
+			}
+		}
 	}
 
 	@Override
@@ -685,4 +690,39 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		if ((sourceCliqueP == null && targetCliqueP != null) || (sourceCliqueP != null && targetCliqueP == null))
 			throw new Error("Property has only one of the two cliques");
 	}
+	
+	/**
+	 * This is used only when drawing the graph using Dot. 
+	 * Different summaries need to traverse their triples in different orders, thus the two cursors which differ between the typed and untyped summaries.
+	 * Returns the first cursor, over the type triples
+	 * @param conn
+	 * @return
+	 */
+	protected ResultSet getGraphTriplesCursor1ForDotDrawing(Connection conn, long triplesToDraw) {
+		try{
+			String query = ("select * from triples where p='<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' limit " + triplesToDraw);
+			Debugger.log("get cursor 1: " + query);
+			return conn.createStatement().executeQuery("select * from triples where p='<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' limit " + triplesToDraw);
+		}
+		catch(SQLException e){
+			throw new IllegalStateException("Could not get a cursor on the graph triples for drawing"); 
+		}
+	}
+	/**
+	 * This is used only when drawing the graph using Dot. 
+	 * Different summaries need to traverse their triples in different orders, thus the two cursors which differ between the typed and untyped summaries.
+	 * Returns the second cursor, over the non-type triples.
+	 * @param conn
+	 * @return
+	 */
+	protected ResultSet getGraphTriplesCursor2ForDotDrawing(Connection conn, long triplesToDraw) {
+		try{
+			return conn.createStatement().executeQuery("select * from triples where p<>'<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' limit " + triplesToDraw);
+		}
+		catch(SQLException e){
+			throw new IllegalStateException("Could not get a cursor on the graph triples for drawing"); 
+		}
+	}
+
+	
 }

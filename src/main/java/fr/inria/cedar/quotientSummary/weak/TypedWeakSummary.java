@@ -5,6 +5,8 @@ import fr.inria.cedar.quotientSummary.datastructures.Long2Long;
 import fr.inria.cedar.quotientSummary.datastructures.Long2LongSet;
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
 import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
+import fr.inria.cedar.quotientSummary.util.Substitutions;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -28,7 +30,22 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 	protected final static char TRS_RO = 9;
 	protected final static char TRS_TRO = 10;
 	protected final static char TRS_UO = 11;
+	
+	protected final static char TRS_RP_TRO = 12;
+	protected final static char TRS_RP_RO = 13;
+	protected final static char TRS_RP_UO = 14;
+	
+	protected final static char TRS_UP_TRO = 15; 
+	protected final static char TRS_UP_RO = 16; 
+	protected final static char TRS_UP_UO = 17; 
 
+	protected final static char RS_RP_TRO = 18;
+	protected final static char RS_UP_TRO = 19; 
+
+	protected final static char US_UP_TRO = 20; 
+	protected final static char US_RP_TRO = 21; 
+
+	
 	public TypedWeakSummary() {
 		super();
 		cs = new Long2LongSet();
@@ -92,7 +109,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 			ResultSet rs = getTypedTriples.executeQuery(getTypedTriplesString);
 			while (rs.next()) {
 				Triple t = new Triple(rs.getInt(1), rs.getInt(2), rs.getInt(3));
-				//System.out.println("### Type triple " + t.toString());
+				System.out.println("### Type triple " + t.toString());
 				this.handleTypeTripleBeforeData(t);
 				triplesSummarizedSoFar++;
 			}
@@ -107,6 +124,8 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		long typeTripleCount = triplesSummarizedSoFar;
 		System.out.println("Summarized " + typeTripleCount + " type triples in " + (System.currentTimeMillis() - start) + " ms.");
 
+		this.drawSummaryAndGraph(conn, dataTriplesFileName, ("_" + triplesSummarizedSoFar));
+
 		// now all the non-type triples
 		String getUntypedTriplesString = ("select *  from encoded_triples where p <> " + typeConstantCode);
 		try {
@@ -116,19 +135,18 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 			ResultSet rs = getUntypedTriples.executeQuery(getUntypedTriplesString);
 			while (rs.next()) {
 				Triple t = new Triple(rs.getLong(1), rs.getLong(2), rs.getLong(3));
-				//Debugger.log("#### Triple " + t.toString());
+				System.out.println("#### Data triple " + t.toString());
 				if ((t.p == RDF2SQLEncoding.getSubClassCode())
-					|| (t.p == RDF2SQLEncoding.getSubPropertyCode())
-					|| (t.p == RDF2SQLEncoding.getDomainCode())
-					|| (t.p == RDF2SQLEncoding.getRangeCode()))
+						|| (t.p == RDF2SQLEncoding.getSubPropertyCode())
+						|| (t.p == RDF2SQLEncoding.getDomainCode())
+						|| (t.p == RDF2SQLEncoding.getRangeCode()))
 					addTriple(t.s, t.p, t.o);
 				else
 					handleDataTriple(t);
-				//Files.write(Paths.get("output.txt"), (triplesSummarizedSoFar + ": " + new String(s + " " + p + " " + o + "\n")).getBytes(), StandardOpenOption.APPEND); 
 				triplesSummarizedSoFar++;
-				//if ((triplesSummarizedSoFar % 1000 == 0)) {//|| (triplesSummarizedSoFar > 28800)) {
-				//	System.out.println(triplesSummarizedSoFar + " triples");
-				//}
+				System.out.println("Triples summarized so far: " + triplesSummarizedSoFar);
+				//this.drawSummaryAndGraph(conn, dataTriplesFileName, ("_" + triplesSummarizedSoFar));
+
 			}
 			rs.close();
 			getUntypedTriples.close();
@@ -147,283 +165,625 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		Long repO = rep.get(t.o);
 		Long pSource = ps.get(t.p);
 		Long pTarget = pt.get(t.p);
-		if ((pSource == null && pTarget != null) || (pSource != null && pTarget == null))
-			throw new Error("Source represented and target not represented, or the opposite");
-		boolean pRepresented = (pSource != null);
+		// can't do this because of triples where one node is typed and the other is not; such nodes have a source but not a target, or the opposite.
+		//if ((pSource == null && pTarget != null) || (pSource != null && pTarget == null))
+		//	throw new Error("Source represented and target not represented, or the opposite");
+		boolean pRepresented = ( (pSource != null) || (pTarget != null)); 
 		boolean sRepresented = (repS != null);
 		boolean sTyped = ((n2cs.get(t.s) != null));
 		boolean oRepresented = (repO != null);
 		boolean oTyped = ((n2cs.get(t.o) != null));
 
 		char caseNumber = identifyTripleSummarizationCase(sRepresented, sTyped,
-														  pRepresented, oRepresented, oTyped);
+				pRepresented, oRepresented, oTyped);
+		System.out.println("Case: " + this.caseName(caseNumber));
 		switch (caseNumber) {
-			case US_UP_UO:
-				handleDataTriple_US_UP_UO(t);
-				break;
-			case US_UP_RO:
-				handleDataTriple_US_UP_RO(t);
-				break;
-			case US_RP_UO:
-				handleDataTriple_US_RP_UO(t);
-				break;
-			case US_RP_RO:
-				handleDataTriple_US_RP_RO(t);
-				break;
-			case RS_UP_UO:
-				handleDataTriple_RS_UP_UO(t);
-				break;
-			case RS_UP_RO:
-				handleDataTriple_RS_UP_RO(t);
-				break;
-			case RS_RP_UO:
-				handleDataTriple_RS_RP_UO(t);
-				break;
-			case RS_RP_RO:
-				handleDataTriple_RS_RP_RO(t);
-				break;
-			case TRS_RO:
-				handleDataTriple_TRS_RO(t);
-				break;
-			case TRS_TRO:
-				handleDataTriple_TRS_TRO(t);
-				break;
-			case TRS_UO:
-				handleDataTriple_TRS_UO(t);
-				break;
-			default:
-				throw new IllegalStateException("This case should not be encountered here");
+		case TRS_UP_TRO: // six cases for TRS
+			handleDataTriple_TRS_UP_TRO(t, repS, repO, pSource, pTarget);
+			break;
+		case TRS_UP_RO:
+			handleDataTriple_TRS_UP_RO(t, repS, repO, pSource, pTarget);
+			break;
+		case TRS_UP_UO:
+			handleDataTriple_TRS_UP_UO(t, repS, repO, pSource, pTarget);
+			break;
+		case TRS_RP_TRO:
+			handleDataTriple_TRS_RP_TRO(t, repS, repO, pSource, pTarget);
+			break;
+		case TRS_RP_UO:
+			handleDataTriple_TRS_RP_UO(t, repS, repO, pSource, pTarget);
+			break;
+		case TRS_RP_RO:
+			handleDataTriple_TRS_RP_RO(t, repS, repO, pSource, pTarget);
+			break;
+		// six cases for RS: 
+		case RS_UP_UO:
+			handleDataTriple_RS_UP_UO(t);
+			break;
+		case RS_UP_RO:
+			handleDataTriple_RS_UP_RO(t);
+			break;
+		case RS_UP_TRO:
+			handleDataTriple_RS_UP_TRO(t, repS, repO, pSource, pTarget);
+			break;
+		case RS_RP_UO:
+			handleDataTriple_RS_RP_UO(t);
+			break;
+		case RS_RP_RO:
+			handleDataTriple_RS_RP_RO(t);
+			break;
+		case RS_RP_TRO:
+			handleDataTriple_RS_RP_TRO(t, repS, repO, pSource, pTarget);
+			break;
+		// six cases for US:  
+		case US_UP_UO: 
+			handleDataTriple_US_UP_UO(t);
+			break;
+		case US_UP_RO:
+			handleDataTriple_US_UP_RO(t);
+			break;
+		case US_UP_TRO:
+			handleDataTriple_US_UP_TRO(t, repS, repO, pSource, pTarget);
+			break;
+		case US_RP_UO: 
+			handleDataTriple_US_RP_UO(t);
+			break;
+		case US_RP_RO:
+			handleDataTriple_US_RP_RO(t);
+			break;
+		case US_RP_TRO:
+			handleDataTriple_US_RP_TRO(t, repS, repO, pSource, pTarget);
+			break;
+		
+		
+//		case TRS_RO:
+//			handleDataTriple_TRS_RO(t);
+//			break;
+//		case TRS_TRO:
+//			handleDataTriple_TRS_TRO(t);
+//			break;
+//		case TRS_UO:
+//			handleDataTriple_TRS_UO(t);
+//			break;
+		
+		default:
+			throw new IllegalStateException("This case should not be encountered here");
 		}
 
 		//Debugger.log("After processing triple " + t.toString() + ", we have:\n" + this.toString()); 
 		//safetyCheck(); 
 	}
 
-	protected char identifyTripleSummarizationCase(boolean sRepresented, boolean sTyped,
-												   boolean pRepresented, boolean oRepresented, boolean oTyped) {
-		if (sRepresented)
-			if (sTyped) // in this case, the edge will not change the source or target of p
-				if (oRepresented)
-					if (oTyped)
-						return TRS_TRO;
-					else
-						return TRS_RO;
-				else
-					return TRS_UO;
-			else { // s represented, s not typed
-				if (pRepresented) {
-					if (oRepresented)
-						return RS_RP_RO;
-					return RS_RP_UO;
-				}
-				if (oRepresented)
-					return RS_UP_RO;
-				return RS_UP_UO;
-			}
-		if (pRepresented) {
-			if (oRepresented)
-				return US_RP_RO;
-			return US_RP_UO;
+	/**
+	 * In this case we need to: represent the subject by the property source if it exists, otherwise, create a new node and also register it as the source of p; 
+	 * add a p edge between this and the typed object, if not already there
+	 */
+	private void handleDataTriple_US_RP_TRO(Triple t, Long repS, Long repO, Long pSource, Long pTarget) {
+		Long sourceP = ps.get(t.p);
+		if (sourceP != null){
+			rep.put(t.s, sourceP);
 		}
-		if (oRepresented)
-			return US_UP_RO;
-		return US_UP_UO;
-	}
-
-	protected void handleDataTriple_TRS_RO(Triple t) {
-		//Debugger.log("============ TRS_RO " + t.toString());
-		// everything has been represented and the subject is typed. In this case we must:
-		// - reuse the subject no matter what; it is represented for its types. 
-		// - reuse the object
-		Long source = rep.get(t.s);
-		Long target = rep.get(t.o);
-		this.addTripleAndCheck(source, t.p, target);
-	}
-
-	protected void handleDataTriple_TRS_TRO(Triple t) {
-		Long source = rep.get(t.s);
-		Long target = rep.get(t.o);
-		addTripleAndCheck(source, t.p, target);
-		//Debugger.log("TRS_RP_UO 2. After replacement and triple addition (1)\n" + this.toString());
-	}
-
-	protected void handleDataTriple_TRS_UO(Triple t) {
-		//Debugger.log("TRS_UO");
-		// the subject is typed and  represented.
-		// The object has not been represented, nor the property. 
-		Long source = rep.get(t.s);
-		// we take the next number but we may not use it in the end
-		Long target = this.getNextSummaryNode();
-		boolean addToSummary = true;
-		// we need to figure out if the representative of o needs creation or not.
-		// we don't create it if this subject already had property p defined on it.
-		HashMap<Long, ArrayList<Long>> edgesOfS = edges.get(source);
-		if (edgesOfS != null) {
-			//Debugger.log(t.s + " had edges");
-			ArrayList<Long> pValuesForS = edgesOfS.get(t.p);
-			if (pValuesForS != null) { // in this case, target is overwritten with the existing node
-				//Debugger.log(t.s + " had edges for " + t.p);
-				target = pValuesForS.get(0);
-				//Debugger.log("Reusing target " + target);
-				addToSummary = false;
-			}
+		else{
+			sourceP = this.getNextSummaryNode();
+			rep.put(t.s, sourceP);
+			ps.put(t.p, sourceP); 
 		}
-		rep.put(t.o, target);
-		// no writing in PS nor TS
-		if (addToSummary)
-			//Debugger.log("Added triple " + source + " "+ t.p + " " + target); 
-			addTripleAndCheck(source, t.p, target);
+		this.addTripleAndCheck(sourceP, t.p, repO); 
 	}
 
 	/**
-	 * @param typeTriplesFile
-	 * @param dataTriplesFile
+	 * In this case we need to: create the source of p; we don't create a target for it.
+	 * We represent s by the source of p, and add an edge from that to repO. 
 	 */
-	@Override
-	public void summarizeFromTripleFiles(String typeTriplesFile, String dataTriplesFile) {
-		long start = System.currentTimeMillis();
-		try {
+	private void handleDataTriple_US_UP_TRO(Triple t, Long repS, Long repO, Long pSource, Long pTarget) {
+		Long sourceP = this.getNextSummaryNode();
+		ps.put(t.p, sourceP);
+		rep.put(t.s, sourceP);
+		this.addTripleAndCheck(sourceP, t.p, repO);
+	}
 
-			// First file: type triples
-			try (BufferedReader br = new BufferedReader(new FileReader(new File(typeTriplesFile)))) {
+	/**
+	 * In this case we may have to fuse things between repS and the source of P
+	 * RepO remains unchanged. 
+	 */
+	private void handleDataTriple_RS_RP_TRO(Triple t, Long repS, Long repO, Long sourceP, Long targetP) {
+		Long addedTripleSource = sourceP;
+		Long addedTripleTarget = repO;
+
+		if (sourceP != null){
+			Substitutions subs = new Substitutions(sourceP, repS);
+			//System.out.println("Substitutions: " + subs.toString());
+
+			// update added triple source, if needed
+			Long possibleNewAddedTripleSource = subs.get(addedTripleSource);
+			if (possibleNewAddedTripleSource != null)
+				addedTripleSource = possibleNewAddedTripleSource;
+		
+			// apply replacements, if any
+			applySubstitutions(subs, t.p);
+			// try to add the resulting triple
+		}
+		else{
+			sourceP = repS; 
+			addedTripleSource = repS; 
+			ps.put(t.p, sourceP); 
+		}
+		this.addTripleAndCheck(addedTripleSource, t.p, addedTripleTarget);
+	}
+
+	/**
+	 * In this case we need to: use repS as the source of P; we don't know a target for p.
+	 * We add the edge. 
+	 */
+	private void handleDataTriple_RS_UP_TRO(Triple t, Long repS, Long repO, Long pSource, Long pTarget) {
+		Long addedTripleSource = repS;
+		Long addedTripleTarget = repO;
+		ps.put(t.p, repS);
+		this.addTripleAndCheck(addedTripleSource, t.p, addedTripleTarget);
+	}
+
+	/**
+	 * In this case we need to possibly fuse the target of p with repO.
+	 * The source of p (if it exists)  remains unchanged.
+	 */
+	private void handleDataTriple_TRS_RP_RO(Triple t, Long repS, Long repO, Long sourceP, Long targetP) {
+		Long addedTripleSource = repS;
+		Long addedTripleTarget = repO;
+
+		if (targetP != null){
+			Substitutions subs = new Substitutions(repS, repS, targetP, repO);
+			//System.out.println("Substitutions: " + subs.toString());
+
+			// update added triple  target, if needed
+			Long possibleNewAddedTripleTarget = subs.get(addedTripleTarget);
+			if (possibleNewAddedTripleTarget != null)
+				addedTripleTarget = possibleNewAddedTripleTarget;
+			// apply replacements, if any
+			applySubstitutions(subs, t.p);
+			// try to add the resulting triple
+		}
+		else{
+			targetP = repO;
+			pt.put(t.p, targetP); 
+		}
+		this.addTripleAndCheck(addedTripleSource, t.p, addedTripleTarget);
+	}
+
+	/**
+	 * In this case we need to represent o by the target of p, and add the edge from repS to that node.
+	 * The source of p (if it exists) is not affected.
+	 * The target of p, if it did not exist, may become the representative of o.  
+	 */
+	private void handleDataTriple_TRS_RP_UO(Triple t, Long repS, Long repO, Long sourceP, Long targetP) {
+		Long addedTripleSource = repS;
+		Long addedTripleTarget = targetP;
+
+		if (targetP == null){
+			targetP = this.getNextSummaryNode();
+			pt.put(t.p, targetP); 
+			addedTripleTarget = targetP; 
+		}
+		rep.put(t.o, targetP);
+		
+		// try to add the resulting triple
+		this.addTripleAndCheck(addedTripleSource, t.p, addedTripleTarget);
+	}
+
+	/**
+	 * In this case we need to add a p triple (if not already there) between repS and repO. 
+	 * The source of p (if it exists) is not affected.
+	 * The target of p (if it exists) is not affected. 
+	 */
+	private void handleDataTriple_TRS_RP_TRO(Triple t, Long repS, Long repO, Long pSource, Long pTarget) {
+		this.addTripleAndCheck(repS, t.p, repO);
+	}
+
+	/**
+	 * In this case we need to create the target of p and represent o by it.
+	 * We do not create a source of p.  
+	 */
+	private void handleDataTriple_TRS_UP_UO(Triple t, Long repS, Long repO, Long pSource, Long pTarget) {
+		Long targetP = this.getNextSummaryNode();
+		pt.put(t.p, targetP);
+		rep.put(t.o, targetP);
+		this.addTripleAndCheck(repS, t.p,targetP);
+	}
+
+	/**
+	 * In this case we need to use repO as the target of p, and do nothing about p's source.
+	 */
+	private void handleDataTriple_TRS_UP_RO(Triple t, Long repS, Long repO, Long pSource, Long pTarget) {
+		pt.put(t.p, repO);
+		this.addTripleAndCheck(repS, t.p, repO);
+	}
+
+	/**
+	 * In this case we just add the triple; we do not modify its source nor its target
+	 */
+	private void handleDataTriple_TRS_UP_TRO(Triple t, Long repS, Long repO, Long pSource, Long pTarget) {
+		this.addTripleAndCheck(repS, t.p, repO);
+	}
+
+	String caseName(char c) { 
+		switch (c) {
+		case TRS_UP_TRO: 
+			return "TRS_UP_TRO"; 
+		case TRS_UP_RO:
+			return "TRS_UP_RO"; 
+		case TRS_UP_UO:
+			return "TRS_UP_UO"; 
+		case TRS_RP_TRO:
+			return "TRS_RP_TRO"; 
+		case TRS_RP_UO:
+			return "TRS_RP_UO"; 
+		case TRS_RP_RO:
+			return "TRS_RP_RO"; 
+		case RS_UP_UO:
+			return "RS_UP_UO"; 
+		case RS_UP_RO:
+			return "RS_UP_RO"; 
+		case RS_UP_TRO:
+			return "RS_UP_TRO"; 
+		case RS_RP_UO:
+			return "RS_RP_UO"; 
+		case RS_RP_RO:
+			return "RS_RP_RO"; 
+		case RS_RP_TRO: 
+			return "RS_RP_TRO";  
+		case US_UP_UO: 
+			return "US_UP_UO";
+		case US_UP_RO:
+			return "US_UP_RO";
+		case US_UP_TRO:
+			return "US_UP_TRO";
+		case US_RP_UO:
+			return "US_RP_UO";
+		case US_RP_RO:
+			return "US_RP_RO";
+		case TRS_RO:
+			return("TRS_RO");
+		case TRS_TRO:
+			return("TRS_TRO");
+		case TRS_UO:
+			return("TRS_UO");
+		}
+		throw new IllegalStateException("Unrecognized case " + c);
+	}	
+
+
+	protected char identifyTripleSummarizationCase(boolean sRepresented, boolean sTyped,
+			boolean pRepresented, boolean oRepresented, boolean oTyped) {
+		if (sRepresented){
+			if (sTyped) {// in this case, the edge will not change the source of p, but it may change its target
+				if (pRepresented){
+					if (oRepresented){
+						if (oTyped){
+							return TRS_RP_TRO; 
+						}
+						return TRS_RP_RO; 
+					}
+					else{ // o unrepresented => o untyped
+						return TRS_RP_UO; 
+					}
+				}
+				else{ // s represented, typed, p unrepresented 
+					if (oRepresented){
+						if (oTyped){
+							return TRS_UP_TRO; 
+						}
+						else{ // o unrepresented => untyped
+							return TRS_UP_RO; 
+						}
+					}
+					else{ // s represented, typed, p unrepresented, o unrepresented => untyped
+						return TRS_UP_UO; 
+					}
+				}
+			}
+			else{ // s represented, untyped
+				if (pRepresented){
+					if (oRepresented){
+						if (oTyped){
+							return RS_RP_TRO; 
+						}
+						return RS_RP_RO; 
+					}
+					else{ // o unrepresented => o untyped
+						return RS_RP_UO; 
+					}
+				}
+				else{ // s represented, typed, p unrepresented 
+					if (oRepresented){
+						if (oTyped){
+							return RS_UP_TRO; 
+						}
+						else{ // o unrepresented => untyped
+							return RS_UP_RO; 
+						}
+					}
+					else{ // s represented, typed, p unrepresented, o unrepresented => untyped
+						return RS_UP_UO; 
+					}
+				}
+			}
+		}
+		else{ // s unrepresented => untyped
+			if (pRepresented){
+				if (oRepresented){
+					if (oTyped){
+						return US_RP_TRO; 
+					}
+					return US_RP_RO; 
+				}
+				else{ // o unrepresented => o untyped
+					return US_RP_UO; 
+				}
+			}
+			else{ // s represented, typed, p unrepresented 
+				if (oRepresented){
+					if (oTyped){
+						return US_UP_TRO; 
+					}
+					else{ // o unrepresented => untyped
+						return US_UP_RO; 
+					}
+				}
+				else{ // s represented, typed, p unrepresented, o unrepresented => untyped
+					return US_UP_UO; 
+				}
+			}
+		}
+	}
+
+//
+//		protected void handleDataTriple_TRS_RO(Triple t) {
+//			//Debugger.log("============ TRS_RO " + t.toString());
+//			// everything has been represented and the subject is typed. In this case we must:
+//			// - reuse the subject no matter what; it is represented for its types. 
+//			// - if the object representative already was a target of this property, do nothing;
+//			//   otherwise, we need to fuse the target of this property, with the object representative
+//			//   in the worst case these may coincide with the property source, thus a Substitution object is needed.
+//
+//			Long addedTripleSource = rep.get(t.s); // this one will not budge
+//
+//			Long repO = rep.get(t.o);
+//			Long targetP = pt.get(t.p); 
+//			Long sourceP = ps.get(t.p);
+//			if (sourceP == null){
+//				System.out.println("Null source clique for " + t.p); 
+//			}
+//			Long addedTripleTarget = repO; 
+//
+//			Substitutions subs = new Substitutions(sourceP, sourceP, targetP, repO);
+//			System.out.println("Substitutions: " + subs.toString());
+//
+//			// update added triple target, if needed
+//			// the source will not change
+//			Long possibleNewAddedTripleTarget = subs.get(addedTripleTarget);
+//			if (possibleNewAddedTripleTarget != null)
+//				addedTripleTarget = possibleNewAddedTripleTarget;
+//			// apply replacements, if any
+//			applySubstitutions(subs, t.p);
+//			// try to add the resulting triple
+//			this.addTripleAndCheck(addedTripleSource, t.p, addedTripleTarget);
+//
+//		}
+//
+//		protected void handleDataTriple_TRS_TRO(Triple t) {
+//			Long source = rep.get(t.s);
+//			Long target = rep.get(t.o);
+//			addTripleAndCheck(source, t.p, target);
+//			//Debugger.log("TRS_RP_UO 2. After replacement and triple addition (1)\n" + this.toString());
+//		}
+//
+//		protected void handleDataTriple_TRS_UO(Triple t) {
+//			//Debugger.log("TRS_UO");
+//			// The subject is typed and  represented.
+//			// The object has not been represented, nor the property. 
+//			Long source = rep.get(t.s);
+//			// we take the next number but we may not use it in the end
+//			Long target = this.getNextSummaryNode();
+//			boolean addToSummary = true;
+//			// we need to figure out if the representative of o needs creation or not.
+//			// we don't create it if this subject already had property p defined on it.
+//			HashMap<Long, ArrayList<Long>> edgesOfS = edges.get(source);
+//			if (edgesOfS != null) {
+//				//Debugger.log(t.s + " had edges");
+//				ArrayList<Long> pValuesForS = edgesOfS.get(t.p);
+//				if (pValuesForS != null) { // in this case, target is overwritten with the existing node
+//					//Debugger.log(t.s + " had edges for " + t.p);
+//					target = pValuesForS.get(0);
+//					//Debugger.log("Reusing target " + target);
+//					addToSummary = false;
+//				}
+//			}
+//			rep.put(t.o, target);
+//			// no writing in PS nor TS
+//			if (addToSummary)
+//				//Debugger.log("Added triple " + source + " "+ t.p + " " + target); 
+//				addTripleAndCheck(source, t.p, target);
+//		}
+
+		/**
+		 * @param typeTriplesFile
+		 * @param dataTriplesFile
+		 */
+		@Override
+		public void summarizeFromTripleFiles(String typeTriplesFile, String dataTriplesFile) {
+			long start = System.currentTimeMillis();
+			try {
+
+				// First file: type triples
+				try (BufferedReader br = new BufferedReader(new FileReader(new File(typeTriplesFile)))) {
+					while (br.ready()) {
+						String spo = br.readLine();
+						Triple t = readTriple(spo);
+						//t.display();
+						handleTypeTripleAfterData(t);
+						//System.out.println();
+					}
+				}
+				//System.out.println("=== After weak type triple summarization of " + typeTriplesFile + ": =================================== ");
+				//display();
+			}
+			catch (IOException e) {
+				throw new IllegalStateException("Could not exploit file " + typeTriplesFile);
+			}
+			// this is the one who actually puts type triples in the summary	
+			postHandleTypeTriples();
+
+			//  Second file: data triples	
+			try (BufferedReader br = new BufferedReader(new FileReader(new File(dataTriplesFile)))) {
 				while (br.ready()) {
 					String spo = br.readLine();
 					Triple t = readTriple(spo);
+					//System.out.println("\n");
 					//t.display();
-					handleTypeTripleAfterData(t);
+					handleDataTriple(t);
+					//display();
 					//System.out.println();
 				}
 			}
-			//System.out.println("=== After weak type triple summarization of " + typeTriplesFile + ": =================================== ");
+			//System.out.println("=== After weak data triple summarization of "+ dataTriplesFile + ": ==================================");
 			//display();
-		}
-		catch (IOException e) {
-			throw new IllegalStateException("Could not exploit file " + typeTriplesFile);
-		}
-		// this is the one who actually puts type triples in the summary	
-		postHandleTypeTriples();
 
-		//  Second file: data triples	
-		try (BufferedReader br = new BufferedReader(new FileReader(new File(dataTriplesFile)))) {
-			while (br.ready()) {
-				String spo = br.readLine();
-				Triple t = readTriple(spo);
-				//System.out.println("\n");
-				//t.display();
-				handleDataTriple(t);
-				//display();
-				//System.out.println();
+			catch (IOException e) {
+				throw new IllegalStateException("Unable to open file " + dataTriplesFile + " or " + typeTriplesFile + ": " + e.toString());
 			}
+			long stop = System.currentTimeMillis();
+			System.out.println("Typed weak summarization took: " + (stop - start));
+			display(dataTriplesFile); // this prints out and makes a DOT file
 		}
-		//System.out.println("=== After weak data triple summarization of "+ dataTriplesFile + ": ==================================");
-		//display();
 
-		catch (IOException e) {
-			throw new IllegalStateException("Unable to open file " + dataTriplesFile + " or " + typeTriplesFile + ": " + e.toString());
-		}
-		long stop = System.currentTimeMillis();
-		System.out.println("Typed weak summarization took: " + (stop - start));
-		display(dataTriplesFile); // this prints out and makes a DOT file
-	}
-
-	public void handleTypeTripleBeforeData(Triple t) {
-		Long prevClassSetOfS = this.n2cs.get(t.s);
-		TreeSet<Long> thisSubjectClassSet;
-		if (prevClassSetOfS == null) { // this subject was untyped so far
-			prevClassSetOfS = getNextSummaryNode();
-			n2cs.put(t.s, prevClassSetOfS);
-			thisSubjectClassSet = new TreeSet<>();
-			thisSubjectClassSet.add(t.o);
-			cs.put(prevClassSetOfS, thisSubjectClassSet);
-			c2cs.add(t.o, prevClassSetOfS);
-		}
-		else { // the subject was typed, then cs should also know about it
-			thisSubjectClassSet = cs.get(prevClassSetOfS);
-			if (thisSubjectClassSet.contains(t.o)) {
-				// do nothing -- we knew s was of type o
-				//Debugger.log("Already knew " + t.s + " was of type " + t.o);
+		public void handleTypeTripleBeforeData(Triple t) {
+			Long prevClassSetOfS = this.n2cs.get(t.s);
+			TreeSet<Long> thisSubjectClassSet;
+			if (prevClassSetOfS == null) { // this subject was untyped so far
+				prevClassSetOfS = getNextSummaryNode();
+				n2cs.put(t.s, prevClassSetOfS);
+				thisSubjectClassSet = new TreeSet<>();
+				thisSubjectClassSet.add(t.o);
+				cs.put(prevClassSetOfS, thisSubjectClassSet);
+				c2cs.add(t.o, prevClassSetOfS);
 			}
-			else {
-				// the class set of s needs to change get also o
-				TreeSet<Long> newClassSetOfS = new TreeSet<>();
-				newClassSetOfS.addAll(thisSubjectClassSet);
-				newClassSetOfS.add(t.o);
-				//Either the union of the class plus t.o already existed:
-				long existingClassSetID = classSetID(newClassSetOfS, t.o);
-				if (existingClassSetID >= 0)
-					// then we need to connect t.s to that
-					n2cs.put(t.s, existingClassSetID); //Debugger.log("Attached " + t.s + " to the existing class set " + existingClassSetID);
+			else { // the subject was typed, then cs should also know about it
+				thisSubjectClassSet = cs.get(prevClassSetOfS);
+				if (thisSubjectClassSet.contains(t.o)) {
+					// do nothing -- we knew s was of type o
+					//Debugger.log("Already knew " + t.s + " was of type " + t.o);
+				}
 				else {
-					//we need to create a new class set, move t.s to that class set, 
-					// detach t.s from its previous class set
-					long newClassSetID = getNextSummaryNode();
-					cs.put(newClassSetID, newClassSetOfS);
-					n2cs.put(t.s, newClassSetID);
-					c2cs.add(t.o, newClassSetID);
-					//Debugger.log("Attached " + t.s + " to the newly created class set " + newClassSetID);
+					// the class set of s needs to change get also o
+					TreeSet<Long> newClassSetOfS = new TreeSet<>();
+					newClassSetOfS.addAll(thisSubjectClassSet);
+					newClassSetOfS.add(t.o);
+					//Either the union of the class plus t.o already existed:
+					long existingClassSetID = classSetID(newClassSetOfS, t.o);
+					if (existingClassSetID >= 0)
+						// then we need to connect t.s to that
+						n2cs.put(t.s, existingClassSetID); //Debugger.log("Attached " + t.s + " to the existing class set " + existingClassSetID);
+					else {
+						//we need to create a new class set, move t.s to that class set, 
+						// detach t.s from its previous class set
+						long newClassSetID = getNextSummaryNode();
+						cs.put(newClassSetID, newClassSetOfS);
+						n2cs.put(t.s, newClassSetID);
+						c2cs.add(t.o, newClassSetID);
+						//Debugger.log("Attached " + t.s + " to the newly created class set " + newClassSetID);
+					}
+				}
+			}
+			// store the representation of t.s:
+			rep.put(t.s, n2cs.get(t.s));
+			//Debugger.log(t.s + " represented by " + n2cs.get(t.s));
+			//display();
+			this.numberOfTypeTriplesRead++;
+		}
+
+		/**
+		 * Tries to see if the given class set has already been encountered.
+		 * For efficiency, the method also gets @givenClass, so that it can look
+		 * only in the class sets that include it.
+		 *
+		 * @param givenClassSet
+		 * @param givenClass
+		 *
+		 * @return the ID of the class set if it was already known, otherwise -1
+		 */
+		private long classSetID(TreeSet<Long> givenClassSet, long givenClass) {
+			TreeSet<Long> possibleSets = c2cs.get(givenClass);
+			if (possibleSets != null)
+				for (long possibleSetNo: possibleSets) {
+					TreeSet<Long> possibleSet = cs.get(possibleSetNo);
+					if (possibleSet.equals(givenClassSet))
+						return possibleSetNo;
+				}
+			return -1;
+		}
+
+		public void postHandleTypeTriples() {
+			for (Long node: this.n2cs.getNodes())
+				for (Long thisClass: this.cs.get(this.n2cs.get(node)))
+					//System.out.println("Adding triple " + thisClass + " type " + RDF2SQLEncoding.dictionaryDecode(thisClass));
+					this.addTriple(rep.get(node), RDF2SQLEncoding.getTypeCode(), thisClass); //checkTypeIsObject(); 
+		}
+
+		@Override
+		protected void handleTypeTripleAfterData(Triple t) {
+			throw new IllegalStateException("This method does not belong to " + this.getClass().getName());
+		}
+
+		@Override
+		protected void consistencyChecks() {
+			for (Long s: edges.keySet()) {
+				HashMap<Long, ArrayList<Long>> triplesOfThisSubject = edges.get(s);
+				if (triplesOfThisSubject == null)
+					throw new IllegalStateException("No triples whose subject is " + s);
+				for (Long p: triplesOfThisSubject.keySet()) {
+					ArrayList<Long> objectsOfThisSandP = triplesOfThisSubject.get(p);
+					if ((objectsOfThisSandP.size() > 1) && RDF2SQLEncoding.isDataProperty(p)
+							&& (n2cs.get(s) == null)) // only check for untyped nodes 
+						throw new IllegalStateException("Subject " + s + " has more than one edge with label " + p);
+					for (Long o: objectsOfThisSandP) {
+						if (!this.ps.get(p).equals(s))
+							throw new IllegalStateException("Source of " + p + " is not " + s + " but " + this.ps.get(p));
+						if (pt.get(p) == null)
+							throw new IllegalStateException("No target for " + p);
+						if (!this.pt.get(p).equals(o))
+							throw new IllegalStateException("Target of " + p + " is not " + o + " but " + this.pt.get(p));
+					}
 				}
 			}
 		}
-		// store the representation of t.s:
-		rep.put(t.s, n2cs.get(t.s));
-		//Debugger.log(t.s + " represented by " + n2cs.get(t.s));
-		//display();
-		this.numberOfTypeTriplesRead++;
-	}
-
-	/**
-	 * Tries to see if the given class set has already been encountered.
-	 * For efficiency, the method also gets @givenClass, so that it can look
-	 * only in the class sets that include it.
-	 *
-	 * @param givenClassSet
-	 * @param givenClass
-	 *
-	 * @return the ID of the class set if it was already known, otherwise -1
-	 */
-	private long classSetID(TreeSet<Long> givenClassSet, long givenClass) {
-		TreeSet<Long> possibleSets = c2cs.get(givenClass);
-		if (possibleSets != null)
-			for (long possibleSetNo: possibleSets) {
-				TreeSet<Long> possibleSet = cs.get(possibleSetNo);
-				if (possibleSet.equals(givenClassSet))
-					return possibleSetNo;
+		/**
+		 * This is used only when drawing the graph using Dot. 
+		 * Different summaries need to traverse their triples in different orders, thus the two cursors which differ between the typed and untyped summaries.
+		 * Returns the first cursor, over the type triples
+		 * @param conn
+		 * @return
+		 */
+		protected ResultSet getGraphTriplesCursor1ForDotDrawing(Connection conn, long triplesToDraw) {
+			try{
+				return conn.createStatement().executeQuery("select * from triples where p='<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' limit " + triplesToDraw);
 			}
-		return -1;
-	}
-
-	public void postHandleTypeTriples() {
-		for (Long node: this.n2cs.getNodes())
-			for (Long thisClass: this.cs.get(this.n2cs.get(node)))
-				//System.out.println("Adding triple " + thisClass + " type " + RDF2SQLEncoding.dictionaryDecode(thisClass));
-				this.addTriple(rep.get(node), RDF2SQLEncoding.getTypeCode(), thisClass); //checkTypeIsObject(); 
-	}
-
-	@Override
-	protected void handleTypeTripleAfterData(Triple t) {
-		throw new IllegalStateException("This method does not belong to " + this.getClass().getName());
-	}
-
-	@Override
-	protected void consistencyChecks() {
-		for (Long s: edges.keySet()) {
-			HashMap<Long, ArrayList<Long>> triplesOfThisSubject = edges.get(s);
-			if (triplesOfThisSubject == null)
-				throw new IllegalStateException("No triples whose subject is " + s);
-			for (Long p: triplesOfThisSubject.keySet()) {
-				ArrayList<Long> objectsOfThisSandP = triplesOfThisSubject.get(p);
-				if ((objectsOfThisSandP.size() > 1) && RDF2SQLEncoding.isDataProperty(p)
-					&& (n2cs.get(s) == null)) // only check for untyped nodes 
-					throw new IllegalStateException("Subject " + s + " has more than one edge with label " + p);
-				for (Long o: objectsOfThisSandP) {
-					if (!this.ps.get(p).equals(s))
-						throw new IllegalStateException("Source of " + p + " is not " + s + " but " + this.ps.get(p));
-					if (pt.get(p) == null)
-						throw new IllegalStateException("No target for " + p);
-					if (!this.pt.get(p).equals(o))
-						throw new IllegalStateException("Target of " + p + " is not " + o + " but " + this.pt.get(p));
-				}
+			catch(SQLException e){
+				throw new IllegalStateException("Could not get a cursor on the graph triples for drawing"); 
 			}
 		}
+		/**
+		 * This is used only when drawing the graph using Dot. 
+		 * Different summaries need to traverse their triples in different orders, thus the two cursors which differ between the typed and untyped summaries.
+		 * Returns the second cursor, over the non-type triples.
+		 * @param conn
+		 * @return
+		 */
+		protected ResultSet getGraphTriplesCursor2ForDotDrawing(Connection conn, long triplesToDraw) {
+			try{
+				return conn.createStatement().executeQuery("select * from triples where p<>'<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' limit " + triplesToDraw);
+			}
+			catch(SQLException e){
+				throw new IllegalStateException("Could not get a cursor on the graph triples for drawing"); 
+			}
+		}
+
 	}
-}

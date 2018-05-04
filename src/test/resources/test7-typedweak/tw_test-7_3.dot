@@ -1,0 +1,10 @@
+digraph g{
+"<http://qs.org/tw16>" [style = filled, color=orange];
+"<http://qstest.org/class1>" [fontcolor=white, style = filled, color=black];
+"<http://qs.org/tw16>" -> "<http://qstest.org/class1>" [label=".../02/22-rdf-syntax-ns#type>"];
+"<http://qs.org/tw18>" [style = filled, color=orangered];
+"<http://qstest.org/class1>" [fontcolor=white, style = filled, color=black];
+"<http://qs.org/tw18>" -> "<http://qstest.org/class1>" [label=".../02/22-rdf-syntax-ns#type>"];
+"<http://qstest.org/class2>" [fontcolor=white, style = filled, color=black];
+"<http://qs.org/tw18>" -> "<http://qstest.org/class2>" [label=".../02/22-rdf-syntax-ns#type>"];
+}
