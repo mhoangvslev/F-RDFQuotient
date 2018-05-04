@@ -36,13 +36,13 @@ public class TypedWeakSummaryTests {
 	public void testtypedweak1() {
 		String referenceFileName = "src/test/resources/test1-typedweak/tw_test-1-reference.nt";
 		File expectedOutput = new File(referenceFileName);
-		if (!expectedOutput.exists()){
-			fail("Expected output not found " + referenceFileName);
-		}
 		try {
 			File testOutput = typedweak(1);
 			if (!testOutput.exists()){
 				fail("Test output not found ");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary typedweak 1", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
@@ -55,13 +55,13 @@ public class TypedWeakSummaryTests {
 	public void testtypedweak2() {
 		String referenceFileName = "src/test/resources/test2-typedweak/tw_test-2-reference.nt";
 		File expectedOutput = new File(referenceFileName);
-		if (!expectedOutput.exists()){
-			fail("Expected output not found " + referenceFileName);
-		}
 		try {
 			File testOutput = typedweak(2);
 			if (!testOutput.exists()){
 				fail("Test output not found ");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary typedweak 2", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
@@ -74,13 +74,13 @@ public class TypedWeakSummaryTests {
 	public void testtypedweak3() {
 		String referenceFileName = "src/test/resources/test3-typedweak/tw_test-3-reference.nt";
 		File expectedOutput = new File(referenceFileName);
-		if (!expectedOutput.exists()){
-			fail("Expected output not found " + referenceFileName);
-		}
 		try {
 			File testOutput = typedweak(3);
 			if (!testOutput.exists()){
 				fail("Test output not found");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary typedweak 3", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
@@ -93,13 +93,13 @@ public class TypedWeakSummaryTests {
 	public void testtypedweak4() {
 		String referenceFileName = "src/test/resources/test4-typedweak/tw_test-4-reference.nt";
 		File expectedOutput = new File(referenceFileName);
-		if (!expectedOutput.exists()){
-			fail("Expected output not found " + referenceFileName);
-		}
 		try {
 			File testOutput = typedweak(4);
 			if (!testOutput.exists()){
 				fail("Test output not found");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary typedweak 4", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
@@ -112,13 +112,13 @@ public class TypedWeakSummaryTests {
 	public void testtypedweak5() {
 		String referenceFileName = "src/test/resources/test5-typedweak/tw_test-5-reference.nt";
 		File expectedOutput = new File(referenceFileName);
-		if (!expectedOutput.exists()){
-			fail("Expected output not found " + referenceFileName);
-		}
 		try {
 			File testOutput = typedweak(5);
 			if (!testOutput.exists()){
 				fail("Test output not found");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary typedweak 5", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
@@ -131,13 +131,13 @@ public class TypedWeakSummaryTests {
 	public void testtypedweak6() {
 		String referenceFileName = "src/test/resources/test6-typedweak/tw_test-6-reference.nt";
 		File expectedOutput = new File(referenceFileName);
-		if (!expectedOutput.exists()){
-			fail("Expected output not found " + referenceFileName);
-		}
 		try {
 			File testOutput = typedweak(6);
 			if (!testOutput.exists()){
 				fail("Test output not found");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary typedweak 6", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
@@ -150,13 +150,13 @@ public class TypedWeakSummaryTests {
 	public void testtypedweak7() {
 		String referenceFileName = "src/test/resources/test7-typedweak/tw_test-7-reference.nt";
 		File expectedOutput = new File(referenceFileName);
-		if (!expectedOutput.exists()){
-			fail("Expected output not found " + referenceFileName);
-		}
 		try {
 			File testOutput = typedweak(7); 
 			if (!testOutput.exists()){
 				fail("Test output not found");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary typedweak 7", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
