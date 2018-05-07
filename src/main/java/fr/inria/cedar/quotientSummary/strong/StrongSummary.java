@@ -81,8 +81,8 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 					handleDataTriple(t);
 				//System.out.println("Summary has become: " + this.toString());
 				triplesSummarizedSoFar++;
-				//this.drawSummaryAndGraph(conn, dataTriplesFileName, ("-after-" + 
-				//triplesSummarizedSoFar + "-"+ t.s + "-" + t.p + "-" + t.o));
+				this.drawSummaryAndGraph(conn, dataTriplesFileName, ("-after-" + 
+				triplesSummarizedSoFar + "-"+ t.s + "-" + t.p + "-" + t.o));
 				//Files.write(Paths.get("output.txt"), (globalTripleCount + ": " + new String(s + " " + p + " " + o + "\n")).getBytes(), StandardOpenOption.APPEND); 
 				//if ((globalTripleCount % 1000 == 0)) {//|| (globalTripleCount > 28800)) {
 				//	System.out.println(globalTripleCount + " triples");
@@ -108,7 +108,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 				//System.out.println("#### Type triple " + t.toString());
 				this.handleTypeTripleAfterData(t);
 				triplesSummarizedSoFar++;
-				//this.drawSummaryAndGraph(conn, dataTriplesFileName, ("-after-" + t.s + "-" + t.p + "-" + t.o));
+				this.drawSummaryAndGraph(conn, dataTriplesFileName, ("-after-" + triplesSummarizedSoFar + "-" + t.s + "-" + t.p + "-" + t.o));
 				//System.out.println("Summary now has " + getSummaryEdges().size() + " triples");
 
 			}
@@ -141,7 +141,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 		//checkSymmetry(sourceCliqueS, targetCliqueS, sourceCliqueO, targetCliqueO, sourceCliqueP, targetCliqueP); 
 		char caseNumber = decode(repS, repO, sourceCliqueP);
 
-		//Debugger.log("Case " + this.caseName(caseNumber));
+		System.out.println("\nCase " + this.caseName(caseNumber)); 
 		switch (caseNumber) {
 			case US_RS_UO_RO_RP: {
 				handleDataTriple_US_RS_UO_RO_RP(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
@@ -181,22 +181,30 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 		//this.display();
 	}
 
+
 	/** This implementation should be shared by Weak and Strong
 	 *
 	 * @param t
 	 */
 	@Override
 	protected void handleTypeTripleAfterData(Triple t) {
+		//System.out.println("\nType triple " + t.toString());
 		Long repS = rep.get(t.s);
-		if (repS != null)
+		if (repS != null) {
+			//System.out.println("Source " + t.s + " already represented");
 			addTriple(repS, t.p, t.o);
+		}
 		else {
+			//System.out.println("Source " + t.s + " has no data properties");
 			if (!typeOnlyNodeAlreadySeen) {
+				//System.out.println("Creating representative for type-only node"); 
 				this.typeOnlyNodeID = getNextSummaryNode();
 				typeOnlyNodeAlreadySeen = true;
 			}
 			addTriple(typeOnlyNodeID, t.p, t.o);
+			rep.put(t.s, typeOnlyNodeID);
 		}
+		this.numberOfTypeTriplesRead++;
 	}
 
 	private char decode(Long repS, Long repO, Long sourceCliqueP) {

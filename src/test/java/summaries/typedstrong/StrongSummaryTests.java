@@ -7,6 +7,8 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import org.apache.commons.io.FileUtils;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -14,7 +16,7 @@ public class StrongSummaryTests {
 	public File strong(int i) {
 		System.out.println("Typed Strong test");
 		String inputFileName = "src/test/resources/test" + i + "-strong/test-" + i + ".nt";
-		String outputFileName = "src/test/resources/test" + i + "-strong/ts-test-" + i + ".nt";
+		String outputFileName = "src/test/resources/test" + i + "-strong/s_test-" + i + ".nt";
 		try {
 			Connection conn = Builder.loadSingleRDFInPostgres(inputFileName);
 			//countConnections("1", conn); 
@@ -34,12 +36,18 @@ public class StrongSummaryTests {
 	}
 
 	@Test
-	@Ignore
 	public void teststrong1() {
-		String referenceFileName = "src/test/resources/test1-strong/s-test-1-reference.nt";
+		String referenceFileName = "src/test/resources/test1-strong/s_test-1-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
-			assertTrue("Different summary strong 1", FileUtils.contentEquals(strong(1), expectedOutput));
+			File testOutput = strong(1);
+			if (!testOutput.exists()){
+				fail("Test output not found ");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary strong 1", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
 			throw new IllegalStateException("Unable to open .nt files in strong test 1 " + e.toString());
@@ -47,12 +55,18 @@ public class StrongSummaryTests {
 	}
 
 	@Test
-	@Ignore
 	public void teststrong2() {
-		String referenceFileName = "src/test/resources/test2-strong/s-test-2-reference.nt";
+		String referenceFileName = "src/test/resources/test2-strong/s_test-2-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
-			assertTrue("Different summary strong 2", FileUtils.contentEquals(strong(2), expectedOutput));
+			File testOutput = strong(2);
+			if (!testOutput.exists()){
+				fail("Test output not found ");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary strong 2", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
 			throw new IllegalStateException("Unable to open .nt files in strong test 2 " + e.toString());
@@ -60,12 +74,18 @@ public class StrongSummaryTests {
 	}
 
 	@Test
-	@Ignore
 	public void teststrong3() {
-		String referenceFileName = "src/test/resources/test2-strong/s-test-3-reference.nt";
+		String referenceFileName = "src/test/resources/test3-strong/s_test-3-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
-			assertTrue("Different summary strong 3", FileUtils.contentEquals(strong(3), expectedOutput));
+			File testOutput = strong(3);
+			if (!testOutput.exists()){
+				fail("Test output not found ");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary strong 3", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
 			throw new IllegalStateException("Unable to open .nt files in strong test 3 " + e.toString());
@@ -73,12 +93,18 @@ public class StrongSummaryTests {
 	}
 
 	@Test
-	@Ignore
 	public void teststrong4() {
-		String referenceFileName = "src/test/resources/test4-strong/s-test-4-reference.nt";
+		String referenceFileName = "src/test/resources/test4-strong/s_test-4-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
-			assertTrue("Different summary strong 4", FileUtils.contentEquals(strong(4), expectedOutput));
+			File testOutput = strong(4);
+			if (!testOutput.exists()){
+				fail("Test output not found ");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary strong 4", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
 			throw new IllegalStateException("Unable to open .nt files in strong test 4 " + e.toString());
@@ -86,12 +112,18 @@ public class StrongSummaryTests {
 	}
 
 	@Test
-	@Ignore
 	public void teststrong5() {
-		String referenceFileName = "src/test/resources/test5-strong/s-test-5-reference.nt";
+		String referenceFileName = "src/test/resources/test5-strong/s_test-5-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
-			assertTrue("Different summary strong 5", FileUtils.contentEquals(strong(5), expectedOutput));
+			File testOutput = strong(5);
+			if (!testOutput.exists()){
+				fail("Test output not found ");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary strong 5", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
 			throw new IllegalStateException("Unable to open .nt files in strong test 5 " + e.toString());
@@ -99,12 +131,18 @@ public class StrongSummaryTests {
 	}
 
 	@Test
-	@Ignore
 	public void teststrong6() {
-		String referenceFileName = "src/test/resources/test6-strong/s-test-6-reference.nt";
+		String referenceFileName = "src/test/resources/test6-strong/s_test-6-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
-			assertTrue("Different summary strong 6", FileUtils.contentEquals(strong(6), expectedOutput));
+			File testOutput = strong(6);
+			if (!testOutput.exists()){
+				fail("Test output not found ");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary strong 6", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
 			throw new IllegalStateException("Unable to open .nt files in strong test 6 " + e.toString());
@@ -112,12 +150,18 @@ public class StrongSummaryTests {
 	}
 
 	@Test
-	@Ignore
 	public void teststrong7() {
-		String referenceFileName = "src/test/resources/test7-strong/s-test-7-reference.nt";
+		String referenceFileName = "src/test/resources/test7-strong/s_test-7-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
-			assertTrue("Different summary strong 7", FileUtils.contentEquals(strong(7), expectedOutput));
+			File testOutput = strong(7);
+			if (!testOutput.exists()){
+				fail("Test output not found ");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary strong 7", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
 			throw new IllegalStateException("Unable to open .nt files in strong test 7 " + e.toString());
