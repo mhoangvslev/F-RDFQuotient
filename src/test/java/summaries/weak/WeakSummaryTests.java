@@ -14,7 +14,9 @@ import org.junit.Test;
 
 public class WeakSummaryTests {
 	public File weak(int i) {
-		System.out.println("Weak summary test");
+		System.out.println("################################################################################");
+		System.out.println("Weak summary test " + Integer.toString(i));
+		System.out.println("################################################################################");
 		String inputFileName = "src/test/resources/test" + i + "-weak/test-" + i + ".nt";
 		String outputFileName = "src/test/resources/test" + i + "-weak/w_test-" + i + ".nt";
 		try {

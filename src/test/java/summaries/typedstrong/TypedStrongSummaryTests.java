@@ -14,7 +14,9 @@ import org.junit.Test;
 
 public class TypedStrongSummaryTests {
 	public File typedstrong(int i) {
-		System.out.println("Typed Strong summary test");
+		System.out.println("################################################################################");
+		System.out.println("Typed Strong summary test " + Integer.toString(i));
+		System.out.println("################################################################################");
 		String inputFileName = "src/test/resources/test" + i + "-typedstrong/test-" + i + ".nt";
 		String outputFileName = "src/test/resources/test" + i + "-typedstrong/ts_test-" + i + ".nt";
 		try {

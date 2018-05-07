@@ -29,12 +29,12 @@ public class Builder {
 	private static Summary summaryInUse;
 
 	public Builder() {
-		try {
+		/*try {
 			getConnection();
 		}
 		catch (UnsupportedDatabaseEngineException | IOException | SQLException e) {
 			e.printStackTrace();
-		}
+		}*/
 	}
 
 	/**
@@ -72,14 +72,14 @@ public class Builder {
 				return;
 			/*case "loadAndSummarizeUsingShortcut":
 				// in this case args[1] is the summary type; the loader doesn't need this information; the loader only gets the files to load
-				try (Connection conn = loadRDFInPostgres(filesToLoad, false)) {
-					// the summarizer also gets the summary name
-					summarizeGraphFromPostgres(conn, nextArguments, false);
-					saturate(conn);
-					Summary sum = summarizeGraphFromPostgres(conn, nextArguments, true);
-					saveSummary(conn, sum, args);
-				}
-				return;*/ // TODO: not ready yet
+				connectionInUse = loadRDFInPostgres(filesToLoad, true); // TODO: Fix and change false to true
+				// the summarizer also gets the summary name
+				summarizeGraphFromPostgres(connectionInUse, nextArguments, false);
+				saturate(connectionInUse);
+				// the summarizer also gets the summary name
+				Summary sum = summarizeGraphFromPostgres(connectionInUse, nextArguments, true);
+				saveSummary(connectionInUse, sum, args);
+				return; */// TODO: not ready yet
 			case "saveSummary":
 				saveSummary(connectionInUse, summaryInUse, nextArguments);
 				return;
@@ -99,7 +99,7 @@ public class Builder {
 	 * @throws UnsupportedDatabaseEngineException
 	 * @throws SQLException
 	 */
-	private static Connection getConnection() throws FileNotFoundException, IOException, UnsupportedDatabaseEngineException, SQLException {
+	/*private static Connection getConnection() throws FileNotFoundException, IOException, UnsupportedDatabaseEngineException, SQLException {
 		// first fill in the connection properties from the default config file
 		Properties properties = new Properties();
 		properties.load(new FileReader(DEFAULT_CONFIG_FILE));
@@ -115,7 +115,7 @@ public class Builder {
 		System.out.println("Connection URL is: " + connectionURL);
 		Preconditions.checkState(conn != null, "No connection for " + connectionURL);
 		return conn;
-	}
+	}*/
 
 	private static void printUsage() {
 		System.out.println("Usage:");

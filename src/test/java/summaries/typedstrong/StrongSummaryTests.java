@@ -14,7 +14,9 @@ import org.junit.Test;
 
 public class StrongSummaryTests {
 	public File strong(int i) {
-		System.out.println("Strong summary test");
+		System.out.println("################################################################################");
+		System.out.println("Strong summary test " + Integer.toString(i));
+		System.out.println("################################################################################");
 		String inputFileName = "src/test/resources/test" + i + "-strong/test-" + i + ".nt";
 		String outputFileName = "src/test/resources/test" + i + "-strong/s_test-" + i + ".nt";
 		try {

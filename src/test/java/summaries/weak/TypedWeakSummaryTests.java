@@ -14,7 +14,9 @@ import org.junit.Test;
 
 public class TypedWeakSummaryTests {
 	public File typedweak(int i) {
-		System.out.println("Typed Weak summary test");
+		System.out.println("################################################################################");
+		System.out.println("Typed Weak summary test " + Integer.toString(i));
+		System.out.println("################################################################################");
 		String inputFileName = "src/test/resources/test" + i + "-typedweak/test-" + i + ".nt";
 		String outputFileName = "src/test/resources/test" + i + "-typedweak/tw_test-" + i + ".nt";
 		try {

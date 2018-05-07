@@ -96,7 +96,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 			throw new IllegalStateException("Postgres error encountered while summarizing data triples " + e.toString());
 		}
 		dataTriplesSummarizationTime = System.currentTimeMillis() - start;
-		System.out.println("Summarized " + triplesSummarizedSoFar + " data triples in " + (dataTriplesSummarizationTime - start) + " ms");
+		System.out.println("Summarized " + triplesSummarizedSoFar + " data triples in " + dataTriplesSummarizationTime + " ms");
 
 		String getTypedTriplesString = ("select *  from encoded_triples where p=" + typeConstantCode);
 		try {
