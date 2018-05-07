@@ -21,8 +21,9 @@ import java.util.List;
 import java.util.Properties;
 
 public class Builder {
-	// Default properties file
+	// Default properties files
 	private static final String DEFAULT_CONFIG_FILE = System.getProperty("user.dir") + "/conf/dataLoading.properties";
+	private static final String SATURATION_CONFIG_FILE = System.getProperty("user.dir") + "/conf/dataLoadingWithSaturation.properties";
 
 	private static Connection connectionInUse;
 	private static Summary summaryInUse;
@@ -65,9 +66,9 @@ public class Builder {
 				return;
 			case "loadWithSaturationAndSummarize":
 				// in this case args[1] is the summary type; the loader doesn't need this information; the loader only gets the files to load
-				connectionInUse = loadRDFInPostgres(filesToLoad, true);
+				connectionInUse = loadRDFInPostgres(filesToLoad, false); // TODO: Fix and change false to true
 				// the summarizer also gets the summary name
-				summaryInUse = summarizeGraphFromPostgres(connectionInUse, nextArguments, true);
+				summaryInUse = summarizeGraphFromPostgres(connectionInUse, nextArguments, false); // TODO: Fix and change false to true
 				return;
 			/*case "loadAndSummarizeUsingShortcut":
 				// in this case args[1] is the summary type; the loader doesn't need this information; the loader only gets the files to load
@@ -78,7 +79,7 @@ public class Builder {
 					Summary sum = summarizeGraphFromPostgres(conn, nextArguments, true);
 					saveSummary(conn, sum, args);
 				}
-				return;*/ // not ready yet
+				return;*/ // TODO: not ready yet
 			case "saveSummary":
 				saveSummary(connectionInUse, summaryInUse, nextArguments);
 				return;
@@ -89,7 +90,7 @@ public class Builder {
 	}
 
 	/**
-	 * This returns the connection to the Postgres database where the dictionary-encoded RDF graph is / will be stored.
+	 * This method returns the connection to the Postgres database where the dictionary-encoded RDF graph is / will be stored
 	 *
 	 * @return the connection
 	 *
@@ -109,8 +110,7 @@ public class Builder {
 		connectionProps.put("user", properties.getProperty("database.user"));
 		connectionProps.put("password", properties.getProperty("database.password"));
 
-		String connectionURL = "jdbc:postgresql://" + properties.getProperty("database.host")
-							   + ":" + properties.getProperty("database.port") + "/" + properties.getProperty("database.name");
+		String connectionURL = "jdbc:postgresql://" + properties.getProperty("database.host") + ":" + properties.getProperty("database.port") + "/" + properties.getProperty("database.name");
 		Connection conn = DriverManager.getConnection(connectionURL, connectionProps);
 		System.out.println("Connection URL is: " + connectionURL);
 		Preconditions.checkState(conn != null, "No connection for " + connectionURL);
@@ -125,7 +125,7 @@ public class Builder {
 		System.out.println("args[0]=summarizeSaturated: summarizes the saturated graph from Postgres");
 		System.out.println("args[0]=loadWithSaturationAndSummarize: loads the graph in Postgres, saturates it, and summarizes it");
 		//System.out.println("args[0]=loadAndSummarizeUsingShortcut: loads the graph in Postgres, summarizes it, saturates it, and summarizes again (shortcut)");
-		System.out.println("args[0]=saveSummary: saves summary to Postgres and to the disk, draws a DOT graph");
+		System.out.println("args[0]=saveSummary: saves summary to Postgres and to the disk, draws a DOT graph and closes the connection to Postgres");
 		//System.out.println("args[0]=summarizeEncodedFile: build the summary out of integer-encoded triples in a file");
 	}
 
@@ -143,7 +143,8 @@ public class Builder {
 		return suffix;
 	}
 
-	/** This method loads data in Postgres through the ontoSQL loader.
+	/**
+	 * This method loads the data in Postgres through the ontoSQL loader
 	 *
 	 * @param args a list of file names
 	 *
@@ -177,11 +178,15 @@ public class Builder {
 			}
 		}
 
+		String configFile = DEFAULT_CONFIG_FILE;
+		if (saturate)
+			configFile = SATURATION_CONFIG_FILE;
+
 		Properties properties = new Properties();
-		properties.load(new FileReader(DEFAULT_CONFIG_FILE));
+		properties.load(new FileReader(configFile));
 		System.out.println(properties.toString());
 		Parameters settings = new Parameters();
-		settings.setPropertiesFileName(DEFAULT_CONFIG_FILE);
+		settings.setPropertiesFileName(configFile);
 
 		if (rdfsFiles.isEmpty())
 			for (String tripleFile: tripleFiles) {
@@ -200,8 +205,7 @@ public class Builder {
 		connectionProps.put("user", properties.getProperty("database.user"));
 		connectionProps.put("password", properties.getProperty("database.password"));
 
-		String connectionURL = "jdbc:postgresql://" + properties.getProperty("database.host")
-							   + ":" + properties.getProperty("database.port") + "/" + properties.getProperty("database.name");
+		String connectionURL = "jdbc:postgresql://" + properties.getProperty("database.host") + ":" + properties.getProperty("database.port") + "/" + properties.getProperty("database.name");
 		Connection conn = DriverManager.getConnection(connectionURL, connectionProps);
 		System.out.println("Connection URL is: " + connectionURL);
 		Preconditions.checkState(conn != null, "No connection for " + connectionURL);
@@ -209,7 +213,7 @@ public class Builder {
 	}
 
 	/**
-	 * Assumes the graph has already been loaded
+	 * This method assumes the graph has already been loaded
 	 *
 	 * @param conn
 	 * @param args
