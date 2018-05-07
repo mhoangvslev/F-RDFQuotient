@@ -512,7 +512,7 @@ public class Summary {
 					object = RDF2SQLEncoding.dictionaryDecode(t.o);
 				}
 				Debugger.log(subject + " " + property + " " + object);
-				bw.write(subject + " " + property + " " + object + " . \n");
+				bw.write(subject + " " + property + " " + object + " .\n");
 			}
 			if (gatherStatistics) {
 				// write node cardinality statistics:
@@ -522,7 +522,7 @@ public class Summary {
 					String property = properties.getProperty("summaryNodeSupportURI");
 					String object = ("\"" + numberOfRepresentedGraphNodes + "\"");
 					Debugger.log(subject + " " + property + " " + object);
-					bw.write(subject + " <" + property + "> " + object + " . \n");
+					bw.write(subject + " <" + property + "> " + object + " .\n");
 				}
 				// write edge cardinality statistics:
 				int reifiedEdgeNumber = 0;
@@ -531,13 +531,13 @@ public class Summary {
 					String reifEdgeURI = getSummaryNodeURI(properties.getProperty("reifiedSummaryEdgeURIPrefix"),
 							reifiedEdgeNumber);
 					bw.write(reifEdgeURI + " <" + properties.getProperty("reifiedEdgeHasSubject") + "> "
-							+ getSummaryNodeURI(URIprefix, ts.s) + " . \n");
+							+ getSummaryNodeURI(URIprefix, ts.s) + " .\n");
 					bw.write(reifEdgeURI + " <" + properties.getProperty("reifiedEdgeHasProperty") + "> <"
-							+ RDF2SQLEncoding.dictionaryDecode(ts.p) + "> . \n");
+							+ RDF2SQLEncoding.dictionaryDecode(ts.p) + "> .\n");
 					bw.write(reifEdgeURI + " <" + properties.getProperty("reifiedEdgeHasObject") + "> "
-							+ getSummaryNodeURI(URIprefix, ts.o) + " . \n");
+							+ getSummaryNodeURI(URIprefix, ts.o) + " .\n");
 					bw.write(reifEdgeURI + " <" + properties.getProperty("summaryEdgeSupportURI") + "> \""
-							+ numberOfRepresentedEdges + "\" . \n");
+							+ numberOfRepresentedEdges + "\" .\n");
 					reifiedEdgeNumber++;
 				}
 			}
