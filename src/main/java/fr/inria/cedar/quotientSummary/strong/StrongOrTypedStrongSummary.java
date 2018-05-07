@@ -34,6 +34,20 @@ public class StrongOrTypedStrongSummary extends Summary {
 	protected final char US_RS_UO_NO_NP = 13;
 	protected final char US_NS_UO_RO_NP = 15;
 	protected final char US_NS_UO_NO_NP = 16;
+	
+	// case classification
+	// T: typed, U: untyped (apply to S and O)
+	// R: already represented, N: not already represented (apply to S, P, O)
+	protected final char TS_TO = 0;
+	protected final char TS_UO_RO_RP = 1;
+	protected final char TS_UO_NO_RP = 2;
+	protected final char US_RS_TO_RP = 3;
+	protected final char US_NS_TO_RP = 6;
+	protected final char TS_UO_RO_NP = 9;
+	protected final char TS_UO_NO_NP = 10;
+	protected final char US_RS_TO_NP = 11;
+	protected final char US_NS_TO_NP = 14;
+
 
 	public StrongOrTypedStrongSummary() {
 		super();
@@ -44,6 +58,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		p2sc = new Long2Long();
 		p2tc = new Long2Long();
 		rep = new Long2Long();
+		untypedSummaryNodes = new HashMap<Long, HashMap<Long, Long>> ();
 		minCliqueID = -1;
 		emptySCCount = Long.MAX_VALUE;
 		emptyTCCount = Long.MAX_VALUE;
@@ -51,6 +66,63 @@ public class StrongOrTypedStrongSummary extends Summary {
 		numberOfTypeTriplesRead = 0;
 	}
 
+	protected String caseName(char c) { // 17 cases
+		switch (c) {
+			case TS_TO: {
+				return "TS_TO";
+			}
+			case TS_UO_RO_RP: {
+				return "TS_UO_RO_RP";
+			}
+			case TS_UO_NO_RP: {
+				return "TS_UO_NO_RP";
+			}
+			case US_RS_TO_RP: {
+				return "US_RS_TO_RP";
+			}
+			case US_RS_UO_RO_RP: {
+				return "US_RS_UO_RO_RP";
+			}
+			case US_RS_UO_NO_RP: {
+				return "US_RS_UO_NO_RP";
+			}
+			case US_NS_TO_RP: {
+				return "US_NS_TO_RP";
+			}
+			case US_NS_UO_RO_RP: {
+				return "US_NS_UO_RO_RP";
+			}
+			case US_NS_UO_NO_RP: {
+				return "US_NS_UO_NO_RP";
+			}
+			case TS_UO_RO_NP: {
+				return "TS_UO_RO_NP";
+			}
+			case TS_UO_NO_NP: {
+				return "TS_UO_NO_NP";
+			}
+			case US_RS_TO_NP: {
+				return "US_RS_TO_NP";
+			}
+			case US_RS_UO_RO_NP: {
+				return "US_RS_UO_RO_NP";
+			}
+			case US_RS_UO_NO_NP: {
+				return "US_RS_UO_NO_NP";
+			}
+			case US_NS_TO_NP: {
+				return "US_NS_TO_NP";
+			}
+			case US_NS_UO_RO_NP: {
+				return "US_NS_UO_RO_NP";
+			}
+			case US_NS_UO_NO_NP: {
+				return "US_NS_UO_NO_NP";
+			}
+		}
+		throw new IllegalStateException("Unrecognized case " + c);
+	}
+	
 	/**
 	 * Creates a new source clique with just p; updates sc and p2sc
 	 *
@@ -515,7 +587,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 	 * @return
 	 */
 	protected Long getOrCreateSummaryNode(Long sourceClique, Long targetClique) {
-		assert (sourceClique != null & targetClique != null);
+		assert ((sourceClique != null) && (targetClique != null));
 		HashMap<Long, Long> targetCliquesForThisSourceClique = this.untypedSummaryNodes.get(sourceClique);
 		if (targetCliquesForThisSourceClique == null) {
 			targetCliquesForThisSourceClique = new HashMap<>();

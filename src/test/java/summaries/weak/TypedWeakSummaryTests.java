@@ -1,12 +1,14 @@
 package summaries.weak;
 
 import fr.inria.cedar.quotientSummary.controller.Builder;
+
+import static org.junit.Assert.*;
+
 import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import org.apache.commons.io.FileUtils;
-import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 
 public class TypedWeakSummaryTests {
@@ -20,6 +22,7 @@ public class TypedWeakSummaryTests {
 			Builder.summarizeGraphFromPostgres(conn, args);
 			conn.close();
 			return new File(outputFileName);
+			
 		}
 		catch (IOException e) {
 			throw new IllegalStateException("Unable to open .nt files in typedweak test " + i + " " + e.toString());
@@ -34,7 +37,14 @@ public class TypedWeakSummaryTests {
 		String referenceFileName = "src/test/resources/test1-typedweak/tw_test-1-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
-			assertTrue("Different summary typedweak 1", FileUtils.contentEquals(typedweak(1), expectedOutput));
+			File testOutput = typedweak(1);
+			if (!testOutput.exists()){
+				fail("Test output not found ");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary typedweak 1", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
 			throw new IllegalStateException("Unable to open .nt files in typedweak test 1 " + e.toString());
@@ -46,7 +56,14 @@ public class TypedWeakSummaryTests {
 		String referenceFileName = "src/test/resources/test2-typedweak/tw_test-2-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
-			assertTrue("Different summary typedweak 2", FileUtils.contentEquals(typedweak(2), expectedOutput));
+			File testOutput = typedweak(2);
+			if (!testOutput.exists()){
+				fail("Test output not found ");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary typedweak 2", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
 			throw new IllegalStateException("Unable to open .nt files in typedweak test 2 " + e.toString());
@@ -58,7 +75,14 @@ public class TypedWeakSummaryTests {
 		String referenceFileName = "src/test/resources/test3-typedweak/tw_test-3-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
-			assertTrue("Different summary typedweak 3", FileUtils.contentEquals(typedweak(3), expectedOutput));
+			File testOutput = typedweak(3);
+			if (!testOutput.exists()){
+				fail("Test output not found");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary typedweak 3", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
 			throw new IllegalStateException("Unable to open .nt files in typedweak test 3 " + e.toString());
@@ -70,7 +94,14 @@ public class TypedWeakSummaryTests {
 		String referenceFileName = "src/test/resources/test4-typedweak/tw_test-4-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
-			assertTrue("Different summary typedweak 4", FileUtils.contentEquals(typedweak(4), expectedOutput));
+			File testOutput = typedweak(4);
+			if (!testOutput.exists()){
+				fail("Test output not found");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary typedweak 4", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
 			throw new IllegalStateException("Unable to open .nt files in typedweak test 4 " + e.toString());
@@ -82,7 +113,14 @@ public class TypedWeakSummaryTests {
 		String referenceFileName = "src/test/resources/test5-typedweak/tw_test-5-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
-			assertTrue("Different summary typedweak 5", FileUtils.contentEquals(typedweak(5), expectedOutput));
+			File testOutput = typedweak(5);
+			if (!testOutput.exists()){
+				fail("Test output not found");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary typedweak 5", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
 			throw new IllegalStateException("Unable to open .nt files in typedweak test 5 " + e.toString());
@@ -94,7 +132,14 @@ public class TypedWeakSummaryTests {
 		String referenceFileName = "src/test/resources/test6-typedweak/tw_test-6-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
-			assertTrue("Different summary typedweak 6", FileUtils.contentEquals(typedweak(6), expectedOutput));
+			File testOutput = typedweak(6);
+			if (!testOutput.exists()){
+				fail("Test output not found");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary typedweak 6", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
 			throw new IllegalStateException("Unable to open .nt files in typedweak test 6 " + e.toString());
@@ -106,7 +151,14 @@ public class TypedWeakSummaryTests {
 		String referenceFileName = "src/test/resources/test7-typedweak/tw_test-7-reference.nt";
 		File expectedOutput = new File(referenceFileName);
 		try {
-			assertTrue("Different summary typedweak 7", FileUtils.contentEquals(typedweak(7), expectedOutput));
+			File testOutput = typedweak(7); 
+			if (!testOutput.exists()){
+				fail("Test output not found");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary typedweak 7", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
 			throw new IllegalStateException("Unable to open .nt files in typedweak test 7 " + e.toString());

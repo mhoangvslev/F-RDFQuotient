@@ -793,6 +793,7 @@ public class Summary {
 				Long p = RDF2SQLEncoding.dictionaryEncode(property);
 
 				//System.out.println("Triple! (" + subject + " " + property + " " + object + ")");
+				//System.out.println("Represented by: " + sRep + " " + p + " " + oRep);
 				writeGraphTripleToDotFile(bw, s, p, o, subject, property, object, sRep, oRep);
 				triplesDrawnInDot++;
 
@@ -839,7 +840,14 @@ public class Summary {
 				//Debugger.log("Type triple");
 				//if (dax.unknownRDFNode(s))
 				//	System.out.println("TYP1 " + s + " (" + subject + ") represented by  " + sRep);
+				if (dax == null){
+					throw new IllegalStateException("Null dax");
+				}
+				if (sRep == null){
+					throw new IllegalStateException("Null sRep");
+				}
 				bw.write("\"" + subjectForDot + "\" [style = filled, color=" + dax.getSummaryNodeColor(sRep) + "];\n");
+				
 				//if (dax.unknownRDFNode(o))
 				//	System.out.println("TYP2 " + o + " (" + object + ") represented by  " + oRep);
 				bw.write("\"" + objectForDot + "\" [fontcolor=white, style = filled, color=black];\n");

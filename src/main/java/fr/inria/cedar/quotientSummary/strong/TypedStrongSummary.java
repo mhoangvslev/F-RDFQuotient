@@ -19,19 +19,6 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	Long2LongSet n2c; // for each node, the set of types we know so far for this node
 	HashMap<TreeSet<Long>, Long> cs2csID; // for each set of types known so far, the ID of that set
 	
-	// case classification
-	// T: typed, U: untyped (apply to S and O)
-	// R: already represented, N: not already represented (apply to S, P, O)
-	protected final char TS_TO = 0;
-	protected final char TS_UO_RO_RP = 1;
-	protected final char TS_UO_NO_RP = 2;
-	protected final char US_RS_TO_RP = 3;
-	protected final char US_NS_TO_RP = 6;
-	protected final char TS_UO_RO_NP = 9;
-	protected final char TS_UO_NO_NP = 10;
-	protected final char US_RS_TO_NP = 11;
-	protected final char US_NS_TO_NP = 14;
-
 	public TypedStrongSummary() {
 		super();
 		cs = new Long2LongSet();
@@ -41,7 +28,6 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		
 		n2c = new Long2LongSet();
 		cs2csID = new HashMap<TreeSet<Long>, Long>();
-		untypedSummaryNodes = new HashMap<>();
 		minCliqueID = -1;
 		emptySCCount = Long.MAX_VALUE;
 		emptyTCCount = Long.MAX_VALUE;
@@ -165,63 +151,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		this.display(dataTriplesFileName);
 	}
 
-	String caseName(char c) { // 17 cases
-		switch (c) {
-			case TS_TO: {
-				return "TS_TO";
-			}
-			case TS_UO_RO_RP: {
-				return "TS_UO_RO_RP";
-			}
-			case TS_UO_NO_RP: {
-				return "TS_UO_NO_RP";
-			}
-			case US_RS_TO_RP: {
-				return "US_RS_TO_RP";
-			}
-			case US_RS_UO_RO_RP: {
-				return "US_RS_UO_RO_RP";
-			}
-			case US_RS_UO_NO_RP: {
-				return "US_RS_UO_NO_RP";
-			}
-			case US_NS_TO_RP: {
-				return "US_NS_TO_RP";
-			}
-			case US_NS_UO_RO_RP: {
-				return "US_NS_UO_RO_RP";
-			}
-			case US_NS_UO_NO_RP: {
-				return "US_NS_UO_NO_RP";
-			}
-			case TS_UO_RO_NP: {
-				return "TS_UO_RO_NP";
-			}
-			case TS_UO_NO_NP: {
-				return "TS_UO_NO_NP";
-			}
-			case US_RS_TO_NP: {
-				return "US_RS_TO_NP";
-			}
-			case US_RS_UO_RO_NP: {
-				return "US_RS_UO_RO_NP";
-			}
-			case US_RS_UO_NO_NP: {
-				return "US_RS_UO_NO_NP";
-			}
-			case US_NS_TO_NP: {
-				return "US_NS_TO_NP";
-			}
-			case US_NS_UO_RO_NP: {
-				return "US_NS_UO_RO_NP";
-			}
-			case US_NS_UO_NO_NP: {
-				return "US_NS_UO_NO_NP";
-			}
-		}
-		throw new IllegalStateException("Unrecognized case " + c);
-	}
-
+	
 	private char decode(Long classSetS, Long repS, Long classSetO, Long repO, Long sourceCliqueP) {
 		if (classSetS != null) // TS (also represented)
 			if (classSetO != null) // TO (also represented)
