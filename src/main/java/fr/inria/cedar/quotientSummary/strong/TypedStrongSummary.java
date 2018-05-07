@@ -104,12 +104,12 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 			throw new IllegalStateException("Postgres error encountered while summarizing type triples: " + e.toString());
 		}
 		classSetCreationTime = System.currentTimeMillis() - start;
-		System.out.println("Class sets created in " + classSetCreationTime + " ms.");
+		System.out.println("Class sets created in " + classSetCreationTime + " ms");
 
 		start = System.currentTimeMillis();
 		this.postHandleTypeTriples();
 		typeTriplesSummarizationTime = System.currentTimeMillis() - start;
-		System.out.println("Summarized " + numberOfTypeTriplesRead + " type triples in " + typeTriplesSummarizationTime + " ms.");
+		System.out.println("Summarized " + numberOfTypeTriplesRead + " type triples in " + typeTriplesSummarizationTime + " ms");
 
 		start = System.currentTimeMillis();
 
@@ -144,10 +144,10 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 			throw new IllegalStateException("Postgres error encountered while summarizing data triples " + e.toString());
 		}
 		dataTriplesSummarizationTime = System.currentTimeMillis() - start;
-		System.out.println("Summarized " + numberOfDataTriplesRead + " data triples in " + dataTriplesSummarizationTime + " ms.");
+		System.out.println("Summarized " + numberOfDataTriplesRead + " data triples in " + dataTriplesSummarizationTime + " ms");
 
 		allTriplesSummarizationTime = classSetCreationTime + typeTriplesSummarizationTime + dataTriplesSummarizationTime;
-		System.out.println("Summarized " + triplesSummarizedSoFar + " triples overall in " + allTriplesSummarizationTime + " ms.");
+		System.out.println("Summarized " + triplesSummarizedSoFar + " triples overall in " + allTriplesSummarizationTime + " ms");
 		this.display(dataTriplesFileName);
 	}
 

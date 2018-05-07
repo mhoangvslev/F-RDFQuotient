@@ -409,7 +409,7 @@ public class Summary {
 			// implemented properly.
 			conn.commit();
 			representationFunctionSavingTime = System.currentTimeMillis() - start;
-			System.out.println("Saved representation function in " + representationFunctionSavingTime + " ms.");
+			System.out.println("Saved representation function in " + representationFunctionSavingTime + " ms");
 		}
 		catch (SQLException e) {
 			throw new IllegalStateException("Could not insert summary triples in "
@@ -444,7 +444,7 @@ public class Summary {
 				conn.commit();
 				insertInSummary.close();
 				summaryEdgesSavingTime = System.currentTimeMillis() - start;
-				System.out.println("Summary edges saved in " + summaryEdgesSavingTime + " ms.");
+				System.out.println("Summary edges saved in " + summaryEdgesSavingTime + " ms");
 				System.out.println("Summary saved in Postgres.");
 			}
 		} catch (SQLException e) {
@@ -725,7 +725,6 @@ public class Summary {
 	}
 
 	public void writeRDFGraphToDotFile(Connection con, String dotFileName) {
-		
 		Properties properties = new Properties();
 		try {
 			properties.load(new FileReader(SUMMARY_CONFIG_FILE));
@@ -804,7 +803,7 @@ public class Summary {
 		}
 		return triplesDrawnInDot; 
 	}
-	
+
 	protected ResultSet getGraphTriplesCursor1ForDotDrawing(Connection conn, long limit) {
 		throw new IllegalStateException("Not supposed to be called at this level"); 
 	}
@@ -847,7 +846,7 @@ public class Summary {
 					throw new IllegalStateException("Null sRep");
 				}
 				bw.write("\"" + subjectForDot + "\" [style = filled, color=" + dax.getSummaryNodeColor(sRep) + "];\n");
-				
+
 				//if (dax.unknownRDFNode(o))
 				//	System.out.println("TYP2 " + o + " (" + object + ") represented by  " + oRep);
 				bw.write("\"" + objectForDot + "\" [fontcolor=white, style = filled, color=black];\n");

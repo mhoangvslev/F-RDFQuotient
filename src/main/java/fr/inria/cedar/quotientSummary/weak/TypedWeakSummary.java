@@ -6,7 +6,6 @@ import fr.inria.cedar.quotientSummary.datastructures.Long2LongSet;
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
 import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 import fr.inria.cedar.quotientSummary.util.Substitutions;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -128,7 +127,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 			throw new IllegalStateException("Unable to open file " + dataTriplesFile + " or " + typeTriplesFile + ": " + e.toString());
 		}
 		allTriplesSummarizationTime = System.currentTimeMillis() - start;
-		System.out.println("Summarized in " + allTriplesSummarizationTime + " ms.");
+		System.out.println("Summarized in " + allTriplesSummarizationTime + " ms");
 		display(dataTriplesFile); // this prints out and makes a DOT file
 	}
 
@@ -170,13 +169,13 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 			throw new IllegalStateException("Postgres error encountered while summarizing type triples: " + e.toString());
 		}
 		classSetCreationTime = System.currentTimeMillis() - start;
-		System.out.println("Class sets created in " + classSetCreationTime + " ms.");
+		System.out.println("Class sets created in " + classSetCreationTime + " ms");
 
 		start = System.currentTimeMillis();
 		this.postHandleTypeTriples();
 		long typeTripleCount = triplesSummarizedSoFar;
 		typeTriplesSummarizationTime = System.currentTimeMillis() - start;
-		System.out.println("Summarized " + numberOfTypeTriplesRead + " type triples in " + typeTriplesSummarizationTime + " ms.");
+		System.out.println("Summarized " + numberOfTypeTriplesRead + " type triples in " + typeTriplesSummarizationTime + " ms");
 
 		start = System.currentTimeMillis();
 
@@ -211,10 +210,10 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 			throw new IllegalStateException("Postgres error encountered while summarizing data triples " + e.toString());
 		}
 		dataTriplesSummarizationTime = System.currentTimeMillis() - start;
-		System.out.println("Summarized " + numberOfDataTriplesRead + " data triples in " + dataTriplesSummarizationTime + " ms.");
+		System.out.println("Summarized " + numberOfDataTriplesRead + " data triples in " + dataTriplesSummarizationTime + " ms");
 
 		allTriplesSummarizationTime = classSetCreationTime + typeTriplesSummarizationTime + dataTriplesSummarizationTime;
-		System.out.println("Summarized " + triplesSummarizedSoFar + " triples overall in " + allTriplesSummarizationTime + " ms.");
+		System.out.println("Summarized " + triplesSummarizedSoFar + " triples overall in " + allTriplesSummarizationTime + " ms");
 		this.display(dataTriplesFileName);
 	}
 

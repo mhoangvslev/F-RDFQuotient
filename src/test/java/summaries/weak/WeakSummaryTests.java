@@ -1,30 +1,32 @@
 package summaries.weak;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
+import fr.inria.cedar.ontosql.db.UnsupportedDatabaseEngineException;
+import fr.inria.cedar.quotientSummary.controller.Builder;
 import java.io.File;
 import java.io.IOException;
-import java.sql.Connection;
 import java.sql.SQLException;
-
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.commons.io.FileUtils;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import org.junit.Test;
-
-import fr.inria.cedar.quotientSummary.controller.Builder;
 
 public class WeakSummaryTests {
 	public File weak(int i) {
+		System.out.println("Weak summary test");
 		String inputFileName = "src/test/resources/test" + i + "-weak/test-" + i + ".nt";
 		String outputFileName = "src/test/resources/test" + i + "-weak/w_test-" + i + ".nt";
 		try {
-			Connection conn = Builder.loadSingleRDFInPostgres(inputFileName);
-			//countConnections("1", conn); 
-			// the summarizer also gets the summary name
-			String[] args = {"weak", inputFileName};
-			Builder.summarizeGraphFromPostgres(conn, args);
-			//countConnections("2", conn); 
-			conn.close();
+			String[] argsSum = {"loadWithSaturationAndSummarize", "weak", inputFileName};
+			try {
+				Builder.main(argsSum);
+				String[] argsSave = {"saveSummary", inputFileName};
+				Builder.main(argsSave);
+			}
+			catch (UnsupportedDatabaseEngineException ex) {
+				Logger.getLogger(WeakSummaryTests.class.getName()).log(Level.SEVERE, null, ex);
+			}
 			return new File(outputFileName);
 		}
 		catch (IOException e) {

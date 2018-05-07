@@ -24,6 +24,9 @@ public class Builder {
 	// Default properties file
 	private static final String DEFAULT_CONFIG_FILE = System.getProperty("user.dir") + "/conf/dataLoading.properties";
 
+	private static Connection connectionInUse;
+	private static Summary summaryInUse;
+
 	public Builder() {
 		try {
 			getConnection();
@@ -34,13 +37,7 @@ public class Builder {
 	}
 
 	/**
-	 *
 	 * @param args
-	 *   args[0] determines what will be done:
-	 *     load: load the data in Postgres
-	 *     summarize: summarize the data from Postgres
-	 *     loadSummarize: load the data in Postgres and summarize it from there
-	 *     summarizeEncodedFile: build the summary out of integer-encoded triples in a file.
 	 *
 	 * @throws IOException
 	 * @throws SQLException
@@ -52,24 +49,38 @@ public class Builder {
 			return;
 		}
 		String[] nextArguments = extractArguments(args);
-		switch (args[0].toLowerCase()) {
-			case "load":
-				try (Connection conn = loadRDFInPostgres(nextArguments)) {
-				}
+		String[] filesToLoad = extractArguments(nextArguments);
+		switch (args[0]) {
+			case "loadWithoutSaturation":
+				connectionInUse = loadRDFInPostgres(nextArguments, false);
 				return;
-			case "summarize":
-				try (Connection conn = getConnection()) {
-					summarizeGraphFromPostgres(conn, nextArguments);
-				}
+			case "loadWithSaturation":
+				connectionInUse = loadRDFInPostgres(nextArguments, true);
 				return;
-			case "loadsummarize":
-				// in this case args[1] is the summary type; the loader doesn't need this information
-				String[] filesToLoad = extractArguments(nextArguments);
-				// the loader only gets the files to load
-				try (Connection conn = loadRDFInPostgres(filesToLoad)) {
+			case "summarizeUnsaturated":
+				summaryInUse = summarizeGraphFromPostgres(connectionInUse, nextArguments, false);
+				return;
+			case "summarizeSaturated":
+				summaryInUse = summarizeGraphFromPostgres(connectionInUse, nextArguments, true);
+				return;
+			case "loadWithSaturationAndSummarize":
+				// in this case args[1] is the summary type; the loader doesn't need this information; the loader only gets the files to load
+				connectionInUse = loadRDFInPostgres(filesToLoad, true);
+				// the summarizer also gets the summary name
+				summaryInUse = summarizeGraphFromPostgres(connectionInUse, nextArguments, true);
+				return;
+			/*case "loadAndSummarizeUsingShortcut":
+				// in this case args[1] is the summary type; the loader doesn't need this information; the loader only gets the files to load
+				try (Connection conn = loadRDFInPostgres(filesToLoad, false)) {
 					// the summarizer also gets the summary name
-					summarizeGraphFromPostgres(conn, nextArguments);
+					summarizeGraphFromPostgres(conn, nextArguments, false);
+					saturate(conn);
+					Summary sum = summarizeGraphFromPostgres(conn, nextArguments, true);
+					saveSummary(conn, sum, args);
 				}
+				return;*/ // not ready yet
+			case "saveSummary":
+				saveSummary(connectionInUse, summaryInUse, nextArguments);
 				return;
 			default:
 				break;
@@ -87,7 +98,6 @@ public class Builder {
 	 * @throws UnsupportedDatabaseEngineException
 	 * @throws SQLException
 	 */
-	// connection balance: +1
 	private static Connection getConnection() throws FileNotFoundException, IOException, UnsupportedDatabaseEngineException, SQLException {
 		// first fill in the connection properties from the default config file
 		Properties properties = new Properties();
@@ -109,10 +119,14 @@ public class Builder {
 
 	private static void printUsage() {
 		System.out.println("Usage:");
-		System.out.println("args[0]=load: loads the data in Postgres");
-		System.out.println("args[0]=summarize: summarize the data from Postgres");
-		System.out.println("args[0]=loadSummarize: load the data in Postgres and summarize it from there");
-		System.out.println("args[0]=summarizeEncodedFile: build the summary out of integer-encoded triples in a file");
+		System.out.println("args[0]=loadWithoutSaturation: loads the graph in Postgres without saturating it");
+		System.out.println("args[0]=loadWithSaturation: loads the graph in Postgres and saturates it");
+		System.out.println("args[0]=summarizeUnsaturated: summarizes the unsaturated graph from Postgres");
+		System.out.println("args[0]=summarizeSaturated: summarizes the saturated graph from Postgres");
+		System.out.println("args[0]=loadWithSaturationAndSummarize: loads the graph in Postgres, saturates it, and summarizes it");
+		//System.out.println("args[0]=loadAndSummarizeUsingShortcut: loads the graph in Postgres, summarizes it, saturates it, and summarizes again (shortcut)");
+		System.out.println("args[0]=saveSummary: saves summary to Postgres and to the disk, draws a DOT graph");
+		//System.out.println("args[0]=summarizeEncodedFile: build the summary out of integer-encoded triples in a file");
 	}
 
 	/**
@@ -144,8 +158,7 @@ public class Builder {
 	 *     then the first file contains the data and the last contains the schema
 	 *     otherwise (only one file) that file contains everything (data and schema)
 	 */
-	// connection balance: +1
-	public static Connection loadRDFInPostgres(String[] args) throws FileNotFoundException, IOException, UnsupportedDatabaseEngineException, SQLException {
+	private static Connection loadRDFInPostgres(String[] args, Boolean saturate) throws FileNotFoundException, IOException, UnsupportedDatabaseEngineException, SQLException {
 		System.out.println(System.getProperty("user.dir"));
 
 		List<String> tripleFiles = new ArrayList<>();
@@ -195,19 +208,8 @@ public class Builder {
 		return conn;
 	}
 
-	// Connection balance: +1
-	public static Connection loadSingleRDFInPostgres(String fileName) {
-		String[] files = {fileName};
-		try {
-			return loadRDFInPostgres(files);
-		}
-		catch (UnsupportedDatabaseEngineException | IOException | SQLException e) {
-			throw new IllegalStateException("Unable to load RDF from " + fileName + " " + e.toString());
-		}
-	}
-
 	/**
-	 * Supposes the graph has already been loaded
+	 * Assumes the graph has already been loaded
 	 *
 	 * @param conn
 	 * @param args
@@ -215,16 +217,12 @@ public class Builder {
 	 * @throws IOException
 	 * @throws SQLException
 	 */
-	// connection balance: 0
-	public static void summarizeGraphFromPostgres(Connection conn, String[] args) throws SQLException, IOException {
+	private static Summary summarizeGraphFromPostgres(Connection conn, String[] args, Boolean summarizeSaturated) throws SQLException, IOException {
 		Summary sum = createNewSummary(args[0]);
 		Debugger.turnOff();
 		sum.summarizeFromRDBMS(conn, extractArguments(args));
-		System.out.println("RDF graph summarized.");
-		sum.saveSummaryInPostgres(conn, args[1]);
-		sum.writeDecodedSummaryToNTFile(conn, args[1]);
-		sum.drawSummaryAndGraph(conn, args[1]);
-		System.out.println(sum.getRunStatistics().toString());
+		System.out.println("RDF graph summarized");
+		return sum;
 	}
 
 	private static Summary createNewSummary(String summaryType) {
@@ -255,5 +253,13 @@ public class Builder {
 				return new TypedStrongSummary(conn);
 		}
 		return null;
+	}
+
+	private static void saveSummary(Connection conn, Summary sum, String[] args) throws SQLException {
+		sum.saveSummaryInPostgres(conn, args[0]);
+		sum.writeDecodedSummaryToNTFile(conn, args[0]);
+		sum.drawSummaryAndGraph(conn, args[0]);
+		conn.close();
+		System.out.println(sum.getRunStatistics().toString());
 	}
 }

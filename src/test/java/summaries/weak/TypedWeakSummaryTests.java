@@ -1,28 +1,33 @@
 package summaries.weak;
 
+import fr.inria.cedar.ontosql.db.UnsupportedDatabaseEngineException;
 import fr.inria.cedar.quotientSummary.controller.Builder;
-
-import static org.junit.Assert.*;
-
 import java.io.File;
 import java.io.IOException;
-import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.commons.io.FileUtils;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import org.junit.Test;
 
 public class TypedWeakSummaryTests {
 	public File typedweak(int i) {
+		System.out.println("Typed Weak summary test");
 		String inputFileName = "src/test/resources/test" + i + "-typedweak/test-" + i + ".nt";
 		String outputFileName = "src/test/resources/test" + i + "-typedweak/tw_test-" + i + ".nt";
 		try {
-			Connection conn = Builder.loadSingleRDFInPostgres(inputFileName);
-			// the summarizer also gets the summary name
-			String[] args = {"typedweak", inputFileName};
-			Builder.summarizeGraphFromPostgres(conn, args);
-			conn.close();
+			String[] argsSum = {"loadWithSaturationAndSummarize", "typedweak", inputFileName};
+			try {
+				Builder.main(argsSum);
+				String[] argsSave = {"saveSummary", inputFileName};
+				Builder.main(argsSave);
+			}
+			catch (UnsupportedDatabaseEngineException ex) {
+				Logger.getLogger(TypedWeakSummaryTests.class.getName()).log(Level.SEVERE, null, ex);
+			}
 			return new File(outputFileName);
-			
 		}
 		catch (IOException e) {
 			throw new IllegalStateException("Unable to open .nt files in typedweak test " + i + " " + e.toString());

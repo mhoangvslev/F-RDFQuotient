@@ -90,7 +90,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 			throw new IllegalStateException("Unable to open file " + dataTriplesFile + " or " + typeTriplesFile + ": " + e.toString());
 		}
 		allTriplesSummarizationTime = System.currentTimeMillis() - start;
-		System.out.println("Summarized in " + allTriplesSummarizationTime + " ms.");
+		System.out.println("Summarized in " + allTriplesSummarizationTime + " ms");
 		display(dataTriplesFile); // this prints out and makes a DOT file
 	}
 
@@ -148,7 +148,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 			throw new IllegalStateException("Postgres error encountered while summarizing data triples " + e.toString());
 		}
 		dataTriplesSummarizationTime = System.currentTimeMillis() - start;
-		System.out.println("Summarized " + triplesSummarizedSoFar + " data triples in " + (dataTriplesSummarizationTime - start) + " ms.");
+		System.out.println("Summarized " + triplesSummarizedSoFar + " data triples in " + (dataTriplesSummarizationTime - start) + " ms");
 
 		String getTypedTriplesString = ("select *  from encoded_triples where p=" + typeConstantCode);
 		try {
@@ -171,7 +171,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 			throw new IllegalStateException("Postgres error encountered while summarizing type triples: " + e.toString());
 		}
 		allTriplesSummarizationTime = System.currentTimeMillis() - start;
-		System.out.println("Summarized " + triplesSummarizedSoFar + " triples in " + allTriplesSummarizationTime + " ms.");
+		System.out.println("Summarized " + triplesSummarizedSoFar + " triples in " + allTriplesSummarizationTime + " ms");
 		this.display(dataTriplesFileName);
 	}
 
