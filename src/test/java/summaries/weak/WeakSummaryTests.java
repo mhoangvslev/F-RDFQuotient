@@ -171,6 +171,7 @@ public class WeakSummaryTests {
 			throw new IllegalStateException("Unable to open .nt files in weak test 7 " + e.toString());
 		}
 	}
+
 	@Test
 	public void testweak8() {
 		String referenceFileName = "src/test/resources/test8-weak/w_test-8-reference.nt";
@@ -187,6 +188,25 @@ public class WeakSummaryTests {
 		}
 		catch (IOException e) {
 			throw new IllegalStateException("Unable to open .nt files in weak test 8 " + e.toString());
+		}
+	}
+
+	@Test
+	public void testweak9() {
+		String referenceFileName = "src/test/resources/test9-weak/w_test-9-reference.nt";
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = weak(9);
+			if (!testOutput.exists()){
+				fail("Test output not found");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary weak 9", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in weak test 9 " + e.toString());
 		}
 	}
 }
