@@ -367,7 +367,7 @@ public class Summary {
 	 * @param rdfFileName
 	 */
 	public void saveSummaryInPostgres(Connection conn, String rdfFileName) {
-		System.out.println("Saving " + this.getClass().getName() + " in Postgres...");
+		System.out.println("Saving " + this.getClass().getName() + " in Postgres");
 		Statement stmt;
 		try {
 			long start = System.currentTimeMillis();
@@ -400,7 +400,7 @@ public class Summary {
 			// implemented properly.
 			conn.commit();
 			representationFunctionSavingTime = System.currentTimeMillis() - start;
-			System.out.println("Saved representation function in " + representationFunctionSavingTime + " ms.");
+			System.out.println("Saved representation function in " + representationFunctionSavingTime + " ms");
 		}
 		catch (SQLException e) {
 			throw new IllegalStateException("Could not insert summary triples in "
@@ -435,8 +435,8 @@ public class Summary {
 				conn.commit();
 				insertInSummary.close();
 				summaryEdgesSavingTime = System.currentTimeMillis() - start;
-				System.out.println("Summary edges saved in " + summaryEdgesSavingTime + " ms.");
-				System.out.println("Summary saved in Postgres.");
+				System.out.println("Summary edges saved in " + summaryEdgesSavingTime + " ms");
+				System.out.println("Summary saved in Postgres");
 			}
 		} catch (SQLException e) {
 			throw new IllegalStateException("Could not insert summary triples in " + this.summaryTablePrefix
@@ -477,7 +477,7 @@ public class Summary {
 
 		String summaryNTFileName = getNTSummaryFileName(rdfFileName);
 
-		System.out.println("Decoding summary and writing it in .nt format in " + summaryNTFileName + "...");
+		System.out.println("Decoding summary and writing it in .nt format in " + summaryNTFileName);
 
 		boolean gatherStatistics = properties.getProperty("gatherStatistics").toLowerCase().equals("true");
 		if (gatherStatistics)
@@ -503,7 +503,7 @@ public class Summary {
 					object = RDF2SQLEncoding.dictionaryDecode(t.o);
 				}
 				Debugger.log(subject + " " + property + " " + object);
-				bw.write(subject + " " + property + " " + object + " . \n");
+				bw.write(subject + " " + property + " " + object + " .\n");
 			}
 			if (gatherStatistics) {
 				// write node cardinality statistics:
@@ -513,7 +513,7 @@ public class Summary {
 					String property = properties.getProperty("summaryNodeSupportURI");
 					String object = ("\"" + numberOfRepresentedGraphNodes + "\"");
 					Debugger.log(subject + " " + property + " " + object);
-					bw.write(subject + " <" + property + "> " + object + " . \n");
+					bw.write(subject + " <" + property + "> " + object + " .\n");
 				}
 				// write edge cardinality statistics:
 				int reifiedEdgeNumber = 0;
@@ -522,13 +522,13 @@ public class Summary {
 					String reifEdgeURI = getSummaryNodeURI(properties.getProperty("reifiedSummaryEdgeURIPrefix"),
 							reifiedEdgeNumber);
 					bw.write(reifEdgeURI + " <" + properties.getProperty("reifiedEdgeHasSubject") + "> "
-							+ getSummaryNodeURI(URIprefix, ts.s) + " . \n");
+							+ getSummaryNodeURI(URIprefix, ts.s) + " .\n");
 					bw.write(reifEdgeURI + " <" + properties.getProperty("reifiedEdgeHasProperty") + "> <"
-							+ RDF2SQLEncoding.dictionaryDecode(ts.p) + "> . \n");
+							+ RDF2SQLEncoding.dictionaryDecode(ts.p) + "> .\n");
 					bw.write(reifEdgeURI + " <" + properties.getProperty("reifiedEdgeHasObject") + "> "
-							+ getSummaryNodeURI(URIprefix, ts.o) + " . \n");
+							+ getSummaryNodeURI(URIprefix, ts.o) + " .\n");
 					bw.write(reifEdgeURI + " <" + properties.getProperty("summaryEdgeSupportURI") + "> \""
-							+ numberOfRepresentedEdges + "\" . \n");
+							+ numberOfRepresentedEdges + "\" .\n");
 					reifiedEdgeNumber++;
 				}
 			}
@@ -649,13 +649,13 @@ public class Summary {
 		} catch (IOException e) {
 			throw new IllegalStateException("Unable to open the DOT file to for the summary: " + e.toString());
 		}
-		System.out.println("Summary written to DOT file " + dotFileName + ".");
+		System.out.println("Summary written to DOT file " + dotFileName);
 
 		String pathToDot = properties.getProperty("pathToDot");
 		try {
 			String pngFileName = dotFileName.substring(0, dotFileName.length() - 4) + ".png";
 			Runtime.getRuntime().exec(pathToDot + " -Tpng " + dotFileName + " -o " + pngFileName);
-			System.out.println("Summary drawn to PNG file " + pngFileName + ".");
+			System.out.println("Summary drawn to PNG file " + pngFileName);
 		} catch (IOException e) {
 			System.out.println(
 					"Could not turn .dot file into .png (check the pathToDot value in summarization.properties)"
@@ -716,7 +716,6 @@ public class Summary {
 	}
 
 	public void writeRDFGraphToDotFile(Connection con, String dotFileName) {
-		
 		Properties properties = new Properties();
 		try {
 			properties.load(new FileReader(SUMMARY_CONFIG_FILE));
@@ -728,7 +727,7 @@ public class Summary {
 			BufferedWriter bw = new BufferedWriter(new FileWriter(new File(dotFileName)));
 			bw.write("digraph g{\n");
 			long triplesToDraw = Math.min(25, triplesSummarizedSoFar);
-			System.out.println("\nWriting " + triplesToDraw + " RDF graph triples to DOT...");
+			System.out.println("Writing " + triplesToDraw + " RDF graph triples to DOT");
 			ResultSet rs = getGraphTriplesCursor1ForDotDrawing(con, triplesToDraw);
 			long triplesDrawn = drawTriples(rs, bw); 
 			//Debugger.log("Drawn " + triplesDrawn);
@@ -748,13 +747,13 @@ public class Summary {
 			throw new IllegalStateException("Unable to read and plot RDF triples: " + e.toString());
 
 		}
-		System.out.println("RDF graph written to DOT file " + dotFileName + ".");
+		System.out.println("RDF graph written to DOT file " + dotFileName);
 
 		String pathToDot = properties.getProperty("pathToDot");
 		try {
 			String pngFileName = dotFileName.substring(0, dotFileName.length() - 4) + ".png";
 			Runtime.getRuntime().exec(pathToDot + " -Tpng " + dotFileName + " -o " + pngFileName);
-			System.out.println("RDF graph drawn to PNG file " + pngFileName + ".");
+			System.out.println("RDF graph drawn to PNG file " + pngFileName);
 		} catch (IOException e) {
 			System.out.println(
 					"Could not turn .dot file into .png (check the pathToDot value in summarization.properties)"
@@ -795,7 +794,7 @@ public class Summary {
 		}
 		return triplesDrawnInDot; 
 	}
-	
+
 	protected ResultSet getGraphTriplesCursor1ForDotDrawing(Connection conn, long limit) {
 		throw new IllegalStateException("Not supposed to be called at this level"); 
 	}
@@ -838,7 +837,7 @@ public class Summary {
 					throw new IllegalStateException("Null sRep");
 				}
 				bw.write("\"" + subjectForDot + "\" [style = filled, color=" + dax.getSummaryNodeColor(sRep) + "];\n");
-				
+
 				//if (dax.unknownRDFNode(o))
 				//	System.out.println("TYP2 " + o + " (" + object + ") represented by  " + oRep);
 				bw.write("\"" + objectForDot + "\" [fontcolor=white, style = filled, color=black];\n");

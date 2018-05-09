@@ -91,7 +91,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 			throw new IllegalStateException("Unable to open file " + dataTriplesFile + " or " + typeTriplesFile + ": " + e.toString());
 		}
 		allTriplesSummarizationTime = System.currentTimeMillis() - start;
-		System.out.println("Summarized in " + allTriplesSummarizationTime + " ms.");
+		System.out.println("Summarized in " + allTriplesSummarizationTime + " ms");
 		display(dataTriplesFile); // this prints out and makes a DOT file
 	}
 
@@ -105,7 +105,8 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 	public void summarizeFromRDBMS(Connection conn, String[] args) {
 		//Debugger.setFlag(true);
 		long start = System.currentTimeMillis();
-		String dataTriplesFileName = args[0];
+		String tableName = args[0];
+		String dataTriplesFileName = args[1];
 		System.out.println(" dataTriplesFileName " + dataTriplesFileName);
 		// this is needed to find the constants associated to special RDF properties
 		RDF2SQLEncoding.setUp(conn);
@@ -115,7 +116,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 			avoidCollisionsWhenAssigningSummaryNodes(conn);
 		}
 		triplesSummarizedSoFar = 0;
-		String getUntypedTriplesString = ("select *  from encoded_triples where p <> " + typeConstantCode);
+		String getUntypedTriplesString = ("select *  from " + tableName + " where p <> " + typeConstantCode);
 		try {
 			conn.setAutoCommit(false);
 			Statement getUntypedTriples = conn.createStatement();
@@ -149,9 +150,9 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 			throw new IllegalStateException("Postgres error encountered while summarizing data triples " + e.toString());
 		}
 		dataTriplesSummarizationTime = System.currentTimeMillis() - start;
-		System.out.println("Summarized " + triplesSummarizedSoFar + " data triples in " + (dataTriplesSummarizationTime - start) + " ms.");
+		System.out.println("Summarized " + triplesSummarizedSoFar + " data triples in " + dataTriplesSummarizationTime + " ms");
 
-		String getTypedTriplesString = ("select *  from encoded_triples where p=" + typeConstantCode);
+		String getTypedTriplesString = ("select *  from " + tableName + " where p =" + typeConstantCode);
 		try {
 			Statement getTypedTriples = conn.createStatement();
 			getTypedTriples.setFetchSize(1000);
@@ -172,7 +173,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 			throw new IllegalStateException("Postgres error encountered while summarizing type triples: " + e.toString());
 		}
 		allTriplesSummarizationTime = System.currentTimeMillis() - start;
-		System.out.println("Summarized " + triplesSummarizedSoFar + " triples in " + allTriplesSummarizationTime + " ms.");
+		System.out.println("Summarized " + triplesSummarizedSoFar + " triples in " + allTriplesSummarizationTime + " ms");
 		this.display(dataTriplesFileName);
 	}
 

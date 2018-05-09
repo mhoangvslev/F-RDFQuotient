@@ -1,30 +1,43 @@
 package summaries.weak;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
+import fr.inria.cedar.ontosql.db.UnsupportedDatabaseEngineException;
+import fr.inria.cedar.quotientSummary.controller.Builder;
 import java.io.File;
 import java.io.IOException;
-import java.sql.Connection;
 import java.sql.SQLException;
-
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.commons.io.FileUtils;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import org.junit.Test;
-
-import fr.inria.cedar.quotientSummary.controller.Builder;
 
 public class WeakSummaryTests {
 	public File weak(int i) {
+		System.out.println("################################################################################");
+		System.out.println("Weak summary test " + Integer.toString(i));
+		System.out.println("################################################################################");
 		String inputFileName = "src/test/resources/test" + i + "-weak/test-" + i + ".nt";
 		String outputFileName = "src/test/resources/test" + i + "-weak/w_test-" + i + ".nt";
 		try {
-			Connection conn = Builder.loadSingleRDFInPostgres(inputFileName);
-			//countConnections("1", conn); 
-			// the summarizer also gets the summary name
-			String[] args = {"weak", inputFileName};
-			Builder.summarizeGraphFromPostgres(conn, args);
-			//countConnections("2", conn); 
-			conn.close();
+			String[] argsSum = {"loadWithSaturationAndSummarize", "weak", inputFileName};
+			try {
+				Builder.main(argsSum);
+				String[] argsSave = {"saveSummary", inputFileName};
+				Builder.main(argsSave);
+			}
+			catch (UnsupportedDatabaseEngineException ex) {
+				Logger.getLogger(WeakSummaryTests.class.getName()).log(Level.SEVERE, null, ex);
+			}
+			finally {
+				String[] argsCloseConnection = {"closeConnection"};
+				try {
+					Builder.main(argsCloseConnection);
+				}
+				catch (UnsupportedDatabaseEngineException ex1) {
+					Logger.getLogger(WeakSummaryTests.class.getName()).log(Level.SEVERE, null, ex1);
+				}
+			}
 			return new File(outputFileName);
 		}
 		catch (IOException e) {
@@ -167,6 +180,7 @@ public class WeakSummaryTests {
 			throw new IllegalStateException("Unable to open .nt files in weak test 7 " + e.toString());
 		}
 	}
+
 	@Test
 	public void testweak8() {
 		String referenceFileName = "src/test/resources/test8-weak/w_test-8-reference.nt";
@@ -185,6 +199,7 @@ public class WeakSummaryTests {
 			throw new IllegalStateException("Unable to open .nt files in weak test 8 " + e.toString());
 		}
 	}
+
 	@Test
 	public void testweak9() {
 		String referenceFileName = "src/test/resources/test9-weak/w_test-9-reference.nt";
