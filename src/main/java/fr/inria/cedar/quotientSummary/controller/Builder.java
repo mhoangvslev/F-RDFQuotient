@@ -71,9 +71,9 @@ public class Builder {
 				return;
 			case "loadWithSaturationAndSummarize":
 				// in this case args[1] is the summary type; the loader doesn't need this information; the loader only gets the files to load
-				connectionInUse = loadRDFInPostgres(filesToLoad, false); // TODO: Fix and change false to true
+				connectionInUse = loadRDFInPostgres(filesToLoad, true); // TODO: Fix and change false to true
 				// the summarizer also gets the summary name
-				summaryInUse = summarizeGraphFromPostgres(connectionInUse, nextArguments, false); // TODO: Fix and change false to true
+				summaryInUse = summarizeGraphFromPostgres(connectionInUse, nextArguments, true); // TODO: Fix and change false to true
 				return;
 			/*case "loadAndSummarizeUsingShortcut":
 				// in this case args[1] is the summary type; the loader doesn't need this information; the loader only gets the files to load
@@ -133,7 +133,7 @@ public class Builder {
 		System.out.println("args[0]=summarizeSaturated: summarizes the saturated graph from Postgres");
 		System.out.println("args[0]=loadWithSaturationAndSummarize: loads the graph in Postgres, saturates it, and summarizes it");
 		//System.out.println("args[0]=loadAndSummarizeUsingShortcut: loads the graph in Postgres, summarizes it, saturates it, and summarizes again (shortcut)");
-		System.out.println("args[0]=saveSummary: saves summary to Postgres and to the disk, draws a DOT graph and closes the connection to Postgres");
+		System.out.println("args[0]=saveSummary: saves summary to Postgres and to the disk, and draws a DOT graph");
 		//System.out.println("args[0]=summarizeEncodedFile: build the summary out of integer-encoded triples in a file");
 		System.out.println("args[0]=closeConnection: closes connection to Postgres");
 	}
@@ -233,9 +233,14 @@ public class Builder {
 	private static Summary summarizeGraphFromPostgres(Connection conn, String[] args, Boolean summarizeSaturated) throws SQLException, IOException {
 		Summary sum = createNewSummary(args[0]);
 		Debugger.turnOff();
-		sum.summarizeFromRDBMS(conn, extractArguments(args));
+		args[0] = tableName(summarizeSaturated);
+		sum.summarizeFromRDBMS(conn, args);
 		System.out.println("RDF graph summarized");
 		return sum;
+	}
+
+	private static String tableName(Boolean summarizeSaturated) {
+		return "encoded_triples"; // TODO
 	}
 
 	private static Summary createNewSummary(String summaryType) {

@@ -27,7 +27,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		n2cs = new Long2Long();
 		
 		n2c = new Long2LongSet();
-		cs2csID = new HashMap<TreeSet<Long>, Long>();
+		cs2csID = new HashMap<>();
 		minCliqueID = -1;
 		emptySCCount = Long.MAX_VALUE;
 		emptyTCCount = Long.MAX_VALUE;
@@ -74,7 +74,8 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	public void summarizeFromRDBMS(Connection conn, String[] args) {
 		//Debugger.setFlag(true);
 		long start = System.currentTimeMillis();
-		String dataTriplesFileName = args[0];
+		String tableName = args[0];
+		String dataTriplesFileName = args[1];
 		// this is needed to find the constants associated to special RDF properties
 		RDF2SQLEncoding.setUp(conn);
 		long typeConstantCode = RDF2SQLEncoding.getTypeCode();
@@ -85,7 +86,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 
 		//System.out.println("TypedStrong: Looking for type triples");
 		triplesSummarizedSoFar = 0;
-		String getTypedTriplesString = ("select *  from encoded_triples where p=" + typeConstantCode);
+		String getTypedTriplesString = ("select *  from " + tableName + " where p =" + typeConstantCode);
 		try {
 			Statement getTypedTriples = conn.createStatement();
 			getTypedTriples.setFetchSize(1000);
@@ -116,7 +117,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		//this.drawSummaryAndGraph(conn, dataTriplesFileName, ("_" + triplesSummarizedSoFar));
 		//this.display();
 		// now all the non-type triples
-		String getUntypedTriplesString = ("select *  from encoded_triples where p <> " + typeConstantCode);
+		String getUntypedTriplesString = ("select *  from " + tableName + " where p <> " + typeConstantCode);
 		try {
 			conn.setAutoCommit(false);
 			Statement getUntypedTriples = conn.createStatement();
