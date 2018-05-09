@@ -639,7 +639,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 	 */
 	public void postHandleTypeTriples() {
 		//System.out.println("POST HANDLE TYPE TRIPLES");
-		for (Long node: this.n2cs.getNodes()){
+		for (Long node: this.n2cs.getKeys()){
 			Long thisClassSetID = this.n2cs.get(node);
 			TreeSet<Long> thisClassSet = this.cs.get(thisClassSetID);
 			for (Long thisClass: thisClassSet){
@@ -658,11 +658,11 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 	@Override
 	protected void consistencyChecks() {
 		for (Long s: edges.keySet()) {
-			HashMap<Long, ArrayList<Long>> triplesOfThisSubject = edges.get(s);
+			HashMap<Long, TreeSet<Long>> triplesOfThisSubject = edges.get(s);
 			if (triplesOfThisSubject == null)
 				throw new IllegalStateException("No triples whose subject is " + s);
 			for (Long p: triplesOfThisSubject.keySet()) {
-				ArrayList<Long> objectsOfThisSandP = triplesOfThisSubject.get(p);
+				TreeSet<Long> objectsOfThisSandP = triplesOfThisSubject.get(p);
 				if ((objectsOfThisSandP.size() > 1) && RDF2SQLEncoding.isDataProperty(p)
 						&& (n2cs.get(s) == null)) // only check for untyped nodes 
 					throw new IllegalStateException("Subject " + s + " has more than one edge with label " + p);

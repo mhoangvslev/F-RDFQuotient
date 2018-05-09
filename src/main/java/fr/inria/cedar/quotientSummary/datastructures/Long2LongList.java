@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
 
+import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
+
 public class Long2LongList {
 	// clique ID --> set of properties
 	// or: class set ID --> set of types
@@ -58,8 +60,10 @@ public class Long2LongList {
 			for (Long key: map.keySet()) {
 				sb.append("#").append(key).append("|{");
 				ArrayList<Long> values = map.get(key);
-				for (Long val: values)
-					sb.append(val).append(", ");
+				for (Long val: values) {
+					//sb.append(val).append(", ");
+					sb.append(val).append(" (" +  RDF2SQLEncoding.dictionaryDecode(val) + ")"); 
+				}
 				sb.append("} ");
 			}
 		}

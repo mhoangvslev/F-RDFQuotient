@@ -35,6 +35,16 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		numberOfTypeTriplesRead = 0;
 		this.summaryTablePrefix = TYPED_STRONG_SUMMARY_PREFIX;
 	}
+	
+	/**
+	 * this must be called after the constructor as the summary needs to ask more queries
+	 * for patching itself up during summarization.
+	 * 
+	 * @param conn
+	 */
+	public void setConn(Connection conn){
+		this.conn = conn; 
+	}
 
 	/**
 	 * This must be used to read a TS summary from Postgres.
@@ -42,6 +52,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	 * @param conn
 	 */
 	public TypedStrongSummary(Connection conn) {
+		this.conn = conn; 
 		this.summaryTablePrefix = TYPED_STRONG_SUMMARY_PREFIX;
 		Debugger.log("Reading TypedStrong summary from Postgres, setting up special URIs from the dictionary");
 		RDF2SQLEncoding.setUp(conn);
@@ -72,6 +83,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	 */
 	@Override
 	public void summarizeFromRDBMS(Connection conn, String[] args) {
+		this.setConn(conn);
 		//Debugger.setFlag(true);
 		long start = System.currentTimeMillis();
 		String dataTriplesFileName = args[0];
@@ -209,20 +221,20 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	 * data structures.
 	 */
 	public void cliqueSafetyCheck() {
-		if (n2sc.getNodes().size() != n2tc.getNodes().size())
-			throw new IllegalStateException("n2sc has " + n2sc.getNodes().size() + " while n2tc has "
-											+ n2tc.getNodes().size() + " entries");
-		if (n2sc.getNodes().size() != rep.getNodes().size())
-			throw new IllegalStateException("n2sc has " + n2sc.getNodes().size() + " while rep has "
-											+ rep.getNodes().size() + " entries");
-		if (rep.getNodes().size() != n2tc.getNodes().size())
-			throw new IllegalStateException("rep has " + rep.getNodes().size() + " while n2tc has "
-											+ n2tc.getNodes().size() + " entries");
-		if (p2sc.getNodes().size() != p2tc.getNodes().size()) {
+		if (n2sc.getKeys().size() != n2tc.getKeys().size())
+			throw new IllegalStateException("n2sc has " + n2sc.getKeys().size() + " while n2tc has "
+											+ n2tc.getKeys().size() + " entries");
+		if (n2sc.getKeys().size() != rep.getKeys().size())
+			throw new IllegalStateException("n2sc has " + n2sc.getKeys().size() + " while rep has "
+											+ rep.getKeys().size() + " entries");
+		if (rep.getKeys().size() != n2tc.getKeys().size())
+			throw new IllegalStateException("rep has " + rep.getKeys().size() + " while n2tc has "
+											+ n2tc.getKeys().size() + " entries");
+		if (p2sc.getKeys().size() != p2tc.getKeys().size()) {
 			display();
 			throw new IllegalStateException("After " + numberOfDataTriplesRead + " data triples, "
-											+ p2sc.getNodes().size() + " properties have source cliques while "
-											+ p2tc.getNodes().size() + " properties have target cliques ");
+											+ p2sc.getKeys().size() + " properties have source cliques while "
+											+ p2tc.getKeys().size() + " properties have target cliques ");
 		}
 		// there is no reason why numbers of source cliques should be equal to numbers of target cliques
 		//
@@ -289,7 +301,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	public void showRepThroughCliques() {
 		StringBuffer sb = new StringBuffer();
 		sb.append("n2sc: ");
-		for (Long node: n2sc.getNodes()) {
+		for (Long node: n2sc.getKeys()) {
 			if (node == null)
 				throw new IllegalStateException("Null node");
 			Long thisNodeSC = n2sc.get(node);
@@ -356,7 +368,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	 */
 	public void postHandleTypeTriples() {
 		//System.out.println("POST HANDLE TYPE TRIPLES");
-		for (Long node: this.n2cs.getNodes()){
+		for (Long node: this.n2cs.getKeys()){
 			Long thisClassSetID = this.n2cs.get(node);
 			TreeSet<Long> thisClassSet = this.cs.get(thisClassSetID);
 			for (Long thisClass: thisClassSet){
@@ -491,12 +503,21 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	// unknown property
 	private void handleDataTriple_US_RS_TO_NP(Triple t, Long classSetS, Long classSetO, Long sourceCliqueS,
 											  Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
-		long ssc = n2sc.get(t.s);
-		Long newSourceClique = addPropertyToSourceClique(t.p, ssc);
-		n2sc.put(t.s, newSourceClique);
+		Long ssc = n2sc.get(t.s);
+		Long repS = rep.get(t.s); 
+		Long newRepS = repS; 
+		Long newSourceClique = addPropertyToSourceClique(t.p, ssc);//TODO check correctness: what if s had an empty source clique and it needs to split?
+		if (!ssc.equals(newSourceClique)){
+			newRepS = this.replaceAndMaybeSplitUntypedSummaryNodes(t.s, newSourceClique, SOURCE); 
+			if (!repS.equals(newRepS)){
+				//this.changeRepresentationOfInto(t.s, newRepS);
+				rep.put(t.s, newRepS);
+			}
+		}
+		n2sc.put(t.s, newSourceClique); // this line should stay after the call to Split...
 		makeAndAddNewSourceClique(t.p);
 		// no representatives will be changed; the cliques of the source node don't change either
-		this.addTriple(rep.get(t.s), t.p, rep.get(t.o));
+		this.addTriple(newRepS, t.p, rep.get(t.o));
 	}
 
 	// typed, represented subject which won't change
@@ -504,12 +525,12 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	// unknown property: both its cliques need to be created
 	private void handleDataTriple_TS_UO_NO_NP(Triple t, Long classSetS, Long classSetO, Long sourceCliqueS,
 											  Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
-		long psc = makeAndAddNewSourceClique(t.p);//TODO check this -- bug? 
+		// p has no source clique so far, as we only saw it with a typed source.
 		long ptc = makeAndAddNewTargetClique(t.p);
 		// cliques of t.o: 
 		n2tc.put(t.o, ptc);
 		n2sc.put(t.o, getEmptySourceCliqueID());
-		// represent t.o:
+		// represent t.o for the first time: 
 		long repO = getOrCreateSummaryNode(getEmptySourceCliqueID(), ptc);
 		rep.put(t.o, repO);
 		// add triple:
@@ -525,11 +546,15 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		// p gets a new source clique as it was unknown, and its (typed) subject doesn't impact psc 
 		makeAndAddNewSourceClique(t.p);
 		// adding p to o's target clique
-		Long resultingTargetClique = addPropertyToTargetClique(t.p, targetCliqueO);
-		p2tc.put(t.p, resultingTargetClique);
+		Long newTargetCliqueO = addPropertyToTargetClique(t.p, targetCliqueO);
+		Long repO = rep.get(t.o); 
+		if ((targetCliqueO.equals(this.getEmptyTargetCliqueID())) && (!targetCliqueO.equals(newTargetCliqueO))){
+			repO = this.replaceAndMaybeSplitUntypedSummaryNodes(t.o, newTargetCliqueO, TARGET); 
+		}
+		p2tc.put(t.p, newTargetCliqueO); // this should stay after the call to Split...
 		// node representatives do not change:
 		// add triple: 
-		this.addTriple(rep.get(t.s), t.p, rep.get(t.o));
+		this.addTriple(rep.get(t.s), t.p, repO);
 	}
 
 	// untyped, unrepresented subject
@@ -553,18 +578,22 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		// the representative of o does not change because o is typed
 		// the representative of s may have to change if the source clique of s did not contain p
 		Long repS = rep.get(t.s);
+		Long newRepS = repS; 
 		if (sourceCliqueS != sourceCliqueP) {
 			Long fusedSCs = this.fuseCliquesIntoCreatedFirst(sourceCliqueS, sourceCliqueP, SOURCE);
-			repS = getOrCreateSummaryNode(fusedSCs, sourceCliqueP);
-			n2tc.put(repS, targetCliqueS);
-			n2sc.put(repS, fusedSCs);
-			rep.put(t.s, repS);
+			newRepS = getOrCreateSummaryNode(fusedSCs, sourceCliqueP);
+			if (!repS.equals(newRepS)){
+				//this.changeRepresentationOfInto(t.s, newRepS);
+				rep.put(t.s, newRepS);
+			}
+			n2tc.put(t.s, targetCliqueS);
+			n2sc.put(t.s, fusedSCs);
 		}
 		else {
 			// nothing
 		}
 		// adding triple:
-		this.addTriple(repS, t.p, rep.get(t.o));
+		this.addTriple(newRepS, t.p, rep.get(t.o));
 	}
 
 	// typed, represented subject
@@ -593,23 +622,24 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		Long newRepO = repO;
 		if (targetCliqueO != targetCliqueP) {
 			//Debugger.log("Fusing target clique O: " + targetCliqueO + " with target clique P: " + targetCliqueP);
-			this.showClique(tc.get(targetCliqueO));
-			this.showClique(tc.get(targetCliqueP));
+			//this.showClique(tc.get(targetCliqueO));
+			//this.showClique(tc.get(targetCliqueP));
 			//Debugger.log("Empty target clique is: " + this.getEmptyTargetCliqueID());
 			newTCo = fuseCliquesIntoCreatedFirst(targetCliqueO, targetCliqueP, TARGET);
 			newRepO = getOrCreateSummaryNode(sourceCliqueO, newTCo);
-			if (newRepO == null)
-				throw new IllegalStateException("repO");
+			if (!repO.equals(newRepO)){
+				//this.changeRepresentationOfInto(t.o, newRepO);
+				rep.put(t.o, newRepO);
+			}
 			n2tc.put(newRepO, newTCo);
 			n2sc.put(newRepO, sourceCliqueO);
-			rep.put(t.o, newRepO);
 		}
 		// adding triple:
 		if (repS == null)
 			throw new IllegalStateException("repS");
 		if (rep.get(t.o) == null)
 			throw new IllegalStateException("repO");
-		this.addTriple(repS, t.p, rep.get(t.o));
+		this.addTriple(repS, t.p, newRepO);
 	}
 
 	private void handleDataTriple_TS_TO(Triple t, Long classSetS, Long classSetO, Long sourceCliqueS,

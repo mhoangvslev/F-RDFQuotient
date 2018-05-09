@@ -6,6 +6,7 @@ import fr.inria.cedar.quotientSummary.datastructures.Triple;
 import fr.inria.cedar.quotientSummary.util.Substitutions;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.TreeSet;
 
 public class WeakOrTypedWeakSummary extends Summary {
 	HashMap<Long, Long> ps; // for each property, the property source
@@ -69,7 +70,7 @@ public class WeakOrTypedWeakSummary extends Summary {
 	protected void replaceAll(Long oldNode, Long newNode, Long forProperty) {
 		//Debugger.log("WTW REPLACE-ALL " + oldNode + " with " + newNode + " for property " + forProperty + " in: ");
 		//Debugger.log(this.toString());
-		replaceInSummary(oldNode, newNode);
+		replaceNodeInSummaryEdges(oldNode, newNode);
 		//Debugger.log("Representation was: "); 
 		//showRep(); 
 		rep.replaceValue(oldNode, newNode);
@@ -271,11 +272,11 @@ public class WeakOrTypedWeakSummary extends Summary {
 	public ArrayList<Triple> getSummaryEdges() {
 		ArrayList<Triple> res = new ArrayList<>();
 		for (Long s: edges.keySet()) {
-			HashMap<Long, ArrayList<Long>> triplesOfThisSubject = edges.get(s);
+			HashMap<Long, TreeSet<Long>> triplesOfThisSubject = edges.get(s);
 			if (triplesOfThisSubject == null)
 				throw new Error("No triples whose subject is " + s);
 			for (Long p: triplesOfThisSubject.keySet()) {
-				ArrayList<Long> objectsOfThisSandP = triplesOfThisSubject.get(p);
+				TreeSet<Long> objectsOfThisSandP = triplesOfThisSubject.get(p);
 				for (Long o: objectsOfThisSandP) {
 					Triple t = new Triple(s, p, o);
 					res.add(t);

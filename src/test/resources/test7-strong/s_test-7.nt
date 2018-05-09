@@ -8,5 +8,5 @@
 <http://qs.org/s22> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://qstest.org/class1> . 
 <http://qs.org/s24> <http://qstest.org/prop6> <http://qs.org/s21> . 
 <http://qs.org/s25> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://qstest.org/class1> . 
-<http://qs.org/s25> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://qstest.org/class2> . 
 <http://qs.org/s25> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://qstest.org/class3> . 
+<http://qs.org/s25> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://qstest.org/class2> . 

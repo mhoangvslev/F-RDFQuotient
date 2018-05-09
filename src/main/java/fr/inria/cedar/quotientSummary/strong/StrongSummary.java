@@ -7,6 +7,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.HashMap;
 
 public class StrongSummary extends StrongOrTypedStrongSummary {
 	public StrongSummary() {
@@ -20,6 +21,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 	 * @param conn
 	 */
 	public StrongSummary(Connection conn) {
+		this.conn = conn; 
 		this.summaryTablePrefix = STRONG_SUMMARY_PREFIX;
 		Debugger.log("Reading Strong summary from Postgres, setting up special URIs from the dictionary");
 		RDF2SQLEncoding.setUp(conn);
@@ -42,6 +44,17 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 		System.out.println("Read Strong summary from Postgres");
 	}
 
+
+	/**
+	 * this must be called after the constructor as the summary needs to ask more queries
+	 * for patching itself up during summarization.
+	 * 
+	 * @param conn
+	 */
+	public void setConn(Connection conn){
+		this.conn = conn; 
+	}
+	
 	/**
 	 * Summarizes an RDF graph assuming the data triples are in Postgres
 	 *
@@ -50,10 +63,11 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 	 */
 	@Override
 	public void summarizeFromRDBMS(Connection conn, String[] args) {
-		//Debugger.setFlag(true);
+		this.setConn(conn);
+		Debugger.setFlag(true);
 		long start = System.currentTimeMillis();
 		String dataTriplesFileName = args[0];
-		System.out.println(" dataTriplesFileName " + dataTriplesFileName);
+		Debugger.log(" dataTriplesFileName " + dataTriplesFileName);
 		// this is needed to find the constants associated to special RDF properties
 		RDF2SQLEncoding.setUp(conn);
 		long typeConstantCode = RDF2SQLEncoding.getTypeCode();
@@ -83,11 +97,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 				triplesSummarizedSoFar++;
 				this.drawSummaryAndGraph(conn, dataTriplesFileName, ("-after-" + 
 				triplesSummarizedSoFar + "-"+ t.s + "-" + t.p + "-" + t.o));
-				//Files.write(Paths.get("output.txt"), (globalTripleCount + ": " + new String(s + " " + p + " " + o + "\n")).getBytes(), StandardOpenOption.APPEND); 
-				//if ((globalTripleCount % 1000 == 0)) {//|| (globalTripleCount > 28800)) {
-				//	System.out.println(globalTripleCount + " triples");
-				//}
-				//System.out.println("Summary now has " + getSummaryEdges().size() + " triples");
+				display();
 			}
 			rs.close();
 			getUntypedTriples.close();
@@ -141,7 +151,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 		//checkSymmetry(sourceCliqueS, targetCliqueS, sourceCliqueO, targetCliqueO, sourceCliqueP, targetCliqueP); 
 		char caseNumber = decode(repS, repO, sourceCliqueP);
 
-		System.out.println("\nCase " + this.caseName(caseNumber)); 
+		System.out.println("\n" + t.toString() + " " + RDF2SQLEncoding.decode(t) + " case: " + this.caseName(caseNumber)); 
 		switch (caseNumber) {
 			case US_RS_UO_RO_RP: {
 				handleDataTriple_US_RS_UO_RO_RP(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
@@ -265,4 +275,52 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 		}
 	}
 	
+	public void display() {
+		System.out.println("===STRONG SUMMARY\nSource cliques: " + sc.display());
+		System.out.println("Target cliques: " + tc.display());
+		System.out.println("Data nodes to source cliques: " + n2sc.display());
+		System.out.println("Data nodes to target cliques: " + n2tc.display());
+		System.out.println("Property to source cliques: " + p2sc.display());
+		System.out.println("Property to target cliques: " + p2tc.display());
+		System.out.println("Untyped summary nodes: " + showUntypedSummaryNodes());
+		System.out.println("Representation function: ");
+		showRep();
+		System.out.println("Summary: ");
+		for (Triple t: this.getSummaryEdges())
+			t.display();
+		roundTripConsistencyCheck();
+		System.out.println("===");
+	}
+	
+	protected void roundTripConsistencyCheck(){
+		String msg = ""; 
+		for (Long dataNode: n2sc.getKeys()){
+			System.out.println("Data node: " + dataNode);
+			Long nodeRep = rep.get(dataNode);
+			if (nodeRep == null){
+				msg = ("Unrepresented data node " + dataNode);
+				System.out.println(msg);
+				throw new IllegalStateException(msg);
+			}
+			Long nsc = n2sc.get(dataNode);
+			Long ntc = n2tc.get(dataNode);
+			HashMap<Long, Long> tc2Nodes = untypedSummaryNodes.get(nsc);
+			if (tc2Nodes == null){
+				msg = ("untypedSummaryNodes has nothing on source clique " + nsc + " of node " + dataNode + "(" + RDF2SQLEncoding.dictionaryDecode(dataNode) + ")"); 
+				System.out.println(msg);
+				throw new IllegalStateException(msg); 
+			}
+			Long tcn = tc2Nodes.get(ntc);
+			if (tcn == null){
+				msg = ("Nothing found on source clique " + nsc + " for target clique " + ntc + " of node " + dataNode + "(" + RDF2SQLEncoding.dictionaryDecode(dataNode) + ")"); 
+				System.out.println(msg);
+				throw new IllegalStateException(msg);
+			}
+			if (!(tcn.equals(nodeRep))){
+				msg = (nsc + "=>" + ntc + ": " + tcn + " while the representative of " + dataNode + " is " + nodeRep); 
+				System.out.println(msg);
+				throw new IllegalStateException(msg);
+			}
+		}
+	}
 }

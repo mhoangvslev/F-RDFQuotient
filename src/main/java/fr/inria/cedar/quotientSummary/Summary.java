@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TreeSet;
 
 public class Summary {
 	protected Long2Long rep; // representative function for untyped nodes
@@ -30,7 +31,7 @@ public class Summary {
 	// for each property
 	// the set of objects such that (subject, property, object) is in the
 	// summary
-	protected HashMap<Long, HashMap<Long, ArrayList<Long>>> edges;
+	protected HashMap<Long, HashMap<Long, TreeSet<Long>>> edges;
 	// for each summary node, the number of graph nodes it represents
 	protected HashMap<Long, Long> summaryNodeStatistics;
 	// for each summary edge, the number of graph edge it represents
@@ -119,7 +120,7 @@ public class Summary {
 		Triple t = new Triple(s, p, o);
 		// Debugger.log("XX Trying to add triple " + t.toString());
 
-		HashMap<Long, ArrayList<Long>> triplesOfThisSubject = edges.get(s);
+		HashMap<Long, TreeSet<Long>> triplesOfThisSubject = edges.get(s);
 		if (triplesOfThisSubject == null) { // no edges yet for this subject;
 			// otherwise, s has already some
 			// edges
@@ -127,12 +128,12 @@ public class Summary {
 			edges.put(s, triplesOfThisSubject);
 			// Debugger.log("XX Created triple map for subject " +s);
 		}
-		ArrayList<Long> objectsOfThisSubjectAndProperty = triplesOfThisSubject.get(p);
+		TreeSet<Long> objectsOfThisSubjectAndProperty = triplesOfThisSubject.get(p);
 		if (objectsOfThisSubjectAndProperty == null) { // no edges yet for this
 			// subject and property;
 			// otherwise, s has
 			// already some p edges
-			objectsOfThisSubjectAndProperty = new ArrayList<>();
+			objectsOfThisSubjectAndProperty = new TreeSet<>();
 			triplesOfThisSubject.put(t.p, objectsOfThisSubjectAndProperty);
 			// Debugger.log("XX Created array list for subject " + s + " and
 			// property " + p);
@@ -177,8 +178,9 @@ public class Summary {
 
 	protected void showRepInBuffer(StringBuffer sb) {
 		sb.append("|| rep:  ");
-		for (Long node : this.rep.getNodes()) {
-			sb.append(node).append("=>").append(rep.get(node)).append(" ");
+		for (Long node : this.rep.getKeys()) {
+			//sb.append(node).append("=>").append(rep.get(node)).append(" ");
+			sb.append(RDF2SQLEncoding.dictionaryDecode(node)).append("=>").append(rep.get(node)).append("\n");
 			assert (rep.get(node) != null);
 		}
 	}
@@ -206,20 +208,20 @@ public class Summary {
 	}
 
 	// replaces in summary edges, not in rep
-	protected void replaceInSummary(Long oldNode, Long newNode) {
+	protected void replaceNodeInSummaryEdges(Long oldNode, Long newNode) {
 		if (newNode == null)
 			throw new Error("Null new node");
 		if (oldNode.equals(newNode))
 			throw new Error("Won't replace equal nodes");
-		Debugger.log("REPLACING " + oldNode + " with " + newNode + " in: ");
-		Debugger.log(this.toString());
+	Debugger.log("REPLACE IN SUMMARY OLD NODE " + oldNode + " WITH NEW NODE " + newNode);
+		//Debugger.log(this.toString());
 		// replace oldNode wherever it existed as an object:
 		for (long s : edges.keySet()) {
-			HashMap<Long, ArrayList<Long>> triplesOfThisSubject = edges.get(s);
+			HashMap<Long, TreeSet<Long>> triplesOfThisSubject = edges.get(s);
 			for (long propOfThisSubject : triplesOfThisSubject.keySet()) {
 
-				ArrayList<Long> objectsForThisSubjectAndProperty = triplesOfThisSubject.get(propOfThisSubject);
-				ArrayList<Long> newObjectsForThisSubjectAndProperty = new ArrayList<>();
+				TreeSet<Long> objectsForThisSubjectAndProperty = triplesOfThisSubject.get(propOfThisSubject);
+				TreeSet<Long> newObjectsForThisSubjectAndProperty = new TreeSet<Long>();
 				boolean arrayChanged = false;
 				for (long o : objectsForThisSubjectAndProperty)
 					if (o == oldNode) {
@@ -231,17 +233,7 @@ public class Summary {
 
 				if (arrayChanged)
 					triplesOfThisSubject.replace(propOfThisSubject, newObjectsForThisSubjectAndProperty); // replace
-				// is
-				// not
-				// a
-				// structural
-				// modification
-				// of
-				// the
-				// map,
-				// thus
-				// no
-				// concurrent modification exception
+				// is not a structural modification of the map, thus no concurrent modification exception
 			}
 		}
 		// above we have replaced old with new wherever it appeared *** as an
@@ -252,13 +244,13 @@ public class Summary {
 		Debugger.log(this.toString());
 		Debugger.log("Now replacing as subject");
 
-		HashMap<Long, ArrayList<Long>> oldNodeIsSubject = edges.get(oldNode);
+		HashMap<Long, TreeSet<Long>> oldNodeIsSubject = edges.get(oldNode);
 		if (oldNodeIsSubject != null) { // in some edges, oldNode was subject
 			Debugger.log("Removing edges whose subject is " + oldNode);
 			edges.remove(oldNode); // detach this entry from edges (but keep
 			// them in oldNodeIsSubject for now)
 
-			HashMap<Long, ArrayList<Long>> newNodeIsSubject = edges.get(newNode);
+			HashMap<Long, TreeSet<Long>> newNodeIsSubject = edges.get(newNode);
 			if (newNodeIsSubject == null) { // the new node was not previously a
 				// subject of some edges
 				Debugger.log("Adding on the new node " + newNode + " the triples of old node " + oldNode);
@@ -273,22 +265,21 @@ public class Summary {
 					Debugger.log("There were edges both on old " + oldNode + " and on new " + newNode);
 
 					for (Long oldNodeProperty : oldNodeIsSubject.keySet()) { // iterate
-						// over
-						// the
+						// over the
 						// properties
 						// of
 						// the
 						// old
 						// node
-						ArrayList<Long> oldNodeObjectsForThisProperty = oldNodeIsSubject.get(oldNodeProperty);
-						ArrayList<Long> newNodeObjectsForThisProperty = newNodeIsSubject.get(oldNodeProperty);
+						TreeSet<Long> oldNodeObjectsForThisProperty = oldNodeIsSubject.get(oldNodeProperty);
+						TreeSet<Long> newNodeObjectsForThisProperty = newNodeIsSubject.get(oldNodeProperty);
 						if (newNodeObjectsForThisProperty == null) { // the new node
 							// did not
 							// have this
 							// one
 							Debugger.log(newNode + " did not have edges labeled " + oldNodeProperty
 									+ ", he is taking them from " + oldNode);
-							newNodeObjectsForThisProperty = new ArrayList<>();
+							newNodeObjectsForThisProperty = new TreeSet<Long>();
 							newNodeIsSubject.put(oldNodeProperty, newNodeObjectsForThisProperty);
 						}
 						// whether the new node did or did not have triples labeled
@@ -395,7 +386,7 @@ public class Summary {
 			// now insert all the rep entries:
 			String insertIntoRep = "insert into " + this.summaryTablePrefix + "encoded_rep values(?, ?);";
 			PreparedStatement insertInRep = conn.prepareStatement(insertIntoRep);
-			Set<Long> origNodes = this.rep.getNodes();
+			Set<Long> origNodes = this.rep.getKeys();
 			for (Long origNode : origNodes) {
 				Long sumNode = this.rep.get(origNode);
 				insertInRep.setLong(1, origNode);
@@ -863,9 +854,9 @@ public class Summary {
 	public ArrayList<Triple> getSummaryEdges() {
 		ArrayList<Triple> res = new ArrayList<>();
 		for (Long s : edges.keySet()) {
-			HashMap<Long, ArrayList<Long>> triplesOfThisSubject = edges.get(s);
+			HashMap<Long, TreeSet<Long>> triplesOfThisSubject = edges.get(s);
 			for (Long p : triplesOfThisSubject.keySet()) {
-				ArrayList<Long> objectsOfThisSandP = triplesOfThisSubject.get(p);
+				TreeSet<Long> objectsOfThisSandP = triplesOfThisSubject.get(p);
 				for (Long o : objectsOfThisSandP) {
 					Triple t = new Triple(s, p, o);
 					res.add(t);
@@ -1017,11 +1008,14 @@ public class Summary {
 	}
 
 	protected void showClique(ArrayList<Long> arrayList) {
+		System.out.println(showCliqueAsString(arrayList));
+	}
+	protected String showCliqueAsString(ArrayList<Long> arrayList) {
 		StringBuffer sb = new StringBuffer();
 		sb.append("[");
 		for (Long l : arrayList)
-			sb.append(l).append(" ");
+			sb.append(l).append("(" + RDF2SQLEncoding.dictionaryDecode(l) + ") ");
 		sb.append("]");
-		System.out.println(new String(sb));
+		return new String(sb); 
 	}
 }

@@ -14,7 +14,7 @@ import org.junit.Test;
 
 public class StrongSummaryTests {
 	public File strong(int i) {
-		System.out.println("Typed Strong test");
+		System.out.println("Strong test");
 		String inputFileName = "src/test/resources/test" + i + "-strong/test-" + i + ".nt";
 		String outputFileName = "src/test/resources/test" + i + "-strong/s_test-" + i + ".nt";
 		try {
@@ -130,7 +130,7 @@ public class StrongSummaryTests {
 		}
 	}
 
-	@Test
+	@Test @Ignore
 	public void teststrong6() {
 		String referenceFileName = "src/test/resources/test6-strong/s_test-6-reference.nt";
 		File expectedOutput = new File(referenceFileName);
@@ -149,7 +149,7 @@ public class StrongSummaryTests {
 		}
 	}
 
-	@Test
+	@Test @Ignore
 	public void teststrong7() {
 		String referenceFileName = "src/test/resources/test7-strong/s_test-7-reference.nt";
 		File expectedOutput = new File(referenceFileName);
@@ -165,6 +165,24 @@ public class StrongSummaryTests {
 		}
 		catch (IOException e) {
 			throw new IllegalStateException("Unable to open .nt files in strong test 7 " + e.toString());
+		}
+	}
+	@Test
+	public void teststrong9() {
+		String referenceFileName = "src/test/resources/test9-strong/s_test-9-reference.nt";
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = strong(9);
+			if (!testOutput.exists()){
+				fail("Test output not found ");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary strong 9", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in strong test 9 " + e.toString());
 		}
 	}
 }
