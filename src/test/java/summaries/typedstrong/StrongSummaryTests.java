@@ -29,6 +29,15 @@ public class StrongSummaryTests {
 			catch (UnsupportedDatabaseEngineException ex) {
 				Logger.getLogger(StrongSummaryTests.class.getName()).log(Level.SEVERE, null, ex);
 			}
+			finally {
+				String[] argsCloseConnection = {"closeConnection"};
+				try {
+					Builder.main(argsCloseConnection);
+				}
+				catch (UnsupportedDatabaseEngineException ex1) {
+					Logger.getLogger(StrongSummaryTests.class.getName()).log(Level.SEVERE, null, ex1);
+				}
+			}
 			return new File(outputFileName);
 		}
 		catch (IOException e) {

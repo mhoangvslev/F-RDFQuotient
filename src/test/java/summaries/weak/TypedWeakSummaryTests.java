@@ -29,6 +29,15 @@ public class TypedWeakSummaryTests {
 			catch (UnsupportedDatabaseEngineException ex) {
 				Logger.getLogger(TypedWeakSummaryTests.class.getName()).log(Level.SEVERE, null, ex);
 			}
+			finally {
+				String[] argsCloseConnection = {"closeConnection"};
+				try {
+					Builder.main(argsCloseConnection);
+				}
+				catch (UnsupportedDatabaseEngineException ex1) {
+					Logger.getLogger(TypedWeakSummaryTests.class.getName()).log(Level.SEVERE, null, ex1);
+				}
+			}
 			return new File(outputFileName);
 		}
 		catch (IOException e) {

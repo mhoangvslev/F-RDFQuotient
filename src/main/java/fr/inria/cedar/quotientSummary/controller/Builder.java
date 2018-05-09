@@ -49,8 +49,13 @@ public class Builder {
 			printUsage();
 			return;
 		}
-		String[] nextArguments = extractArguments(args);
-		String[] filesToLoad = extractArguments(nextArguments);
+		String[] nextArguments = {};
+		String[] filesToLoad = {};
+		if (args.length > 1) {
+			nextArguments = extractArguments(args);
+			if (args.length > 2)
+				filesToLoad = extractArguments(nextArguments);
+		}
 		switch (args[0]) {
 			case "loadWithoutSaturation":
 				connectionInUse = loadRDFInPostgres(nextArguments, false);
@@ -82,6 +87,9 @@ public class Builder {
 				return; */// TODO: not ready yet
 			case "saveSummary":
 				saveSummary(connectionInUse, summaryInUse, nextArguments);
+				return;
+			case "closeConnection":
+				closeConnection(connectionInUse);
 				return;
 			default:
 				break;
@@ -127,6 +135,7 @@ public class Builder {
 		//System.out.println("args[0]=loadAndSummarizeUsingShortcut: loads the graph in Postgres, summarizes it, saturates it, and summarizes again (shortcut)");
 		System.out.println("args[0]=saveSummary: saves summary to Postgres and to the disk, draws a DOT graph and closes the connection to Postgres");
 		//System.out.println("args[0]=summarizeEncodedFile: build the summary out of integer-encoded triples in a file");
+		System.out.println("args[0]=closeConnection: closes connection to Postgres");
 	}
 
 	/**
@@ -259,11 +268,15 @@ public class Builder {
 		return null;
 	}
 
-	private static void saveSummary(Connection conn, Summary sum, String[] args) throws SQLException {
+	private static void saveSummary(Connection conn, Summary sum, String[] args) {
 		sum.saveSummaryInPostgres(conn, args[0]);
 		sum.writeDecodedSummaryToNTFile(conn, args[0]);
 		sum.drawSummaryAndGraph(conn, args[0]);
-		conn.close();
 		System.out.println(sum.getRunStatistics().toString());
+	}
+
+	private static void closeConnection(Connection conn) throws SQLException {
+		conn.close();
+		System.out.println("Connection closed");
 	}
 }
