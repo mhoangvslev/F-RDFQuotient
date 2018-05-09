@@ -21,19 +21,20 @@ import java.util.List;
 import java.util.Properties;
 
 public class Builder {
-	// Default properties file
+	// Default properties files
 	private static final String DEFAULT_CONFIG_FILE = System.getProperty("user.dir") + "/conf/dataLoading.properties";
+	private static final String SATURATION_CONFIG_FILE = System.getProperty("user.dir") + "/conf/dataLoadingWithSaturation.properties";
 
 	private static Connection connectionInUse;
 	private static Summary summaryInUse;
 
 	public Builder() {
-		try {
+		/*try {
 			getConnection();
 		}
 		catch (UnsupportedDatabaseEngineException | IOException | SQLException e) {
 			e.printStackTrace();
-		}
+		}*/
 	}
 
 	/**
@@ -48,8 +49,13 @@ public class Builder {
 			printUsage();
 			return;
 		}
-		String[] nextArguments = extractArguments(args);
-		String[] filesToLoad = extractArguments(nextArguments);
+		String[] nextArguments = {};
+		String[] filesToLoad = {};
+		if (args.length > 1) {
+			nextArguments = extractArguments(args);
+			if (args.length > 2)
+				filesToLoad = extractArguments(nextArguments);
+		}
 		switch (args[0]) {
 			case "loadWithoutSaturation":
 				connectionInUse = loadRDFInPostgres(nextArguments, false);
@@ -65,22 +71,25 @@ public class Builder {
 				return;
 			case "loadWithSaturationAndSummarize":
 				// in this case args[1] is the summary type; the loader doesn't need this information; the loader only gets the files to load
-				connectionInUse = loadRDFInPostgres(filesToLoad, true);
+				connectionInUse = loadRDFInPostgres(filesToLoad, false); // TODO: Fix and change false to true
 				// the summarizer also gets the summary name
-				summaryInUse = summarizeGraphFromPostgres(connectionInUse, nextArguments, true);
+				summaryInUse = summarizeGraphFromPostgres(connectionInUse, nextArguments, false); // TODO: Fix and change false to true
 				return;
 			/*case "loadAndSummarizeUsingShortcut":
 				// in this case args[1] is the summary type; the loader doesn't need this information; the loader only gets the files to load
-				try (Connection conn = loadRDFInPostgres(filesToLoad, false)) {
-					// the summarizer also gets the summary name
-					summarizeGraphFromPostgres(conn, nextArguments, false);
-					saturate(conn);
-					Summary sum = summarizeGraphFromPostgres(conn, nextArguments, true);
-					saveSummary(conn, sum, args);
-				}
-				return;*/ // not ready yet
+				connectionInUse = loadRDFInPostgres(filesToLoad, true); // TODO: Fix and change false to true
+				// the summarizer also gets the summary name
+				summarizeGraphFromPostgres(connectionInUse, nextArguments, false);
+				saturate(connectionInUse);
+				// the summarizer also gets the summary name
+				Summary sum = summarizeGraphFromPostgres(connectionInUse, nextArguments, true);
+				saveSummary(connectionInUse, sum, args);
+				return; */// TODO: not ready yet
 			case "saveSummary":
 				saveSummary(connectionInUse, summaryInUse, nextArguments);
+				return;
+			case "closeConnection":
+				closeConnection(connectionInUse);
 				return;
 			default:
 				break;
@@ -89,7 +98,7 @@ public class Builder {
 	}
 
 	/**
-	 * This returns the connection to the Postgres database where the dictionary-encoded RDF graph is / will be stored.
+	 * This method returns the connection to the Postgres database where the dictionary-encoded RDF graph is / will be stored
 	 *
 	 * @return the connection
 	 *
@@ -98,7 +107,7 @@ public class Builder {
 	 * @throws UnsupportedDatabaseEngineException
 	 * @throws SQLException
 	 */
-	private static Connection getConnection() throws FileNotFoundException, IOException, UnsupportedDatabaseEngineException, SQLException {
+	/*private static Connection getConnection() throws FileNotFoundException, IOException, UnsupportedDatabaseEngineException, SQLException {
 		// first fill in the connection properties from the default config file
 		Properties properties = new Properties();
 		properties.load(new FileReader(DEFAULT_CONFIG_FILE));
@@ -109,13 +118,12 @@ public class Builder {
 		connectionProps.put("user", properties.getProperty("database.user"));
 		connectionProps.put("password", properties.getProperty("database.password"));
 
-		String connectionURL = "jdbc:postgresql://" + properties.getProperty("database.host")
-							   + ":" + properties.getProperty("database.port") + "/" + properties.getProperty("database.name");
+		String connectionURL = "jdbc:postgresql://" + properties.getProperty("database.host") + ":" + properties.getProperty("database.port") + "/" + properties.getProperty("database.name");
 		Connection conn = DriverManager.getConnection(connectionURL, connectionProps);
 		System.out.println("Connection URL is: " + connectionURL);
 		Preconditions.checkState(conn != null, "No connection for " + connectionURL);
 		return conn;
-	}
+	}*/
 
 	private static void printUsage() {
 		System.out.println("Usage:");
@@ -125,8 +133,9 @@ public class Builder {
 		System.out.println("args[0]=summarizeSaturated: summarizes the saturated graph from Postgres");
 		System.out.println("args[0]=loadWithSaturationAndSummarize: loads the graph in Postgres, saturates it, and summarizes it");
 		//System.out.println("args[0]=loadAndSummarizeUsingShortcut: loads the graph in Postgres, summarizes it, saturates it, and summarizes again (shortcut)");
-		System.out.println("args[0]=saveSummary: saves summary to Postgres and to the disk, draws a DOT graph");
+		System.out.println("args[0]=saveSummary: saves summary to Postgres and to the disk, draws a DOT graph and closes the connection to Postgres");
 		//System.out.println("args[0]=summarizeEncodedFile: build the summary out of integer-encoded triples in a file");
+		System.out.println("args[0]=closeConnection: closes connection to Postgres");
 	}
 
 	/**
@@ -143,7 +152,8 @@ public class Builder {
 		return suffix;
 	}
 
-	/** This method loads data in Postgres through the ontoSQL loader.
+	/**
+	 * This method loads the data in Postgres through the ontoSQL loader
 	 *
 	 * @param args a list of file names
 	 *
@@ -177,11 +187,15 @@ public class Builder {
 			}
 		}
 
+		String configFile = DEFAULT_CONFIG_FILE;
+		if (saturate)
+			configFile = SATURATION_CONFIG_FILE;
+
 		Properties properties = new Properties();
-		properties.load(new FileReader(DEFAULT_CONFIG_FILE));
+		properties.load(new FileReader(configFile));
 		System.out.println(properties.toString());
 		Parameters settings = new Parameters();
-		settings.setPropertiesFileName(DEFAULT_CONFIG_FILE);
+		settings.setPropertiesFileName(configFile);
 
 		if (rdfsFiles.isEmpty())
 			for (String tripleFile: tripleFiles) {
@@ -200,8 +214,7 @@ public class Builder {
 		connectionProps.put("user", properties.getProperty("database.user"));
 		connectionProps.put("password", properties.getProperty("database.password"));
 
-		String connectionURL = "jdbc:postgresql://" + properties.getProperty("database.host")
-							   + ":" + properties.getProperty("database.port") + "/" + properties.getProperty("database.name");
+		String connectionURL = "jdbc:postgresql://" + properties.getProperty("database.host") + ":" + properties.getProperty("database.port") + "/" + properties.getProperty("database.name");
 		Connection conn = DriverManager.getConnection(connectionURL, connectionProps);
 		System.out.println("Connection URL is: " + connectionURL);
 		Preconditions.checkState(conn != null, "No connection for " + connectionURL);
@@ -209,7 +222,7 @@ public class Builder {
 	}
 
 	/**
-	 * Assumes the graph has already been loaded
+	 * This method assumes the graph has already been loaded
 	 *
 	 * @param conn
 	 * @param args
@@ -255,11 +268,15 @@ public class Builder {
 		return null;
 	}
 
-	private static void saveSummary(Connection conn, Summary sum, String[] args) throws SQLException {
+	private static void saveSummary(Connection conn, Summary sum, String[] args) {
 		sum.saveSummaryInPostgres(conn, args[0]);
 		sum.writeDecodedSummaryToNTFile(conn, args[0]);
 		sum.drawSummaryAndGraph(conn, args[0]);
-		conn.close();
 		System.out.println(sum.getRunStatistics().toString());
+	}
+
+	private static void closeConnection(Connection conn) throws SQLException {
+		conn.close();
+		System.out.println("Connection closed");
 	}
 }

@@ -14,7 +14,9 @@ import org.junit.Test;
 
 public class WeakSummaryTests {
 	public File weak(int i) {
-		System.out.println("Weak summary test");
+		System.out.println("################################################################################");
+		System.out.println("Weak summary test " + Integer.toString(i));
+		System.out.println("################################################################################");
 		String inputFileName = "src/test/resources/test" + i + "-weak/test-" + i + ".nt";
 		String outputFileName = "src/test/resources/test" + i + "-weak/w_test-" + i + ".nt";
 		try {
@@ -26,6 +28,15 @@ public class WeakSummaryTests {
 			}
 			catch (UnsupportedDatabaseEngineException ex) {
 				Logger.getLogger(WeakSummaryTests.class.getName()).log(Level.SEVERE, null, ex);
+			}
+			finally {
+				String[] argsCloseConnection = {"closeConnection"};
+				try {
+					Builder.main(argsCloseConnection);
+				}
+				catch (UnsupportedDatabaseEngineException ex1) {
+					Logger.getLogger(WeakSummaryTests.class.getName()).log(Level.SEVERE, null, ex1);
+				}
 			}
 			return new File(outputFileName);
 		}
@@ -169,6 +180,7 @@ public class WeakSummaryTests {
 			throw new IllegalStateException("Unable to open .nt files in weak test 7 " + e.toString());
 		}
 	}
+
 	@Test
 	public void testweak8() {
 		String referenceFileName = "src/test/resources/test8-weak/w_test-8-reference.nt";
@@ -185,6 +197,25 @@ public class WeakSummaryTests {
 		}
 		catch (IOException e) {
 			throw new IllegalStateException("Unable to open .nt files in weak test 8 " + e.toString());
+		}
+	}
+
+	@Test
+	public void testweak9() {
+		String referenceFileName = "src/test/resources/test9-weak/w_test-9-reference.nt";
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = weak(9);
+			if (!testOutput.exists()){
+				fail("Test output not found");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary weak 9", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in weak test 9 " + e.toString());
 		}
 	}
 }

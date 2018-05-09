@@ -14,7 +14,9 @@ import org.junit.Test;
 
 public class StrongSummaryTests {
 	public File strong(int i) {
-		System.out.println("Strong summary test");
+		System.out.println("################################################################################");
+		System.out.println("Strong summary test " + Integer.toString(i));
+		System.out.println("################################################################################");
 		String inputFileName = "src/test/resources/test" + i + "-strong/test-" + i + ".nt";
 		String outputFileName = "src/test/resources/test" + i + "-strong/s_test-" + i + ".nt";
 		try {
@@ -26,6 +28,15 @@ public class StrongSummaryTests {
 			}
 			catch (UnsupportedDatabaseEngineException ex) {
 				Logger.getLogger(StrongSummaryTests.class.getName()).log(Level.SEVERE, null, ex);
+			}
+			finally {
+				String[] argsCloseConnection = {"closeConnection"};
+				try {
+					Builder.main(argsCloseConnection);
+				}
+				catch (UnsupportedDatabaseEngineException ex1) {
+					Logger.getLogger(StrongSummaryTests.class.getName()).log(Level.SEVERE, null, ex1);
+				}
 			}
 			return new File(outputFileName);
 		}
