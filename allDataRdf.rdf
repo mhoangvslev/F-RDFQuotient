@@ -1,0 +1,18 @@
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:j.0="http://qstest.org/"
+    xmlns:j.1="http://qstest.org/class#1" > 
+  <rdf:Description rdf:about="http://qstest.org/node2">
+    <j.0:prop3>5</j.0:prop3>
+    <j.0:prop2>4</j.0:prop2>
+    <j.0:prop1>3</j.0:prop1>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://qstest.org/node3">
+    <j.0:prop2>6</j.0:prop2>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://qstest.org/node1">
+    <j.0:prop1>2</j.0:prop1>
+    <j.0:prop1>1</j.0:prop1>
+    <rdf:type rdf:resource="http://qstest.org/class#1"/>
+  </rdf:Description>
+</rdf:RDF>
