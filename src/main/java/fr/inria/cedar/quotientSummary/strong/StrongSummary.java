@@ -62,7 +62,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 	 * @param args
 	 */
 	@Override
-	public void summarizeFromRDBMS(Connection conn, String[] args) {
+	public void summarizeFromPostgres(Connection conn, String[] args) {
 		this.setConn(conn);
 		Debugger.setFlag(true);
 		long start = System.currentTimeMillis();

@@ -1,18 +1,20 @@
 package fr.inria.cedar.quotientSummary.datastructures;
 
-import fr.inria.cedar.commons.miscellaneous.Debugger;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.TreeSet;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 public class Long2Long {
+	private static final Logger LOGGER = Logger.getLogger(Long2Long.class.getName());
 	// from the node to the ID of its clique
 	final HashMap<Long, Long> map;
 	// from the ID of a clique, to the list of IDs of all the nodes
 	final HashMap<Long, TreeSet<Long>> inverse;
 
 	public Long2Long() {
+		LOGGER.setLevel(Level.INFO);
 		map = new HashMap<>();
 		inverse = new HashMap<>();
 	}
@@ -38,13 +40,13 @@ public class Long2Long {
 		if (previous != null){
 			TreeSet<Long> inversePrev = inverse.get(previous);
 			inversePrev.remove(node); 
-			if (inversePrev.size() == 0){
-				Debugger.log("No one is represented by " + previous + " any more!");
+			if (inversePrev.isEmpty()){
+				LOGGER.debug("No one is represented by " + previous + " any more!");
 				res = true; 
 			}
 		}
 		map.put(node, clique);
-		
+
 		TreeSet<Long> nodesForC = inverse.get(clique);
 		if (nodesForC == null) {
 			nodesForC = new TreeSet<>();
@@ -85,7 +87,7 @@ public class Long2Long {
 	 * @param v2
 	 */
 	public void replaceValue(Long v1, Long v2) {
-		//Debugger.log("Trying to replace value " + v1 + " with " + v2 + " in:");
+		LOGGER.debug("Trying to replace value " + v1 + " with " + v2 + " in:");
 		this.display();
 		TreeSet<Long> keys1 = inverse.get(v1);
 		TreeSet<Long> keys2 = inverse.get(v2);

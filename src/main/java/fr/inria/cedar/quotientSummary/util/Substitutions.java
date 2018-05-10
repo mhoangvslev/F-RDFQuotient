@@ -3,6 +3,8 @@ package fr.inria.cedar.quotientSummary.util;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 /**
  * The class computes a set of substitutions given two lists of number pairs.
@@ -18,11 +20,13 @@ import java.util.Set;
  *
  */
 public class Substitutions {
+	private static final Logger LOGGER = Logger.getLogger(Substitutions.class.getName());
 	ArrayList<Long> l1;
 	ArrayList<Long> l2;
 	HashMap<Long, Long> substitutions;
 
 	public Substitutions(Long l11, Long l21, Long l12, Long l22) {
+		LOGGER.setLevel(Level.INFO);
 		l1 = new ArrayList<>();
 		l1.add(l11);
 		l1.add(l12);
@@ -33,12 +37,14 @@ public class Substitutions {
 	}
 
 	public Substitutions(ArrayList<Long> l1, ArrayList<Long> l2) {
+		LOGGER.setLevel(Level.INFO);
 		this.l1 = l1;
 		this.l2 = l2;
 		computeSubstitutions();
 	}
 
 	public Substitutions(Long n1, Long n2) {
+		LOGGER.setLevel(Level.INFO);
 		l1 = new ArrayList<>();
 		l1.add(n1);
 		l2 = new ArrayList<>();
@@ -51,11 +57,11 @@ public class Substitutions {
 		for (int i = 0; i < l1.size(); i++) {
 			Long n1 = l1.get(i);
 			Long n2 = l2.get(i);
-			System.out.println("Comparing " + n1 + " " + n2);
+			LOGGER.debug("Comparing " + n1 + " " + n2);
 			Long n1aux = substitutions.get(n1);
 			Long n2aux = substitutions.get(n2);
-			if (n1 > n2) // we should replace n1 by n2,
-				//System.out.println("n1>n2");
+			if (n1 > n2) { // we should replace n1 by n2,
+				LOGGER.debug("n1>n2");
 				// except if n1 is already replaced by someone smaller
 				// than (n2 or the substitution of n2, if it exists)
 				// in which case, n2 should be replaced by the smallest, too
@@ -85,8 +91,9 @@ public class Substitutions {
 						substitutions.put(n1, n2aux);
 					else // n1aux is null, n2aux is null
 						substitutions.put(n1, n2);
-			if (n2 > n1) // we should replace n2 by n1,
-				//System.out.println("n2 > n1");
+			}
+			if (n2 > n1) { // we should replace n2 by n1,
+				LOGGER.debug("n2 > n1");
 				// except if n2 is already replaced by someone smaller
 				// than (n1 or the substitution of n1, if it exists)
 				// in which case, n1 should be replaced by the smallest, too
@@ -116,8 +123,9 @@ public class Substitutions {
 						substitutions.put(n2, n1aux);
 					else // n1aux is null, n2aux is null
 						substitutions.put(n2, n1);
+			}
 		}
-		//System.out.println("Now substitutions is: " + this.toString());
+		LOGGER.debug("Now substitutions is: " + this.toString());
 	}
 
 	@Override

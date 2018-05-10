@@ -5,9 +5,8 @@ import fr.inria.cedar.quotientSummary.controller.Builder;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.apache.commons.io.FileUtils;
+import org.apache.log4j.Logger;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import org.junit.Test;
@@ -25,9 +24,11 @@ public class WeakSummaryTests {
 				Builder.main(argsSum);
 				String[] argsSave = {"saveSummary", inputFileName};
 				Builder.main(argsSave);
+				argsSave[0] = "exportSummary";
+				Builder.main(argsSave);
 			}
 			catch (UnsupportedDatabaseEngineException ex) {
-				Logger.getLogger(WeakSummaryTests.class.getName()).log(Level.SEVERE, null, ex);
+				Logger.getLogger(WeakSummaryTests.class.getName()).error(ex);
 			}
 			finally {
 				String[] argsCloseConnection = {"closeConnection"};
@@ -35,7 +36,7 @@ public class WeakSummaryTests {
 					Builder.main(argsCloseConnection);
 				}
 				catch (UnsupportedDatabaseEngineException ex1) {
-					Logger.getLogger(WeakSummaryTests.class.getName()).log(Level.SEVERE, null, ex1);
+					Logger.getLogger(WeakSummaryTests.class.getName()).error(ex1);
 				}
 			}
 			return new File(outputFileName);

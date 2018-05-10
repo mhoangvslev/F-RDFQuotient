@@ -5,3 +5,4 @@
 /.settings/
 *.png
 *.dot
+src/test/resources/test*/*_test-*.nt

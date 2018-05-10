@@ -27,25 +27,24 @@ public class DOTAuxiliary {
 		Integer colorForThisNode = coloredSummaryNodes.get(summaryNodeCode);
 		if (colorForThisNode == null) {
 			int modulo = (int) (summaryNodeCode % (svgColorNames.length));
-			coloredSummaryNodes.put(summaryNodeCode,
-									modulo);
-			//Debugger.log("-<-<-<-<-<-< Assigned " + svgColorNames[nextSummaryColorToGive] + " for " + summaryNodeCode);
+			coloredSummaryNodes.put(summaryNodeCode, modulo);
+			//System.out.println("-<-<-<-<-<-< Assigned " + svgColorNames[nextSummaryColorToGive] + " for " + summaryNodeCode);
 			return svgColorNames[modulo];
 		}
 		else
-			//Debugger.log("-<-<-<-<-<-< Retrieved " + svgColorNames[colorForThisNode] + " for " + summaryNodeCode);
+			//System.out.println("-<-<-<-<-<-< Retrieved " + svgColorNames[colorForThisNode] + " for " + summaryNodeCode);
 			return svgColorNames[colorForThisNode];
 	}
 
 	public boolean unknownSummaryNode(long summaryNodeCode) {
 		boolean b = !(coloredSummaryNodes.keySet().contains(summaryNodeCode));
-		////Debugger.log("-<-<-<-<-<-< " + summaryNodeCode + " unknown: " + b);
+		//System.out.println("-<-<-<-<-<-< " + summaryNodeCode + " unknown: " + b);
 		return b;
 	}
 
 	public boolean unknownRDFNode(long RDFNodeCode) {
 		boolean b = !(coloredRDFNodes.contains(RDFNodeCode));
-		//Debugger.log("-o-o-o-o-o-o- " + RDFNodeCode + " unknown: " + b);
+		//System.out.println("-o-o-o-o-o-o- " + RDFNodeCode + " unknown: " + b);
 		coloredRDFNodes.add(RDFNodeCode);
 		return b;
 	}

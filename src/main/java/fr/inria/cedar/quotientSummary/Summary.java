@@ -1,6 +1,5 @@
 package fr.inria.cedar.quotientSummary;
 
-import fr.inria.cedar.commons.miscellaneous.Debugger;
 import fr.inria.cedar.quotientSummary.datastructures.Long2Long;
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
 import fr.inria.cedar.quotientSummary.util.DOTAuxiliary;
@@ -22,31 +21,31 @@ import java.util.HashMap;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 public class Summary {
+	private static final Logger LOGGER = Logger.getLogger(Summary.class.getName());
+
 	protected Long2Long rep; // representative function for untyped nodes
 	protected boolean typeTriplesExist = false;
 	// data, schema and type triples:
-	// for each subject
-	// for each property
-	// the set of objects such that (subject, property, object) is in the
-	// summary
+	//   for each subject
+	//     for each property
+	//       the set of objects such that (subject, property, object) is in the summary
 	protected HashMap<Long, HashMap<Long, TreeSet<Long>>> edges;
 	// for each summary node, the number of graph nodes it represents
 	protected HashMap<Long, Long> summaryNodeStatistics;
 	// for each summary edge, the number of graph edge it represents
 	protected HashMap<Triple, Long> summaryEdgeStatistics;
-	// these serve to represent the nodes that may have types but no
-	// data property
+	// these serve to represent the nodes that may have types but no data property
 	protected long typeOnlyNodeID;
 	protected boolean typeOnlyNodeAlreadySeen;
 	protected Triple lastReadTriple;
 	protected long maxSummaryNode;
 	protected Properties properties;
 	protected static String SUMMARY_CONFIG_FILE = "conf/summarization.properties";
-	// repTablePrefix must be instantiated with a specific string for each
-	// summary type,
-	// so that each summary is saved as separated Postgres tables
+	// repTablePrefix must be instantiated with a specific string for each summary type, so that each summary is saved as separated Postgres tables
 	protected String summaryTablePrefix;
 	protected static String ROOT_SUMMARY_PREFIX = "";
 	protected static String WEAK_SUMMARY_PREFIX = "w_";
@@ -65,6 +64,7 @@ public class Summary {
 	protected long allTriplesSummarizationTime;
 
 	public Summary() {
+		LOGGER.setLevel(Level.INFO);
 		rep = new Long2Long();
 		edges = new HashMap<>();
 		summaryNodeStatistics = new HashMap<>();
@@ -77,8 +77,8 @@ public class Summary {
 		} catch (IOException e) {
 			throw new IllegalStateException("Unable to initialize summary properties");
 		}
-		this.summaryTablePrefix = ROOT_SUMMARY_PREFIX;
-		this.dax = new DOTAuxiliary();
+		summaryTablePrefix = ROOT_SUMMARY_PREFIX;
+		dax = new DOTAuxiliary();
 	}
 
 	/**
@@ -90,21 +90,19 @@ public class Summary {
 	 */
 	protected Triple readTriple(String spo) {
 		int spacePos = spo.indexOf(' ');
-		// System.out.println("String position " + spacePos + " out of: " +
-		// spo.length());
+		LOGGER.debug("String position " + spacePos + " out of: " + spo.length());
 		Long s = new Long(spo.substring(0, spacePos));
 		spo = spo.substring(spacePos + 1, spo.length());
-		// System.out.println("Read s: " + s + " spo is: #" + spo + "#");
+		LOGGER.debug("Read s: " + s + " spo is: #" + spo + "#");
 
 		spacePos = spo.indexOf(' ');
-		// System.out.println("String position " + spacePos + " out of: " +
-		// spo.length());
+		LOGGER.debug("String position " + spacePos + " out of: " + spo.length());
 		Long p = new Long(spo.substring(0, spacePos));
-		// System.out.println("Read p: "+ p + " spo is: =" + spo + "=");
+		LOGGER.debug("Read p: "+ p + " spo is: =" + spo + "=");
 		spo = spo.substring(spacePos + 1, spo.length());
 
 		Long o = new Long(spo);
-		// System.out.println("Read o: " + o);
+		LOGGER.debug("Read o: " + o);
 		lastReadTriple = new Triple(s, p, o);
 		return lastReadTriple;
 	}
@@ -118,31 +116,25 @@ public class Summary {
 	 */
 	protected void addTriple(Long s, Long p, Long o) {
 		Triple t = new Triple(s, p, o);
-		// Debugger.log("XX Trying to add triple " + t.toString());
+		LOGGER.debug("XX Trying to add triple " + t.toString());
 
 		HashMap<Long, TreeSet<Long>> triplesOfThisSubject = edges.get(s);
 		if (triplesOfThisSubject == null) { // no edges yet for this subject;
-			// otherwise, s has already some
-			// edges
+			// otherwise, s has already some edges
 			triplesOfThisSubject = new HashMap<>();
 			edges.put(s, triplesOfThisSubject);
-			// Debugger.log("XX Created triple map for subject " +s);
+			LOGGER.debug("XX Created triple map for subject " +s);
 		}
 		TreeSet<Long> objectsOfThisSubjectAndProperty = triplesOfThisSubject.get(p);
-		if (objectsOfThisSubjectAndProperty == null) { // no edges yet for this
-			// subject and property;
-			// otherwise, s has
-			// already some p edges
+		if (objectsOfThisSubjectAndProperty == null) { // no edges yet for this subject and property; otherwise, s has already some p edges
 			objectsOfThisSubjectAndProperty = new TreeSet<>();
 			triplesOfThisSubject.put(t.p, objectsOfThisSubjectAndProperty);
-			// Debugger.log("XX Created array list for subject " + s + " and
-			// property " + p);
+			LOGGER.debug("XX Created array list for subject " + s + " and property " + p);
 		}
-		if (!objectsOfThisSubjectAndProperty.contains(t.o)) // otherwise, s p o
-			// is already there
-			// Debugger.log("XX " + o + " was not a known value for " + p + " of
-			// " + s + " in " + this.toString());
+		if (!objectsOfThisSubjectAndProperty.contains(t.o)) { // otherwise, s p o is already there
+			LOGGER.debug("XX " + o + " was not a known value for " + p + " of " + s + " in " + this.toString());
 			objectsOfThisSubjectAndProperty.add(o);
+		}
 	}
 
 	protected void checkTypeIsObject() {
@@ -150,8 +142,7 @@ public class Summary {
 			for (Long p : edges.get(s).keySet())
 				for (Long o : edges.get(s).get(p))
 					if (o == RDF2SQLEncoding.getTypeCode())
-						throw new Error("Found type in object position for " + s + " "
-								+ RDF2SQLEncoding.dictionaryDecode(s) + " and " + RDF2SQLEncoding.dictionaryDecode(p));
+						throw new Error("Found type in object position for " + s + " " + RDF2SQLEncoding.dictionaryDecode(s) + " and " + RDF2SQLEncoding.dictionaryDecode(p));
 	}
 
 	// we need to be sure that integers which we invent to represent nodes
@@ -188,7 +179,7 @@ public class Summary {
 	protected void showRep() {
 		StringBuffer sb = new StringBuffer();
 		showRepInBuffer(sb);
-		System.out.println(sb.toString());
+		LOGGER.info(sb.toString());
 	}
 
 	protected Long getNextSummaryNode() {
@@ -213,8 +204,8 @@ public class Summary {
 			throw new Error("Null new node");
 		if (oldNode.equals(newNode))
 			throw new Error("Won't replace equal nodes");
-	Debugger.log("REPLACE IN SUMMARY OLD NODE " + oldNode + " WITH NEW NODE " + newNode);
-		//Debugger.log(this.toString());
+		LOGGER.debug("REPLACE IN SUMMARY OLD NODE " + oldNode + " WITH NEW NODE " + newNode);
+		LOGGER.debug(this.toString());
 		// replace oldNode wherever it existed as an object:
 		for (long s : edges.keySet()) {
 			HashMap<Long, TreeSet<Long>> triplesOfThisSubject = edges.get(s);
@@ -232,53 +223,34 @@ public class Summary {
 						newObjectsForThisSubjectAndProperty.add(o);
 
 				if (arrayChanged)
-					triplesOfThisSubject.replace(propOfThisSubject, newObjectsForThisSubjectAndProperty); // replace
-				// is not a structural modification of the map, thus no concurrent modification exception
+					triplesOfThisSubject.replace(propOfThisSubject, newObjectsForThisSubjectAndProperty); // replace is not a structural modification of the map, thus no concurrent modification exception
 			}
 		}
-		// above we have replaced old with new wherever it appeared *** as an
-		// object ***
-
+		// above we have replaced old with new wherever it appeared *** as an object ***
 		// now let's also do it for the subject:
-		Debugger.log("After replacement as an object, we have: ");
-		Debugger.log(this.toString());
-		Debugger.log("Now replacing as subject");
+		LOGGER.debug("After replacement as an object, we have: ");
+		LOGGER.debug(this.toString());
+		LOGGER.debug("Now replacing as subject");
 
 		HashMap<Long, TreeSet<Long>> oldNodeIsSubject = edges.get(oldNode);
 		if (oldNodeIsSubject != null) { // in some edges, oldNode was subject
-			Debugger.log("Removing edges whose subject is " + oldNode);
-			edges.remove(oldNode); // detach this entry from edges (but keep
-			// them in oldNodeIsSubject for now)
+			LOGGER.debug("Removing edges whose subject is " + oldNode);
+			edges.remove(oldNode); // detach this entry from edges (but keep them in oldNodeIsSubject for now)
 
 			HashMap<Long, TreeSet<Long>> newNodeIsSubject = edges.get(newNode);
-			if (newNodeIsSubject == null) { // the new node was not previously a
-				// subject of some edges
-				Debugger.log("Adding on the new node " + newNode + " the triples of old node " + oldNode);
+			if (newNodeIsSubject == null) { // the new node was not previously a subject of some edges
+				LOGGER.debug("Adding on the new node " + newNode + " the triples of old node " + oldNode);
 				edges.put(newNode, oldNodeIsSubject); // we're done
 			} else // there were already edges whose subject was the new node
-				if (oldNodeIsSubject != null) { // in this case we need to fuse the
-					// two maps so that each edge
-					// appears only once
-					// we will do this by copying those oldNodeIsSubject triples
-					// which were not already on the new node, into the properties
-					// of the new node
-					Debugger.log("There were edges both on old " + oldNode + " and on new " + newNode);
+				if (oldNodeIsSubject != null) { // in this case we need to fuse the two maps so that each edge appears only once
+					// we will do this by copying those oldNodeIsSubject triples which were not already on the new node, into the properties of the new node
+					LOGGER.debug("There were edges both on old " + oldNode + " and on new " + newNode);
 
-					for (Long oldNodeProperty : oldNodeIsSubject.keySet()) { // iterate
-						// over the
-						// properties
-						// of
-						// the
-						// old
-						// node
+					for (Long oldNodeProperty : oldNodeIsSubject.keySet()) { // iterate over the properties of the old node
 						TreeSet<Long> oldNodeObjectsForThisProperty = oldNodeIsSubject.get(oldNodeProperty);
 						TreeSet<Long> newNodeObjectsForThisProperty = newNodeIsSubject.get(oldNodeProperty);
-						if (newNodeObjectsForThisProperty == null) { // the new node
-							// did not
-							// have this
-							// one
-							Debugger.log(newNode + " did not have edges labeled " + oldNodeProperty
-									+ ", he is taking them from " + oldNode);
+						if (newNodeObjectsForThisProperty == null) { // the new node did not have this one
+							LOGGER.debug(newNode + " did not have edges labeled " + oldNodeProperty + ", he is taking them from " + oldNode);
 							newNodeObjectsForThisProperty = new TreeSet<Long>();
 							newNodeIsSubject.put(oldNodeProperty, newNodeObjectsForThisProperty);
 						}
@@ -287,16 +259,14 @@ public class Summary {
 						// oldNodeProperty of the old node:
 						for (Long objectOfOldNode : oldNodeObjectsForThisProperty)
 							if (!newNodeObjectsForThisProperty.contains(objectOfOldNode)) {
-								Debugger.log(newNode + " takes property " + oldNodeProperty + " with value "
-										+ objectOfOldNode + " from " + oldNode);
+								LOGGER.debug(newNode + " takes property " + oldNodeProperty + " with value " + objectOfOldNode + " from " + oldNode);
 								newNodeObjectsForThisProperty.add(objectOfOldNode);
 							} else
-								Debugger.log(newNode + " already had property " + oldNodeProperty + " with value "
-										+ objectOfOldNode);
+								LOGGER.debug(newNode + " already had property " + oldNodeProperty + " with value " + objectOfOldNode);
 					}
 				}
-		} else { // there was no edge with oldNode as a subject, no subject
-			// replacement to do
+		} else {
+			// there was no edge with oldNode as a subject, no subject replacement to do
 		}
 	}
 
@@ -339,9 +309,7 @@ public class Summary {
 							+ this.summaryTablePrefix + "encoded_rep rep1, " + this.summaryTablePrefix
 							+ "encoded_rep rep2, encoded_triples t, " + this.summaryTablePrefix + "encoded_summary es "
 							+ "where rep1.graphnode = t.s and rep2.graphnode=t.o and es.s = rep1.summarynode and es.o = rep2.summarynode and es.p = t.p "
-							+ "group by es.s, es.p, es.o\n"); // + "order by
-			// es.s, es.p,
-			// es.o;");
+							+ "group by es.s, es.p, es.o\n"); // + "order by es.s, es.p, es.o;");
 			while (rs.next()) {
 				Triple t = new Triple(rs.getLong(1), rs.getLong(2), rs.getLong(3));
 				this.summaryEdgeStatistics.put(t, rs.getLong(4));
@@ -367,7 +335,7 @@ public class Summary {
 	 * @param rdfFileName
 	 */
 	public void saveSummaryInPostgres(Connection conn, String rdfFileName) {
-		System.out.println("Saving " + this.getClass().getName() + " in Postgres");
+		LOGGER.info("Saving " + this.getClass().getName() + " in Postgres");
 		Statement stmt;
 		try {
 			long start = System.currentTimeMillis();
@@ -378,9 +346,8 @@ public class Summary {
 				stmt.execute("create table " + this.summaryTablePrefix
 						+ "encoded_rep(graphNode int not null, summaryNode int not null); ");
 			else
-				Debugger.log("Did not create " + this.summaryTablePrefix + "encoded_rep table as it was already there");
-			// empty it (even if the creation failed, e.g. because the table was
-			// already there)
+				LOGGER.info("Did not create " + this.summaryTablePrefix + "encoded_rep table as it was already there");
+			// empty it (even if the creation failed, e.g. because the table was already there)
 			stmt.executeUpdate("delete from " + this.summaryTablePrefix + "encoded_rep; ");
 
 			// now insert all the rep entries:
@@ -400,11 +367,10 @@ public class Summary {
 			// implemented properly.
 			conn.commit();
 			representationFunctionSavingTime = System.currentTimeMillis() - start;
-			System.out.println("Saved representation function in " + representationFunctionSavingTime + " ms");
+			LOGGER.info("Representation function saved in " + representationFunctionSavingTime + " ms");
 		}
 		catch (SQLException e) {
-			throw new IllegalStateException("Could not insert summary triples in "
-											+ this.summaryTablePrefix + "encoded_rep " + e.toString());
+			throw new IllegalStateException("Could not insert summary triples in " + this.summaryTablePrefix + "encoded_rep " + e.toString());
 		}
 
 		try {
@@ -413,8 +379,7 @@ public class Summary {
 			if (!existsTable(conn, this.summaryTablePrefix + "encoded_summary"))
 				stmt.execute("create table " + this.summaryTablePrefix
 						+ "encoded_summary(s int not null, p int not null, o int not null); ");
-			// empty it (even if the creation failed, e.g. because the table was
-			// already there)
+			// empty it (even if the creation failed, e.g. because the table was already there)
 			stmt.executeUpdate("delete from " + this.summaryTablePrefix + "encoded_summary; ");
 
 			// now insert all the summary edges:
@@ -422,7 +387,7 @@ public class Summary {
 			try (PreparedStatement insertInSummary = conn.prepareStatement(insertIntoSummary)) {
 				ArrayList<Triple> edges = this.getSummaryEdges();
 				for (Triple t : edges) {
-					//System.out.println("Saving in Postgres edge: " + t.toString());
+					LOGGER.debug("Saving in Postgres edge: " + t.toString());
 					insertInSummary.setLong(1, t.s);
 					insertInSummary.setLong(2, t.p);
 					insertInSummary.setLong(3, t.o);
@@ -435,8 +400,8 @@ public class Summary {
 				conn.commit();
 				insertInSummary.close();
 				summaryEdgesSavingTime = System.currentTimeMillis() - start;
-				System.out.println("Summary edges saved in " + summaryEdgesSavingTime + " ms");
-				System.out.println("Summary saved in Postgres");
+				LOGGER.info("Summary edges saved in " + summaryEdgesSavingTime + " ms");
+				LOGGER.info("Summary saved in Postgres");
 			}
 		} catch (SQLException e) {
 			throw new IllegalStateException("Could not insert summary triples in " + this.summaryTablePrefix
@@ -477,7 +442,7 @@ public class Summary {
 
 		String summaryNTFileName = getNTSummaryFileName(rdfFileName);
 
-		System.out.println("Decoding summary and writing it in .nt format in " + summaryNTFileName);
+		LOGGER.info("Decoding summary and writing it in .nt format to " + summaryNTFileName);
 
 		boolean gatherStatistics = properties.getProperty("gatherStatistics").toLowerCase().equals("true");
 		if (gatherStatistics)
@@ -487,7 +452,7 @@ public class Summary {
 			BufferedWriter bw = new BufferedWriter(new FileWriter(new File(summaryNTFileName)));
 			// write summary triples:
 			for (Triple t : summEdges) {
-				// System.out.println("Summary triple: " + t.toString() );
+				LOGGER.debug("Summary triple: " + t.toString() );
 				String subject = "", property = "", object = "";
 				if (RDF2SQLEncoding.isDataProperty(t.p)) { // data
 					subject = getSummaryNodeURI(URIprefix, t.s);
@@ -502,7 +467,7 @@ public class Summary {
 					property = RDF2SQLEncoding.dictionaryDecode(t.p);
 					object = RDF2SQLEncoding.dictionaryDecode(t.o);
 				}
-				Debugger.log(subject + " " + property + " " + object);
+				LOGGER.debug(subject + " " + property + " " + object);
 				bw.write(subject + " " + property + " " + object + " .\n");
 			}
 			if (gatherStatistics) {
@@ -512,7 +477,7 @@ public class Summary {
 					String subject = getSummaryNodeURI(URIprefix, node);
 					String property = properties.getProperty("summaryNodeSupportURI");
 					String object = ("\"" + numberOfRepresentedGraphNodes + "\"");
-					Debugger.log(subject + " " + property + " " + object);
+					LOGGER.debug(subject + " " + property + " " + object);
 					bw.write(subject + " <" + property + "> " + object + " .\n");
 				}
 				// write edge cardinality statistics:
@@ -536,7 +501,7 @@ public class Summary {
 		} catch (IOException e) {
 			throw new IllegalStateException("Could not save the decoded summary in .nt file");
 		}
-		System.out.println("Summary decoded and saved in .nt format");
+		LOGGER.info("Summary decoded and saved in .nt format");
 	}
 
 	private String getCoreRDFFileName(String rdfFileName) {
@@ -593,7 +558,7 @@ public class Summary {
 			throw new IllegalStateException("Unable to read config file");
 		}
 		String URIprefix = properties.getProperty("prefixURIForSummaryNodes");
-		// Debugger.log("writeSummaryToDotFile:");
+		LOGGER.debug("writeSummaryToDotFile:");
 
 		try {
 			BufferedWriter bw = new BufferedWriter(new FileWriter(new File(dotFileName)));
@@ -610,13 +575,11 @@ public class Summary {
 					subject = this.getSummaryNodeURI(URIprefix, t.s);
 					subjectInDot = getShortURIForDot(subject).replaceAll("\"", "");
 					if (dax.unknownSummaryNode(t.s))
-						bw.write("\"" + subjectInDot + "\" [style = filled, color=" + dax.getSummaryNodeColor(t.s)
-						+ "];\n");
+						bw.write("\"" + subjectInDot + "\" [style = filled, color=" + dax.getSummaryNodeColor(t.s) + "];\n");
 					object = this.getSummaryNodeURI(URIprefix, t.o);
 					objectInDot = getShortURIForDot(object).replaceAll("\"", "");
 					if (dax.unknownSummaryNode(t.o))
-						bw.write("\"" + objectInDot + "\" [style = filled, color=" + dax.getSummaryNodeColor(t.o)
-						+ "];\n");
+						bw.write("\"" + objectInDot + "\" [style = filled, color=" + dax.getSummaryNodeColor(t.o) + "];\n");
 				} else if (RDF2SQLEncoding.isSchemaProperty(t.p)) { // schema
 					subject = getShortURIForDot(RDF2SQLEncoding.dictionaryDecode(t.s));
 					subjectInDot = subject.replaceAll("\"", "");
@@ -635,13 +598,11 @@ public class Summary {
 					objectInDot = object.replaceAll("\"", "");
 					property = "rdf:type";
 					if (dax.unknownSummaryNode(t.s))
-						bw.write("\"" + subjectInDot + "\" [style = filled, color=" + dax.getSummaryNodeColor(t.s)
-						+ "];\n");
+						bw.write("\"" + subjectInDot + "\" [style = filled, color=" + dax.getSummaryNodeColor(t.s) + "];\n");
 					bw.write("\"" + objectInDot + "\" [fontcolor=white, style = filled, color=black];\n");
 				}
 				// write the triple in all cases:
-				bw.write("\"" + subjectInDot + "\"" + " -> \"" + objectInDot + "\" [label=\"" + propertyInDot
-						+ "\"];\n");
+				bw.write("\"" + subjectInDot + "\"" + " -> \"" + objectInDot + "\" [label=\"" + propertyInDot + "\"];\n");
 
 			}
 			bw.write("}\n");
@@ -649,17 +610,16 @@ public class Summary {
 		} catch (IOException e) {
 			throw new IllegalStateException("Unable to open the DOT file to for the summary: " + e.toString());
 		}
-		System.out.println("Summary written to DOT file " + dotFileName);
+		LOGGER.info("Summary written to DOT file " + dotFileName);
 
 		String pathToDot = properties.getProperty("pathToDot");
 		try {
 			String pngFileName = dotFileName.substring(0, dotFileName.length() - 4) + ".png";
 			Runtime.getRuntime().exec(pathToDot + " -Tpng " + dotFileName + " -o " + pngFileName);
-			System.out.println("Summary drawn to PNG file " + pngFileName);
-		} catch (IOException e) {
-			System.out.println(
-					"Could not turn .dot file into .png (check the pathToDot value in summarization.properties)"
-							+ e.toString());
+			LOGGER.info("Summary drawn to PNG file " + pngFileName);
+		}
+		catch (IOException e) {
+			LOGGER.error("Could not turn .dot file into .png (check the pathToDot value in summarization.properties)" + e.toString());
 		}
 	}
 
@@ -678,10 +638,7 @@ public class Summary {
 	private String getDotFileName(String fullRDFFileName, String suffix) {
 		String coreRDFFileName = getCoreRDFFileName(fullRDFFileName);
 		String dotFileName = fullRDFFileName.replaceFirst(coreRDFFileName, (this.summaryTablePrefix + coreRDFFileName));
-		dotFileName = dotFileName.substring(0, dotFileName.length() - 3) + suffix + ".dot"; // replace
-		// .nt
-		// with
-		// .dot
+		dotFileName = dotFileName.substring(0, dotFileName.length() - 3) + suffix + ".dot"; // replace .nt with .dot
 		return dotFileName;
 	}
 
@@ -727,19 +684,19 @@ public class Summary {
 			BufferedWriter bw = new BufferedWriter(new FileWriter(new File(dotFileName)));
 			bw.write("digraph g{\n");
 			long triplesToDraw = Math.min(25, triplesSummarizedSoFar);
-			System.out.println("Writing " + triplesToDraw + " RDF graph triples to DOT");
+			LOGGER.debug("Writing " + triplesToDraw + " RDF graph triples to DOT");
 			ResultSet rs = getGraphTriplesCursor1ForDotDrawing(con, triplesToDraw);
 			long triplesDrawn = drawTriples(rs, bw); 
-			//Debugger.log("Drawn " + triplesDrawn);
+			LOGGER.debug("Drawn " + triplesDrawn);
 			rs.close();
 			if (triplesDrawn < triplesToDraw){
 				ResultSet rs2 = getGraphTriplesCursor2ForDotDrawing(con, (triplesToDraw-triplesDrawn));
-				//Debugger.log("Got 2nd cursor");
+				LOGGER.debug("Got 2nd cursor");
 				drawTriples(rs2, bw);
 				rs2.close();
 			}
 			bw.write("}\n");
-			//System.out.println("Finished writing file");
+			LOGGER.debug("Finished writing file");
 			bw.close();
 		} catch (IOException e) {
 			throw new IllegalStateException("Unable to open the DOT file to for the summary: " + e.toString());
@@ -747,17 +704,16 @@ public class Summary {
 			throw new IllegalStateException("Unable to read and plot RDF triples: " + e.toString());
 
 		}
-		System.out.println("RDF graph written to DOT file " + dotFileName);
+		LOGGER.info("Graph written to DOT file " + dotFileName);
 
 		String pathToDot = properties.getProperty("pathToDot");
 		try {
 			String pngFileName = dotFileName.substring(0, dotFileName.length() - 4) + ".png";
 			Runtime.getRuntime().exec(pathToDot + " -Tpng " + dotFileName + " -o " + pngFileName);
-			System.out.println("RDF graph drawn to PNG file " + pngFileName);
-		} catch (IOException e) {
-			System.out.println(
-					"Could not turn .dot file into .png (check the pathToDot value in summarization.properties)"
-							+ e.toString());
+			LOGGER.info("Graph drawn to PNG file " + pngFileName);
+		}
+		catch (IOException e) {
+			LOGGER.error("Could not turn .dot file into .png (check the pathToDot value in summarization.properties)" + e.toString());
 		}
 	}
 
@@ -782,8 +738,8 @@ public class Summary {
 				String property = rs.getString(2);
 				Long p = RDF2SQLEncoding.dictionaryEncode(property);
 
-				//System.out.println("Triple! (" + subject + " " + property + " " + object + ")");
-				//System.out.println("Represented by: " + sRep + " " + p + " " + oRep);
+				LOGGER.debug("Triple! (" + subject + " " + property + " " + object + ")");
+				LOGGER.debug("Represented by: " + sRep + " " + p + " " + oRep);
 				writeGraphTripleToDotFile(bw, s, p, o, subject, property, object, sRep, oRep);
 				triplesDrawnInDot++;
 
@@ -802,34 +758,31 @@ public class Summary {
 		throw new IllegalStateException("Not supposed to be called at this level"); 
 	}
 
-	private void writeGraphTripleToDotFile(BufferedWriter bw, Long s, Long p, Long o, String subject, String property,
-			String object, Long sRep, Long oRep) {
+	private void writeGraphTripleToDotFile(BufferedWriter bw, Long s, Long p, Long o, String subject, String property, String object, Long sRep, Long oRep) {
 		String subjectForDot = getShortURIForDot(subject).replaceAll("\"", "");
 		String objectForDot = getShortURIForDot(object).replaceAll("\"", "");
 		String propertyForDot = getShortURIForDot(property).replaceAll("\"", "");
 
 		try {
 			if (RDF2SQLEncoding.isDataProperty(p)) {
-				if (dax.unknownRDFNode(s))
-					//System.out.println("Data-S " + s + " (" + subject + ") represented by  " + sRep + " colored "
-					//		+ dax.getSummaryNodeColor(sRep));
+				//if (dax.unknownRDFNode(s))
+				//	LOGGER.debug("Data-S " + s + " (" + subject + ") represented by  " + sRep + " colored " + dax.getSummaryNodeColor(sRep));
 				bw.write("\"" + subjectForDot + "\" [style = filled, color=" + dax.getSummaryNodeColor(sRep) + "];\n");
 				//if (dax.unknownRDFNode(o))
-					//System.out.println("Data-O " + o + " (" + object + ")");
-				//System.out.println("represented by " + oRep + " colored " + dax.getSummaryNodeColor(oRep));
+				//	LOGGER.debug("Data-O " + o + " (" + object + ") represented by " + oRep + " colored " + dax.getSummaryNodeColor(oRep));
 				bw.write("\"" + objectForDot + "\" [style = filled, color=" + dax.getSummaryNodeColor(oRep) + "];\n");
 			} else if (RDF2SQLEncoding.isSchemaProperty(p)) {
 				propertyForDot = getShortURIForDot(property).replaceAll("\"", "");
 				//if (dax.unknownRDFNode(s))
-					//System.out.println("SCH1 " + s + " (" + subject + ") represented by  " + sRep);
+				//	LOGGER.debug("SCH1 " + s + " (" + subject + ") represented by  " + sRep);
 				bw.write("\"" + subjectForDot + "\" [fontcolor=white, style = filled, color=black];\n");
 				//if (dax.unknownRDFNode(o))
-				//	System.out.println("SCH2 " + s + " (" + subject + ") represented by  " + sRep);
+				//	LOGGER.debug("SCH2 " + s + " (" + subject + ") represented by  " + sRep);
 				bw.write("\"" + objectForDot + "\" [fontcolor=white, style = filled, color=black];\n");
 			} else { // type
-				//Debugger.log("Type triple");
+				LOGGER.debug("Type triple");
 				//if (dax.unknownRDFNode(s))
-				//	System.out.println("TYP1 " + s + " (" + subject + ") represented by  " + sRep);
+				//	LOGGER.debug("TYP1 " + s + " (" + subject + ") represented by  " + sRep);
 				if (dax == null){
 					throw new IllegalStateException("Null dax");
 				}
@@ -839,12 +792,11 @@ public class Summary {
 				bw.write("\"" + subjectForDot + "\" [style = filled, color=" + dax.getSummaryNodeColor(sRep) + "];\n");
 
 				//if (dax.unknownRDFNode(o))
-				//	System.out.println("TYP2 " + o + " (" + object + ") represented by  " + oRep);
+				//	LOGGER.debug("TYP2 " + o + " (" + object + ") represented by  " + oRep);
 				bw.write("\"" + objectForDot + "\" [fontcolor=white, style = filled, color=black];\n");
 			}
-			bw.write(
-					"\"" + subjectForDot + "\"" + " -> \"" + objectForDot + "\" [label=\"" + propertyForDot + "\"];\n");
-			//System.out.println("Written a line in dot");
+			bw.write("\"" + subjectForDot + "\"" + " -> \"" + objectForDot + "\" [label=\"" + propertyForDot + "\"];\n");
+			LOGGER.debug("Written a line in dot");
 		} catch (IOException e) {
 			throw new IllegalStateException("Unable to open the DOT file to for the summary: " + e.toString());
 		}
@@ -876,8 +828,7 @@ public class Summary {
 			this.writeEncodedTripleToFile(bw);
 			bw.close();
 		} catch (IOException e) {
-			throw new IllegalStateException(
-					"Could not write encoded summary to file: " + fileName + ". Is the path correct?");
+			throw new IllegalStateException("Could not write encoded summary to file: " + fileName + ". Is the path correct?");
 		}
 	}
 
@@ -906,8 +857,7 @@ public class Summary {
 			bw.write("}\n");
 			bw.close();
 		} catch (IOException e) {
-			throw new IllegalStateException(
-					"Could not write encoded summary to dot file: " + dotFile + ". Is the path correct?");
+			throw new IllegalStateException("Could not write encoded summary to dot file: " + dotFile + ". Is the path correct?");
 		}
 	}
 
@@ -927,7 +877,7 @@ public class Summary {
 	public static Summary readSummaryFromFile(String[] args) throws IOException {
 		Summary sum = new Summary();
 		String summaryTripleFileName = args[0];
-		System.out.println("Trying to read an encoded summary from file:" + summaryTripleFileName);
+		LOGGER.info("Trying to read an encoded summary from file: " + summaryTripleFileName);
 		try (BufferedReader br = new BufferedReader(new FileReader(new File(summaryTripleFileName)))) {
 			while (br.ready()) {
 				String spo = br.readLine().replaceAll("<", "").replaceAll(">", "");
@@ -939,17 +889,14 @@ public class Summary {
 	}
 
 	public Summary(Connection conn) throws SQLException {
-		// Debugger.log("Trying to read summary from Postgres");
+		LOGGER.info("Trying to read summary from Postgres");
 		RDF2SQLEncoding.setUp(conn);
-		// Debugger.log("Set up special URIs from dictionary");
+		LOGGER.debug("Set up special URIs from dictionary");
 		String getSummaryTriples = ("select *  from " + this.summaryTablePrefix + "encoded_summary");
-		try (Statement getTriples = conn.createStatement();
-				// Debugger.log("Created statement");
-				ResultSet rs = getTriples.executeQuery(getSummaryTriples) // Debugger.log("Asking
-						// for
-						// summary
-						// triples")
-				) {
+		try (
+			Statement getTriples = conn.createStatement();
+			ResultSet rs = getTriples.executeQuery(getSummaryTriples);
+		) {
 			while (rs.next()) {
 				Long s = rs.getLong(1);
 				Long p = rs.getLong(2);
@@ -957,10 +904,10 @@ public class Summary {
 				this.addTriple(s, p, o);
 			}
 		}
-		System.out.println("Read summary from Postgres");
+		LOGGER.info("Summary read from Postgres");
 	}
 
-	public void summarizeFromRDBMS(Connection conn, String[] args) {
+	public void summarizeFromPostgres(Connection conn, String[] args) {
 		throw new IllegalStateException("This method is not defined for " + this.getClass().getName());
 	}
 
@@ -974,7 +921,7 @@ public class Summary {
 
 	public static Summary readSummaryFromPostgres(Connection conn) {
 		Summary sum = new Summary();
-		Debugger.log("Trying to read summary from Postgres");
+		LOGGER.info("Trying to read summary from Postgres");
 		RDF2SQLEncoding.setUp(conn);
 		return sum;
 	}
@@ -1007,13 +954,13 @@ public class Summary {
 	}
 
 	protected void showClique(ArrayList<Long> arrayList) {
-		System.out.println(showCliqueAsString(arrayList));
+		LOGGER.info(showCliqueAsString(arrayList));
 	}
 	protected String showCliqueAsString(ArrayList<Long> arrayList) {
 		StringBuffer sb = new StringBuffer();
 		sb.append("[");
 		for (Long l : arrayList)
-			sb.append(l).append("(" + RDF2SQLEncoding.dictionaryDecode(l) + ") ");
+			sb.append(l).append("(").append(RDF2SQLEncoding.dictionaryDecode(l)).append(") ");
 		sb.append("]");
 		return new String(sb); 
 	}

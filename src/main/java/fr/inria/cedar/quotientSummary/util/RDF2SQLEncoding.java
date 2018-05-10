@@ -7,6 +7,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 /**
  * This class serves exactly to encode / decode the five special RDF properties we are interested in
@@ -15,6 +17,7 @@ import java.util.HashMap;
  *
  */
 public class RDF2SQLEncoding {
+	private static final Logger LOGGER = Logger.getLogger(RDF2SQLEncoding.class.getName());
 	protected static long typeCode = -1; // this is the long associated by OntoSQL to rdf:type. 
 	protected static long subClassCode = -1;
 	protected static long subPropertyCode = -1;
@@ -77,16 +80,17 @@ public class RDF2SQLEncoding {
 	}
 
 	public static void setRDFBuiltInPropertyCodes() {
+		LOGGER.setLevel(Level.INFO);
 		setTypeCode();
-		System.out.println("rdf:type code is " + typeCode);
+		LOGGER.debug("rdf:type code is " + typeCode);
 		setSubClassCode();
-		System.out.println("rdfs:subclass  code is: " + subClassCode);
+		LOGGER.debug("rdfs:subclass  code is: " + subClassCode);
 		setSubPropertyCode();
-		System.out.println("rdfs:subproperty code is: " + subPropertyCode);
+		LOGGER.debug("rdfs:subproperty code is: " + subPropertyCode);
 		setDomainCode();
-		System.out.println("rdfs:domain code is: " + domainCode);
+		LOGGER.debug("rdfs:domain code is: " + domainCode);
 		setRangeCode();
-		System.out.println("rdfs:range code is: " + rangeCode);
+		LOGGER.debug("rdfs:range code is: " + rangeCode);
 	}
 
 	private static void setTypeCode() {
@@ -125,9 +129,11 @@ public class RDF2SQLEncoding {
 		try {
 			stmtEncode.setString(1, URI);
 			ResultSet rs = stmtEncode.executeQuery();
-			//Debugger.log("Asked query: " + learnCodeQueryString);
-			if (rs.next())
-				code = rs.getInt(1); //Debugger.log("The code of " + URI + " is: " + constantCode);
+			//LOGGER.debug("Asked query: " + learnCodeQueryString);
+			if (rs.next()) {
+				code = rs.getInt(1);
+				//LOGGER.debug("The code of " + URI + " is: " + constantCode);
+			}
 			rs.close();
 		}
 		catch (SQLException e) {

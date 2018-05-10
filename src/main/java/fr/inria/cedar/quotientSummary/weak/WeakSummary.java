@@ -102,7 +102,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 	 * @param args
 	 */
 	@Override
-	public void summarizeFromRDBMS(Connection conn, String[] args) {
+	public void summarizeFromPostgres(Connection conn, String[] args) {
 		//Debugger.setFlag(true);
 		long start = System.currentTimeMillis();
 		String tableName = args[0];
