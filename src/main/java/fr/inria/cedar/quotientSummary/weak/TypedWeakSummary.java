@@ -14,7 +14,6 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.TreeSet;
 
@@ -49,7 +48,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		cs = new Long2LongSet();
 		n2cs = new Long2Long();	
 		n2c = new Long2LongSet();
-		cs2csID = new HashMap<TreeSet<Long>, Long>();
+		cs2csID = new HashMap<>();
 		this.summaryTablePrefix = TYPED_WEAK_SUMMARY_PREFIX;
 	}
 

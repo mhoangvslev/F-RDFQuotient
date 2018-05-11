@@ -305,11 +305,11 @@ public class Summary {
 		try {
 			Statement edgeStatisticQuery = RDF2SQLEncoding.getConnection().createStatement();
 			ResultSet rs = edgeStatisticQuery.executeQuery(
-					"select es.s as summary_source, es.p as summary_prop, es.o as summary_target, count(*) " + "from "
-							+ this.summaryTablePrefix + "encoded_rep rep1, " + this.summaryTablePrefix
-							+ "encoded_rep rep2, encoded_triples t, " + this.summaryTablePrefix + "encoded_summary es "
-							+ "where rep1.graphnode = t.s and rep2.graphnode=t.o and es.s = rep1.summarynode and es.o = rep2.summarynode and es.p = t.p "
-							+ "group by es.s, es.p, es.o\n"); // + "order by es.s, es.p, es.o;");
+				"select es.s as summary_source, es.p as summary_prop, es.o as summary_target, count(*) " + "from "
+					+ this.summaryTablePrefix + "encoded_rep rep1, " + this.summaryTablePrefix
+					+ "encoded_rep rep2, encoded_triples t, " + this.summaryTablePrefix + "encoded_summary es "
+					+ "where rep1.graphnode = t.s and rep2.graphnode=t.o and es.s = rep1.summarynode and es.o = rep2.summarynode and es.p = t.p "
+					+ "group by es.s, es.p, es.o\n"); // + "order by es.s, es.p, es.o;");
 			while (rs.next()) {
 				Triple t = new Triple(rs.getLong(1), rs.getLong(2), rs.getLong(3));
 				this.summaryEdgeStatistics.put(t, rs.getLong(4));
@@ -332,9 +332,9 @@ public class Summary {
 	 * subject and objects in the summary edges are just "new integer codes".
 	 *
 	 * @param conn
-	 * @param rdfFileName
+	 * @param tableName
 	 */
-	public void saveSummaryInPostgres(Connection conn, String rdfFileName) {
+	public void saveSummaryInPostgres(Connection conn, String tableName) {
 		LOGGER.info("Saving " + this.getClass().getName() + " in Postgres");
 		Statement stmt;
 		try {
@@ -342,9 +342,10 @@ public class Summary {
 			conn.setAutoCommit(false);
 			stmt = conn.createStatement();
 			// create the table (it may have existed)
-			if (!existsTable(conn, this.summaryTablePrefix + "encoded_rep"))
-				stmt.execute("create table " + this.summaryTablePrefix
-						+ "encoded_rep(graphNode int not null, summaryNode int not null); ");
+			if (!existsTable(conn, this.summaryTablePrefix + "encoded_rep")) {
+				stmt.execute("create table " + this.summaryTablePrefix + "encoded_rep(graphNode int not null, summaryNode int not null); ");
+				LOGGER.info("Table " + this.summaryTablePrefix + "encoded_rep created");
+			}
 			else
 				LOGGER.info("Did not create " + this.summaryTablePrefix + "encoded_rep table as it was already there");
 			// empty it (even if the creation failed, e.g. because the table was already there)
@@ -404,8 +405,7 @@ public class Summary {
 				LOGGER.info("Summary saved in Postgres");
 			}
 		} catch (SQLException e) {
-			throw new IllegalStateException("Could not insert summary triples in " + this.summaryTablePrefix
-					+ "encoded_summary " + e.toString());
+			throw new IllegalStateException("Could not insert summary triples in " + this.summaryTablePrefix + "encoded_summary " + e.toString());
 		}
 	}
 
@@ -434,13 +434,13 @@ public class Summary {
 	 * summary to the standard output and also saves it in a separate .nt file
 	 *
 	 * @param con
-	 * @param rdfFileName
+	 * @param graphFileName
 	 */
-	public void writeDecodedSummaryToNTFile(Connection con, String rdfFileName) {
+	public void writeDecodedSummaryToNTFile(String graphFileName) {
 
 		String URIprefix = properties.getProperty("prefixURIForSummaryNodes");
 
-		String summaryNTFileName = getNTSummaryFileName(rdfFileName);
+		String summaryNTFileName = getNTSummaryFileName(graphFileName);
 
 		LOGGER.info("Decoding summary and writing it in .nt format to " + summaryNTFileName);
 
@@ -504,18 +504,17 @@ public class Summary {
 		LOGGER.info("Summary decoded and saved in .nt format");
 	}
 
-	private String getCoreRDFFileName(String rdfFileName) {
-		int lastDotPosition = Math.max(0, rdfFileName.lastIndexOf("."));
-		int lastSlashPosition = Math.max(0, rdfFileName.lastIndexOf("/"));
+	private String getCoreGraphFileName(String graphFileName) {
+		int lastDotPosition = Math.max(0, graphFileName.lastIndexOf("."));
+		int lastSlashPosition = Math.max(0, graphFileName.lastIndexOf("/"));
 		if (lastDotPosition - lastSlashPosition < 1)
-			throw new IllegalStateException("Was not able to extract a core component of the file name " + rdfFileName);
-		return rdfFileName.substring(lastSlashPosition + 1, lastDotPosition + 3);
+			throw new IllegalStateException("Was not able to extract a core component of the file name " + graphFileName);
+		return graphFileName.substring(lastSlashPosition + 1, lastDotPosition + 3);
 	}
 
-	private String getNTSummaryFileName(String rdfFileName) {
-		String coreRDFFileName = getCoreRDFFileName(rdfFileName);
-		String summaryNTFileName = rdfFileName.replaceFirst(coreRDFFileName,
-				(this.summaryTablePrefix + coreRDFFileName));
+	private String getNTSummaryFileName(String graphFileName) {
+		String coregraphFileName = getCoreGraphFileName(graphFileName);
+		String summaryNTFileName = graphFileName.replaceFirst(coregraphFileName, (this.summaryTablePrefix + coregraphFileName));
 		return summaryNTFileName;
 	}
 
@@ -531,15 +530,15 @@ public class Summary {
 		return ("<" + uriPrefix + this.getSummaryURIPrefix() + n + ">");
 	}
 
-	public void drawSummaryAndGraph(Connection con, String fullRDFFileName) {
-		this.drawSummaryAndGraph(con, fullRDFFileName, "");
+	public void drawSummaryAndGraph(Connection conn, String fullGraphFileName) {
+		this.drawSummaryAndGraph(conn, fullGraphFileName, "");
 	}
 
-	protected void drawSummaryAndGraph(Connection con, String fullRDFFileName, String suffix) {
-		String summaryDotFileName = getDotFileName(fullRDFFileName, suffix);
-		writeSummaryToDotFile(con, summaryDotFileName);
-		String graphDotFileName = getRDFDotFileName(fullRDFFileName, suffix);
-		writeRDFGraphToDotFile(con, graphDotFileName);
+	protected void drawSummaryAndGraph(Connection conn, String fullGraphFileName, String suffix) {
+		String summaryDotFileName = getDotFileName(fullGraphFileName, suffix);
+		writeSummaryToDotFile(summaryDotFileName);
+		String graphDotFileName = getRDFDotFileName(fullGraphFileName, suffix);
+		writeRDFGraphToDotFile(conn, graphDotFileName);
 	}
 
 	/**
@@ -549,7 +548,7 @@ public class Summary {
 	 * @param con
 	 * @param dotFileName
 	 */
-	protected void writeSummaryToDotFile(Connection con, String dotFileName) {
+	protected void writeSummaryToDotFile(String dotFileName) {
 		dax.resetColors();
 		Properties properties = new Properties();
 		try {
@@ -630,14 +629,14 @@ public class Summary {
 	 *
 	 * It also inserts the suffix with a "-" before the ".".
 	 *
-	 * @param fullRDFFileName
+	 * @param fullGraphFileName
 	 * @param suffix
 	 *
 	 * @return
 	 */
-	private String getDotFileName(String fullRDFFileName, String suffix) {
-		String coreRDFFileName = getCoreRDFFileName(fullRDFFileName);
-		String dotFileName = fullRDFFileName.replaceFirst(coreRDFFileName, (this.summaryTablePrefix + coreRDFFileName));
+	private String getDotFileName(String fullGraphFileName, String suffix) {
+		String coreGraphFileName = getCoreGraphFileName(fullGraphFileName);
+		String dotFileName = fullGraphFileName.replaceFirst(coreGraphFileName, (this.summaryTablePrefix + coreGraphFileName));
 		dotFileName = dotFileName.substring(0, dotFileName.length() - 3) + suffix + ".dot"; // replace .nt with .dot
 		return dotFileName;
 	}
@@ -648,13 +647,13 @@ public class Summary {
 	 *
 	 * It also adds the suffix just before the "."
 	 *
-	 * @param fullRDFFileName
+	 * @param fullGraphFileName
 	 * @param suffix
 	 *
 	 * @return
 	 */
-	private String getRDFDotFileName(String fullRDFFileName, String suffix) {
-		return (fullRDFFileName.substring(0, fullRDFFileName.length() - 3)) + suffix + ".dot";
+	private String getRDFDotFileName(String fullGraphFileName, String suffix) {
+		return (fullGraphFileName.substring(0, fullGraphFileName.length() - 3)) + suffix + ".dot";
 	}
 
 	/**
@@ -672,7 +671,7 @@ public class Summary {
 			return "..." + URI.substring(URI.length() - (maxNodeLabelLength - 4), URI.length());
 	}
 
-	public void writeRDFGraphToDotFile(Connection con, String dotFileName) {
+	public void writeRDFGraphToDotFile(Connection conn, String dotFileName) {
 		Properties properties = new Properties();
 		try {
 			properties.load(new FileReader(SUMMARY_CONFIG_FILE));
@@ -685,12 +684,12 @@ public class Summary {
 			bw.write("digraph g{\n");
 			long triplesToDraw = Math.min(25, triplesSummarizedSoFar);
 			LOGGER.debug("Writing " + triplesToDraw + " RDF graph triples to DOT");
-			ResultSet rs = getGraphTriplesCursor1ForDotDrawing(con, triplesToDraw);
+			ResultSet rs = getGraphTriplesCursor1ForDotDrawing(conn, triplesToDraw);
 			long triplesDrawn = drawTriples(rs, bw); 
 			LOGGER.debug("Drawn " + triplesDrawn);
 			rs.close();
 			if (triplesDrawn < triplesToDraw){
-				ResultSet rs2 = getGraphTriplesCursor2ForDotDrawing(con, (triplesToDraw-triplesDrawn));
+				ResultSet rs2 = getGraphTriplesCursor2ForDotDrawing(conn, (triplesToDraw-triplesDrawn));
 				LOGGER.debug("Got 2nd cursor");
 				drawTriples(rs2, bw);
 				rs2.close();
@@ -817,9 +816,9 @@ public class Summary {
 		return res;
 	}
 
-	public void display(String fullRDFFileName) {
-		writeEncodedSummaryToFile(getNTSummaryFileName(fullRDFFileName));
-		writeEncodedSummaryToDotFile(getDotFileName(fullRDFFileName, ""));
+	public void display(String fullGraphFileName) {
+		writeEncodedSummaryToFile(getNTSummaryFileName(fullGraphFileName));
+		writeEncodedSummaryToDotFile(getDotFileName(fullGraphFileName, ""));
 	}
 
 	public void writeEncodedSummaryToFile(String fileName) {
@@ -862,11 +861,11 @@ public class Summary {
 	}
 
 	/**
-	 * Reads summary triples from an .nt file TODO the method is currently
-	 * insufficient as in the summary that has been read, the codes of special
-	 * properties are not known. Either fix by starting the serialization in a
-	 * file with the five magic constants, or don't use for now. Instead, use
-	 * readSummaryFromPostgres (below).
+	 * Reads summary triples from an .nt file
+	 * TODO: the method is currently insufficient as in the summary that has
+	 * been read, the codes of special properties are not known. Either fix by
+	 * starting the serialization in a file with the five magic constants, or
+	 * don't use for now. Instead, use readSummaryFromPostgres (below).
 	 *
 	 * @param args
 	 *

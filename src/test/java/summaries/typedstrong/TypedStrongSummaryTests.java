@@ -22,10 +22,10 @@ public class TypedStrongSummaryTests {
 			String[] argsSum = {"loadWithSaturationAndSummarize", "typedstrong", inputFileName};
 			try {
 				Builder.main(argsSum);
-				String[] argsSave = {"saveSummary", inputFileName};
+				String[] argsSave = {"saveSummary"};
 				Builder.main(argsSave);
-				argsSave[0] = "exportSummary";
-				Builder.main(argsSave);
+				String[] argsExport = {"exportSummary", inputFileName};
+				Builder.main(argsExport);
 			}
 			catch (UnsupportedDatabaseEngineException ex) {
 				Logger.getLogger(TypedStrongSummaryTests.class.getName()).error(ex);

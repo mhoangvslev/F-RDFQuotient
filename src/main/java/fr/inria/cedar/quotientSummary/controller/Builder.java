@@ -60,32 +60,32 @@ public class Builder {
 				connectionInUse = loadGraphInPostgres(nextArguments, true);
 				return;
 			case "summarizeUnsaturated":
-				summaryInUse = summarizeGraphFromPostgres(connectionInUse, nextArguments, false);
+				summaryInUse = summarizeGraphFromPostgres(nextArguments, false);
 				return;
 			case "summarizeSaturated":
-				summaryInUse = summarizeGraphFromPostgres(connectionInUse, nextArguments, true);
+				summaryInUse = summarizeGraphFromPostgres(nextArguments, true);
 				return;
 			case "saturate":
-				saturate(connectionInUse);
+				saturate();
 				return;
 			case "loadWithSaturationAndSummarize":
 				connectionInUse = loadGraphInPostgres(filesToLoad, true);
-				summaryInUse = summarizeGraphFromPostgres(connectionInUse, nextArguments, true);
+				summaryInUse = summarizeGraphFromPostgres(nextArguments, true);
 				return;
 			case "loadAndSummarizeUsingShortcut":
 				connectionInUse = loadGraphInPostgres(filesToLoad, false);
-				summarizeGraphFromPostgres(connectionInUse, nextArguments, false);
-				saturate(connectionInUse);
-				summaryInUse = summarizeGraphFromPostgres(connectionInUse, nextArguments, true);
+				summarizeGraphFromPostgres(nextArguments, false);
+				saturate();
+				summaryInUse = summarizeGraphFromPostgres(nextArguments, true);
 				return;
 			case "saveSummary":
-				saveSummary(connectionInUse, summaryInUse, nextArguments);
+				saveSummary();
 				return;
 			case "exportSummary":
-				exportSummary(connectionInUse, summaryInUse, nextArguments);
+				exportSummary(nextArguments);
 				return;
 			case "closeConnection":
-				closeConnection(connectionInUse);
+				closeConnection();
 				return;
 			default:
 				break;
@@ -201,11 +201,11 @@ public class Builder {
 	 * @throws IOException
 	 * @throws SQLException
 	 */
-	private static Summary summarizeGraphFromPostgres(Connection conn, String[] args, Boolean summarizeSaturated) throws SQLException, IOException {
+	private static Summary summarizeGraphFromPostgres(String[] args, Boolean summarizeSaturated) throws SQLException, IOException {
 		LOGGER.info("Summarizing graph from Postgres");
 		Summary sum = createNewSummary(args[0]);
 		args[0] = tableName(summarizeSaturated);
-		sum.summarizeFromPostgres(conn, args);
+		sum.summarizeFromPostgres(connectionInUse, args);
 		LOGGER.info("Graph from Postgres summarized");
 		return sum;
 	}
@@ -226,11 +226,11 @@ public class Builder {
 	}
 
 	private static String tableName(Boolean summarizeSaturated) {
-		return "encoded_triples"; // TODO
+		return "encoded_triples"; // TODO: return correct name
 	}
 
-	private static void saturate(Connection connectionInUse1) {
-		return; // TODO
+	private static void saturate() {
+		return; // TODO: use variable connectionInUse
 	}
 
 	private static Summary readSummaryFromPostgres(String summaryType, Connection conn) {
@@ -248,20 +248,20 @@ public class Builder {
 		return null;
 	}
 
-	private static void saveSummary(Connection conn, Summary sum, String[] args) {
-		sum.saveSummaryInPostgres(conn, args[0]);
+	private static void saveSummary() {
+		summaryInUse.saveSummaryInPostgres(connectionInUse, ""); // TODO: tableName
 	}
 
-	private static void exportSummary(Connection conn, Summary sum, String[] args) {
+	private static void exportSummary(String[] args) {
 		LOGGER.info("Exporting summary to disk");
-		sum.writeDecodedSummaryToNTFile(conn, args[0]);
-		sum.drawSummaryAndGraph(conn, args[0]);
-		LOGGER.info("Statistics: " + sum.getRunStatistics().toString());
+		summaryInUse.writeDecodedSummaryToNTFile(args[0]);
+		summaryInUse.drawSummaryAndGraph(connectionInUse, args[0]);
+		LOGGER.info("Statistics: " + summaryInUse.getRunStatistics().toString());
 		LOGGER.info("Summary exported to disk");
 	}
 
-	private static void closeConnection(Connection conn) throws SQLException {
-		conn.close();
+	private static void closeConnection() throws SQLException {
+		connectionInUse.close();
 		LOGGER.info("Connection closed");
 	}
 }

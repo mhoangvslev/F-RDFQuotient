@@ -69,7 +69,6 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 
 		String tableName = args[0];
 		String dataTriplesFileName = args[1];
-		System.out.println(" dataTriplesFileName " + dataTriplesFileName);
 
 		// this is needed to find the constants associated to special RDF properties
 		RDF2SQLEncoding.setUp(conn);

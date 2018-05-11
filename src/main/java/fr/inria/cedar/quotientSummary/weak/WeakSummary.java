@@ -11,7 +11,6 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.TreeSet;
 
@@ -107,7 +106,6 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 		long start = System.currentTimeMillis();
 		String tableName = args[0];
 		String dataTriplesFileName = args[1];
-		System.out.println(" dataTriplesFileName " + dataTriplesFileName);
 		// this is needed to find the constants associated to special RDF properties
 		RDF2SQLEncoding.setUp(conn);
 		long typeConstantCode = RDF2SQLEncoding.getTypeCode();

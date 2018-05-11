@@ -25,10 +25,10 @@ public class StrongSummaryTests {
 			String[] argsSum = {"loadWithSaturationAndSummarize", "strong", inputFileName};
 			try {
 				Builder.main(argsSum);
-				String[] argsSave = {"saveSummary", inputFileName};
+				String[] argsSave = {"saveSummary"};
 				Builder.main(argsSave);
-				argsSave[0] = "exportSummary";
-				Builder.main(argsSave);
+				String[] argsExport = {"exportSummary", inputFileName};
+				Builder.main(argsExport);
 			}
 			catch (UnsupportedDatabaseEngineException ex) {
 				Logger.getLogger(StrongSummaryTests.class.getName()).error(ex);
