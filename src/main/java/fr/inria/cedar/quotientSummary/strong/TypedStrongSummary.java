@@ -18,14 +18,14 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	Long2Long n2cs; // for each node, its class set ID. This is also the rep function for typed nodes
 	Long2LongSet n2c; // for each node, the set of types we know so far for this node
 	HashMap<TreeSet<Long>, Long> cs2csID; // for each set of types known so far, the ID of that set
-	
+
 	public TypedStrongSummary() {
 		super();
 		cs = new Long2LongSet();
 		n2sc = new Long2Long();
 		rep = new Long2Long();
 		n2cs = new Long2Long();
-		
+
 		n2c = new Long2LongSet();
 		cs2csID = new HashMap<>();
 		minCliqueID = -1;
@@ -35,7 +35,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		numberOfTypeTriplesRead = 0;
 		this.summaryTablePrefix = TYPED_STRONG_SUMMARY_PREFIX;
 	}
-	
+
 	/**
 	 * this must be called after the constructor as the summary needs to ask more queries
 	 * for patching itself up during summarization.
@@ -55,7 +55,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		this.conn = conn; 
 		this.summaryTablePrefix = TYPED_STRONG_SUMMARY_PREFIX;
 		Debugger.log("Reading TypedStrong summary from Postgres, setting up special URIs from the dictionary");
-		RDF2SQLEncoding.setUp(conn);
+		RDF2SQLEncoding.setUp(conn, "dictionary");
 		String getSummaryTriples = getSummaryTriplesSQLQuery();
 		try {
 			Statement getTriples = conn.createStatement();
@@ -70,7 +70,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 			}
 		}
 		catch (SQLException e) {
-			throw new IllegalStateException("Unable to read Typed Strong summary from Postgres " + e.getStackTrace());
+			throw new IllegalStateException("Unable to read Typed Strong summary from Postgres: " + e.toString());
 		}
 		System.out.println("Read Typed Strong summary from Postgres");
 	}
@@ -89,7 +89,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		String tableName = args[0];
 		String dataTriplesFileName = args[1];
 		// this is needed to find the constants associated to special RDF properties
-		RDF2SQLEncoding.setUp(conn);
+		RDF2SQLEncoding.setUp(conn, args[2]);
 		long typeConstantCode = RDF2SQLEncoding.getTypeCode();
 		if (typeConstantCode != -1) {
 			this.typeTriplesExist = true;
@@ -100,18 +100,18 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		triplesSummarizedSoFar = 0;
 		String getTypedTriplesString = ("select *  from " + tableName + " where p =" + typeConstantCode);
 		try {
-			Statement getTypedTriples = conn.createStatement();
-			getTypedTriples.setFetchSize(1000);
-			ResultSet rs = getTypedTriples.executeQuery(getTypedTriplesString);
-			while (rs.next()) {
-				Triple t = new Triple(rs.getInt(1), rs.getInt(2), rs.getInt(3));
-				//Debugger.log("### Type triple " + t.toString());
-				this.handleTypeTripleBeforeData(t);
-				triplesSummarizedSoFar++;
-				this.numberOfTypeTriplesRead++;
+			try (Statement getTypedTriples = conn.createStatement()) {
+				getTypedTriples.setFetchSize(1000);
+				try (ResultSet rs = getTypedTriples.executeQuery(getTypedTriplesString)) {
+					while (rs.next()) {
+						Triple t = new Triple(rs.getInt(1), rs.getInt(2), rs.getInt(3));
+						//Debugger.log("### Type triple " + t.toString());
+						this.handleTypeTripleBeforeData(t);
+						triplesSummarizedSoFar++;
+						this.numberOfTypeTriplesRead++;
+					}
+				}
 			}
-			rs.close();
-			getTypedTriples.close();
 		}
 		catch (SQLException e) {
 			throw new IllegalStateException("Postgres error encountered while summarizing type triples: " + e.toString());
@@ -132,26 +132,26 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		String getUntypedTriplesString = ("select *  from " + tableName + " where p <> " + typeConstantCode);
 		try {
 			conn.setAutoCommit(false);
-			Statement getUntypedTriples = conn.createStatement();
-			getUntypedTriples.setFetchSize(10000);
-			ResultSet rs = getUntypedTriples.executeQuery(getUntypedTriplesString);
-			while (rs.next()) {
-				Triple t = new Triple(rs.getLong(1), rs.getLong(2), rs.getLong(3));
-				//Debugger.log("#### Data triple " + t.toString());
-				if ((t.p == RDF2SQLEncoding.getSubClassCode())
-					|| (t.p == RDF2SQLEncoding.getSubPropertyCode())
-					|| (t.p == RDF2SQLEncoding.getDomainCode())
-					|| (t.p == RDF2SQLEncoding.getRangeCode()))
-					addTriple(t.s, t.p, t.o);
-				else
-					handleDataTriple(t);
-				triplesSummarizedSoFar++;
-				this.numberOfDataTriplesRead++;
-				//this.drawSummaryAndGraph(conn, dataTriplesFileName, ("_" + triplesSummarizedSoFar));
+			try (Statement getUntypedTriples = conn.createStatement()) {
+				getUntypedTriples.setFetchSize(10000);
+				try (ResultSet rs = getUntypedTriples.executeQuery(getUntypedTriplesString)) {
+					while (rs.next()) {
+						Triple t = new Triple(rs.getLong(1), rs.getLong(2), rs.getLong(3));
+						//Debugger.log("#### Data triple " + t.toString());
+						if ((t.p == RDF2SQLEncoding.getSubClassCode())
+						|| (t.p == RDF2SQLEncoding.getSubPropertyCode())
+						|| (t.p == RDF2SQLEncoding.getDomainCode())
+						|| (t.p == RDF2SQLEncoding.getRangeCode()))
+							addTriple(t.s, t.p, t.o);
+						else
+							handleDataTriple(t);
+						triplesSummarizedSoFar++;
+						this.numberOfDataTriplesRead++;
+						//this.drawSummaryAndGraph(conn, dataTriplesFileName, ("_" + triplesSummarizedSoFar));
 
+					}
+				}
 			}
-			rs.close();
-			getUntypedTriples.close();
 		}
 		catch (SQLException e) {
 			throw new IllegalStateException("Postgres error encountered while summarizing data triples " + e.toString());
@@ -164,7 +164,6 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		this.display(dataTriplesFileName);
 	}
 
-	
 	private char decode(Long classSetS, Long repS, Long classSetO, Long repO, Long sourceCliqueP) {
 		if (classSetS != null) // TS (also represented)
 			if (classSetO != null) // TO (also represented)
@@ -284,14 +283,14 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		StringBuffer sb = new StringBuffer();
 		sb.append("{");
 		for (Long e: s){
-			sb.append(e + " ");
+			sb.append(e).append(" ");
 		}
 		sb.append("}");
 		return new String(sb);
 	}
 	private void showClassSets() {
 		for (TreeSet<Long> cs: cs2csID.keySet()){
-			StringBuffer thisCSBuffer = new StringBuffer();
+			StringBuilder thisCSBuffer = new StringBuilder();
 			thisCSBuffer.append(showLongSet(cs));
 			thisCSBuffer.append("-->");
 			thisCSBuffer.append(cs2csID.get(cs));
@@ -326,11 +325,11 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 
 	public void handleTypeTripleBeforeData(Triple t) {
 		//System.out.println("@@@ Type triple: " + t.toString()); 
-			
+
 		TreeSet<Long> classSetOfThisNode = n2c.get(t.s); 
 		if (classSetOfThisNode == null){ // this is the first time we encounter the node: create a class set with exactly this type
 			Long newClassSetID = this.getNextSummaryNode(); 
-			classSetOfThisNode = new TreeSet<Long>();
+			classSetOfThisNode = new TreeSet<>();
 			classSetOfThisNode.add(t.o); 
 			n2c.put(t.s, classSetOfThisNode);
 			cs.put(newClassSetID, classSetOfThisNode);
@@ -341,19 +340,18 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 			if (classSetOfThisNode.contains(t.o)){
 				// do nothing
 			}
-			else{				
-				TreeSet<Long> newClassSetOfThisNode = new TreeSet<Long>();
+			else {
+				TreeSet<Long> newClassSetOfThisNode = new TreeSet<>();
 				newClassSetOfThisNode.addAll(classSetOfThisNode);
 				newClassSetOfThisNode.add(t.o); 
-				
+
 				Long newClassSetID = cs2csID.get(newClassSetOfThisNode);
 				if (newClassSetID == null){
 					// this class set was not already known. We create it.
 					newClassSetID = this.getNextSummaryNode();
 					cs.put(newClassSetID, newClassSetOfThisNode); // installs the new class set
 					cs2csID.put(newClassSetOfThisNode, newClassSetID); // installs the new class set
-					
-				}	
+				}
 				// whether or not newClassSetID was known:
 				n2cs.put(t.s, newClassSetID); // erases/replaces previously known class set ID
 				n2c.put(t.s, newClassSetOfThisNode); // erases/replaces previously known class set
@@ -658,19 +656,22 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		if ((sourceCliqueP == null && targetCliqueP != null) || (sourceCliqueP != null && targetCliqueP == null))
 			throw new Error("Property has only one of the two cliques");
 	}
-	
+
 	/**
 	 * This is used only when drawing the graph using Dot. 
 	 * Different summaries need to traverse their triples in different orders, thus the two cursors which differ between the typed and untyped summaries.
 	 * Returns the first cursor, over the type triples
 	 * @param conn
+	 * @param triplesToDraw
+	 * @param triplesTableName
 	 * @return
 	 */
-	protected ResultSet getGraphTriplesCursor1ForDotDrawing(Connection conn, long triplesToDraw) {
+	@Override
+	protected ResultSet getGraphTriplesCursor1ForDotDrawing(Connection conn, long triplesToDraw, String triplesTableName) {
 		try{
 			String query = ("select * from triples where p='<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' limit " + triplesToDraw);
 			Debugger.log("get cursor 1: " + query);
-			return conn.createStatement().executeQuery("select * from triples where p='<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' limit " + triplesToDraw);
+			return conn.createStatement().executeQuery("select * from " + triplesTableName + " where p='<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' limit " + triplesToDraw);
 		}
 		catch(SQLException e){
 			throw new IllegalStateException("Could not get a cursor on the graph triples for drawing"); 
@@ -681,16 +682,17 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	 * Different summaries need to traverse their triples in different orders, thus the two cursors which differ between the typed and untyped summaries.
 	 * Returns the second cursor, over the non-type triples.
 	 * @param conn
+	 * @param triplesToDraw
+	 * @param triplesTableName
 	 * @return
 	 */
-	protected ResultSet getGraphTriplesCursor2ForDotDrawing(Connection conn, long triplesToDraw) {
+	@Override
+	protected ResultSet getGraphTriplesCursor2ForDotDrawing(Connection conn, long triplesToDraw, String triplesTableName) {
 		try{
-			return conn.createStatement().executeQuery("select * from triples where p<>'<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' limit " + triplesToDraw);
+			return conn.createStatement().executeQuery("select * from " + triplesTableName + " where p<>'<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' limit " + triplesToDraw);
 		}
 		catch(SQLException e){
 			throw new IllegalStateException("Could not get a cursor on the graph triples for drawing"); 
 		}
 	}
-
-	
 }

@@ -13,8 +13,9 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 public class StrongSummaryTests {
-	public File strong(int i) {
+	private static final Logger LOGGER = Logger.getLogger(StrongSummaryTests.class.getName());
 
+	public File strong(int i) {
 		System.out.println("################################################################################");
 		System.out.println("Strong summary test " + Integer.toString(i));
 		System.out.println("################################################################################");
@@ -25,13 +26,13 @@ public class StrongSummaryTests {
 			String[] argsSum = {"loadWithSaturationAndSummarize", "strong", inputFileName};
 			try {
 				Builder.main(argsSum);
-				String[] argsSave = {"saveSummary"};
+				String[] argsSave = {"saveSummaryComputedClassicalWay"};
 				Builder.main(argsSave);
-				String[] argsExport = {"exportSummary", inputFileName};
+				String[] argsExport = {"exportSummary", inputFileName, "draw"};
 				Builder.main(argsExport);
 			}
 			catch (UnsupportedDatabaseEngineException ex) {
-				Logger.getLogger(StrongSummaryTests.class.getName()).error(ex);
+				LOGGER.error(ex);
 			}
 			finally {
 				String[] argsCloseConnection = {"closeConnection"};
@@ -39,7 +40,7 @@ public class StrongSummaryTests {
 					Builder.main(argsCloseConnection);
 				}
 				catch (UnsupportedDatabaseEngineException ex1) {
-					Logger.getLogger(StrongSummaryTests.class.getName()).error(ex1);
+					LOGGER.error(ex1);
 				}
 			}
 			return new File(outputFileName);

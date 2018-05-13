@@ -6,16 +6,12 @@ import fr.inria.cedar.quotientSummary.datastructures.Long2Long;
 import fr.inria.cedar.quotientSummary.datastructures.Long2LongList;
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
 import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
-
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.TreeSet;
-
-import com.ibm.db2.jcc.am.SqlException;
-import com.ibm.db2.jcc.am.t;
 
 public class StrongOrTypedStrongSummary extends Summary {
 	Long2LongList sc; // for each source clique ID,  a source clique
@@ -68,7 +64,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		p2sc = new Long2Long();
 		p2tc = new Long2Long();
 		rep = new Long2Long();
-		untypedSummaryNodes = new HashMap<Long, HashMap<Long, Long>> ();
+		untypedSummaryNodes = new HashMap<> ();
 		minCliqueID = -1;
 		emptySCCount = Long.MAX_VALUE;
 		emptyTCCount = Long.MAX_VALUE;
@@ -198,7 +194,6 @@ public class StrongOrTypedStrongSummary extends Summary {
 	 * @return 
 	 */
 	protected Long fuseCliquesIntoCreatedFirst(Long c1, Long c2, char code) {
-	
 		if (code == SOURCE){
 			boolean c1empty = c1.equals(this.getEmptySourceCliqueID());
 			boolean c2empty = c2.equals(this.getEmptySourceCliqueID());
@@ -222,7 +217,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 			boolean c1empty = c1.equals(this.getEmptyTargetCliqueID());
 			boolean c2empty = c2.equals(this.getEmptyTargetCliqueID());
 			Debugger.log("FuseCliquesIntoCreatedFirst TARGET " + c1 + (c1empty?" (empty)":"") + " " + c2 + (c2empty?" (empty)":""));
-			
+
 			if (c1empty){
 				return c2;
 			}
@@ -262,7 +257,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 				//this.changeRepresentationOfInto(t.s, newRepS);
 				rep.put(t.s, newRepS);
 			}
-		}		
+		}
 		n2sc.put(t.s, newSourceClique); // this line should stay after the call to Split...
 		// so that this call still has access to the SC of t.s, unmodified (yet)
 
@@ -298,12 +293,12 @@ public class StrongOrTypedStrongSummary extends Summary {
 			//      then represent s by that node (and possibly garbage collect its representative)
 			//      else modify that node, by replacing in  untypedSummaryNodes, the empty source clique with the non-empty one
 			if (thisNodeAlone){
-				System.out.println("R&S SOURCE 0 for " + node + " (" + RDF2SQLEncoding.dictionaryDecode(node) + ") alone, w/ old source clique " + oldClique + 
-						" " + showCliqueAsString(sc.get(oldClique)) + 
-						" and new source clique " + newClique + " " + showCliqueAsString(sc.get(newClique)) +  		
-						", for " + thisNodeRep + " (and target clique " + otherClique + 
-						" " + showCliqueAsString(tc.get(otherClique)) + 
-						")");
+				System.out.println("R&S SOURCE 0 for " + node + " (" + RDF2SQLEncoding.dictionaryDecode(node) + ") alone, w/ old source clique " + oldClique +
+					" " + showCliqueAsString(sc.get(oldClique)) +
+					" and new source clique " + newClique + " " + showCliqueAsString(sc.get(newClique)) +
+					", for " + thisNodeRep + " (and target clique " + otherClique +
+					" " + showCliqueAsString(tc.get(otherClique)) +
+					")");
 
 				thisNodeNewRep = findExistingSummaryNode(newClique, otherClique); 
 
@@ -348,14 +343,14 @@ public class StrongOrTypedStrongSummary extends Summary {
 			// while this node needs to be represented by a new node, corresponding to the (non-empty source clique, existing
 			// target clique)
 			else{ 
-				System.out.println("REPLACE-AND-SPLIT SOURCE for " + node + " (" + 
-						RDF2SQLEncoding.dictionaryDecode(node) + 
-						") not alone, w/ old source clique " + oldClique + 
-						" " + showCliqueAsString(sc.get(oldClique)) + 
-						" and new source clique " + newClique + " " + showCliqueAsString(sc.get(newClique)) +  		
-						", rep. by " + thisNodeRep + " (and target clique " + otherClique + 
-						" " + showCliqueAsString(tc.get(otherClique)) + 
-						"). We split its representative "  + thisNodeRep);
+				System.out.println("REPLACE-AND-SPLIT SOURCE for " + node + " (" +
+					RDF2SQLEncoding.dictionaryDecode(node) +
+					") not alone, w/ old source clique " + oldClique +
+					" " + showCliqueAsString(sc.get(oldClique)) +
+					" and new source clique " + newClique + " " + showCliqueAsString(sc.get(newClique)) +
+					", rep. by " + thisNodeRep + " (and target clique " + otherClique +
+					" " + showCliqueAsString(tc.get(otherClique)) +
+					"). We split its representative "  + thisNodeRep);
 				thisNodeNewRep = this.getOrCreateSummaryNode(newClique, otherClique); 
 				boolean suppressionNeeded = rep.put(node, thisNodeNewRep);
 				if (suppressionNeeded){
@@ -371,17 +366,17 @@ public class StrongOrTypedStrongSummary extends Summary {
 				return thisNodeNewRep; 
 			}
 		}
-		if (param == TARGET){	
+		if (param == TARGET) {
 			Long oldClique = n2tc.get(node); 
 			Long otherClique = n2sc.get(node);
 			if (thisNodeAlone){ // this node the only one represented by by nodeRep
-				System.out.println("REPLACE-AND-SPLIT TARGET for " + node + " (" + RDF2SQLEncoding.dictionaryDecode(node) + 
-						") alone, w/ old target clique " + oldClique + 
-						" " + showCliqueAsString(tc.get(oldClique)) + 
-						" and new target clique " + newClique + " " + showCliqueAsString(tc.get(newClique)) +  		
-						", rep. by " + thisNodeRep + " (and source clique " + otherClique + 
-						" " + showCliqueAsString(sc.get(otherClique)) + 
-						")");
+				System.out.println("REPLACE-AND-SPLIT TARGET for " + node + " (" + RDF2SQLEncoding.dictionaryDecode(node) +
+					") alone, w/ old target clique " + oldClique +
+					" " + showCliqueAsString(tc.get(oldClique)) +
+					" and new target clique " + newClique + " " + showCliqueAsString(tc.get(newClique)) +
+					", rep. by " + thisNodeRep + " (and source clique " + otherClique +
+					" " + showCliqueAsString(sc.get(otherClique)) +
+					")");
 
 				thisNodeNewRep = findExistingSummaryNode(otherClique, newClique); 
 
@@ -415,14 +410,14 @@ public class StrongOrTypedStrongSummary extends Summary {
 				}
 			}
 			else{ // several nodes were represented together here
-				System.out.println("REPLACE-AND-SPLIT TARGET for " + node + " (" + 
-						RDF2SQLEncoding.dictionaryDecode(node) + 
-						") not alone, w/ target clique " + oldClique + 
-						" " + showCliqueAsString(tc.get(oldClique)) + 
-						" with " + newClique + " " + showCliqueAsString(tc.get(newClique)) +  		
-						", for " + thisNodeRep + " (using also " + otherClique + 
-						" " + showCliqueAsString(sc.get(otherClique)) + 
-						"). We split its representative "  + thisNodeRep);
+				System.out.println("REPLACE-AND-SPLIT TARGET for " + node + " (" +
+					RDF2SQLEncoding.dictionaryDecode(node) +
+					") not alone, w/ target clique " + oldClique +
+					" " + showCliqueAsString(tc.get(oldClique)) +
+					" with " + newClique + " " + showCliqueAsString(tc.get(newClique)) +
+					", for " + thisNodeRep + " (using also " + otherClique +
+					" " + showCliqueAsString(sc.get(otherClique)) +
+					"). We split its representative "  + thisNodeRep);
 				thisNodeNewRep = this.getOrCreateSummaryNode(otherClique, newClique);
 				boolean suppressionNeeded = rep.put(node, thisNodeNewRep);
 				if (suppressionNeeded){
@@ -464,19 +459,19 @@ public class StrongOrTypedStrongSummary extends Summary {
 		String patchUpQuery;
 		if (param == SOURCE){
 			// newRep must be the source of edges reflecting those of which node is a source
-			patchUpQuery = "select p, o from encoded_triples et where et.s = " + node; 
+			patchUpQuery = "select p, o from encoded_triples et where et.s = " + node; // TODO: needs to be modified to account new naming convention
 			try{
-				ResultSet rs = this.conn.prepareStatement(patchUpQuery).executeQuery();
-				while (rs.next()){
-					Long p = rs.getLong(1);
-					Long o = rs.getLong(2);
-					Long repO = rep.get(o); 
-					if (repO != null){
-						Debugger.log("Patch: adding outgoing " + p + " edge from " + newRep);
-						this.addTriple(newRep, p, repO);
+				try (ResultSet rs = this.conn.prepareStatement(patchUpQuery).executeQuery()) {
+					while (rs.next()){
+						Long p = rs.getLong(1);
+						Long o = rs.getLong(2);
+						Long repO = rep.get(o);
+						if (repO != null){
+							Debugger.log("Patch: adding outgoing " + p + " edge from " + newRep);
+							this.addTriple(newRep, p, repO);
+						}
 					}
 				}
-				rs.close();
 			}
 			catch(SQLException e){
 				throw new IllegalStateException("Could not get replay edges " + e.toString());
@@ -486,24 +481,23 @@ public class StrongOrTypedStrongSummary extends Summary {
 			// We will build a set of edges to remove. 
 			// We remove an edge rep--a-->rep' iff for every node n still represented by rep and n' represented by n'
 			// there exists no edge n--a-->n'
-			patchUpQuery = "select o from encoded_triples where s=? and p=?";
-			TreeSet<Triple> edgesToRemove = new TreeSet<Triple>();
-			
+			patchUpQuery = "select o from encoded_triples where s=? and p=?";  // TODO: needs to be modified to account new naming convention
+			TreeSet<Triple> edgesToRemove = new TreeSet<>();
 		}
 		if (param == TARGET){// we must replay the edges of which node is a target
-			patchUpQuery = "select s, p from encoded_triples et where et.o = " + node; 
+			patchUpQuery = "select s, p from encoded_triples et where et.o = " + node; // TODO: needs to be modified to account new naming convention
 			try{
-				ResultSet rs = this.conn.prepareStatement(patchUpQuery).executeQuery();
-				while (rs.next()){
-					Long p = rs.getLong(2);
-					Long s = rs.getLong(1);
-					Long repS = rep.get(s); 
-					if (repS != null){
-						Debugger.log("Patch: adding incoming " + p + " edge to " + newRep);
-						this.addTriple(repS, p, newRep);
+				try (ResultSet rs = this.conn.prepareStatement(patchUpQuery).executeQuery()) {
+					while (rs.next()){
+						Long p = rs.getLong(2);
+						Long s = rs.getLong(1);
+						Long repS = rep.get(s);
+						if (repS != null){
+							Debugger.log("Patch: adding incoming " + p + " edge to " + newRep);
+							this.addTriple(repS, p, newRep);
+						}
 					}
 				}
-				rs.close();
 			}
 			catch(SQLException e){
 				throw new IllegalStateException("Could not get replay edges " + e.toString());
@@ -779,7 +773,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 				}
 				else{// got the same node back, but we need to "manually" modify untypedSummaryNodes as its cliques
 					// have changed...
-					nodeOrientedCliqueReplacementInUntyped(t.s, repS, sourceCliqueS, targetCliqueS, newSCs, SOURCE); 					
+					nodeOrientedCliqueReplacementInUntyped(t.s, repS, sourceCliqueS, targetCliqueS, newSCs, SOURCE);
 				}
 			}
 			// in all cases, update repS
@@ -816,7 +810,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 				}
 				else{// got the same node back, but we need to "manually" modify untypedSummaryNodes as its cliques
 					// have changed...
-					//replaceInUntypedSummaryNode(t.o, repO, targetCliqueO, sourceCliqueO, newTCo, TARGET); 					
+					//replaceInUntypedSummaryNode(t.o, repO, targetCliqueO, sourceCliqueO, newTCo, TARGET);
 				}
 			}
 			n2tc.put(t.o, newTCo);
@@ -845,12 +839,12 @@ public class StrongOrTypedStrongSummary extends Summary {
 				throw new IllegalStateException(msg);
 			}
 			oldCliqueEntries.remove(otherClique);
-			if (oldCliqueEntries.size() == 0){
+			if (oldCliqueEntries.isEmpty()){
 				untypedSummaryNodes.remove(oldClique); 
 			}
 			HashMap<Long, Long> newCliqueEntries = untypedSummaryNodes.get(newClique);
 			if (newCliqueEntries == null){
-				newCliqueEntries = new HashMap<Long, Long>();
+				newCliqueEntries = new HashMap<>();
 				untypedSummaryNodes.put(newClique, newCliqueEntries);
 			}
 			newCliqueEntries.put(otherClique, thisNodeRep);
@@ -1089,12 +1083,12 @@ public class StrongOrTypedStrongSummary extends Summary {
 	protected String showUntypedSummaryNodes() {
 		StringBuffer sb = new StringBuffer();
 		for(Long sc: this.untypedSummaryNodes.keySet()){
-			sb.append(sc + "=>{");
+			sb.append(sc).append("=>{");
 			//System.out.println("Source clique: " + sc);
 			HashMap<Long, Long> tc2Nodes = this.untypedSummaryNodes.get(sc);
 			for (Long tc: tc2Nodes.keySet()){
 				Long node = tc2Nodes.get(tc);
-				sb.append(tc + ":" + node + " ");
+				sb.append(tc).append(":").append(node).append(" ");
 			}
 			sb.append("} ");
 		}

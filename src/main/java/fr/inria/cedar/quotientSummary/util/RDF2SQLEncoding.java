@@ -33,12 +33,13 @@ public class RDF2SQLEncoding {
 	 * It is crucial to call this method in order for the summarization or any summary usage code to work OK.
 	 *
 	 * @param givenConn
+	 * @param dictionaryTableName
 	 */
-	public static void setUp(Connection givenConn) {
+	public static void setUp(Connection givenConn, String dictionaryTableName) {
 		conn = givenConn;
 		try {
-			stmtDecode = conn.prepareStatement("select value from dictionary where key=?");
-			stmtEncode = conn.prepareStatement("select key from dictionary where value=?");
+			stmtDecode = conn.prepareStatement("select value from " + dictionaryTableName + " where key=?");
+			stmtEncode = conn.prepareStatement("select key from " + dictionaryTableName + " where value=?");
 		}
 		catch (SQLException e) {
 			throw new IllegalStateException("Could not prepare encode/decode statements " + e.toString());
@@ -128,13 +129,14 @@ public class RDF2SQLEncoding {
 		long code = -1;
 		try {
 			stmtEncode.setString(1, URI);
-			ResultSet rs = stmtEncode.executeQuery();
 			//LOGGER.debug("Asked query: " + learnCodeQueryString);
-			if (rs.next()) {
-				code = rs.getInt(1);
-				//LOGGER.debug("The code of " + URI + " is: " + constantCode);
+			try (ResultSet rs = stmtEncode.executeQuery()) {
+				//LOGGER.debug("Asked query: " + learnCodeQueryString);
+				if (rs.next()) {
+					code = rs.getInt(1);
+					//LOGGER.debug("The code of " + URI + " is: " + constantCode);
+				}
 			}
-			rs.close();
 		}
 		catch (SQLException e) {
 			throw new IllegalStateException("Not able to encode " + e.toString());

@@ -195,11 +195,11 @@ public class WeakOrTypedWeakSummary extends Summary {
 		}
 		Long addedTripleSource = sourceP;
 		rep.put(t.s, addedTripleSource);
-		
+
 		Long repO = rep.get(t.o);
 		Long targetP = pt.get(t.p);
 		Long addedTripleTarget = targetP; // initialize with any of them
-		if (targetP != null){ // in this case we need to fuse repO with targetP			
+		if (targetP != null){ // in this case we need to fuse repO with targetP
 			Substitutions subs = new Substitutions(repO, targetP);
 			Long possibleNewTripleSource = subs.get(addedTripleSource);
 			if (possibleNewTripleSource != null)

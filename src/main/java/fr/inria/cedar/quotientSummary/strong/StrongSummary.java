@@ -24,7 +24,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 		this.conn = conn; 
 		this.summaryTablePrefix = STRONG_SUMMARY_PREFIX;
 		Debugger.log("Reading Strong summary from Postgres, setting up special URIs from the dictionary");
-		RDF2SQLEncoding.setUp(conn);
+		RDF2SQLEncoding.setUp(conn, "dictionary");
 		String getSummaryTriples = getSummaryTriplesSQLQuery();
 		try {
 			Statement getTriples = conn.createStatement();
@@ -39,7 +39,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 			}
 		}
 		catch (SQLException e) {
-			throw new IllegalStateException("Unable to read Strong summary from Postgres " + e.getStackTrace());
+			throw new IllegalStateException("Unable to read Strong summary from Postgres: " + e.toString());
 		}
 		System.out.println("Read Strong summary from Postgres");
 	}
@@ -54,7 +54,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 	public void setConn(Connection conn){
 		this.conn = conn; 
 	}
-	
+
 	/**
 	 * Summarizes an RDF graph assuming the data triples are in Postgres
 	 *
@@ -71,7 +71,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 		String dataTriplesFileName = args[1];
 
 		// this is needed to find the constants associated to special RDF properties
-		RDF2SQLEncoding.setUp(conn);
+		RDF2SQLEncoding.setUp(conn, args[2]);
 		long typeConstantCode = RDF2SQLEncoding.getTypeCode();
 		if (typeConstantCode != -1) {
 			this.typeTriplesExist = true;
@@ -81,28 +81,27 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 		String getUntypedTriplesString = ("select *  from " + tableName + " where p <> " + typeConstantCode);
 		try {
 			conn.setAutoCommit(false);
-			Statement getUntypedTriples = conn.createStatement();
-			getUntypedTriples.setFetchSize(10000);
-			ResultSet rs = getUntypedTriples.executeQuery(getUntypedTriplesString);
-			while (rs.next()) {
-				Triple t = new Triple(rs.getInt(1), rs.getInt(2), rs.getInt(3));
-				if ((t.p == RDF2SQLEncoding.getSubClassCode())
-					|| (t.p == RDF2SQLEncoding.getSubPropertyCode())
-					|| (t.p == RDF2SQLEncoding.getDomainCode())
-					|| (t.p == RDF2SQLEncoding.getRangeCode()))
-					//System.out.println("#### Schema triple " + t.toString());
-					addTriple(t.s, t.p, t.o);
-				else
-					//System.out.println("#### Data triple " + t.toString());
-					handleDataTriple(t);
-				//System.out.println("Summary has become: " + this.toString());
-				triplesSummarizedSoFar++;
-				this.drawSummaryAndGraph(conn, dataTriplesFileName, ("-after-" + 
-				triplesSummarizedSoFar + "-"+ t.s + "-" + t.p + "-" + t.o));
-				display();
+			try (Statement getUntypedTriples = conn.createStatement()) {
+				getUntypedTriples.setFetchSize(10000);
+				try (ResultSet rs = getUntypedTriples.executeQuery(getUntypedTriplesString)) {
+					while (rs.next()) {
+						Triple t = new Triple(rs.getInt(1), rs.getInt(2), rs.getInt(3));
+						if ((t.p == RDF2SQLEncoding.getSubClassCode())
+						|| (t.p == RDF2SQLEncoding.getSubPropertyCode())
+						|| (t.p == RDF2SQLEncoding.getDomainCode())
+						|| (t.p == RDF2SQLEncoding.getRangeCode()))
+							//System.out.println("#### Schema triple " + t.toString());
+							addTriple(t.s, t.p, t.o);
+						else
+							//System.out.println("#### Data triple " + t.toString());
+							handleDataTriple(t);
+						//System.out.println("Summary has become: " + this.toString());
+						triplesSummarizedSoFar++;
+						this.drawSummaryAndGraph(conn, dataTriplesFileName, ("-after-" + triplesSummarizedSoFar + "-"+ t.s + "-" + t.p + "-" + t.o), "tmp_triples", "dictionary");
+						display();
+					}
+				}
 			}
-			rs.close();
-			getUntypedTriples.close();
 		}
 		catch (SQLException e) {
 			throw new IllegalStateException("Postgres error encountered while summarizing data triples " + e.toString());
@@ -112,20 +111,20 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 
 		String getTypedTriplesString = ("select *  from " + tableName + " where p =" + typeConstantCode);
 		try {
-			Statement getTypedTriples = conn.createStatement();
-			getTypedTriples.setFetchSize(1000);
-			ResultSet rs = getTypedTriples.executeQuery(getTypedTriplesString);
-			while (rs.next()) {
-				Triple t = new Triple(rs.getInt(1), rs.getInt(2), rs.getInt(3));
-				//System.out.println("#### Type triple " + t.toString());
-				this.handleTypeTripleAfterData(t);
-				triplesSummarizedSoFar++;
-				this.drawSummaryAndGraph(conn, dataTriplesFileName, ("-after-" + triplesSummarizedSoFar + "-" + t.s + "-" + t.p + "-" + t.o));
-				//System.out.println("Summary now has " + getSummaryEdges().size() + " triples");
+			try (Statement getTypedTriples = conn.createStatement()) {
+				getTypedTriples.setFetchSize(1000);
+				try (ResultSet rs = getTypedTriples.executeQuery(getTypedTriplesString)) {
+					while (rs.next()) {
+						Triple t = new Triple(rs.getInt(1), rs.getInt(2), rs.getInt(3));
+						//System.out.println("#### Type triple " + t.toString());
+						this.handleTypeTripleAfterData(t);
+						triplesSummarizedSoFar++;
+						this.drawSummaryAndGraph(conn, dataTriplesFileName, ("-after-" + triplesSummarizedSoFar + "-" + t.s + "-" + t.p + "-" + t.o), "tmp_triples", "dictionary");
+						//System.out.println("Summary now has " + getSummaryEdges().size() + " triples");
 
+					}
+				}
 			}
-			rs.close();
-			getTypedTriples.close();
 		}
 		catch (SQLException e) {
 			throw new IllegalStateException("Postgres error encountered while summarizing type triples: " + e.toString());
@@ -244,20 +243,22 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 				else
 					return US_NS_UO_NO_NP;
 	}
-	
+
 	/**
 	 * This is used only when drawing the graph using Dot. 
 	 * Different summaries need to traverse their triples in different orders, thus the two cursors which differ between the typed and untyped summaries.
 	 * Returns the first cursor, over the non-type triples
 	 * @param conn
+	 * @param triplesToDraw
+	 * @param triplesTableName
 	 * @return
 	 */
-	protected ResultSet getGraphTriplesCursor1ForDotDrawing(Connection conn, long triplesToDraw) {
-		try{
-			return conn.createStatement().executeQuery("select * from triples where p<>'<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' limit " + triplesToDraw);
-			
+	@Override
+	protected ResultSet getGraphTriplesCursor1ForDotDrawing(Connection conn, long triplesToDraw, String triplesTableName) {
+		try {
+			return conn.createStatement().executeQuery("select * from " + triplesTableName + " where p<>'<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' limit " + triplesToDraw);
 		}
-		catch(SQLException e){
+		catch(SQLException e) {
 			throw new IllegalStateException("Could not get a cursor on the graph triples for drawing"); 
 		}
 	}
@@ -266,17 +267,20 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 	 * Different summaries need to traverse their triples in different orders, thus the two cursors which differ between the typed and untyped summaries.
 	 * Returns the second cursor, over the type triples.
 	 * @param conn
+	 * @param triplesToDraw
+	 * @param triplesTableName
 	 * @return
 	 */
-	protected ResultSet getGraphTriplesCursor2ForDotDrawing(Connection conn, long triplesToDraw) {
+	@Override
+	protected ResultSet getGraphTriplesCursor2ForDotDrawing(Connection conn, long triplesToDraw, String triplesTableName) {
 		try{
-			return conn.createStatement().executeQuery("select * from triples where p='<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' limit " + triplesToDraw);
+			return conn.createStatement().executeQuery("select * from " + triplesTableName + " where p='<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' limit " + triplesToDraw);
 		}
 		catch(SQLException e){
 			throw new IllegalStateException("Could not get a cursor on the graph triples for drawing"); 
 		}
 	}
-	
+
 	public void display() {
 		System.out.println("===STRONG SUMMARY\nSource cliques: " + sc.display());
 		System.out.println("Target cliques: " + tc.display());
@@ -293,7 +297,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 		roundTripConsistencyCheck();
 		System.out.println("===");
 	}
-	
+
 	protected void roundTripConsistencyCheck(){
 		String msg = ""; 
 		for (Long dataNode: n2sc.getKeys()){

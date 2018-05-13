@@ -46,7 +46,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 	public TypedWeakSummary() {
 		super();
 		cs = new Long2LongSet();
-		n2cs = new Long2Long();	
+		n2cs = new Long2Long();
 		n2c = new Long2LongSet();
 		cs2csID = new HashMap<>();
 		this.summaryTablePrefix = TYPED_WEAK_SUMMARY_PREFIX;
@@ -60,7 +60,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 	public TypedWeakSummary(Connection conn) {
 		this.summaryTablePrefix = TYPED_WEAK_SUMMARY_PREFIX;
 		Debugger.log("Reading TypedWeak summary from Postgres, setting up special URIs from the dictionary");
-		RDF2SQLEncoding.setUp(conn);
+		RDF2SQLEncoding.setUp(conn, "dictionary");
 		String getSummaryTriples = getSummaryTriplesSQLQuery();
 		try {
 			Statement getTriples = conn.createStatement();
@@ -75,7 +75,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 			}
 		}
 		catch (SQLException e) {
-			throw new IllegalStateException("Unable to read TypedWeak summary from Postgres " + e.getStackTrace());
+			throw new IllegalStateException("Unable to read TypedWeak summary from Postgres: " + e.toString());
 		}
 		System.out.println("Read TypedWeak summary from Postgres");
 	}
@@ -143,7 +143,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		String tableName = args[0];
 		String dataTriplesFileName = args[1];
 		// this is needed to find the constants associated to special RDF properties
-		RDF2SQLEncoding.setUp(conn);
+		RDF2SQLEncoding.setUp(conn, args[2]);
 		long typeConstantCode = RDF2SQLEncoding.getTypeCode();
 		if (typeConstantCode != -1) {
 			this.typeTriplesExist = true;
@@ -153,17 +153,17 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		triplesSummarizedSoFar = 0;
 		String getTypedTriplesString = ("select *  from " + tableName + " where p =" + typeConstantCode);
 		try {
-			Statement getTypedTriples = conn.createStatement();
-			getTypedTriples.setFetchSize(1000);
-			ResultSet rs = getTypedTriples.executeQuery(getTypedTriplesString);
-			while (rs.next()) {
-				Triple t = new Triple(rs.getInt(1), rs.getInt(2), rs.getInt(3));
-				System.out.println("### Type triple " + t.toString());
-				this.handleTypeTripleBeforeData(t);
-				triplesSummarizedSoFar++;
+			try (Statement getTypedTriples = conn.createStatement()) {
+				getTypedTriples.setFetchSize(1000);
+				try (ResultSet rs = getTypedTriples.executeQuery(getTypedTriplesString)) {
+					while (rs.next()) {
+						Triple t = new Triple(rs.getInt(1), rs.getInt(2), rs.getInt(3));
+						System.out.println("### Type triple " + t.toString());
+						this.handleTypeTripleBeforeData(t);
+						triplesSummarizedSoFar++;
+					}
+				}
 			}
-			rs.close();
-			getTypedTriples.close();
 		}
 		catch (SQLException e) {
 			throw new IllegalStateException("Postgres error encountered while summarizing type triples: " + e.toString());
@@ -185,26 +185,26 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		String getUntypedTriplesString = ("select *  from " + tableName + " where p <> " + typeConstantCode);
 		try {
 			conn.setAutoCommit(false);
-			Statement getUntypedTriples = conn.createStatement();
-			getUntypedTriples.setFetchSize(10000);
-			ResultSet rs = getUntypedTriples.executeQuery(getUntypedTriplesString);
-			while (rs.next()) {
-				Triple t = new Triple(rs.getLong(1), rs.getLong(2), rs.getLong(3));
-				//System.out.println("#### Data triple " + t.toString());
-				if ((t.p == RDF2SQLEncoding.getSubClassCode())
+			try (Statement getUntypedTriples = conn.createStatement()) {
+				getUntypedTriples.setFetchSize(10000);
+				try (ResultSet rs = getUntypedTriples.executeQuery(getUntypedTriplesString)) {
+					while (rs.next()) {
+						Triple t = new Triple(rs.getLong(1), rs.getLong(2), rs.getLong(3));
+						//System.out.println("#### Data triple " + t.toString());
+						if ((t.p == RDF2SQLEncoding.getSubClassCode())
 						|| (t.p == RDF2SQLEncoding.getSubPropertyCode())
 						|| (t.p == RDF2SQLEncoding.getDomainCode())
 						|| (t.p == RDF2SQLEncoding.getRangeCode()))
-					addTriple(t.s, t.p, t.o);
-				else
-					handleDataTriple(t);
-				triplesSummarizedSoFar++;
-				System.out.println("Triples summarized so far: " + triplesSummarizedSoFar);
-				//this.drawSummaryAndGraph(conn, dataTriplesFileName, ("_" + triplesSummarizedSoFar));
+							addTriple(t.s, t.p, t.o);
+						else
+							handleDataTriple(t);
+						triplesSummarizedSoFar++;
+						System.out.println("Triples summarized so far: " + triplesSummarizedSoFar);
+						//this.drawSummaryAndGraph(conn, dataTriplesFileName, ("_" + triplesSummarizedSoFar));
 
+					}
+				}
 			}
-			rs.close();
-			getUntypedTriples.close();
 		}
 		catch (SQLException e) {
 			throw new IllegalStateException("Postgres error encountered while summarizing data triples " + e.toString());
@@ -506,8 +506,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 			return("TRS_UO");
 		}
 		throw new IllegalStateException("Unrecognized case " + c);
-	}	
-
+	}
 
 	protected char identifyTripleSummarizationCase(boolean sRepresented, boolean sTyped,
 			boolean pRepresented, boolean oRepresented, boolean oTyped) {
@@ -600,7 +599,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		TreeSet<Long> classSetOfThisNode = n2c.get(t.s); 
 		if (classSetOfThisNode == null){ // this is the first time we encounter the node: create a class set with exactly this type
 			Long newClassSetID = this.getNextSummaryNode(); 
-			classSetOfThisNode = new TreeSet<Long>();
+			classSetOfThisNode = new TreeSet<>();
 			classSetOfThisNode.add(t.o); 
 			n2c.put(t.s, classSetOfThisNode);
 			cs.put(newClassSetID, classSetOfThisNode);
@@ -611,8 +610,8 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 			if (classSetOfThisNode.contains(t.o)){
 				// do nothing
 			}
-			else{				
-				TreeSet<Long> newClassSetOfThisNode = new TreeSet<Long>();
+			else {
+				TreeSet<Long> newClassSetOfThisNode = new TreeSet<>();
 				newClassSetOfThisNode.addAll(classSetOfThisNode);
 				newClassSetOfThisNode.add(t.o); 
 
@@ -622,8 +621,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 					newClassSetID = this.getNextSummaryNode();
 					cs.put(newClassSetID, newClassSetOfThisNode); // installs the new class set
 					cs2csID.put(newClassSetOfThisNode, newClassSetID); // installs the new class set
-
-				}	
+				}
 				// whether or not newClassSetID was known:
 				n2cs.put(t.s, newClassSetID); // erases/replaces previously known class set ID
 				n2c.put(t.s, newClassSetOfThisNode); // erases/replaces previously known class set
@@ -681,11 +679,14 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 	 * Different summaries need to traverse their triples in different orders, thus the two cursors which differ between the typed and untyped summaries.
 	 * Returns the first cursor, over the type triples
 	 * @param conn
+	 * @param triplesToDraw
+	 * @param triplesTableName
 	 * @return
 	 */
-	protected ResultSet getGraphTriplesCursor1ForDotDrawing(Connection conn, long triplesToDraw) {
+	@Override
+	protected ResultSet getGraphTriplesCursor1ForDotDrawing(Connection conn, long triplesToDraw, String triplesTableName) {
 		try{
-			return conn.createStatement().executeQuery("select * from triples where p='<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' limit " + triplesToDraw);
+			return conn.createStatement().executeQuery("select * from " + triplesTableName + " where p='<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' limit " + triplesToDraw);
 		}
 		catch(SQLException e){
 			throw new IllegalStateException("Could not get a cursor on the graph triples for drawing"); 
@@ -696,11 +697,14 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 	 * Different summaries need to traverse their triples in different orders, thus the two cursors which differ between the typed and untyped summaries.
 	 * Returns the second cursor, over the non-type triples.
 	 * @param conn
+	 * @param triplesToDraw
+	 * @param triplesTableName
 	 * @return
 	 */
-	protected ResultSet getGraphTriplesCursor2ForDotDrawing(Connection conn, long triplesToDraw) {
+	@Override
+	protected ResultSet getGraphTriplesCursor2ForDotDrawing(Connection conn, long triplesToDraw, String triplesTableName) {
 		try{
-			return conn.createStatement().executeQuery("select * from triples where p<>'<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' limit " + triplesToDraw);
+			return conn.createStatement().executeQuery("select * from " + triplesTableName + " where p<>'<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' limit " + triplesToDraw);
 		}
 		catch(SQLException e){
 			throw new IllegalStateException("Could not get a cursor on the graph triples for drawing"); 

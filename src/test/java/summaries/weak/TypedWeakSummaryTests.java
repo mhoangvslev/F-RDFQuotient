@@ -12,23 +12,26 @@ import static org.junit.Assert.fail;
 import org.junit.Test;
 
 public class TypedWeakSummaryTests {
+	private static final Logger LOGGER = Logger.getLogger(TypedWeakSummaryTests.class.getName());
+
 	public File typedweak(int i) {
 		System.out.println("################################################################################");
 		System.out.println("Typed Weak summary test " + Integer.toString(i));
 		System.out.println("################################################################################");
+
 		String inputFileName = "src/test/resources/test" + i + "-typedweak/test-" + i + ".nt";
 		String outputFileName = "src/test/resources/test" + i + "-typedweak/tw_test-" + i + ".nt";
 		try {
 			String[] argsSum = {"loadWithSaturationAndSummarize", "typedweak", inputFileName};
 			try {
 				Builder.main(argsSum);
-				String[] argsSave = {"saveSummary"};
+				String[] argsSave = {"saveSummaryComputedClassicalWay"};
 				Builder.main(argsSave);
-				String[] argsExport = {"exportSummary", inputFileName};
+				String[] argsExport = {"exportSummary", inputFileName, "draw"};
 				Builder.main(argsExport);
 			}
 			catch (UnsupportedDatabaseEngineException ex) {
-				Logger.getLogger(TypedWeakSummaryTests.class.getName()).error(ex);
+				LOGGER.error(ex);
 			}
 			finally {
 				String[] argsCloseConnection = {"closeConnection"};
@@ -36,7 +39,7 @@ public class TypedWeakSummaryTests {
 					Builder.main(argsCloseConnection);
 				}
 				catch (UnsupportedDatabaseEngineException ex1) {
-					Logger.getLogger(TypedWeakSummaryTests.class.getName()).error(ex1);
+					LOGGER.error(ex1);
 				}
 			}
 			return new File(outputFileName);
