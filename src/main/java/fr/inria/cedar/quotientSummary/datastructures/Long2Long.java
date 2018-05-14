@@ -1,6 +1,8 @@
 package fr.inria.cedar.quotientSummary.datastructures;
 
 import fr.inria.cedar.commons.miscellaneous.Debugger;
+import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
@@ -28,30 +30,39 @@ public class Long2Long {
 	/**
 	 * Returns true if node had a previous representative who now becomes a 
 	 * representative of no one.
-	 * @param node
-	 * @param clique
+	 * @param k
+	 * @param v
 	 * @return
 	 */
-	public boolean put(Long node, Long clique) {
+	public boolean put(Long k, Long v) {
+		//System.out.println("Long2Long: upon entering put " + clique + " on " + node + ": " + this.display()); 
 		boolean res = false; 
-		Long previous = map.get(node);
+		
+		Long previous = map.get(k);
+		
 		if (previous != null){
 			TreeSet<Long> inversePrev = inverse.get(previous);
-			inversePrev.remove(node); 
+			if (inversePrev == null){
+				System.out.println("Long2Long: Problem " + this.display());
+				throw new IllegalStateException("Map has " + previous + " on " + k + " but nothing in inverse for " + previous); 
+			}
+			inversePrev.remove(k);
+			System.out.println("Long2Long: " + k + " no  longer mapped to " + previous);
 			if (inversePrev.size() == 0){
-				Debugger.log("No one is represented by " + previous + " any more!");
-				res = true; 
+				//Debugger.log("Long2Long: No one is represented by " + previous + " any more!");
+				res = true;
+				inverse.remove(previous); 
 			}
 		}
-		map.put(node, clique);
+		map.put(k, v);
 		
-		TreeSet<Long> nodesForC = inverse.get(clique);
-		if (nodesForC == null) {
-			nodesForC = new TreeSet<>();
-			inverse.put(clique, nodesForC);
+		TreeSet<Long> keysForV = inverse.get(v);
+		if (keysForV == null) {
+			keysForV = new TreeSet<>();
+			inverse.put(v, keysForV);
 		}
-		if (!nodesForC.contains(node)){
-			nodesForC.add(node);
+		if (!keysForV.contains(k)){
+			keysForV.add(k);
 		}
 		return res; 
 	}
@@ -62,6 +73,7 @@ public class Long2Long {
 			sb.append("\n----------: \n");
 			for (Long key: map.keySet()) {
 				sb.append("#").append(key).append("|");
+				//sb.append(RDF2SQLEncoding.dictionaryDecode(key) + "|");
 				sb.append(map.get(key)).append(" ");
 			}
 			sb.append("Inverse:");
@@ -69,6 +81,7 @@ public class Long2Long {
 				sb.append("*").append(value).append("|");
 				for (Long key: inverse.get(value))
 					sb.append(key).append(",");
+					//sb.append(RDF2SQLEncoding.dictionaryDecode(key) + ",");
 				sb.setLength(sb.length() - 1);
 				sb.append("| ");
 			}
@@ -86,17 +99,19 @@ public class Long2Long {
 	 */
 	public void replaceValue(Long v1, Long v2) {
 		//Debugger.log("Trying to replace value " + v1 + " with " + v2 + " in:");
-		this.display();
-		TreeSet<Long> keys1 = inverse.get(v1);
-		TreeSet<Long> keys2 = inverse.get(v2);
-
-		if ((keys1 != null) && (keys2 != null))
-			for (Long l: keys1) {
-				keys2.add(l);
-				map.put(l, v2); // this erases (k1, v1)
+		//this.display();
+		TreeSet<Long> keysWithV1 = inverse.get(v1);
+		if (keysWithV1 != null){
+			TreeSet<Long> keysWithV2 = inverse.get(v2);
+			if (keysWithV2 == null){
+				keysWithV2 = new TreeSet<Long>();
+				inverse.put(v2, keysWithV2); 
 			}
-		if (keys2 != null)
-			inverse.put(v2, keys2);
+			for (Long l: keysWithV1) {
+				keysWithV2.add(l);
+				map.put(l, v2); // this erases (l, v1)
+			}
+		}
 		inverse.remove(v1);
 	}
 

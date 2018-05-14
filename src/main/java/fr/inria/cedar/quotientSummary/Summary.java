@@ -2,6 +2,7 @@ package fr.inria.cedar.quotientSummary;
 
 import fr.inria.cedar.commons.miscellaneous.Debugger;
 import fr.inria.cedar.quotientSummary.datastructures.Long2Long;
+import fr.inria.cedar.quotientSummary.datastructures.Long2LongSet;
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
 import fr.inria.cedar.quotientSummary.util.DOTAuxiliary;
 import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
@@ -135,13 +136,8 @@ public class Summary {
 			// already some p edges
 			objectsOfThisSubjectAndProperty = new TreeSet<>();
 			triplesOfThisSubject.put(t.p, objectsOfThisSubjectAndProperty);
-			// Debugger.log("XX Created array list for subject " + s + " and
-			// property " + p);
 		}
 		if (!objectsOfThisSubjectAndProperty.contains(t.o)) // otherwise, s p o
-			// is already there
-			// Debugger.log("XX " + o + " was not a known value for " + p + " of
-			// " + s + " in " + this.toString());
 			objectsOfThisSubjectAndProperty.add(o);
 	}
 
@@ -177,11 +173,9 @@ public class Summary {
 	}
 
 	protected void showRepInBuffer(StringBuffer sb) {
-		sb.append("|| rep:  ");
 		for (Long node : this.rep.getKeys()) {
 			//sb.append(node).append("=>").append(rep.get(node)).append(" ");
-			sb.append(RDF2SQLEncoding.dictionaryDecode(node)).append("=>").append(rep.get(node)).append("\n");
-			assert (rep.get(node) != null);
+			sb.append(node + " (" + RDF2SQLEncoding.dictionaryDecode(node)).append(") => ").append(rep.get(node)).append("\n");
 		}
 	}
 
@@ -209,11 +203,7 @@ public class Summary {
 
 	// replaces in summary edges, not in rep
 	protected void replaceNodeInSummaryEdges(Long oldNode, Long newNode) {
-		if (newNode == null)
-			throw new Error("Null new node");
-		if (oldNode.equals(newNode))
-			throw new Error("Won't replace equal nodes");
-	Debugger.log("REPLACE IN SUMMARY OLD NODE " + oldNode + " WITH NEW NODE " + newNode);
+	//System.out.println("   SUMMARY.REPLACE IN EDGES NODE " + oldNode + " WITH " + newNode);
 		//Debugger.log(this.toString());
 		// replace oldNode wherever it existed as an object:
 		for (long s : edges.keySet()) {
@@ -240,20 +230,20 @@ public class Summary {
 		// object ***
 
 		// now let's also do it for the subject:
-		Debugger.log("After replacement as an object, we have: ");
-		Debugger.log(this.toString());
-		Debugger.log("Now replacing as subject");
+		//System.out.println("   SUMMARY.REPLACE IN EDGES: After replacement as an object, we have: ");
+		//System.out.println("   " + this.toString());
+		//System.out.println("   SUMMARY.REPLACE IN EDGES: Now replacing as subject");
 
 		HashMap<Long, TreeSet<Long>> oldNodeIsSubject = edges.get(oldNode);
 		if (oldNodeIsSubject != null) { // in some edges, oldNode was subject
-			Debugger.log("Removing edges whose subject is " + oldNode);
+			//System.out.println("   SUMMARY.REPLACE IN EDGES: Removing edges whose subject is " + oldNode);
 			edges.remove(oldNode); // detach this entry from edges (but keep
 			// them in oldNodeIsSubject for now)
 
 			HashMap<Long, TreeSet<Long>> newNodeIsSubject = edges.get(newNode);
 			if (newNodeIsSubject == null) { // the new node was not previously a
 				// subject of some edges
-				Debugger.log("Adding on the new node " + newNode + " the triples of old node " + oldNode);
+				//System.out.println("   SUMMARY.REPLACE IN EDGES: Adding on the new node " + newNode + " the triples of old node " + oldNode);
 				edges.put(newNode, oldNodeIsSubject); // we're done
 			} else // there were already edges whose subject was the new node
 				if (oldNodeIsSubject != null) { // in this case we need to fuse the
@@ -262,23 +252,16 @@ public class Summary {
 					// we will do this by copying those oldNodeIsSubject triples
 					// which were not already on the new node, into the properties
 					// of the new node
-					Debugger.log("There were edges both on old " + oldNode + " and on new " + newNode);
+					//System.out.println("   SUMMARY.REPLACE IN EDGES: There were edges both on old " + oldNode + " and on new " + newNode);
 
 					for (Long oldNodeProperty : oldNodeIsSubject.keySet()) { // iterate
-						// over the
-						// properties
-						// of
-						// the
-						// old
-						// node
+						// over the properties of the old node
 						TreeSet<Long> oldNodeObjectsForThisProperty = oldNodeIsSubject.get(oldNodeProperty);
 						TreeSet<Long> newNodeObjectsForThisProperty = newNodeIsSubject.get(oldNodeProperty);
 						if (newNodeObjectsForThisProperty == null) { // the new node
-							// did not
-							// have this
-							// one
-							Debugger.log(newNode + " did not have edges labeled " + oldNodeProperty
-									+ ", he is taking them from " + oldNode);
+							// did not have this one
+							//System.out.println("   SUMMARY.REPLACE IN EDGES: " + newNode + " did not have edges labeled " + oldNodeProperty
+							//		+ ", he is taking them from " + oldNode);
 							newNodeObjectsForThisProperty = new TreeSet<Long>();
 							newNodeIsSubject.put(oldNodeProperty, newNodeObjectsForThisProperty);
 						}
@@ -287,17 +270,20 @@ public class Summary {
 						// oldNodeProperty of the old node:
 						for (Long objectOfOldNode : oldNodeObjectsForThisProperty)
 							if (!newNodeObjectsForThisProperty.contains(objectOfOldNode)) {
-								Debugger.log(newNode + " takes property " + oldNodeProperty + " with value "
-										+ objectOfOldNode + " from " + oldNode);
+								//System.out.println("   SUMMARY.REPLACE IN EDGES: " +newNode + " takes property " + oldNodeProperty + " with value "
+								//		+ objectOfOldNode + " from " + oldNode);
 								newNodeObjectsForThisProperty.add(objectOfOldNode);
-							} else
-								Debugger.log(newNode + " already had property " + oldNodeProperty + " with value "
-										+ objectOfOldNode);
+							} 
+							else {
+								//System.out.println("   SUMMARY.REPLACE IN EDGES: " +newNode + " already had property " + oldNodeProperty + " with value "	+ objectOfOldNode);
+							}
 					}
 				}
 		} else { // there was no edge with oldNode as a subject, no subject
 			// replacement to do
 		}
+		//System.out.println("   SUMMARY.REPLACE IN EDGES ends");
+		
 	}
 
 	protected void gatherStatistics() {
@@ -477,7 +463,7 @@ public class Summary {
 
 		String summaryNTFileName = getNTSummaryFileName(rdfFileName);
 
-		System.out.println("Decoding summary and writing it in .nt format in " + summaryNTFileName);
+		//System.out.println("Decoding summary and writing it in .nt format in " + summaryNTFileName);
 
 		boolean gatherStatistics = properties.getProperty("gatherStatistics").toLowerCase().equals("true");
 		if (gatherStatistics)
@@ -727,7 +713,7 @@ public class Summary {
 			BufferedWriter bw = new BufferedWriter(new FileWriter(new File(dotFileName)));
 			bw.write("digraph g{\n");
 			long triplesToDraw = Math.min(25, triplesSummarizedSoFar);
-			System.out.println("Writing " + triplesToDraw + " RDF graph triples to DOT");
+			//System.out.println("Writing " + triplesToDraw + " RDF graph triples to DOT");
 			ResultSet rs = getGraphTriplesCursor1ForDotDrawing(con, triplesToDraw);
 			long triplesDrawn = drawTriples(rs, bw); 
 			//Debugger.log("Drawn " + triplesDrawn);
@@ -891,7 +877,7 @@ public class Summary {
 		StringBuffer sb = new StringBuffer();
 		for (Triple t : getSummaryEdges()) {
 			sb.append(t.toString());
-			sb.append("\n");
+			sb.append(" ");
 		}
 		return new String(sb);
 	}
@@ -911,32 +897,34 @@ public class Summary {
 		}
 	}
 
-	/**
-	 * Reads summary triples from an .nt file TODO the method is currently
-	 * insufficient as in the summary that has been read, the codes of special
-	 * properties are not known. Either fix by starting the serialization in a
-	 * file with the five magic constants, or don't use for now. Instead, use
-	 * readSummaryFromPostgres (below).
-	 *
-	 * @param args
-	 *
-	 * @return
-	 *
-	 * @throws IOException
-	 */
-	public static Summary readSummaryFromFile(String[] args) throws IOException {
-		Summary sum = new Summary();
-		String summaryTripleFileName = args[0];
-		System.out.println("Trying to read an encoded summary from file:" + summaryTripleFileName);
-		try (BufferedReader br = new BufferedReader(new FileReader(new File(summaryTripleFileName)))) {
-			while (br.ready()) {
-				String spo = br.readLine().replaceAll("<", "").replaceAll(">", "");
-				Triple t = sum.readTriple(spo);
-				sum.addTriple(t.s, t.p, t.o);
-			}
-		}
-		return sum;
-	}
+//	/**
+//	 * Reads summary triples from an .nt file TODO the method is currently
+//	 * insufficient as in the summary that has been read, the codes of special
+//	 * properties are not known. Either fix by starting the serialization in a
+//	 * file with the five magic constants, or don't use for now. Instead, use
+//	 * readSummaryFromPostgres (below).
+//	 *
+//	 * @param args
+//	 *
+//	 * @return
+//	 *
+//	 * @throws IOException
+//	 */
+//	public static Summary readSummaryFromFile(String[] args) throws IOException {
+//		Summary sum = new Summary();
+//		String summaryTripleFileName = args[0];
+//		//System.out.println("Trying to read an encoded summary from file:" + summaryTripleFileName);
+//		try (BufferedReader br = new BufferedReader(new FileReader(new File(summaryTripleFileName)))) {
+//			while (br.ready()) {
+//				String spo = br.readLine().replaceAll("<", "").replaceAll(">", "");
+//				Triple t = sum.readTriple(spo);
+//				sum.addTriple(t.s, t.p, t.o);
+//			}
+//		}
+//		System.out.println("Read encoded summary from file:" + summaryTripleFileName);
+//		
+//		return sum;
+//	}
 
 	public Summary(Connection conn) throws SQLException {
 		// Debugger.log("Trying to read summary from Postgres");
@@ -1005,16 +993,84 @@ public class Summary {
 
 		return stats;
 	}
-
-	protected void showClique(ArrayList<Long> arrayList) {
-		System.out.println(showCliqueAsString(arrayList));
+	protected void showClique(TreeSet<Long> clique) {
+		System.out.println(showCliqueAsString(clique));
 	}
-	protected String showCliqueAsString(ArrayList<Long> arrayList) {
+	protected String showCliqueAsString(TreeSet<Long> clique) {
 		StringBuffer sb = new StringBuffer();
 		sb.append("[");
-		for (Long l : arrayList)
+		for (Long l : clique)
 			sb.append(l).append("(" + RDF2SQLEncoding.dictionaryDecode(l) + ") ");
 		sb.append("]");
 		return new String(sb); 
 	}
+	
+	protected HashMap<Long, TreeSet<Long>> getEdgesFrom(Long s){
+		return this.edges.get(s); 
+	}
+	protected HashMap<Long, TreeSet<Long>> getEdgesTo(Long o){
+		HashMap<Long, TreeSet<Long>> res = new HashMap<Long, TreeSet<Long>>();
+		for (Long s: edges.keySet()){
+			for (Long p: edges.get(s).keySet()){
+				// if there is an edge s--p-->o
+				if (edges.get(s).get(p).equals(o)) {
+					TreeSet<Long> onP = res.get(p);
+					if (onP == null){ // the first edge labeled p which goes into o 
+						onP = new TreeSet<Long>();
+						res.put(p, onP);
+					}
+					onP.add(s); // add s on p in the result
+				}
+			}
+		}
+		return res;  
+	}
+	protected void addIncomingEdges(Long node, Long2LongSet newEdges){
+		//System.out.println("SUMMARY ADD INCOMING EDGES INTO " + node);
+		for (Long p: newEdges.keys()){
+			//System.out.println("SUMMARY ADD INCOMING EDGES: incoming property: " + p);
+			for (Long s: newEdges.get(p)){
+				//System.out.println("SUMMARY ADDDING " + s + "--" + p + "-->" + node); 
+				this.addTriple(s, p, node);
+			}
+		}
+	}
+	protected void removeIncomingEdges(Long node, Long2LongSet removedEdges){
+		for (Long p: removedEdges.keys()){
+			for (Long s: removedEdges.get(p)){
+				this.removeTriple(s, p, node); 
+			}
+		}
+	}
+	protected void addOutgoingEdges(Long node, Long2LongSet newEdges){
+		for (Long p: newEdges.keys()){
+			for (Long o: newEdges.get(p)){
+				this.addTriple(node, p, o);
+			}
+		}
+	}
+	protected void removeOutgoingEdges(Long node, Long2LongSet removedEdges){
+		for (Long p: removedEdges.keys()){
+			for (Long o: removedEdges.get(p)){
+				this.removeTriple(node, p, o); 
+			}
+		}
+	}
+	protected void removeTriple(Long s, Long p, Long o){
+		HashMap<Long, TreeSet<Long>> edgesOfS = edges.get(s); 
+		if (edgesOfS != null){
+			TreeSet<Long> pEdgesOfS = edgesOfS.get(p);
+			if (pEdgesOfS != null){
+				pEdgesOfS.remove(o); 
+			}
+		}
+	}
+	public String getEdgesToString(){
+		StringBuffer sb = new StringBuffer();
+		for (Triple t: this.getSummaryEdges()){
+			sb.append(t.toString() + " ");
+		}
+		return new String(sb); 
+	}
+	
 }

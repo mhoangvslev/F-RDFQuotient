@@ -147,7 +147,7 @@ public class StrongSummaryTests {
 		}
 	}
 
-	@Test @Ignore
+	@Test
 	public void teststrong6() {
 		String referenceFileName = "src/test/resources/test6-strong/s_test-6-reference.nt";
 		File expectedOutput = new File(referenceFileName);
@@ -166,7 +166,7 @@ public class StrongSummaryTests {
 		}
 	}
 
-	@Test @Ignore
+	@Test
 	public void teststrong7() {
 		String referenceFileName = "src/test/resources/test7-strong/s_test-7-reference.nt";
 		File expectedOutput = new File(referenceFileName);

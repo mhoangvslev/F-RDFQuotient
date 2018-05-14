@@ -191,6 +191,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 			default:
 				throw new IllegalStateException("Unknown case " + caseNumber);
 		}
+		cacheTriple(t) ;
 		//this.display();
 	}
 
@@ -279,13 +280,13 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 	}
 	
 	public void display() {
-		System.out.println("===STRONG SUMMARY\nSource cliques: " + sc.display());
-		System.out.println("Target cliques: " + tc.display());
+		System.out.println("===STRONG SUMMARY\nSource cliques: " + sc.toString());
+		System.out.println("Target cliques: " + tc.toString());
 		System.out.println("Data nodes to source cliques: " + n2sc.display());
 		System.out.println("Data nodes to target cliques: " + n2tc.display());
 		System.out.println("Property to source cliques: " + p2sc.display());
 		System.out.println("Property to target cliques: " + p2tc.display());
-		System.out.println("Untyped summary nodes: " + showUntypedSummaryNodes());
+		System.out.println("Untyped summary nodes: " + untypedSummaryNodes.toString());
 		System.out.println("Representation function: ");
 		showRep();
 		System.out.println("Summary: ");
@@ -295,35 +296,4 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 		System.out.println("===");
 	}
 	
-	protected void roundTripConsistencyCheck(){
-		String msg = ""; 
-		for (Long dataNode: n2sc.getKeys()){
-			System.out.println("Data node: " + dataNode);
-			Long nodeRep = rep.get(dataNode);
-			if (nodeRep == null){
-				msg = ("Unrepresented data node " + dataNode);
-				System.out.println(msg);
-				throw new IllegalStateException(msg);
-			}
-			Long nsc = n2sc.get(dataNode);
-			Long ntc = n2tc.get(dataNode);
-			HashMap<Long, Long> tc2Nodes = untypedSummaryNodes.get(nsc);
-			if (tc2Nodes == null){
-				msg = ("untypedSummaryNodes has nothing on source clique " + nsc + " of node " + dataNode + "(" + RDF2SQLEncoding.dictionaryDecode(dataNode) + ")"); 
-				System.out.println(msg);
-				throw new IllegalStateException(msg); 
-			}
-			Long tcn = tc2Nodes.get(ntc);
-			if (tcn == null){
-				msg = ("Nothing found on source clique " + nsc + " for target clique " + ntc + " of node " + dataNode + "(" + RDF2SQLEncoding.dictionaryDecode(dataNode) + ")"); 
-				System.out.println(msg);
-				throw new IllegalStateException(msg);
-			}
-			if (!(tcn.equals(nodeRep))){
-				msg = (nsc + "=>" + ntc + ": " + tcn + " while the representative of " + dataNode + " is " + nodeRep); 
-				System.out.println(msg);
-				throw new IllegalStateException(msg);
-			}
-		}
-	}
 }
