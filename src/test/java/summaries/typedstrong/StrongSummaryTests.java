@@ -9,7 +9,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class StrongSummaryTests {
@@ -23,10 +22,10 @@ public class StrongSummaryTests {
 		String inputFileName = "src/test/resources/test" + i + "-strong/test-" + i + ".nt";
 		String outputFileName = "src/test/resources/test" + i + "-strong/s_test-" + i + ".nt";
 		try {
-			String[] argsSum = {"loadWithSaturationAndSummarize", "strong", inputFileName};
+			String[] argsSum = {"loadAndSummarize", "strong", inputFileName};
 			try {
 				Builder.main(argsSum);
-				String[] argsSave = {"saveSummaryComputedClassicalWay"};
+				String[] argsSave = {"saveSummaryComputedWithoutSaturation"};
 				Builder.main(argsSave);
 				String[] argsExport = {"exportSummary", inputFileName, "draw"};
 				Builder.main(argsExport);

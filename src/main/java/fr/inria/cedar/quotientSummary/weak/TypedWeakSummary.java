@@ -151,7 +151,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		}
 		//System.out.println("TypedWeak: Looking for type triples"); 
 		triplesSummarizedSoFar = 0;
-		String getTypedTriplesString = ("select *  from " + tableName + " where p =" + typeConstantCode);
+		String getTypedTriplesString = ("select *  from " + tableName + " where p = " + typeConstantCode);
 		try {
 			try (Statement getTypedTriples = conn.createStatement()) {
 				getTypedTriples.setFetchSize(1000);

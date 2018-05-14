@@ -22,10 +22,10 @@ public class TypedWeakSummaryTests {
 		String inputFileName = "src/test/resources/test" + i + "-typedweak/test-" + i + ".nt";
 		String outputFileName = "src/test/resources/test" + i + "-typedweak/tw_test-" + i + ".nt";
 		try {
-			String[] argsSum = {"loadWithSaturationAndSummarize", "typedweak", inputFileName};
+			String[] argsSum = {"loadAndSummarize", "typedweak", inputFileName};
 			try {
 				Builder.main(argsSum);
-				String[] argsSave = {"saveSummaryComputedClassicalWay"};
+				String[] argsSave = {"saveSummaryComputedWithoutSaturation"};
 				Builder.main(argsSave);
 				String[] argsExport = {"exportSummary", inputFileName, "draw"};
 				Builder.main(argsExport);

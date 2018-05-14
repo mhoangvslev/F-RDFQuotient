@@ -22,10 +22,10 @@ public class TypedStrongSummaryTests {
 		String inputFileName = "src/test/resources/test" + i + "-typedstrong/test-" + i + ".nt";
 		String outputFileName = "src/test/resources/test" + i + "-typedstrong/ts_test-" + i + ".nt";
 		try {
-			String[] argsSum = {"loadWithSaturationAndSummarize", "typedstrong", inputFileName};
+			String[] argsSum = {"loadAndSummarize", "typedstrong", inputFileName};
 			try {
 				Builder.main(argsSum);
-				String[] argsSave = {"saveSummaryComputedClassicalWay"};
+				String[] argsSave = {"saveSummaryComputedWithoutSaturation"};
 				Builder.main(argsSave);
 				String[] argsExport = {"exportSummary", inputFileName, "draw"};
 				Builder.main(argsExport);

@@ -22,10 +22,10 @@ public class WeakSummaryTests {
 		String inputFileName = "src/test/resources/test" + i + "-weak/test-" + i + ".nt";
 		String outputFileName = "src/test/resources/test" + i + "-weak/w_test-" + i + ".nt";
 		try {
-			String[] argsSum = {"loadWithSaturationAndSummarize", "weak", inputFileName};
+			String[] argsSum = {"loadAndSummarize", "weak", inputFileName};
 			try {
 				Builder.main(argsSum);
-				String[] argsSave = {"saveSummaryComputedClassicalWay"};
+				String[] argsSave = {"saveSummaryComputedWithoutSaturation"};
 				Builder.main(argsSave);
 				String[] argsExport = {"exportSummary", inputFileName, "draw"};
 				Builder.main(argsExport);

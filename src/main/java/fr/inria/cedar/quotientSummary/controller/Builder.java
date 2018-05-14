@@ -70,6 +70,10 @@ public class Builder {
 			case "summarizeSaturated":
 				summaryInUse = summarizeGraphFromPostgres(nextArguments, true);
 				return;
+			case "loadAndSummarize":
+				connectionInUse = loadGraphInPostgres(filesToLoad, false, false);
+				summaryInUse = summarizeGraphFromPostgres(nextArguments, false);
+				return;
 			case "loadWithSaturationAndSummarize":
 				connectionInUse = loadGraphInPostgres(filesToLoad, true, false);
 				summaryInUse = summarizeGraphFromPostgres(nextArguments, true);
@@ -82,6 +86,9 @@ public class Builder {
 				closeConnection();
 				connectionInUse = loadGraphInPostgres(filesToLoad, true, true);
 				summaryInUse = summarizeGraphFromPostgres(nextArguments, true); // TODO: edit nextArguments args[1]
+				return;
+			case "saveSummaryComputedWithoutSaturation":
+				saveSummary(Boolean.TRUE, "noSaturation");
 				return;
 			case "saveSummaryComputedClassicalWay":
 				saveSummary(Boolean.FALSE, "classical");

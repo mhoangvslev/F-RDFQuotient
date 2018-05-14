@@ -61,7 +61,7 @@ public class Substitutions {
 			Long n1aux = substitutions.get(n1);
 			Long n2aux = substitutions.get(n2);
 			if (n1 > n2) { // we should replace n1 by n2,
-				LOGGER.debug("n1>n2");
+				LOGGER.debug("n1 > n2");
 				// except if n1 is already replaced by someone smaller
 				// than (n2 or the substitution of n2, if it exists)
 				// in which case, n2 should be replaced by the smallest, too

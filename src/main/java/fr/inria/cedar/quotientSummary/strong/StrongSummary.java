@@ -97,7 +97,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 							handleDataTriple(t);
 						//System.out.println("Summary has become: " + this.toString());
 						triplesSummarizedSoFar++;
-						this.drawSummaryAndGraph(conn, dataTriplesFileName, ("-after-" + triplesSummarizedSoFar + "-"+ t.s + "-" + t.p + "-" + t.o), "tmp_triples", "dictionary");
+						this.drawSummaryAndGraph(conn, dataTriplesFileName, "tmp_triples", "dictionary", "-after-" + triplesSummarizedSoFar + "-"+ t.s + "-" + t.p + "-" + t.o);
 						display();
 					}
 				}
@@ -119,7 +119,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 						//System.out.println("#### Type triple " + t.toString());
 						this.handleTypeTripleAfterData(t);
 						triplesSummarizedSoFar++;
-						this.drawSummaryAndGraph(conn, dataTriplesFileName, ("-after-" + triplesSummarizedSoFar + "-" + t.s + "-" + t.p + "-" + t.o), "tmp_triples", "dictionary");
+						this.drawSummaryAndGraph(conn, dataTriplesFileName, "tmp_triples", "dictionary", "-after-" + triplesSummarizedSoFar + "-" + t.s + "-" + t.p + "-" + t.o);
 						//System.out.println("Summary now has " + getSummaryEdges().size() + " triples");
 
 					}
