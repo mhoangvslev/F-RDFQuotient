@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.Set;
 import java.util.TreeSet;
 
+import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
+
 public class Long2LongSet {
 	final HashMap<Long, TreeSet<Long>> map;
 
@@ -49,17 +51,26 @@ public class Long2LongSet {
 		}
 	}
 
-	public String display() {
+	public String toString() {
+		//System.out.println("LONG2LONGSET DISPLAY");
 		StringBuffer sb = new StringBuffer();
 		if (!map.keySet().isEmpty()) {
-			sb.append("\n==============: \n");
 			for (Long key: map.keySet()) {
 				sb.append("#").append(key).append("|{");
 				TreeSet<Long> values = map.get(key);
-				for (Long val: values)
-					sb.append(val).append(", ");
-				sb.append("}  (").append(map.size()).append(" entries)");
+				for (Long val: values){
+					String decodedVal = ""; 
+					try{
+						decodedVal = RDF2SQLEncoding.dictionaryDecode(val);
+					}
+					catch(Exception e){
+						// nothing -- this value was not part of the dictionary
+					}
+					sb.append(val + (decodedVal.equals("")?"":(" (" + decodedVal + ")")) + ", ");
+				}
+				sb.append("} ");
 			}
+			sb.append("(" + map.size()  + " entries)");
 		}
 		return new String(sb);
 	}
@@ -68,14 +79,13 @@ public class Long2LongSet {
 		return map.keySet();
 	}
 
-	public void add(long o, long newClassSetID) {
-		TreeSet<Long> setFor = map.get(o);
+	public void add(Long k, Long v) {
+		TreeSet<Long> setFor = map.get(k);
 		if (setFor == null) {
 			setFor = new TreeSet<>();
-			setFor.add(newClassSetID);
+			map.put(k, setFor); 
 		}
-		else
-			if (!setFor.contains(newClassSetID))
-				setFor.add(newClassSetID);
-	}
+		if (!setFor.contains(v))
+			setFor.add(v);
+		}
 }
