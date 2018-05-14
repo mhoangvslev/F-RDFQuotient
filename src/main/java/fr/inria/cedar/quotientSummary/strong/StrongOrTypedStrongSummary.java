@@ -12,9 +12,7 @@ import java.util.HashMap;
 import java.util.TreeSet;
 
 import fr.inria.cedar.quotientSummary.datastructures.Long2LongSet;
-import fr.inria.cedar.quotientSummary.datastructures.Triple;
 import fr.inria.cedar.quotientSummary.datastructures.TwoLevelLongMap;
-import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 
 public class StrongOrTypedStrongSummary extends Summary {
 	Long2LongSet sc; // for each source clique ID,  a source clique
@@ -281,7 +279,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		// e.g., if replaceForS is false but replaceForO is true, it contains those node replacements that are needed because of O, and
 		// will replace nothing wrongly around s
 		for (ReplacementSpecification reps: nodeReps){
-			replaceNodeInEdges(reps.getOldNode(), reps.getNewNode()); 
+			edgesWithProv.replaceNodeInEdges(reps.getOldNode(), reps.getNewNode()); 
 		}
 
 		// now patching summary edges if needed
@@ -301,7 +299,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		n2tc.put(t.o, newTCo);
 
 		// adding the triple:
-		this.addTriple(newRepS, t.p, newRepO);
+		edgesWithProv.addTriple(newRepS, t.p, newRepO);
 	}
 
 	// untyped, represented object
@@ -382,7 +380,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 
 		// now modify summary edges
 		for (ReplacementSpecification reps: nodeReps){
-			replaceNodeInEdges(reps.getOldNode(), reps.getNewNode()); 
+			edgesWithProv.replaceNodeInEdges(reps.getOldNode(), reps.getNewNode()); 
 		}
 
 		// now patching summary edges if needed
@@ -402,7 +400,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		n2tc.put(t.o, newTCo);
 
 		// adding the triple:
-		this.addTriple(newRepS, t.p, newRepO);
+		edgesWithProv.addTriple(newRepS, t.p, newRepO);
 	}
 
 	// untyped, unrepresented subject
@@ -462,7 +460,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 
 		// now modify summary edges
 		for (ReplacementSpecification reps: nodeReps){
-			replaceNodeInEdges(reps.getOldNode(), reps.getNewNode()); 
+			edgesWithProv.replaceNodeInEdges(reps.getOldNode(), reps.getNewNode()); 
 		}
 
 		// now patching summary edges of object, if needed
@@ -480,7 +478,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		n2tc.put(t.o, newTCo);
 
 		// adding the triple:
-		this.addTriple(newRepS, t.p, newRepO);
+		edgesWithProv.addTriple(newRepS, t.p, newRepO);
 	}
 
 	// untyped, unrepresented subject
@@ -544,7 +542,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 
 		// now modify summary edges
 		for (ReplacementSpecification reps: nodeReps){
-			replaceNodeInEdges(reps.getOldNode(), reps.getNewNode()); 
+			edgesWithProv.replaceNodeInEdges(reps.getOldNode(), reps.getNewNode()); 
 		}
 
 		// now patching summary edges of object, if needed
@@ -562,7 +560,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		n2tc.put(t.o, newTCo);
 
 		// adding the triple:
-		this.addTriple(newRepS, t.p, newRepO);
+		edgesWithProv.addTriple(newRepS, t.p, newRepO);
 	}
 
 
@@ -638,7 +636,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 
 		// now modify summary edges
 		for (ReplacementSpecification reps: nodeReps){
-			replaceNodeInEdges(reps.getOldNode(), reps.getNewNode()); 
+			edgesWithProv.replaceNodeInEdges(reps.getOldNode(), reps.getNewNode()); 
 		}
 		//System.out.println("US_RS_UO_NO_RP after node replacement, edges : " + this.getEdgesToString()); 
 
@@ -658,7 +656,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		n2tc.put(t.o, newTCo);
 
 		// adding the triple:
-		this.addTriple(newRepS, t.p, newRepO);
+		edgesWithProv.addTriple(newRepS, t.p, newRepO);
 	}
 
 
@@ -713,7 +711,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		n2tc.put(t.o, newTCo);
 
 		// adding the triple:
-		this.addTriple(newRepS, t.p, newRepO);
+		edgesWithProv.addTriple(newRepS, t.p, newRepO);
 	}
 
 	// untyped, unrepresented subject
@@ -767,7 +765,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		n2tc.put(t.o, newTCo);
 
 		// adding the triple:
-		this.addTriple(newRepS, t.p, newRepO);
+		edgesWithProv.addTriple(newRepS, t.p, newRepO);
 	}
 
 
@@ -851,7 +849,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		
 		// now modify summary edges
 		for (ReplacementSpecification reps: nodeReps){
-			replaceNodeInEdges(reps.getOldNode(), reps.getNewNode()); 
+			edgesWithProv.replaceNodeInEdges(reps.getOldNode(), reps.getNewNode()); 
 		}
 
 		// now patching summary edges if needed
@@ -870,7 +868,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		n2tc.put(t.o, newTCo);
 
 		// adding the triple:
-		this.addTriple(newRepS, t.p, newRepO);
+		edgesWithProv.addTriple(newRepS, t.p, newRepO);
 	}
 
 	// updates untypedSummaryNodes, p2sc, p2tc
@@ -966,68 +964,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		}
 	}
 
-	// updates exactly edges, does nothing else, changes nothing else
-	protected void replaceNodeInEdges(Long oldNode, Long newNode){
-		// replace oldNode wherever it existed as an object:
-		for (long s : edges.keySet()) {
-			HashMap<Long, TreeSet<Long>> triplesOfThisSubject = edges.get(s);
-			for (long propOfThisSubject : triplesOfThisSubject.keySet()) {
-				TreeSet<Long> objectsForThisSubjectAndProperty = triplesOfThisSubject.get(propOfThisSubject);
-				TreeSet<Long> newObjectsForThisSubjectAndProperty = new TreeSet<Long>();
-				boolean changed = false;
-				for (long o : objectsForThisSubjectAndProperty)
-					if (o == oldNode) {
-						if (!newObjectsForThisSubjectAndProperty.contains(newNode))
-							newObjectsForThisSubjectAndProperty.add(newNode);
-						changed = true;
-					} else
-						newObjectsForThisSubjectAndProperty.add(o);
-				if (changed)
-					triplesOfThisSubject.replace(propOfThisSubject, newObjectsForThisSubjectAndProperty); // replace
-				// is not a structural modification of the map, thus no concurrent modification exception
-			}
-		}
-		// above we have replaced old with new wherever it appeared *** as an
-		// object ***
-
-		// now let's also do it for the subject:
-		HashMap<Long, TreeSet<Long>> oldNodeIsSubject = edges.get(oldNode);
-		if (oldNodeIsSubject != null) { // in some edges, oldNode was subject
-			edges.remove(oldNode); // detach this entry from edges (but keep them in oldNodeIsSubject for now)
-			HashMap<Long, TreeSet<Long>> newNodeIsSubject = edges.get(newNode);
-			if (newNodeIsSubject == null) { // the new node was not previously a
-				// subject of some edges
-				edges.put(newNode, oldNodeIsSubject); // we're done
-			} else // there were already edges whose subject was the new node
-				if (oldNodeIsSubject != null) { // in this case we need to fuse the
-					// two maps so that each edge appears only once
-					// we will do this by copying those oldNodeIsSubject triples
-					// which were not already on the new node, into the properties
-					// of the new node
-					for (Long oldNodeProperty : oldNodeIsSubject.keySet()) { // iterate
-						// over the properties of the old node
-						TreeSet<Long> oldNodeObjectsForThisProperty = oldNodeIsSubject.get(oldNodeProperty);
-						TreeSet<Long> newNodeObjectsForThisProperty = newNodeIsSubject.get(oldNodeProperty);
-						if (newNodeObjectsForThisProperty == null) { // the new node
-							// did not have this one
-							newNodeObjectsForThisProperty = new TreeSet<Long>();
-							newNodeIsSubject.put(oldNodeProperty, newNodeObjectsForThisProperty);
-						}
-						// whether the new node did or did not have triples labeled
-						// oldNodeProperty, try to give him the triples labeled
-						// oldNodeProperty of the old node:
-						for (Long objectOfOldNode : oldNodeObjectsForThisProperty)
-							if (!newNodeObjectsForThisProperty.contains(objectOfOldNode)) {
-								newNodeObjectsForThisProperty.add(objectOfOldNode);
-							} else{ // already had this property
-							} 
-					}
-				}
-		} else { // there was no edge with oldNode as a subject, no subject
-			// replacement to do
-		}
-	}
-
+	
 	// returns on oldRep, the edges to remove, 
 	// and on newRep, the edges to create for it
 	protected HashMap<Long, Long2LongSet> distributeSummaryEdgesDueTo(long oldRep, long newRep, long node, char param){

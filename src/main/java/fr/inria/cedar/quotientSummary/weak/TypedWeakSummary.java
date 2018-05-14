@@ -71,7 +71,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 				Long s = rs.getLong(1);
 				Long p = rs.getLong(2);
 				Long o = rs.getLong(3);
-				this.addTriple(s, p, o);
+				edgesWithProv.addTriple(s, p, o);
 			}
 		}
 		catch (SQLException e) {
@@ -195,7 +195,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 						|| (t.p == RDF2SQLEncoding.getSubPropertyCode())
 						|| (t.p == RDF2SQLEncoding.getDomainCode())
 						|| (t.p == RDF2SQLEncoding.getRangeCode()))
-							addTriple(t.s, t.p, t.o);
+							edgesWithProv.addTriple(t.s, t.p, t.o);
 						else
 							handleDataTriple(t);
 						triplesSummarizedSoFar++;
@@ -640,7 +640,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 			Long thisClassSetID = this.n2cs.get(node);
 			TreeSet<Long> thisClassSet = this.cs.get(thisClassSetID);
 			for (Long thisClass: thisClassSet){
-				this.addTriple(thisClassSetID, RDF2SQLEncoding.getTypeCode(), thisClass);
+				edgesWithProv.addTriple(thisClassSetID, RDF2SQLEncoding.getTypeCode(), thisClass);
 				rep.put(node, thisClassSetID);
 			}
 		}
@@ -654,8 +654,8 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 
 	@Override
 	protected void consistencyChecks() {
-		for (Long s: edges.keySet()) {
-			HashMap<Long, TreeSet<Long>> triplesOfThisSubject = edges.get(s);
+		for (Long s: edgesWithProv.keySet()) {
+			HashMap<Long, TreeSet<Long>> triplesOfThisSubject = edgesWithProv.get(s);
 			if (triplesOfThisSubject == null)
 				throw new IllegalStateException("No triples whose subject is " + s);
 			for (Long p: triplesOfThisSubject.keySet()) {

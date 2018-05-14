@@ -67,7 +67,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 				Long s = rs.getLong(1);
 				Long p = rs.getLong(2);
 				Long o = rs.getLong(3);
-				this.addTriple(s, p, o);
+				edgesWithProv.addTriple(s, p, o);
 			}
 		}
 		catch (SQLException e) {
@@ -143,7 +143,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 						|| (t.p == RDF2SQLEncoding.getSubPropertyCode())
 						|| (t.p == RDF2SQLEncoding.getDomainCode())
 						|| (t.p == RDF2SQLEncoding.getRangeCode()))
-							addTriple(t.s, t.p, t.o);
+							edgesWithProv.addTriple(t.s, t.p, t.o);
 						else
 							handleDataTriple(t);
 						triplesSummarizedSoFar++;
@@ -276,7 +276,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		System.out.println("Cs to cs ID: ");
 		showClassSets();
 		System.out.println("Summary: ");
-		for (Triple t: this.getSummaryEdges())
+		for (Triple t: edgesWithProv.getSummaryEdges())
 			t.display();
 	}
 
@@ -372,7 +372,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 			Long thisClassSetID = this.n2cs.get(node);
 			TreeSet<Long> thisClassSet = this.cs.get(thisClassSetID);
 			for (Long thisClass: thisClassSet){
-				this.addTriple(thisClassSetID, RDF2SQLEncoding.getTypeCode(), thisClass);
+				edgesWithProv.addTriple(thisClassSetID, RDF2SQLEncoding.getTypeCode(), thisClass);
 				rep.put(node, thisClassSetID);
 			}
 		}
@@ -514,7 +514,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		n2tc.put(t.s, this.getEmptyTargetCliqueID()); 
 		
 		// adding the triple:
-		this.addTriple(newRepS, t.p, repO);
+		edgesWithProv.addTriple(newRepS, t.p, repO);
 
 	}
 
@@ -574,7 +574,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 				
 		// now modify summary edges
 		for (ReplacementSpecification reps: nodeReps){
-			replaceNodeInEdges(reps.getOldNode(), reps.getNewNode()); 
+			edgesWithProv.replaceNodeInEdges(reps.getOldNode(), reps.getNewNode()); 
 		}
 
 		// now patching summary edges if needed
@@ -590,7 +590,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		n2sc.put(t.s, newSCs);
 		
 		// adding the triple:
-		this.addTriple(newRepS, t.p, newRepO);
+		edgesWithProv.addTriple(newRepS, t.p, newRepO);
 	}
 
 	// typed, represented subject which won't change
@@ -634,7 +634,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		n2tc.put(t.o, newTCo);
 
 		// adding the triple:
-		this.addTriple(newRepS, t.p, newRepO);
+		edgesWithProv.addTriple(newRepS, t.p, newRepO);
 		
 	}
 
@@ -693,7 +693,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		}
 		// now modify summary edges
 		for (ReplacementSpecification reps: nodeReps){
-			replaceNodeInEdges(reps.getOldNode(), reps.getNewNode()); 
+			edgesWithProv.replaceNodeInEdges(reps.getOldNode(), reps.getNewNode()); 
 		}
 
 		// now patching summary edges if needed
@@ -709,7 +709,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		n2tc.put(t.o, newTCo);
 		
 		// adding the triple:
-		this.addTriple(newRepS, t.p, newRepO);
+		edgesWithProv.addTriple(newRepS, t.p, newRepO);
 	}
 
 	// untyped, unrepresented subject
@@ -742,7 +742,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		n2tc.put(t.s, this.getEmptyTargetCliqueID()); 
 		
 		// adding the triple:
-		this.addTriple(newRepS, t.p, repO);
+		edgesWithProv.addTriple(newRepS, t.p, repO);
 	}
 
 	// untyped, represented subject
@@ -796,8 +796,8 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		} // else, nothing to do because newRepS is correctly inserted in untypedNodes, on its cliques
 		
 		// now modify summary edges
-			for (ReplacementSpecification reps: nodeReps){
-			replaceNodeInEdges(reps.getOldNode(), reps.getNewNode()); 
+		for (ReplacementSpecification reps: nodeReps){
+			edgesWithProv.replaceNodeInEdges(reps.getOldNode(), reps.getNewNode()); 
 		}
 
 		// now patching summary edges if needed
@@ -811,7 +811,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		n2sc.put(t.s, newSCs);
 
 		// adding the triple:
-		this.addTriple(newRepS, t.p, repO);
+		edgesWithProv.addTriple(newRepS, t.p, repO);
 	}
 
 	// typed, represented subject
@@ -843,7 +843,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		n2tc.put(t.o, newTCo);
 
 		// adding the triple:
-		this.addTriple(repS, t.p, repO);
+		edgesWithProv.addTriple(repS, t.p, repO);
 	}
 	
 
@@ -901,7 +901,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		// e.g., if replaceForS is false but replaceForO is true, it contains those node replacements that are needed because of O, and
 		// will replace nothing wrongly around s
 		for (ReplacementSpecification reps: nodeReps){
-			replaceNodeInEdges(reps.getOldNode(), reps.getNewNode()); 
+			edgesWithProv.replaceNodeInEdges(reps.getOldNode(), reps.getNewNode()); 
 		}
 
 		// now patching summary edges if needed
@@ -916,13 +916,13 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		n2tc.put(t.o, newTCo);
 
 		// adding the triple:
-		this.addTriple(repS, t.p, newRepO);
+		edgesWithProv.addTriple(repS, t.p, newRepO);
 	}
 
 	private void handleDataTriple_TS_TO(Triple t, Long classSetS, Long classSetO, Long sourceCliqueS,
 										Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
 		// add the edge to the summary
-		this.addTriple(classSetS, t.p, classSetO);
+		edgesWithProv.addTriple(classSetS, t.p, classSetO);
 	}
 
 	private void checkSymmetry(Long sourceCliqueS, Long targetCliqueS, Long sourceCliqueO, Long targetCliqueO,

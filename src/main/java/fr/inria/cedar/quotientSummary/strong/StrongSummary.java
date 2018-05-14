@@ -35,7 +35,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 				Long s = rs.getLong(1);
 				Long p = rs.getLong(2);
 				Long o = rs.getLong(3);
-				this.addTriple(s, p, o);
+				edgesWithProv.addTriple(s, p, o);
 			}
 		}
 		catch (SQLException e) {
@@ -91,7 +91,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 						|| (t.p == RDF2SQLEncoding.getDomainCode())
 						|| (t.p == RDF2SQLEncoding.getRangeCode()))
 							//System.out.println("#### Schema triple " + t.toString());
-							addTriple(t.s, t.p, t.o);
+							edgesWithProv.addTriple(t.s, t.p, t.o);
 						else
 							//System.out.println("#### Data triple " + t.toString());
 							handleDataTriple(t);
@@ -204,7 +204,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 		Long repS = rep.get(t.s);
 		if (repS != null) {
 			//System.out.println("Source " + t.s + " already represented");
-			addTriple(repS, t.p, t.o);
+			edgesWithProv.addTriple(repS, t.p, t.o);
 		}
 		else {
 			//System.out.println("Source " + t.s + " has no data properties");
@@ -213,7 +213,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 				this.typeOnlyNodeID = getNextSummaryNode();
 				typeOnlyNodeAlreadySeen = true;
 			}
-			addTriple(typeOnlyNodeID, t.p, t.o);
+			edgesWithProv.addTriple(typeOnlyNodeID, t.p, t.o);
 			rep.put(t.s, typeOnlyNodeID);
 		}
 		this.numberOfTypeTriplesRead++;
@@ -293,7 +293,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 		System.out.println("Representation function: ");
 		showRep();
 		System.out.println("Summary: ");
-		for (Triple t: this.getSummaryEdges())
+		for (Triple t: edgesWithProv.getSummaryEdges())
 			t.display();
 		roundTripConsistencyCheck();
 		System.out.println("===");

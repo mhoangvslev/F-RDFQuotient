@@ -70,7 +70,7 @@ public class WeakOrTypedWeakSummary extends Summary {
 	protected void replaceAll(Long oldNode, Long newNode, Long forProperty) {
 		//Debugger.log("WTW REPLACE-ALL " + oldNode + " with " + newNode + " for property " + forProperty + " in: ");
 		//Debugger.log(this.toString());
-		replaceNodeInSummaryEdges(oldNode, newNode);
+		edgesWithProv.replaceNodeInSummaryEdges(oldNode, newNode);
 		//Debugger.log("Representation was: "); 
 		//showRep(); 
 		rep.replaceValue(oldNode, newNode);
@@ -262,50 +262,19 @@ public class WeakOrTypedWeakSummary extends Summary {
 	}
 
 	protected void addTripleAndCheck(Long s, long p, Long o) {
-		addTriple(s, p, o);
+		edgesWithProv.addTriple(s, p, o);
 		if (this.checkConsistency)
 			consistencyChecks();
-	}
-
-	// This methods overrides that of Summary. It has some safety checks specific to W and TW summarization.
-	@Override
-	public ArrayList<Triple> getSummaryEdges() {
-		ArrayList<Triple> res = new ArrayList<>();
-		for (Long s: edges.keySet()) {
-			HashMap<Long, TreeSet<Long>> triplesOfThisSubject = edges.get(s);
-			if (triplesOfThisSubject == null)
-				throw new Error("No triples whose subject is " + s);
-			for (Long p: triplesOfThisSubject.keySet()) {
-				TreeSet<Long> objectsOfThisSandP = triplesOfThisSubject.get(p);
-				for (Long o: objectsOfThisSandP) {
-					Triple t = new Triple(s, p, o);
-					res.add(t);
-				}
-			}
-		}
-		return res;
 	}
 
 	// This method overrides that of Summary. Some of the printout is specific to W and TW.
 	@Override
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
-		for (Triple t: getSummaryEdges()) {
+		for (Triple t: edgesWithProv.getSummaryEdges()) {
 			sb.append(t.toString());
 			sb.append("\n");
 		}
-//		sb.append("rep:\n");
-//		this.showRepInBuffer(sb);
-//		sb.append("\nProperty sources:\n");
-//		for (Long l: ps.keySet()) {
-//			sb.append(l + ": " + ps.get(l));
-//			sb.append(" "); 
-//		}
-//		sb.append("\nProperty targets:\n");
-//		for (Long l: pt.keySet()) {
-//			sb.append(l + ": " + pt.get(l));
-//			sb.append(" "); 
-//		}
 		return new String(sb);
 	}
 }
