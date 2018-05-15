@@ -56,6 +56,10 @@ public class Summary {
 	protected static String STRONG_SUMMARY_PREFIX = "s_";
 	protected static String TYPED_WEAK_SUMMARY_PREFIX = "tw_";
 	protected static String TYPED_STRONG_SUMMARY_PREFIX = "ts_";
+	protected String triplesFileName = "";
+	protected String triplesTableName = "";
+	protected String encodedTriplesTableName = "";
+	protected String dictionaryTableName = "";
 	protected boolean checkConsistency = false;
 	protected long triplesSummarizedSoFar = 0;
 	protected DOTAuxiliary dax;
@@ -123,12 +127,12 @@ public class Summary {
 	// we need to be sure that integers which we invent to represent nodes
 	// will not collide with the codes already given to classes and properties
 	// (which, in this implementation, for simplicity, are preserved).
-	protected void avoidCollisionsWhenAssigningSummaryNodes(Connection conn, String tableName) {
+	protected void avoidCollisionsWhenAssigningSummaryNodes(Connection conn) {
 		long maxClassOrPropertyCode = 0;
 		long typeConstantCode = RDF2SQLEncoding.getTypeCode();
-		
+
 		try {
-			String jumpRepString = ("select max(o) from " + tableName + " t1 where p = " + typeConstantCode);
+			String jumpRepString = ("select max(o) from " + encodedTriplesTableName + " t1 where p = " + typeConstantCode);
 			try (ResultSet rs = conn.createStatement().executeQuery(jumpRepString)) {
 				while (rs.next()) {
 					maxClassOrPropertyCode = rs.getLong(1);
@@ -139,7 +143,7 @@ public class Summary {
 		catch (SQLException e) {
 			throw new IllegalStateException("Unable to determine the highest dictionary code for a type " + e.toString());
 		}
-		
+
 		this.jumpSummaryNodeCount(maxClassOrPropertyCode + 1);
 	}
 
@@ -239,10 +243,8 @@ public class Summary {
 	 * @param conn
 	 * @param partialResult
 	 * @param summarizationTechnique
-	 * @param dictionaryTableName
-	 * @return
 	 */
-	public String saveSummaryInPostgres(Connection conn, Boolean partialResult, String summarizationTechnique, String dictionaryTableName) {
+	public void saveSummaryInPostgres(Connection conn, Boolean partialResult, String summarizationTechnique) {
 		String newTableName = "_encoded_";
 		String timestamp = SD_FORMAT.format(new Timestamp(System.currentTimeMillis()));
 		if (partialResult)
@@ -349,7 +351,7 @@ public class Summary {
 			throw new IllegalStateException("Could not insert summary triples in " + newSummaryTableNameSum + ": " + e.toString());
 		}
 
-		return newDictionaryTableName;
+		this.dictionaryTableName = newDictionaryTableName;
 	}
 
 	static protected boolean existsTable(Connection conn, String tableName) {
@@ -379,15 +381,14 @@ public class Summary {
 	 * summary to the standard output and also saves it in a separate .nt file
 	 *
 	 * @param conn
-	 * @param graphFileName
-	 * @param dictionaryTableName
+	 * @param summarizationTechnique
 	 */
-	public void writeDecodedSummaryToNTFile(Connection conn, String graphFileName, String dictionaryTableName, String summarizationTechnique) {
+	public void writeDecodedSummaryToNTFile(Connection conn, String summarizationTechnique) {
 		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
 
 		String URIprefix = properties.getProperty("prefixURIForSummaryNodes");
 
-		String summaryNTFileName = getNTSummaryFileName(graphFileName, summarizationTechnique);
+		String summaryNTFileName = getNTSummaryFileName(triplesFileName, summarizationTechnique);
 
 		//LOGGER.info("Decoding summary and writing it in .nt format to " + summaryNTFileName);
 
@@ -473,10 +474,10 @@ public class Summary {
 		return ("<" + uriPrefix + this.getSummaryURIPrefix() + n + ">");
 	}
 
-	public void drawSummaryAndGraph(Connection conn, String fullGraphFileName, String triplesTableName, String dictionaryTableName, String suffix) {
-		String summaryDotFileName = getDotFileName(fullGraphFileName, suffix);
+	public void drawSummaryAndGraph(Connection conn, String suffix) {
+		String summaryDotFileName = getDotFileName(triplesFileName, suffix);
 		writeSummaryToDotFile(conn, summaryDotFileName, dictionaryTableName);
-		String graphDotFileName = getRDFDotFileName(fullGraphFileName, suffix);
+		String graphDotFileName = getRDFDotFileName(triplesFileName, suffix);
 		writeRDFGraphToDotFile(conn, graphDotFileName, triplesTableName);
 	}
 
@@ -811,7 +812,7 @@ public class Summary {
 		LOGGER.info("Summary read from Postgres");
 	}
 
-	public void summarizeFromPostgres(Connection conn, String[] args) {
+	public void summarizeFromPostgres(Connection conn) {
 		throw new IllegalStateException("This method is not defined for " + this.getClass().getName());
 	}
 

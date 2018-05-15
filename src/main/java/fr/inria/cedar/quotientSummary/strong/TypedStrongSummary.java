@@ -20,8 +20,12 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	Long2LongSet n2c; // for each node, the set of types we know so far for this node
 	HashMap<TreeSet<Long>, Long> cs2csID; // for each set of types known so far, the ID of that set
 
-	public TypedStrongSummary() {
+	public TypedStrongSummary(String triplesFileName, String triplesTableName, String encodedTriplesTableName, String dictionaryTableName) {
 		super();
+		this.triplesFileName = triplesFileName;
+		this.triplesTableName = triplesTableName;
+		this.encodedTriplesTableName = encodedTriplesTableName;
+		this.dictionaryTableName = dictionaryTableName;
 		cs = new Long2LongSet();
 		n2sc = new Long2Long();
 		rep = new Long2Long();
@@ -43,7 +47,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	 * 
 	 * @param conn
 	 */
-	public void setConn(Connection conn){
+	public void setConn(Connection conn) {
 		this.conn = conn; 
 	}
 
@@ -80,24 +84,18 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	 * Summarizes an RDF graph assuming the data triples are in Postgres
 	 *
 	 * @param conn
-	 * @param args
 	 */
 	@Override
-	public void summarizeFromPostgres(Connection conn, String[] args) {
+	public void summarizeFromPostgres(Connection conn) {
 		this.setConn(conn);
 		long start = System.currentTimeMillis();
-		
-		String triplesFileName = args[0];
-		String triplesTableName = args[1];
-		String encodedTriplesTableName = args[2];
-		String dictionaryTableName = args[3];
 		
 		// this is needed to find the constants associated to special RDF properties
 		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
 		long typeConstantCode = RDF2SQLEncoding.getTypeCode();
 		if (typeConstantCode != -1) {
 			this.typeTriplesExist = true;
-			avoidCollisionsWhenAssigningSummaryNodes(conn, encodedTriplesTableName);
+			avoidCollisionsWhenAssigningSummaryNodes(conn);
 		}
 		triplesSummarizedSoFar = 0;
 		String getTypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p =" + typeConstantCode);
@@ -127,7 +125,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 
 		start = System.currentTimeMillis();
 
-		//this.drawSummaryAndGraph(conn, dataTriplesFileName, ("_" + triplesSummarizedSoFar));
+		//this.drawSummaryAndGraph(conn, "_" + triplesSummarizedSoFar);
 		//this.display();
 		// now all the non-type triples
 		String getUntypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p <> " + typeConstantCode);
@@ -148,7 +146,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 							handleDataTriple(t);
 						triplesSummarizedSoFar++;
 						this.numberOfDataTriplesRead++;
-						//this.drawSummaryAndGraph(conn, dataTriplesFileName, ("_" + triplesSummarizedSoFar));
+						//this.drawSummaryAndGraph(conn, "_" + triplesSummarizedSoFar);
 						//this.roundTripConsistencyCheck(); 
 					}
 				}
@@ -509,7 +507,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		else{ }// if we are not replacing but splitting, scs was empty, the new clique of S is that of P, no clique creation is needed
 		
 		// compute node replacements:
-		ArrayList<ReplacementSpecification> nodeReps = new ArrayList<ReplacementSpecification>();
+		ArrayList<ReplacementSpecification> nodeReps = new ArrayList<>();
 		if (replaceForS) {
 			if (!newRepS.equals(repS)){
 				nodeReps.add(new ReplacementSpecification(newSCs, targetCliqueS, repS, newRepS)); 
@@ -629,7 +627,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 
 		
 		// compute node replacements:
-		ArrayList<ReplacementSpecification> nodeReps = new ArrayList<ReplacementSpecification>();
+		ArrayList<ReplacementSpecification> nodeReps = new ArrayList<>();
 		if (replaceForO){
 			if (!newRepO.equals(repO)){
 				ReplacementSpecification repsO = new ReplacementSpecification(sourceCliqueO, newTCo, repO, newRepO); 
@@ -733,7 +731,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		}
 		else{ }// if we are not replacing but splitting, scs was empty, the new clique of S is that of P, no clique creation is needed
 		
-		ArrayList<ReplacementSpecification> nodeReps = new ArrayList<ReplacementSpecification>();
+		ArrayList<ReplacementSpecification> nodeReps = new ArrayList<>();
 		if (replaceForS) {
 			if (!newRepS.equals(repS)){
 				nodeReps.add(new ReplacementSpecification(newSCs, targetCliqueS, repS, newRepS)); 
@@ -830,7 +828,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 			fuseCliqueInto(targetCliqueP, newTCo, TARGET);
 		}// otherwise do nothing
 		
-		ArrayList<ReplacementSpecification> nodeReps = new ArrayList<ReplacementSpecification>();
+		ArrayList<ReplacementSpecification> nodeReps = new ArrayList<>();
 		if (replaceForO){
 			if (!newRepO.equals(repO)){
 				ReplacementSpecification repsO = new ReplacementSpecification(sourceCliqueO, newTCo, repO, newRepO); 
