@@ -1,13 +1,13 @@
 package fr.inria.cedar.quotientSummary.strong;
 
-import fr.inria.cedar.commons.miscellaneous.Debugger;
-import fr.inria.cedar.quotientSummary.datastructures.Triple;
-import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.HashMap;
+
+import fr.inria.cedar.commons.miscellaneous.Debugger;
+import fr.inria.cedar.quotientSummary.datastructures.Triple;
+import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 
 public class StrongSummary extends StrongOrTypedStrongSummary {
 	public StrongSummary() {
@@ -98,7 +98,6 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 						//System.out.println("Summary has become: " + this.toString());
 						triplesSummarizedSoFar++;
 						this.drawSummaryAndGraph(conn, dataTriplesFileName, "tmp_triples", "dictionary", "-after-" + triplesSummarizedSoFar + "-"+ t.s + "-" + t.p + "-" + t.o);
-						display();
 					}
 				}
 			}
@@ -132,6 +131,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 
 		allTriplesSummarizationTime = System.currentTimeMillis() - start;
 		System.out.println("Summarized " + triplesSummarizedSoFar + " triples in " + allTriplesSummarizationTime + " ms");
+		display();
 		this.display(dataTriplesFileName);
 	}
 
@@ -292,7 +292,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 		System.out.println("Untyped summary nodes: " + untypedSummaryNodes.toString());
 		System.out.println("Representation function: ");
 		showRep();
-		System.out.println("Summary: ");
+		System.out.println("Summary edges: ");
 		edgesWithProv.display(); 
 		roundTripConsistencyCheck();
 		System.out.println("===");

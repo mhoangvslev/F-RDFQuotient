@@ -47,11 +47,11 @@ public class Long2Long {
 		if (previous != null){
 			TreeSet<Long> inversePrev = inverse.get(previous);
 			if (inversePrev == null){
-				System.out.println("Long2Long: Problem " + this.display());
+				//System.out.println("Long2Long: Problem " + this.display());
 				throw new IllegalStateException("Map has " + previous + " on " + k + " but nothing in inverse for " + previous); 
 			}
 			inversePrev.remove(k);
-			System.out.println("Long2Long: " + k + " no  longer mapped to " + previous);
+			//System.out.println("Long2Long: " + k + " no  longer mapped to " + previous);
 			if (inversePrev.size() == 0){
 				//LOGGER.debug("Long2Long: No one is represented by " + previous + " any more!");
 				res = true;

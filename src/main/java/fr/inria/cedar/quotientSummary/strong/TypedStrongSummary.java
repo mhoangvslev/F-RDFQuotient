@@ -217,51 +217,6 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 							return US_NS_UO_NO_NP;
 	}
 
-	/**
-	 * Paranoid method for safety check. Throws an error is something is not coherent across the
-	 * data structures.
-	 */
-	public void cliqueSafetyCheck() {
-		if (n2sc.getKeys().size() != n2tc.getKeys().size())
-			throw new IllegalStateException("n2sc has " + n2sc.getKeys().size() + " while n2tc has "
-											+ n2tc.getKeys().size() + " entries");
-		if (n2sc.getKeys().size() != rep.getKeys().size())
-			throw new IllegalStateException("n2sc has " + n2sc.getKeys().size() + " while rep has "
-											+ rep.getKeys().size() + " entries");
-		if (rep.getKeys().size() != n2tc.getKeys().size())
-			throw new IllegalStateException("rep has " + rep.getKeys().size() + " while n2tc has "
-											+ n2tc.getKeys().size() + " entries");
-		if (p2sc.getKeys().size() != p2tc.getKeys().size()) {
-			display();
-			throw new IllegalStateException("After " + numberOfDataTriplesRead + " data triples, "
-											+ p2sc.getKeys().size() + " properties have source cliques while "
-											+ p2tc.getKeys().size() + " properties have target cliques ");
-		}
-		// there is no reason why numbers of source cliques should be equal to numbers of target cliques
-		//
-		// The number of source and target clique in untypedSummaryNodes may be less than those in p2tc, p2sc, n2tc, n2sc.
-		// This is because typed nodes may be source or target of a data property and in this case, a source (target) clique is created for the data property, but is not associated to any node,
-		// as typed nodes do not have source/target cliques.
-	}
-
-	private long countDistinctTargetCliquesInCliqueToNodesMap() {
-		TreeSet<Long> uniqueTCs = new TreeSet<>();
-		for (Long sourceClique: untypedSummaryNodes.keySet()) {
-			HashMap<Long, Long> map = untypedSummaryNodes.get(sourceClique);
-			for (Long targetClique: map.keySet()) {
-				if (targetClique == this.emptyTCCount)
-					continue; // not counting the empty tc because it does not appear in p2tc
-				if (!uniqueTCs.contains(targetClique))
-					uniqueTCs.add(targetClique);
-			}
-		}
-		return uniqueTCs.size();
-	}
-
-	private long countDistinctSourceCliquesInCliqueToNodesMap() {
-		return this.untypedSummaryNodes.keySet().size(); // this does not count the empty sc
-	}
-
 	public void display() {
 		System.out.println("TYPED STRONG SUMMARY\nClass set IDs to class sets: " + cs.toString());
 		System.out.println("Nodes to class set IDs: " + n2cs.display());
@@ -275,9 +230,8 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		showRep();
 		System.out.println("Cs to cs ID: ");
 		showClassSets();
-		System.out.println("Summary: ");
-		for (Triple t: edgesWithProv.getSummaryEdges())
-			t.display();
+		System.out.println("Summary edges: ");
+		edgesWithProv.display();
 	}
 
 	private String showLongSet(TreeSet<Long> s){
@@ -579,7 +533,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 
 		// now patching summary edges if needed
 		if (!replaceForS){
-			updateEdgesAfterSplit(distributeSummaryEdgesDueTo(repS, newRepS, t.s, TARGET), repS, newRepS, TARGET); 
+			updateEdgesAfterSplit(distributeSummaryEdgesThroughCounts(repS, newRepS, t.s, TARGET), repS, newRepS, TARGET); 
 		}
 		// no patching/splitting for o, because it's typed
 
@@ -698,7 +652,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 
 		// now patching summary edges if needed
 		if (!replaceForO){
-			updateEdgesAfterSplit(distributeSummaryEdgesDueTo(repO, newRepO, t.o, SOURCE), repO, newRepO, SOURCE); 
+			updateEdgesAfterSplit(distributeSummaryEdgesThroughCounts(repO, newRepO, t.o, SOURCE), repO, newRepO, SOURCE); 
 		}
 
 		// now modifying rep:
@@ -802,7 +756,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 
 		// now patching summary edges if needed
 		if (!replaceForS){
-			updateEdgesAfterSplit(distributeSummaryEdgesDueTo(repS, newRepS, t.s, TARGET), repS, newRepS, TARGET); 
+			updateEdgesAfterSplit(distributeSummaryEdgesThroughCounts(repS, newRepS, t.s, TARGET), repS, newRepS, TARGET); 
 		}
 		
 		// now modifying rep:
@@ -906,7 +860,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 
 		// now patching summary edges if needed
 		if (!replaceForO){
-			updateEdgesAfterSplit(distributeSummaryEdgesDueTo(repO, newRepO, t.o, SOURCE), repO, newRepO, SOURCE); 
+			updateEdgesAfterSplit(distributeSummaryEdgesThroughCounts(repO, newRepO, t.o, SOURCE), repO, newRepO, SOURCE); 
 		}
 
 		// now modifying rep:
@@ -925,15 +879,6 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		edgesWithProv.addTriple(classSetS, t.p, classSetO);
 	}
 
-	private void checkSymmetry(Long sourceCliqueS, Long targetCliqueS, Long sourceCliqueO, Long targetCliqueO,
-							   Long sourceCliqueP, Long targetCliqueP) {
-		if ((sourceCliqueS == null && targetCliqueS != null) || (sourceCliqueS != null && targetCliqueS == null))
-			throw new Error("Subject has only one of the two cliques");
-		if ((sourceCliqueO == null && targetCliqueO != null) || (sourceCliqueO != null && targetCliqueO == null))
-			throw new Error("Object has only one of the two cliques");
-		if ((sourceCliqueP == null && targetCliqueP != null) || (sourceCliqueP != null && targetCliqueP == null))
-			throw new Error("Property has only one of the two cliques");
-	}
 
 	/**
 	 * This is used only when drawing the graph using Dot. 

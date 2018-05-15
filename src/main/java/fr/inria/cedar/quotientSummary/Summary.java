@@ -351,7 +351,7 @@ public class Summary {
 			// create the table (it may have existed)
 			if (!existsTable(conn, newSummaryTableNameSum)) {
 				stmt.execute("create table " + newSummaryTableNameSum + "(s int not null, p int not null, o int not null);");
-				LOGGER.info("Table " + newSummaryTableNameSum + "created");
+				LOGGER.info("Table " + newSummaryTableNameSum + " created");
 			}
 			else
 				LOGGER.info("Did not create " + newSummaryTableNameSum + " table as it was already there");

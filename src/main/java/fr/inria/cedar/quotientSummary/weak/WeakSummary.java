@@ -169,6 +169,9 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 		}
 		allTriplesSummarizationTime = System.currentTimeMillis() - start;
 		System.out.println("Summarized " + triplesSummarizedSoFar + " triples in " + allTriplesSummarizationTime + " ms");
+		if (checkConsistency){
+			consistencyChecks();
+		}
 		this.display(dataTriplesFileName);
 	}
 
