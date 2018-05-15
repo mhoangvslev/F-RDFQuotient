@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import org.apache.commons.io.FileUtils;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -15,6 +16,7 @@ public class StrongSummaryTests {
 	private static final Logger LOGGER = Logger.getLogger(StrongSummaryTests.class.getName());
 
 	public File summarizeUsingStrongSummary(int i) {
+		LOGGER.setLevel(Level.INFO);
 		System.out.println("################################################################################");
 		System.out.println("Strong summary test " + Integer.toString(i) + " only summarization");
 		System.out.println("################################################################################");

@@ -75,7 +75,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 		long typeConstantCode = RDF2SQLEncoding.getTypeCode();
 		if (typeConstantCode != -1) {
 			this.typeTriplesExist = true;
-			avoidCollisionsWhenAssigningSummaryNodes(conn);
+			avoidCollisionsWhenAssigningSummaryNodes(conn, encodedTriplesTableName);
 		}
 		triplesSummarizedSoFar = 0;
 		String getUntypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p <> " + typeConstantCode);

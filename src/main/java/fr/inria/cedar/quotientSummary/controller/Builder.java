@@ -94,7 +94,7 @@ public class Builder {
 				summaryInUse = summarizeGraphFromPostgres(arg1, true, files);
 				return;
 			case "saveSummaryComputedWithoutSaturation":
-				saveSummary(Boolean.TRUE, "noSaturation");
+				saveSummary(Boolean.FALSE, "noSaturation");
 				return;
 			case "saveSummaryComputedClassicalWay":
 				saveSummary(Boolean.FALSE, "classical");

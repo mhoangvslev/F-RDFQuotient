@@ -126,54 +126,23 @@ public class Summary {
 	// we need to be sure that integers which we invent to represent nodes
 	// will not collide with the codes already given to classes and properties
 	// (which, in this implementation, for simplicity, are preserved).
-	protected void avoidCollisionsWhenAssigningSummaryNodes(Connection conn) {
+	protected void avoidCollisionsWhenAssigningSummaryNodes(Connection conn, String tableName) {
 		long maxClassOrPropertyCode = 0;
 		long typeConstantCode = RDF2SQLEncoding.getTypeCode();
-
-		String jumpRepString = ("select max(o) from tmp_encoded t1 where p=" + typeConstantCode);
-		try (ResultSet rs = conn.createStatement().executeQuery(jumpRepString)) {
-			while (rs.next()) {
-				maxClassOrPropertyCode = rs.getLong(1);
-				break;
-			}
-		}
-		catch (SQLException ex1) {
-			jumpRepString = ("select max(o) from tmp_encoded_saturated t1 where p=" + typeConstantCode);
+		
+		try {
+			String jumpRepString = ("select max(o) from " + tableName + " t1 where p = " + typeConstantCode);
 			try (ResultSet rs = conn.createStatement().executeQuery(jumpRepString)) {
 				while (rs.next()) {
-					long rs_val = rs.getLong(1);
-					if (maxClassOrPropertyCode < rs_val)
-						maxClassOrPropertyCode = rs_val;
+					maxClassOrPropertyCode = rs.getLong(1);
 					break;
 				}
 			}
-			catch (SQLException ex2) {
-			}
 		}
-
-		jumpRepString = ("select max(o) from tmp_encoded_summarized t1 where p=" + typeConstantCode);
-		try (ResultSet rs = conn.createStatement().executeQuery(jumpRepString)) {
-			while (rs.next()) {
-				long rs_val = rs.getLong(1);
-				if (maxClassOrPropertyCode < rs_val)
-					maxClassOrPropertyCode = rs_val;
-				break;
-			}
+		catch (SQLException e) {
+			throw new IllegalStateException("Unable to determine the highest dictionary code for a type " + e.toString());
 		}
-		catch (SQLException ex1) {
-			jumpRepString = ("select max(o) from tmp_encoded_summarized_saturated t1 where p=" + typeConstantCode);
-			try (ResultSet rs = conn.createStatement().executeQuery(jumpRepString)) {
-				while (rs.next()) {
-					long rs_val = rs.getLong(1);
-					if (maxClassOrPropertyCode < rs_val)
-						maxClassOrPropertyCode = rs_val;
-					break;
-				}
-			}
-			catch (SQLException ex2) {
-			}
-		}
-
+		
 		this.jumpSummaryNodeCount(maxClassOrPropertyCode + 1);
 	}
 
@@ -358,6 +327,7 @@ public class Summary {
 				LOGGER.info("Did not create " + newSummaryTableNameSum + " table as it was already there");
 			// empty it (even if the creation failed, e.g. because the table was already there)
 			stmt.executeUpdate("delete from " + newSummaryTableNameSum + ";");
+			conn.commit();
 
 			// now insert all the summary edges:
 			String insertIntoSummary = "insert into " + newSummaryTableNameSum + " values(?, ?, ?);";
