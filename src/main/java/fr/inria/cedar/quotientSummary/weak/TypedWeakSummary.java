@@ -158,7 +158,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 				try (ResultSet rs = getTypedTriples.executeQuery(getTypedTriplesString)) {
 					while (rs.next()) {
 						Triple t = new Triple(rs.getInt(1), rs.getInt(2), rs.getInt(3));
-						System.out.println("### Type triple " + t.toString());
+						//System.out.println("### Type triple " + t.toString());
 						this.handleTypeTripleBeforeData(t);
 						triplesSummarizedSoFar++;
 					}
@@ -199,7 +199,9 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 						else
 							handleDataTriple(t);
 						triplesSummarizedSoFar++;
-						System.out.println("Triples summarized so far: " + triplesSummarizedSoFar);
+						//System.out.println("Triples summarized so far: " + triplesSummarizedSoFar);
+						if (this.checkConsistency)
+							consistencyChecks();
 						//this.drawSummaryAndGraph(conn, dataTriplesFileName, ("_" + triplesSummarizedSoFar));
 
 					}
@@ -326,7 +328,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 			rep.put(t.s, sourceP);
 			ps.put(t.p, sourceP); 
 		}
-		this.addTripleAndCheck(sourceP, t.p, repO); 
+		edgesWithProv.addTriple(sourceP, t.p, repO); 
 	}
 
 	/**
@@ -337,7 +339,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		Long sourceP = this.getNextSummaryNode();
 		ps.put(t.p, sourceP);
 		rep.put(t.s, sourceP);
-		this.addTripleAndCheck(sourceP, t.p, repO);
+		edgesWithProv.addTriple(sourceP, t.p, repO);
 	}
 
 	/**
@@ -366,7 +368,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 			addedTripleSource = repS; 
 			ps.put(t.p, sourceP); 
 		}
-		this.addTripleAndCheck(addedTripleSource, t.p, addedTripleTarget);
+		edgesWithProv.addTriple(addedTripleSource, t.p, addedTripleTarget);
 	}
 
 	/**
@@ -377,7 +379,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		Long addedTripleSource = repS;
 		Long addedTripleTarget = repO;
 		ps.put(t.p, repS);
-		this.addTripleAndCheck(addedTripleSource, t.p, addedTripleTarget);
+		edgesWithProv.addTriple(addedTripleSource, t.p, addedTripleTarget);
 	}
 
 	/**
@@ -404,7 +406,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 			targetP = repO;
 			pt.put(t.p, targetP); 
 		}
-		this.addTripleAndCheck(addedTripleSource, t.p, addedTripleTarget);
+		edgesWithProv.addTriple(addedTripleSource, t.p, addedTripleTarget);
 	}
 
 	/**
@@ -424,7 +426,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		rep.put(t.o, targetP);
 
 		// try to add the resulting triple
-		this.addTripleAndCheck(addedTripleSource, t.p, addedTripleTarget);
+		edgesWithProv.addTriple(addedTripleSource, t.p, addedTripleTarget);
 	}
 
 	/**
@@ -433,7 +435,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 	 * The target of p (if it exists) is not affected. 
 	 */
 	private void handleDataTriple_TRS_RP_TRO(Triple t, Long repS, Long repO, Long pSource, Long pTarget) {
-		this.addTripleAndCheck(repS, t.p, repO);
+		edgesWithProv.addTriple(repS, t.p, repO);
 	}
 
 	/**
@@ -444,7 +446,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		Long targetP = this.getNextSummaryNode();
 		pt.put(t.p, targetP);
 		rep.put(t.o, targetP);
-		this.addTripleAndCheck(repS, t.p,targetP);
+		edgesWithProv.addTriple(repS, t.p,targetP);
 	}
 
 	/**
@@ -452,14 +454,14 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 	 */
 	private void handleDataTriple_TRS_UP_RO(Triple t, Long repS, Long repO, Long pSource, Long pTarget) {
 		pt.put(t.p, repO);
-		this.addTripleAndCheck(repS, t.p, repO);
+		edgesWithProv.addTriple(repS, t.p, repO);
 	}
 
 	/**
 	 * In this case we just add the triple; we do not modify its source nor its target
 	 */
 	private void handleDataTriple_TRS_UP_TRO(Triple t, Long repS, Long repO, Long pSource, Long pTarget) {
-		this.addTripleAndCheck(repS, t.p, repO);
+		edgesWithProv.addTriple(repS, t.p, repO);
 	}
 
 	String caseName(char c) { 

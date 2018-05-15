@@ -293,8 +293,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 		System.out.println("Representation function: ");
 		showRep();
 		System.out.println("Summary: ");
-		for (Triple t: edgesWithProv.getSummaryEdges())
-			t.display();
+		edgesWithProv.display(); 
 		roundTripConsistencyCheck();
 		System.out.println("===");
 	}

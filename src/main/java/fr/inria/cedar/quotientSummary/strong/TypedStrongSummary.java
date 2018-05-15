@@ -574,7 +574,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 				
 		// now modify summary edges
 		for (ReplacementSpecification reps: nodeReps){
-			edgesWithProv.replaceNodeInEdges(reps.getOldNode(), reps.getNewNode()); 
+			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode()); 
 		}
 
 		// now patching summary edges if needed
@@ -693,7 +693,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		}
 		// now modify summary edges
 		for (ReplacementSpecification reps: nodeReps){
-			edgesWithProv.replaceNodeInEdges(reps.getOldNode(), reps.getNewNode()); 
+			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode()); 
 		}
 
 		// now patching summary edges if needed
@@ -797,7 +797,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		
 		// now modify summary edges
 		for (ReplacementSpecification reps: nodeReps){
-			edgesWithProv.replaceNodeInEdges(reps.getOldNode(), reps.getNewNode()); 
+			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode()); 
 		}
 
 		// now patching summary edges if needed
@@ -901,7 +901,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		// e.g., if replaceForS is false but replaceForO is true, it contains those node replacements that are needed because of O, and
 		// will replace nothing wrongly around s
 		for (ReplacementSpecification reps: nodeReps){
-			edgesWithProv.replaceNodeInEdges(reps.getOldNode(), reps.getNewNode()); 
+			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode()); 
 		}
 
 		// now patching summary edges if needed

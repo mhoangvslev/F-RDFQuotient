@@ -185,7 +185,7 @@ public class Summary {
 	protected void showRep() {
 		StringBuffer sb = new StringBuffer();
 		showRepInBuffer(sb);
-		LOGGER.info(sb.toString());
+		System.out.println(sb.toString());
 	}
 
 	protected Long getNextSummaryNode() {

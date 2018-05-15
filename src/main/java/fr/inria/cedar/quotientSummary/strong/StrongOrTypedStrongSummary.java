@@ -1,18 +1,16 @@
 package fr.inria.cedar.quotientSummary.strong;
 
-import fr.inria.cedar.commons.miscellaneous.Debugger;
-import fr.inria.cedar.quotientSummary.Summary;
-import fr.inria.cedar.quotientSummary.datastructures.Long2Long;
-import fr.inria.cedar.quotientSummary.datastructures.Long2LongList;
-import fr.inria.cedar.quotientSummary.datastructures.Triple;
-import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.TreeSet;
 
+import fr.inria.cedar.quotientSummary.Summary;
+import fr.inria.cedar.quotientSummary.datastructures.Long2Long;
 import fr.inria.cedar.quotientSummary.datastructures.Long2LongSet;
+import fr.inria.cedar.quotientSummary.datastructures.Triple;
 import fr.inria.cedar.quotientSummary.datastructures.TwoLevelLongMap;
+import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 
 public class StrongOrTypedStrongSummary extends Summary {
 	Long2LongSet sc; // for each source clique ID,  a source clique
@@ -279,7 +277,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		// e.g., if replaceForS is false but replaceForO is true, it contains those node replacements that are needed because of O, and
 		// will replace nothing wrongly around s
 		for (ReplacementSpecification reps: nodeReps){
-			edgesWithProv.replaceNodeInEdges(reps.getOldNode(), reps.getNewNode()); 
+			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode()); 
 		}
 
 		// now patching summary edges if needed
@@ -380,7 +378,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 
 		// now modify summary edges
 		for (ReplacementSpecification reps: nodeReps){
-			edgesWithProv.replaceNodeInEdges(reps.getOldNode(), reps.getNewNode()); 
+			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode()); 
 		}
 
 		// now patching summary edges if needed
@@ -460,7 +458,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 
 		// now modify summary edges
 		for (ReplacementSpecification reps: nodeReps){
-			edgesWithProv.replaceNodeInEdges(reps.getOldNode(), reps.getNewNode()); 
+			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode()); 
 		}
 
 		// now patching summary edges of object, if needed
@@ -542,7 +540,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 
 		// now modify summary edges
 		for (ReplacementSpecification reps: nodeReps){
-			edgesWithProv.replaceNodeInEdges(reps.getOldNode(), reps.getNewNode()); 
+			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode()); 
 		}
 
 		// now patching summary edges of object, if needed
@@ -636,7 +634,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 
 		// now modify summary edges
 		for (ReplacementSpecification reps: nodeReps){
-			edgesWithProv.replaceNodeInEdges(reps.getOldNode(), reps.getNewNode()); 
+			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode()); 
 		}
 		//System.out.println("US_RS_UO_NO_RP after node replacement, edges : " + this.getEdgesToString()); 
 
@@ -849,7 +847,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		
 		// now modify summary edges
 		for (ReplacementSpecification reps: nodeReps){
-			edgesWithProv.replaceNodeInEdges(reps.getOldNode(), reps.getNewNode()); 
+			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode()); 
 		}
 
 		// now patching summary edges if needed
@@ -1094,6 +1092,69 @@ public class StrongOrTypedStrongSummary extends Summary {
 		return res; 
 	}
 	
+	// returns on oldRep, the edges to remove, 
+	// and on newRep, the edges to create for it
+	protected HashMap<Long, Long2LongSet> distributeSummaryEdgesThroughCounts(long oldRep, long newRep, long node, char param){
+			HashMap<Long, Long2LongSet> res = new HashMap<Long, Long2LongSet>();
+			Long2LongSet summEdgesToAddOnNewRep = new Long2LongSet(); 
+			Long2LongSet summEdgesToRemoveOnOldRep = new Long2LongSet(); 
+			res.put(oldRep, summEdgesToRemoveOnOldRep);
+			res.put(newRep, summEdgesToAddOnNewRep);
+
+			if (param == SOURCE){ // we must distribute edges outgoing from oldRep and newRep, which now represents node
+				
+				System.out.println("DISTRIBUTING OUTGOING SUMMARY EDGES of " + oldRep + " with the new " + newRep + " due to " + node);
+				
+				// traverse the data edges outgoing node and, for each of them:
+				// - mark the corresponding summary edge as needing to be added to the new summary node; 
+				// - decrease the counter of the corresponding summary edge starting from the old node, and if the counter is 0, mark that edge for removal
+				Long2LongSet edgesFromNode = this.triplesBySubject.get(node); 
+				if (edgesFromNode != null){
+					for (Long p: edgesFromNode.keys()){
+						for (Long o: edgesFromNode.get(p)){
+							// data edge node--p-->o
+							Long repO = rep.get(o); 
+							if (repO != null){ // represented by summary edge oldRep--p-->repO
+								summEdgesToAddOnNewRep.add(p, repO); 
+								Long edgeCountLeft = edgesWithProv.getCounter(oldRep, p, o) - 1; 
+								if (edgeCountLeft == 0){
+									summEdgesToRemoveOnOldRep.add(p, repO);
+								}
+							}
+						}
+					}
+				}
+			}
+			if (param == TARGET){ // we must distribute edges incoming in oldRep and/or newRep, which now represents node
+				//System.out.println("DISTRIBUTING INCOMING SUMMARY EDGES of " + oldRep + " with the new " + newRep + " due to " + node);
+				//System.out.println("DISTRIBUTING INCOMING SUMMARY EDGES: incoming edges are " + displayTriplesByObject());
+				
+				Long2LongSet edgesToNode = this.triplesByObject.get(node); 
+				if (edgesToNode != null){
+					//System.out.println("DISTRIBUTING INCOMING SUMMARY EDGES: " + node + " has " + edgesToNode.keys().size() + " distinct incoming properties");
+					for (Long p: edgesToNode.keys()){
+						//System.out.println("DISTRIBUTING INCOMING SUMMARY EDGES: " + node + " has " + p + " incoming edge(s)");  
+						for (Long s: edgesToNode.get(p)){
+							// data edge s--p-->node
+							Long repS = rep.get(s); 
+							//System.out.println("DISTRIBUTING INCOMING SUMMARY EDGES " + node + " had a " + p + " edge from " + s + " and representative of " + s + " is " + repS); 
+							if (repS != null){
+								summEdgesToAddOnNewRep.add(p, repS); 
+								Long edgeCountLeft = edgesWithProv.getCounter(s,  p, oldRep) - 1;
+								if (edgeCountLeft == 0){
+									summEdgesToRemoveOnOldRep.add(p, repS); 
+								}
+								System.out.println("DISTRIBUTING INCOMING SUMMARY EDGES adding to new node " + newRep + " a " + p + " edge from " + repS); 
+							}
+						}
+					}
+				}
+			}
+			return res; 
+		}
+
+	
+	
 	// on rep there are edges to remove
 	// on newRep there are edges to add
 	protected void updateEdgesAfterSplit(HashMap<Long, Long2LongSet> edgesToAddAndRemove, Long rep, Long newRep, char param){
@@ -1267,6 +1328,10 @@ public class StrongOrTypedStrongSummary extends Summary {
 				System.out.println(msg);
 				throw new IllegalStateException(msg);
 			}
+		}
+		Long totalEdgeCount = edgesWithProv.totalEdgeCount(); 
+		if (!totalEdgeCount.equals(this.numberOfDataTriplesRead)){
+			msg = ("In edges we have a total of " + totalEdgeCount + " edges while we have summarized so far " + numberOfDataTriplesRead + " data triples");  
 		}
 	}
 	

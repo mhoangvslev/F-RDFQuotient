@@ -135,11 +135,8 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 						triplesSummarizedSoFar++;
 						//this.drawSummaryAndGraph(conn, dataTriplesFileName, ("-after-" +
 						//triplesSummarizedSoFar + "-"+ t.s + "-" + t.p + "-" + t.o));
-						//Files.write(Paths.get("output.txt"), (globalTripleCount + ": " + new String(s + " " + p + " " + o + "\n")).getBytes(), StandardOpenOption.APPEND);
-						//if ((globalTripleCount % 1000 == 0)) {//|| (globalTripleCount > 28800)) {
-						//	System.out.println(globalTripleCount + " triples");
-						//}
-						//System.out.println("Summary now has " + getSummaryEdges().size() + " triples");
+						if (this.checkConsistency)
+							consistencyChecks();
 					}
 				}
 			}

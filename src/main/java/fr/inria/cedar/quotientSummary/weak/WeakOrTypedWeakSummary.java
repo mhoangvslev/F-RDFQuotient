@@ -1,12 +1,11 @@
 package fr.inria.cedar.quotientSummary.weak;
 
+import java.util.HashMap;
+
 import fr.inria.cedar.commons.miscellaneous.Debugger;
 import fr.inria.cedar.quotientSummary.Summary;
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
 import fr.inria.cedar.quotientSummary.util.Substitutions;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.TreeSet;
 
 public class WeakOrTypedWeakSummary extends Summary {
 	HashMap<Long, Long> ps; // for each property, the property source
@@ -114,7 +113,7 @@ public class WeakOrTypedWeakSummary extends Summary {
 		// apply replacements, if any
 		applySubstitutions(subs, t.p);
 		// try to add the resulting triple
-		this.addTripleAndCheck(addedTripleSource, t.p, addedTripleTarget);
+		edgesWithProv.addTriple(addedTripleSource, t.p, addedTripleTarget);
 
 	}
 
@@ -148,7 +147,7 @@ public class WeakOrTypedWeakSummary extends Summary {
 			addedTripleTarget = possibleNewTripleTarget;
 
 		applySubstitutions(subs, t.p);
-		addTripleAndCheck(addedTripleSubject, t.p, addedTripleTarget);
+		edgesWithProv.addTriple(addedTripleSubject, t.p, addedTripleTarget);
 		rep.put(t.o, addedTripleTarget);
 
 	}
@@ -165,7 +164,7 @@ public class WeakOrTypedWeakSummary extends Summary {
 		Long targetP = rep.get(t.o);
 		ps.put(t.p, sourceP);
 		pt.put(t.p, targetP);
-		addTripleAndCheck(sourceP, t.p, targetP);
+		edgesWithProv.addTriple(sourceP, t.p, targetP);
 	}
 
 	protected void handleDataTriple_RS_UP_UO(Triple t) {
@@ -177,7 +176,7 @@ public class WeakOrTypedWeakSummary extends Summary {
 		rep.put(t.o, targetP);
 		ps.put(t.p, sourceP);
 		pt.put(t.p, targetP);
-		addTripleAndCheck(sourceP, t.p, targetP);
+		edgesWithProv.addTriple(sourceP, t.p, targetP);
 	}
 
 	// the property and the object have been seen, not the subject. 
@@ -213,7 +212,7 @@ public class WeakOrTypedWeakSummary extends Summary {
 			targetP = repO;
 			pt.put(t.p, repO); 
 		}
-		addTripleAndCheck(addedTripleSource, t.p, addedTripleTarget);
+		edgesWithProv.addTriple(addedTripleSource, t.p, addedTripleTarget);
 	}
 
 	protected void handleDataTriple_US_RP_UO(Triple t) {
@@ -232,7 +231,7 @@ public class WeakOrTypedWeakSummary extends Summary {
 		}
 		rep.put(t.s, sourceP);
 		rep.put(t.o, targetP);
-		addTripleAndCheck(sourceP, t.p, targetP);
+		edgesWithProv.addTriple(sourceP, t.p, targetP);
 	}
 
 	protected void handleDataTriple_US_UP_RO(Triple t) {
@@ -246,7 +245,7 @@ public class WeakOrTypedWeakSummary extends Summary {
 		Long pSource = this.getNextSummaryNode();
 		ps.put(t.p, pSource);
 		rep.put(t.s, pSource);
-		addTripleAndCheck(pSource, t.p, pTarget);
+		edgesWithProv.addTriple(pSource, t.p, pTarget);
 	}
 
 	protected void handleDataTriple_US_UP_UO(Triple t) {
@@ -258,13 +257,7 @@ public class WeakOrTypedWeakSummary extends Summary {
 		pt.put(t.p, pTarget);
 		rep.put(t.s, pSource);
 		rep.put(t.o, pTarget);
-		addTripleAndCheck(pSource, t.p, pTarget);
-	}
-
-	protected void addTripleAndCheck(Long s, long p, Long o) {
-		edgesWithProv.addTriple(s, p, o);
-		if (this.checkConsistency)
-			consistencyChecks();
+		edgesWithProv.addTriple(pSource, t.p, pTarget);
 	}
 
 	// This method overrides that of Summary. Some of the printout is specific to W and TW.
