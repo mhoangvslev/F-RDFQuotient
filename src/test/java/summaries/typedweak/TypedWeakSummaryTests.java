@@ -266,6 +266,25 @@ public class TypedWeakSummaryTests {
 			throw new IllegalStateException("Unable to open .nt files in typedweak test 7 " + e.toString());
 		}
 	}
+	
+	@Test
+	public void summarizeTypedWeakTest8() {
+		String referenceFileName = expectedOutput(8, "noSaturation");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = summarizeUsingTypedWeakSummary(8); 
+			if (!testOutput.exists()){
+				fail("Test output not found");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary typedweak 8", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in typedweak test 8 " + e.toString());
+		}
+	}
 
 	@Test
 	public void saturateAndSummarizeTypedWeakTest1() {

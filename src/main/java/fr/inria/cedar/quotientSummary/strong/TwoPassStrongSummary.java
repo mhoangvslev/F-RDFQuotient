@@ -63,16 +63,16 @@ public class TwoPassStrongSummary extends StrongOrTypedStrongSummary {
 	 * @param args
 	 */
 	@Override
-	public void summarizeFromPostgres(Connection conn, String[] args) {
+	public void summarizeFromPostgres(Connection conn){
 		this.setConn(conn);
 		Debugger.setFlag(true);
 		long start = System.currentTimeMillis();
 
-		String tableName = args[0];
-		String dataTriplesFileName = args[1];
+		String tableName = ""; 
+		String dataTriplesFileName =""; 
 
 		// this is needed to find the constants associated to special RDF properties
-		RDF2SQLEncoding.setUp(conn, args[2]);
+		RDF2SQLEncoding.setUp(conn, ""); 
 		long typeConstantCode = RDF2SQLEncoding.getTypeCode();
 		if (typeConstantCode != -1) {
 			this.typeTriplesExist = true;
@@ -92,7 +92,7 @@ public class TwoPassStrongSummary extends StrongOrTypedStrongSummary {
 						updateCliquesOutOf(t);
 						//System.out.println("Summary has become: " + this.toString());
 						triplesSummarizedSoFar++;
-						this.drawSummaryAndGraph(conn, dataTriplesFileName, "tmp_triples", "dictionary", "-after-" + triplesSummarizedSoFar + "-"+ t.s + "-" + t.p + "-" + t.o);
+						//this.drawSummaryAndGraph(conn, dataTriplesFileName, "tmp_triples", "dictionary", "-after-" + triplesSummarizedSoFar + "-"+ t.s + "-" + t.p + "-" + t.o);
 					}
 				}
 			}
@@ -115,7 +115,7 @@ public class TwoPassStrongSummary extends StrongOrTypedStrongSummary {
 						//System.out.println("#### Type triple " + t.toString());
 						this.handleTypeTripleAfterData(t);
 						triplesSummarizedSoFar++;
-						this.drawSummaryAndGraph(conn, dataTriplesFileName, "tmp_triples", "dictionary", "-after-" + triplesSummarizedSoFar + "-" + t.s + "-" + t.p + "-" + t.o);
+						//this.drawSummaryAndGraph(conn, dataTriplesFileName, "tmp_triples", "dictionary", "-after-" + triplesSummarizedSoFar + "-" + t.s + "-" + t.p + "-" + t.o);
 						//System.out.println("Summary now has " + getSummaryEdges().size() + " triples");
 
 					}

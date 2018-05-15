@@ -1353,7 +1353,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		return new String(sb); 
 	}
 	
-	protected void display() {
+	public void display() {
 		System.out.println("=== SUMMARY " + this.getClass().getName() + "\nSource cliques: " + sc.toString());
 		System.out.println("Target cliques: " + tc.toString());
 		System.out.println("Data nodes to source cliques: " + n2sc.display());

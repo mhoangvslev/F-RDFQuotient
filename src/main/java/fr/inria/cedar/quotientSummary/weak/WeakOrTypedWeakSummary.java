@@ -127,9 +127,9 @@ public class WeakOrTypedWeakSummary extends Summary {
 	// By convention, we will keep the *** smaller *** one. 
 	// - represent the object by the target of the property
 	protected void handleDataTriple_RS_RP_UO(Triple t) {
-		//Debugger.log("================== RS_RP_UO on " + t.toString() + " starts on");
-		//Debugger.log(this.toString()); 
-		//safetyCheck(); 
+		System.out.println("================== RS_RP_UO on " + t.toString() + " starts on");
+		System.out.println(this.toString()); 
+		consistencyChecks(); 
 		Long sourceP = ps.get(t.p);
 		long repS = rep.get(t.s);
 		Long addedTripleSubject = repS;
@@ -258,16 +258,7 @@ public class WeakOrTypedWeakSummary extends Summary {
 		rep.put(t.s, pSource);
 		rep.put(t.o, pTarget);
 		edgesWithProv.addTriple(pSource, t.p, pTarget);
+		display();
 	}
 
-	// This method overrides that of Summary. Some of the printout is specific to W and TW.
-	@Override
-	public String toString() {
-		StringBuffer sb = new StringBuffer();
-		for (Triple t: edgesWithProv.getSummaryEdges()) {
-			sb.append(t.toString());
-			sb.append("\n");
-		}
-		return new String(sb);
-	}
 }

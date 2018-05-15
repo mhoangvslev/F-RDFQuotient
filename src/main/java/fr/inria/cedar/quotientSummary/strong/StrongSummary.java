@@ -9,8 +9,12 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 public class StrongSummary extends StrongOrTypedStrongSummary {
-	public StrongSummary() {
+	public StrongSummary(String triplesFileName, String triplesTableName, String encodedTriplesTableName, String dictionaryTableName) {
 		super();
+		this.triplesFileName = triplesFileName;
+		this.triplesTableName = triplesTableName;
+		this.encodedTriplesTableName = encodedTriplesTableName;
+		this.dictionaryTableName = dictionaryTableName;
 		this.summaryTablePrefix = STRONG_SUMMARY_PREFIX;
 	}
 
@@ -58,24 +62,18 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 	 * Summarizes an RDF graph assuming the data triples are in Postgres
 	 *
 	 * @param conn
-	 * @param args
 	 */
 	@Override
-	public void summarizeFromPostgres(Connection conn, String[] args) {
+	public void summarizeFromPostgres(Connection conn) {
 		this.setConn(conn);
 		long start = System.currentTimeMillis();
-
-		String triplesFileName = args[0];
-		String triplesTableName = args[1];
-		String encodedTriplesTableName = args[2];
-		String dictionaryTableName = args[3];
 
 		// this is needed to find the constants associated to special RDF properties
 		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
 		long typeConstantCode = RDF2SQLEncoding.getTypeCode();
 		if (typeConstantCode != -1) {
 			this.typeTriplesExist = true;
-			avoidCollisionsWhenAssigningSummaryNodes(conn, encodedTriplesTableName);
+			avoidCollisionsWhenAssigningSummaryNodes(conn);
 		}
 		triplesSummarizedSoFar = 0;
 		String getUntypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p <> " + typeConstantCode);
@@ -96,7 +94,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 							handleDataTriple(t);
 						triplesSummarizedSoFar++;
 
-						//this.drawSummaryAndGraph(conn, triplesFileName, triplesTableName, dictionaryTableName, "-after-" + triplesSummarizedSoFar + "-"+ t.s + "-" + t.p + "-" + t.o);
+						//this.drawSummaryAndGraph(conn, "-after-" + triplesSummarizedSoFar + "-"+ t.s + "-" + t.p + "-" + t.o);
 						//display();
 					}
 				}
@@ -118,7 +116,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 						//System.out.println("#### Type triple " + t.toString());
 						this.handleTypeTripleAfterData(t);
 						triplesSummarizedSoFar++;
-						this.drawSummaryAndGraph(conn, triplesFileName, triplesTableName, dictionaryTableName, "-after-" + triplesSummarizedSoFar + "-" + t.s + "-" + t.p + "-" + t.o);
+						this.drawSummaryAndGraph(conn, "-after-" + triplesSummarizedSoFar + "-" + t.s + "-" + t.p + "-" + t.o);
 						//System.out.println("Summary now has " + getSummaryEdges().size() + " triples");
 					}
 				}
@@ -130,7 +128,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 
 		allTriplesSummarizationTime = System.currentTimeMillis() - start;
 		System.out.println("Summarized " + triplesSummarizedSoFar + " triples in " + allTriplesSummarizationTime + " ms");
-		this.display(triplesFileName);
+		//display(triplesFileName);
 	}
 
 	public void handleDataTriple(Triple t) {

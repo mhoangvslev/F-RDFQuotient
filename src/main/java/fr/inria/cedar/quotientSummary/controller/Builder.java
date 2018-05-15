@@ -262,26 +262,23 @@ public class Builder {
 	 */
 	private static Summary summarizeGraphFromPostgres(String summaryType, Boolean summarizeSaturated, String[] files) throws SQLException, IOException {
 		LOGGER.info("Summarizing graph from Postgres");
-		Summary sum = createNewSummary(summaryType);
-		String[] sumArgs = {files[0], triplesTableName, tableName(summarizeSaturated), dictionaryTableName};
-		sum.summarizeFromPostgres(connectionInUse, sumArgs);
+		Summary sum = createNewSummary(summaryType, files[0], triplesTableName, tableName(summarizeSaturated), dictionaryTableName);
+		sum.summarizeFromPostgres(connectionInUse);
 		LOGGER.info("Graph from Postgres summarized");
 		return sum;
 	}
 
-	private static Summary createNewSummary(String summaryType) {
+	private static Summary createNewSummary(String summaryType, String triplesFileName, String triplesTableName, String encodedTriplesTableName, String dictionaryTableName) {
 		String lowerCaseSummaryType = summaryType.toLowerCase();
 		switch (lowerCaseSummaryType) {
 			case "weak":
-				return new WeakSummary();
+				return new WeakSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 			case "strong":
-				return new StrongSummary();
-			case "2pstrong":
-				return new TwoPassStrongSummary();
+				return new StrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 			case "typedweak":
-				return new TypedWeakSummary();
+				return new TypedWeakSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 			case "typedstrong":
-				return new TypedStrongSummary();
+				return new TypedStrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 		}
 		return null;
 	}
@@ -320,14 +317,14 @@ public class Builder {
 	}
 
 	private static void saveSummary(Boolean partialResult, String summarizationTechnique) {
-		dictionaryTableName = summaryInUse.saveSummaryInPostgres(connectionInUse, partialResult, summarizationTechnique, dictionaryTableName);
+		summaryInUse.saveSummaryInPostgres(connectionInUse, partialResult, summarizationTechnique);
 	}
 
 	private static void exportSummary(String summarizationTechnique, Boolean draw, String[] files) {
 		LOGGER.info("Exporting summary to disk");
-		summaryInUse.writeDecodedSummaryToNTFile(connectionInUse, files[0], dictionaryTableName, summarizationTechnique);
+		summaryInUse.writeDecodedSummaryToNTFile(connectionInUse, summarizationTechnique);
 		if (draw)
-			summaryInUse.drawSummaryAndGraph(connectionInUse, files[0], triplesTableName, dictionaryTableName, summarizationTechnique);
+			summaryInUse.drawSummaryAndGraph(connectionInUse, summarizationTechnique);
 		LOGGER.info("Statistics: " + summaryInUse.getRunStatistics().toString());
 		LOGGER.info("Summary exported to disk");
 	}

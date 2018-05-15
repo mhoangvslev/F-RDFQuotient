@@ -39,8 +39,12 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 	protected final static char US_RP_TRO = 21; 
 
 
-	public TypedWeakSummary() {
+	public TypedWeakSummary(String triplesFileName, String triplesTableName, String encodedTriplesTableName, String dictionaryTableName) {
 		super();
+		this.triplesFileName = triplesFileName;
+		this.triplesTableName = triplesTableName;
+		this.encodedTriplesTableName = encodedTriplesTableName;
+		this.dictionaryTableName = dictionaryTableName;
 		cs = new Long2LongSet();
 		n2cs = new Long2Long();
 		n2c = new Long2LongSet();
@@ -81,23 +85,17 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 	 * Summarizes an RDF graph assuming the data triples are in Postgres
 	 *
 	 * @param conn
-	 * @param args
 	 */
 	@Override
-	public void summarizeFromPostgres(Connection conn, String[] args) {
+	public void summarizeFromPostgres(Connection conn) {
 		long start = System.currentTimeMillis();
-
-		String triplesFileName = args[0];
-		String triplesTableName = args[1];
-		String encodedTriplesTableName = args[2];
-		String dictionaryTableName = args[3];
 
 		// this is needed to find the constants associated to special RDF properties
 		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
 		long typeConstantCode = RDF2SQLEncoding.getTypeCode();
 		if (typeConstantCode != -1) {
 			this.typeTriplesExist = true;
-			avoidCollisionsWhenAssigningSummaryNodes(conn, encodedTriplesTableName);
+			avoidCollisionsWhenAssigningSummaryNodes(conn);
 		}
 		triplesSummarizedSoFar = 0;
 		String getTypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p = " + typeConstantCode);
@@ -128,7 +126,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 
 		start = System.currentTimeMillis();
 
-		//this.drawSummaryAndGraph(conn, dataTriplesFileName, ("_" + triplesSummarizedSoFar));
+		//this.drawSummaryAndGraph(conn, "_" + triplesSummarizedSoFar);
 
 		// now all the non-type triples
 		String getUntypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p <> " + typeConstantCode);
@@ -151,7 +149,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 						//System.out.println("Triples summarized so far: " + triplesSummarizedSoFar);
 						if (this.checkConsistency)
 							consistencyChecks();
-						//this.drawSummaryAndGraph(conn, dataTriplesFileName, ("_" + triplesSummarizedSoFar));
+						//this.drawSummaryAndGraph(conn, "_" + triplesSummarizedSoFar);
 
 					}
 				}

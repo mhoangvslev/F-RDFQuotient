@@ -15,8 +15,12 @@ import java.util.HashMap;
 import java.util.TreeSet;
 
 public class WeakSummary extends WeakOrTypedWeakSummary {
-	public WeakSummary() {
+	public WeakSummary(String triplesFileName, String triplesTableName, String encodedTriplesTableName, String dictionaryTableName) {
 		super();
+		this.triplesFileName = triplesFileName;
+		this.triplesTableName = triplesTableName;
+		this.encodedTriplesTableName = encodedTriplesTableName;
+		this.dictionaryTableName = dictionaryTableName;
 		this.summaryTablePrefix = WEAK_SUMMARY_PREFIX;
 		typeOnlyNodeID = -1;
 	}
@@ -91,30 +95,24 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 		}
 		allTriplesSummarizationTime = System.currentTimeMillis() - start;
 		System.out.println("Summarized in " + allTriplesSummarizationTime + " ms");
-		display(dataTriplesFile); // this prints out and makes a DOT file
+		//display(dataTriplesFile); // this prints out and makes a DOT file
 	}
 
 	/**
 	 * Summarizes an RDF graph assuming the data triples are in Postgres
 	 *
 	 * @param conn
-	 * @param args
 	 */
 	@Override
-	public void summarizeFromPostgres(Connection conn, String[] args) {
+	public void summarizeFromPostgres(Connection conn) {
 		long start = System.currentTimeMillis();
-
-		String triplesFileName = args[0];
-		String triplesTableName = args[1];
-		String encodedTriplesTableName = args[2];
-		String dictionaryTableName = args[3];
 
 		// this is needed to find the constants associated to special RDF properties
 		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
 		long typeConstantCode = RDF2SQLEncoding.getTypeCode();
 		if (typeConstantCode != -1) {
 			this.typeTriplesExist = true;
-			avoidCollisionsWhenAssigningSummaryNodes(conn, encodedTriplesTableName);
+			avoidCollisionsWhenAssigningSummaryNodes(conn);
 		}
 		triplesSummarizedSoFar = 0;
 		String getUntypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p <> " + typeConstantCode);
@@ -134,8 +132,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 						else
 							handleDataTriple(t);
 						triplesSummarizedSoFar++;
-						//this.drawSummaryAndGraph(conn, dataTriplesFileName, ("-after-" +
-						//triplesSummarizedSoFar + "-"+ t.s + "-" + t.p + "-" + t.o));
+						//this.drawSummaryAndGraph(conn, "-after-" + triplesSummarizedSoFar + "-"+ t.s + "-" + t.p + "-" + t.o);
 						if (this.checkConsistency)
 							consistencyChecks();
 					}
@@ -157,7 +154,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 						Triple t = new Triple(rs.getInt(1), rs.getInt(2), rs.getInt(3));
 						this.handleTypeTripleAfterData(t);
 						triplesSummarizedSoFar++;
-						//this.drawSummaryAndGraph(conn, dataTriplesFileName, ("-after-" + t.s + "-" + t.p + "-" + t.o));
+						//this.drawSummaryAndGraph(conn, "-after-" + t.s + "-" + t.p + "-" + t.o);
 						//System.out.println("Summary now has " + getSummaryEdges().size() + " triples");
 					}
 				}
