@@ -16,8 +16,8 @@ import java.util.TreeSet;
 public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 	// The following three attribute serve to identify and store the class sets for RDF resources
 	Long2LongSet cs; // for each class set ID, a class set
-	Long2Long n2cs; // for each node, its class set ID. This is also the rep function for typed nodes
-	Long2LongSet n2c; // for each node, the set of types we know so far for this node
+	Long2Long n2cs; // for each data node, its class set ID. This is also the rep function for typed nodes
+	Long2LongSet n2c; // for each data node, the set of types we know so far for this node
 	HashMap<TreeSet<Long>, Long> cs2csID; // for each set of types known so far, the ID of that set
 
 	protected final static char TRS_RO = 9;
@@ -108,6 +108,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 						//System.out.println("### Type triple " + t.toString());
 						this.handleTypeTripleBeforeData(t);
 						triplesSummarizedSoFar++;
+						//display();
 					}
 				}
 			}
@@ -150,7 +151,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 						if (this.checkConsistency)
 							consistencyChecks();
 						//this.drawSummaryAndGraph(conn, "_" + triplesSummarizedSoFar);
-
+						//display(); 
 					}
 				}
 			}
@@ -172,10 +173,11 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		Long repO = rep.get(t.o);
 		Long pSource = ps.get(t.p);
 		Long pTarget = pt.get(t.p);
-		// can't do this because of triples where one node is typed and the other is not; such nodes have a source but not a target, or the opposite.
-		//if ((pSource == null && pTarget != null) || (pSource != null && pTarget == null))
-		//	throw new Error("Source represented and target not represented, or the opposite");
-		boolean pRepresented = ( (pSource != null) || (pTarget != null)); 
+		// Properties appearing in triples where one node is typed and the other is not,
+		// may have a source but lack a target, or the opposite.
+		// Thus, is "represented" a property having a source OR a target. It doesn't have to have both.
+		// If a property only occurs between typed nodes, it is considered non represented.
+		boolean pRepresented = ((pSource != null) || (pTarget != null)); 
 		boolean sRepresented = (repS != null);
 		boolean sTyped = ((n2cs.get(t.s) != null));
 		boolean oRepresented = (repO != null);
@@ -183,7 +185,10 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 
 		char caseNumber = identifyTripleSummarizationCase(sRepresented, sTyped,
 				pRepresented, oRepresented, oTyped);
-		System.out.println("Case: " + this.caseName(caseNumber));
+//		System.out.println("\nCase: " + this.caseName(caseNumber) + " " + t.toString() + " " + 
+//				RDF2SQLEncoding.dictionaryDecode(t.s) + " " + 
+//				RDF2SQLEncoding.dictionaryDecode(t.p) + " " +
+//				RDF2SQLEncoding.dictionaryDecode(t.o));
 		switch (caseNumber) {
 		case TRS_UP_TRO: // six cases for TRS
 			handleDataTriple_TRS_UP_TRO(t, repS, repO, pSource, pTarget);
@@ -241,18 +246,6 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		case US_RP_TRO:
 			handleDataTriple_US_RP_TRO(t, repS, repO, pSource, pTarget);
 			break;
-
-
-			//		case TRS_RO:
-			//			handleDataTriple_TRS_RO(t);
-			//			break;
-			//		case TRS_TRO:
-			//			handleDataTriple_TRS_TRO(t);
-			//			break;
-			//		case TRS_UO:
-			//			handleDataTriple_TRS_UO(t);
-			//			break;
-
 		default:
 			throw new IllegalStateException("This case should not be encountered here");
 		}
@@ -587,7 +580,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		//System.out.println("POST HANDLE TYPE TRIPLES");
 		for (Long node: this.n2cs.getKeys()){
 			Long thisClassSetID = this.n2cs.get(node);
-			TreeSet<Long> thisClassSet = this.cs.get(thisClassSetID);
+			TreeSet<Long> thisClassSet = this.cs.get(thisClassSetID);// the class set IS the representative
 			for (Long thisClass: thisClassSet){
 				edgesWithProv.addTriple(thisClassSetID, RDF2SQLEncoding.getTypeCode(), thisClass);
 				rep.put(node, thisClassSetID);
@@ -603,7 +596,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 
 	@Override
 	protected void consistencyChecks() {
-		for (Long s: edgesWithProv.keySet()) {
+		for (Long s: edgesWithProv.keySet()) { // s is a summary node 
 			HashMap<Long, TreeSet<Long>> triplesOfThisSubject = edgesWithProv.get(s);
 			if (triplesOfThisSubject == null)
 				throw new IllegalStateException("No triples whose subject is " + s);
@@ -613,12 +606,34 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 						&& (n2cs.get(s) == null)) // only check for untyped nodes 
 					throw new IllegalStateException("Subject " + s + " has more than one edge with label " + p);
 				for (Long o: objectsOfThisSandP) {
-					if (!this.ps.get(p).equals(s))
-						throw new IllegalStateException("Source of " + p + " is not " + s + " but " + this.ps.get(p));
-					if (pt.get(p) == null)
-						throw new IllegalStateException("No target for " + p);
-					if (!this.pt.get(p).equals(o))
-						throw new IllegalStateException("Target of " + p + " is not " + o + " but " + this.pt.get(p));
+					if (RDF2SQLEncoding.isDataProperty(p)){
+						Long sp = ps.get(p); 
+						if (sp == null){
+							if (n2cs.get(s) == null){
+								throw new IllegalStateException("Null source for property " + p + " (" +
+										RDF2SQLEncoding.dictionaryDecode(p) + ") of untyped node " + s + 
+										 " (" +	RDF2SQLEncoding.dictionaryDecode(s) + ")"); 
+							}
+						}
+						else{
+							if (!sp.equals(s)){
+								throw new IllegalStateException("Source of " + p + " is not " + s + " but " + sp);
+							}
+						}
+						Long tp = pt.get(p); 
+						if (tp == null){
+							if (n2cs.get(o) == null){
+								throw new IllegalStateException("Null target for property " + p + " (" +
+										RDF2SQLEncoding.dictionaryDecode(p) + ") incoming untyped node " + o + 
+										 " (" +	RDF2SQLEncoding.dictionaryDecode(o) + ")"); 
+							}
+						}
+						else{
+							if (!tp.equals(o)){
+								throw new IllegalStateException("Target of " + p + " is not " + o + " but " + tp);
+							}
+						}
+					}
 				}
 			}
 		}
@@ -659,5 +674,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 			throw new IllegalStateException("Could not get a cursor on the graph triples for drawing"); 
 		}
 	}
+	
+	
 
 }

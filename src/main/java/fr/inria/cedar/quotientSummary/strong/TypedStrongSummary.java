@@ -217,13 +217,13 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 
 	public void display() {
 		System.out.println("TYPED STRONG SUMMARY\nClass set IDs to class sets: " + cs.toString());
-		System.out.println("Nodes to class set IDs: " + n2cs.display());
+		System.out.println("Nodes to class set IDs: " + n2cs.toString());
 		System.out.println("Source cliques: " + sc.toString());
 		System.out.println("Target cliques: " + tc.toString());
-		System.out.println("Nodes to source cliques: " + n2sc.display());
-		System.out.println("Nodes to target cliques: " + n2tc.display());
-		System.out.println("Property to source cliques: " + p2sc.display());
-		System.out.println("Property to target cliques: " + p2tc.display());
+		System.out.println("Nodes to source cliques: " + n2sc.toString());
+		System.out.println("Nodes to target cliques: " + n2tc.toString());
+		System.out.println("Property to source cliques: " + p2sc.toString());
+		System.out.println("Property to target cliques: " + p2tc.toString());
 		System.out.println("Representation function: ");
 		showRep();
 		System.out.println("Cs to cs ID: ");

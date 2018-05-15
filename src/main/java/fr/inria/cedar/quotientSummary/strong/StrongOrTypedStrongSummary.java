@@ -1356,10 +1356,10 @@ public class StrongOrTypedStrongSummary extends Summary {
 	public void display() {
 		System.out.println("=== SUMMARY " + this.getClass().getName() + "\nSource cliques: " + sc.toString());
 		System.out.println("Target cliques: " + tc.toString());
-		System.out.println("Data nodes to source cliques: " + n2sc.display());
-		System.out.println("Data nodes to target cliques: " + n2tc.display());
-		System.out.println("Property to source cliques: " + p2sc.display());
-		System.out.println("Property to target cliques: " + p2tc.display());
+		System.out.println("Data nodes to source cliques: " + n2sc.toString());
+		System.out.println("Data nodes to target cliques: " + n2tc.toString());
+		System.out.println("Property to source cliques: " + p2sc.toString());
+		System.out.println("Property to target cliques: " + p2tc.toString());
 		System.out.println("Untyped summary nodes: " + untypedSummaryNodes.toString());
 		System.out.println("Representation function: ");
 		showRep();

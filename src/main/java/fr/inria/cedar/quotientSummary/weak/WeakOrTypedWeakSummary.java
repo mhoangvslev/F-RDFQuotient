@@ -5,11 +5,13 @@ import java.util.HashMap;
 import fr.inria.cedar.commons.miscellaneous.Debugger;
 import fr.inria.cedar.quotientSummary.Summary;
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
+import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 import fr.inria.cedar.quotientSummary.util.Substitutions;
 
 public class WeakOrTypedWeakSummary extends Summary {
 	HashMap<Long, Long> ps; // for each property, the property source
 	HashMap<Long, Long> pt; // for each property, the property source
+	
 	long minSummaryNode;
 	// below:
 	// U means unrepresented (so far) 
@@ -127,9 +129,8 @@ public class WeakOrTypedWeakSummary extends Summary {
 	// By convention, we will keep the *** smaller *** one. 
 	// - represent the object by the target of the property
 	protected void handleDataTriple_RS_RP_UO(Triple t) {
-		System.out.println("================== RS_RP_UO on " + t.toString() + " starts on");
-		System.out.println(this.toString()); 
-		consistencyChecks(); 
+		//System.out.println("================== RS_RP_UO on " + t.toString() + " starts on");
+		//display();
 		Long sourceP = ps.get(t.p);
 		long repS = rep.get(t.s);
 		Long addedTripleSubject = repS;
@@ -138,15 +139,22 @@ public class WeakOrTypedWeakSummary extends Summary {
 		Long addedTripleTarget = targetP;
 
 		// if repS and/or addedTripleTarget have been impacted by a substitution, do it
-		Substitutions subs = new Substitutions(repS, sourceP);
-		Long possibleNewTripleSubject = subs.get(addedTripleSubject);
-		if (possibleNewTripleSubject != null)
-			addedTripleSubject = possibleNewTripleSubject;
-		Long possibleNewTripleTarget = subs.get(addedTripleTarget);
-		if (possibleNewTripleTarget != null)
-			addedTripleTarget = possibleNewTripleTarget;
-
-		applySubstitutions(subs, t.p);
+		if (sourceP != null){
+			Substitutions subs = new Substitutions(repS, sourceP);
+			Long possibleNewTripleSubject = subs.get(addedTripleSubject);
+			if (possibleNewTripleSubject != null)
+				addedTripleSubject = possibleNewTripleSubject;
+			Long possibleNewTripleTarget = subs.get(addedTripleTarget);
+			if (possibleNewTripleTarget != null)
+				addedTripleTarget = possibleNewTripleTarget;
+			applySubstitutions(subs, t.p);
+		}
+		else{ // p may have empty source if so far we only found it on typed nodes
+			// here, s is represented and untyped. Thus, we put p's source on s' representative.
+			ps.put(t.p, repS);
+			// addedTripleSubject remains repS
+			// addedTripleTarget remains targetP, that should not be empty
+		}
 		edgesWithProv.addTriple(addedTripleSubject, t.p, addedTripleTarget);
 		rep.put(t.o, addedTripleTarget);
 
@@ -258,7 +266,23 @@ public class WeakOrTypedWeakSummary extends Summary {
 		rep.put(t.s, pSource);
 		rep.put(t.o, pTarget);
 		edgesWithProv.addTriple(pSource, t.p, pTarget);
-		display();
+		//display();
 	}
 
+	public void display() {
+		System.out.println("SUMMARY " + this.getClass().getName());
+		edgesWithProv.display();
+		System.out.println("REPRESENTATION: " + rep.toString()); 
+		System.out.println("PROPERTY SOURCES: ");
+		for (Long p: ps.keySet()){
+			System.out.println(p + " (" + RDF2SQLEncoding.dictionaryDecode(p)
+			+ ") => " + ps.get(p)); 
+		}
+		System.out.println("PROPERTY TARGETS: ");
+		for (Long p: pt.keySet()){
+			System.out.println(p + " (" + RDF2SQLEncoding.dictionaryDecode(p)
+			+ ") => " + pt.get(p)); 
+		}
+		System.out.println("=======");
+	}
 }

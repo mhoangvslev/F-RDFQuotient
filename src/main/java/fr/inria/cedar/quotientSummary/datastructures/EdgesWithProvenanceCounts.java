@@ -32,7 +32,7 @@ public class EdgesWithProvenanceCounts {
 	 */
 	public final void addTriple(Long s, Long p, Long o) {
 		Triple t = new Triple(s, p, o);
-		System.out.println("ADDING TRIPLE: " + s + " " + p + " " + o);
+		//System.out.println("ADDING TRIPLE: " + s + " " + p + " " + o);
 		HashMap<Long, TreeSet<Long>> triplesForThisSubject = edges.get(s);
 		HashMap<Long,  HashMap<Long, Long>> countsForThisSubject = counts.get(s); 
 		
@@ -89,8 +89,6 @@ public class EdgesWithProvenanceCounts {
 	
 	
 	// replaces in summary edges
-	// this one is called by the Weak summarization classes
-	// TODO one day check if it's identical to the one below or not
 	public void replaceNodeInSummaryEdges(Long oldNode, Long newNode) {
 		// replace oldNode wherever it existed as an object:
 		for (long s : edges.keySet()) {

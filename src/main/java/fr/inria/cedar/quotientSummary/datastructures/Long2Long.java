@@ -71,7 +71,7 @@ public class Long2Long {
 		return res; 
 	}
 
-	public String display() {
+	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		if (!map.keySet().isEmpty()) {
 			sb.append("\n----------: \n");

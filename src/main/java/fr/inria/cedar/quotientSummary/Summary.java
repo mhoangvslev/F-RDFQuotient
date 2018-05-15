@@ -776,8 +776,7 @@ public class Summary {
 	public void display() {
 		System.out.println("SUMMARY " + this.getClass().getName());
 		edgesWithProv.display();
-		System.out.println("REPRESENTATION:");
-		rep.display();
+		System.out.println("REPRESENTATION: " + rep.toString()); 
 		System.out.println("=======");
 	}
 
