@@ -6,7 +6,6 @@ import fr.inria.cedar.quotientSummary.datastructures.Long2LongSet;
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
 import fr.inria.cedar.quotientSummary.util.DOTAuxiliary;
 import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
@@ -204,7 +203,6 @@ public class Summary {
 		this.maxSummaryNode += n;
 	}
 
-	
 	protected void gatherStatistics() {
 		gatherNodeStatistics();
 		gatherEdgeStatistics();
@@ -305,7 +303,7 @@ public class Summary {
 		catch (SQLException e) {
 			throw new IllegalStateException("Could not insert summary triples in " + newSummaryTableNameRep + ": " + e.toString());
 		}
-		
+
 		if (!partialResult) {
 			// save representation function
 			try {
@@ -314,7 +312,7 @@ public class Summary {
 				// create the table (it may have existed)
 				if (!existsTable(conn, newSummaryTableNameRep)) {
 					stmt.execute("create table " + newSummaryTableNameRep + "(graphNode int not null, summaryNode int not null);");
-					LOGGER.info("Table " + newSummaryTableNameRep + "created");
+					LOGGER.info("Table " + newSummaryTableNameRep + " created");
 				}
 				else
 					LOGGER.info("Did not create " + newSummaryTableNameRep + " table as it was already there");
@@ -414,12 +412,12 @@ public class Summary {
 	 * @param graphFileName
 	 * @param dictionaryTableName
 	 */
-	public void writeDecodedSummaryToNTFile(Connection conn, String graphFileName, String dictionaryTableName) {
+	public void writeDecodedSummaryToNTFile(Connection conn, String graphFileName, String dictionaryTableName, String summarizationTechnique) {
 		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
 
 		String URIprefix = properties.getProperty("prefixURIForSummaryNodes");
 
-		String summaryNTFileName = getNTSummaryFileName(graphFileName);
+		String summaryNTFileName = getNTSummaryFileName(graphFileName, summarizationTechnique);
 
 		//LOGGER.info("Decoding summary and writing it in .nt format to " + summaryNTFileName);
 
@@ -485,18 +483,12 @@ public class Summary {
 		LOGGER.info("Summary decoded and saved in .nt format");
 	}
 
-	private String getCoreGraphFileName(String graphFileName) {
+	private String getNTSummaryFileName(String graphFileName, String summarizationTechnique) {
 		int lastDotPosition = Math.max(0, graphFileName.lastIndexOf("."));
 		int lastSlashPosition = Math.max(0, graphFileName.lastIndexOf("/"));
 		if (lastDotPosition - lastSlashPosition < 1)
 			throw new IllegalStateException("Was not able to extract a core component of the file name " + graphFileName);
-		return graphFileName.substring(lastSlashPosition + 1, lastDotPosition + 3);
-	}
-
-	private String getNTSummaryFileName(String graphFileName) {
-		String coregraphFileName = getCoreGraphFileName(graphFileName);
-		String summaryNTFileName = graphFileName.replaceFirst(coregraphFileName, (this.summaryTablePrefix + coregraphFileName));
-		return summaryNTFileName;
+		return graphFileName.substring(0, lastDotPosition) + "_" + summaryTablePrefix + summarizationTechnique + ".nt";
 	}
 
 	/**
@@ -511,11 +503,7 @@ public class Summary {
 		return ("<" + uriPrefix + this.getSummaryURIPrefix() + n + ">");
 	}
 
-	public void drawSummaryAndGraph(Connection conn, String fullGraphFileName, String triplesTableName, String dictionaryTableName) {
-		this.drawSummaryAndGraph(conn, fullGraphFileName, triplesTableName, dictionaryTableName, "");
-	}
-
-	protected void drawSummaryAndGraph(Connection conn, String fullGraphFileName, String triplesTableName, String dictionaryTableName, String suffix) {
+	public void drawSummaryAndGraph(Connection conn, String fullGraphFileName, String triplesTableName, String dictionaryTableName, String suffix) {
 		String summaryDotFileName = getDotFileName(fullGraphFileName, suffix);
 		writeSummaryToDotFile(conn, summaryDotFileName, dictionaryTableName);
 		String graphDotFileName = getRDFDotFileName(fullGraphFileName, suffix);
@@ -610,18 +598,19 @@ public class Summary {
 	 * the prefix encoding the summary type before the main file name, and
 	 * replacing the trailing .nt with .dot
 	 *
-	 * It also inserts the suffix with a "-" before the ".".
+	 * It also inserts the suffix before the ".".
 	 *
 	 * @param fullGraphFileName
 	 * @param suffix
 	 *
 	 * @return
 	 */
-	private String getDotFileName(String fullGraphFileName, String suffix) {
-		String coreGraphFileName = getCoreGraphFileName(fullGraphFileName);
-		String dotFileName = fullGraphFileName.replaceFirst(coreGraphFileName, (this.summaryTablePrefix + coreGraphFileName));
-		dotFileName = dotFileName.substring(0, dotFileName.length() - 3) + suffix + ".dot"; // replace .nt with .dot
-		return dotFileName;
+	private String getDotFileName(String graphFileName, String suffix) {
+		int lastDotPosition = Math.max(0, graphFileName.lastIndexOf("."));
+		int lastSlashPosition = Math.max(0, graphFileName.lastIndexOf("/"));
+		if (lastDotPosition - lastSlashPosition < 1)
+			throw new IllegalStateException("Was not able to extract a core component of the file name " + graphFileName);
+		return graphFileName.substring(0, lastDotPosition) + "_" + summaryTablePrefix + suffix + ".dot"; // replace .nt with .dot
 	}
 
 	/**
@@ -636,7 +625,7 @@ public class Summary {
 	 * @return
 	 */
 	private String getRDFDotFileName(String fullGraphFileName, String suffix) {
-		return (fullGraphFileName.substring(0, fullGraphFileName.length() - 3)) + suffix + ".dot";
+		return (fullGraphFileName.substring(0, fullGraphFileName.length() - 3)) + "_" + suffix + ".dot";
 	}
 
 	/**
@@ -658,7 +647,8 @@ public class Summary {
 		Properties properties = new Properties();
 		try {
 			properties.load(new FileReader(SUMMARY_CONFIG_FILE));
-		} catch (IOException e) {
+		}
+		catch (IOException e) {
 			throw new IllegalStateException("Unable to read config file");
 		}
 
@@ -767,10 +757,10 @@ public class Summary {
 				LOGGER.debug("Type triple");
 				//if (dax.unknownRDFNode(s))
 				//	LOGGER.debug("TYP1 " + s + " (" + subject + ") represented by  " + sRep);
-				if (dax == null){
+				if (dax == null) {
 					throw new IllegalStateException("Null dax");
 				}
-				if (sRep == null){
+				if (sRep == null) {
 					throw new IllegalStateException("Null sRep");
 				}
 				bw.write("\"" + subjectForDot + "\" [style = filled, color=" + dax.getSummaryNodeColor(sRep) + "];\n");
@@ -788,7 +778,7 @@ public class Summary {
 	}
 
 	public void display(String fullGraphFileName) {
-		writeEncodedSummaryToFile(getNTSummaryFileName(fullGraphFileName));
+		writeEncodedSummaryToFile(getNTSummaryFileName(fullGraphFileName, ""));
 		writeEncodedSummaryToDotFile(getDotFileName(fullGraphFileName, ""));
 	}
 
@@ -908,7 +898,7 @@ public class Summary {
 		sb.append("]");
 		return new String(sb); 
 	}
-	
+
 	protected HashMap<Long, TreeSet<Long>> getEdgesFrom(Long s){
 		return this.edgesWithProv.get(s); 
 	}
@@ -967,5 +957,4 @@ public class Summary {
 		}
 		return new String(sb); 
 	}
-	
 }

@@ -102,19 +102,22 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 	 */
 	@Override
 	public void summarizeFromPostgres(Connection conn, String[] args) {
-		//Debugger.setFlag(true);
 		long start = System.currentTimeMillis();
-		String tableName = args[0];
-		String dataTriplesFileName = args[1];
+
+		String triplesFileName = args[0];
+		String triplesTableName = args[1];
+		String encodedTriplesTableName = args[2];
+		String dictionaryTableName = args[3];
+
 		// this is needed to find the constants associated to special RDF properties
-		RDF2SQLEncoding.setUp(conn, args[2]);
+		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
 		long typeConstantCode = RDF2SQLEncoding.getTypeCode();
 		if (typeConstantCode != -1) {
 			this.typeTriplesExist = true;
 			avoidCollisionsWhenAssigningSummaryNodes(conn);
 		}
 		triplesSummarizedSoFar = 0;
-		String getUntypedTriplesString = ("select *  from " + tableName + " where p <> " + typeConstantCode);
+		String getUntypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p <> " + typeConstantCode);
 		try {
 			conn.setAutoCommit(false);
 			try (Statement getUntypedTriples = conn.createStatement()) {
@@ -129,9 +132,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 							//System.out.println("#### Schema triple " + t.toString());
 							edgesWithProv.addTriple(t.s, t.p, t.o);
 						else
-							//System.out.println("#### Data triple " + t.toString());
 							handleDataTriple(t);
-						//System.out.println("Summary has become: " + this.toString());
 						triplesSummarizedSoFar++;
 						//this.drawSummaryAndGraph(conn, dataTriplesFileName, ("-after-" +
 						//triplesSummarizedSoFar + "-"+ t.s + "-" + t.p + "-" + t.o));
@@ -147,19 +148,17 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 		dataTriplesSummarizationTime = System.currentTimeMillis() - start;
 		System.out.println("Summarized " + triplesSummarizedSoFar + " data triples in " + dataTriplesSummarizationTime + " ms");
 
-		String getTypedTriplesString = ("select *  from " + tableName + " where p =" + typeConstantCode);
+		String getTypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p =" + typeConstantCode);
 		try {
 			try (Statement getTypedTriples = conn.createStatement()) {
 				getTypedTriples.setFetchSize(1000);
 				try (ResultSet rs = getTypedTriples.executeQuery(getTypedTriplesString)) {
 					while (rs.next()) {
 						Triple t = new Triple(rs.getInt(1), rs.getInt(2), rs.getInt(3));
-						//System.out.println("#### Type triple " + t.toString());
 						this.handleTypeTripleAfterData(t);
 						triplesSummarizedSoFar++;
 						//this.drawSummaryAndGraph(conn, dataTriplesFileName, ("-after-" + t.s + "-" + t.p + "-" + t.o));
 						//System.out.println("Summary now has " + getSummaryEdges().size() + " triples");
-
 					}
 				}
 			}
@@ -172,7 +171,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 		if (checkConsistency){
 			consistencyChecks();
 		}
-		this.display(dataTriplesFileName);
+		//this.display(dataTriplesFileName);
 	}
 
 	protected void handleDataTriple(Triple t) {

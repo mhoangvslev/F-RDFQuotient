@@ -1,16 +1,15 @@
 package fr.inria.cedar.quotientSummary.strong;
 
-import java.sql.Connection;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.TreeSet;
-
 import fr.inria.cedar.quotientSummary.Summary;
 import fr.inria.cedar.quotientSummary.datastructures.Long2Long;
 import fr.inria.cedar.quotientSummary.datastructures.Long2LongSet;
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
 import fr.inria.cedar.quotientSummary.datastructures.TwoLevelLongMap;
 import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
+import java.sql.Connection;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.TreeSet;
 
 public class StrongOrTypedStrongSummary extends Summary {
 	Long2LongSet sc; // for each source clique ID,  a source clique

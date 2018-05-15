@@ -85,28 +85,28 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	@Override
 	public void summarizeFromPostgres(Connection conn, String[] args) {
 		this.setConn(conn);
-		//Debugger.setFlag(true);
 		long start = System.currentTimeMillis();
-		String tableName = args[0];
-		String dataTriplesFileName = args[1];
+		
+		String triplesFileName = args[0];
+		String triplesTableName = args[1];
+		String encodedTriplesTableName = args[2];
+		String dictionaryTableName = args[3];
+		
 		// this is needed to find the constants associated to special RDF properties
-		RDF2SQLEncoding.setUp(conn, args[2]);
+		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
 		long typeConstantCode = RDF2SQLEncoding.getTypeCode();
 		if (typeConstantCode != -1) {
 			this.typeTriplesExist = true;
 			avoidCollisionsWhenAssigningSummaryNodes(conn);
 		}
-
-		//System.out.println("TypedStrong: Looking for type triples");
 		triplesSummarizedSoFar = 0;
-		String getTypedTriplesString = ("select *  from " + tableName + " where p =" + typeConstantCode);
+		String getTypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p =" + typeConstantCode);
 		try {
 			try (Statement getTypedTriples = conn.createStatement()) {
 				getTypedTriples.setFetchSize(1000);
 				try (ResultSet rs = getTypedTriples.executeQuery(getTypedTriplesString)) {
 					while (rs.next()) {
 						Triple t = new Triple(rs.getInt(1), rs.getInt(2), rs.getInt(3));
-						//Debugger.log("### Type triple " + t.toString());
 						this.handleTypeTripleBeforeData(t);
 						triplesSummarizedSoFar++;
 						this.numberOfTypeTriplesRead++;
@@ -130,7 +130,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		//this.drawSummaryAndGraph(conn, dataTriplesFileName, ("_" + triplesSummarizedSoFar));
 		//this.display();
 		// now all the non-type triples
-		String getUntypedTriplesString = ("select *  from " + tableName + " where p <> " + typeConstantCode);
+		String getUntypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p <> " + typeConstantCode);
 		try {
 			conn.setAutoCommit(false);
 			try (Statement getUntypedTriples = conn.createStatement()) {
@@ -162,7 +162,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 
 		allTriplesSummarizationTime = classSetCreationTime + typeTriplesSummarizationTime + dataTriplesSummarizationTime;
 		System.out.println("Summarized " + triplesSummarizedSoFar + " triples overall in " + allTriplesSummarizationTime + " ms");
-		this.display(dataTriplesFileName);
+		//this.display(dataTriplesFileName);
 	}
 
 	private char decode(Long classSetS, Long repS, Long classSetO, Long repO, Long sourceCliqueP) {
