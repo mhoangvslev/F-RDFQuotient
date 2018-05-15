@@ -7,7 +7,6 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.HashMap;
 
 public class StrongSummary extends StrongOrTypedStrongSummary {
 	public StrongSummary() {
@@ -64,21 +63,22 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 	@Override
 	public void summarizeFromPostgres(Connection conn, String[] args) {
 		this.setConn(conn);
-		Debugger.setFlag(true);
 		long start = System.currentTimeMillis();
 
-		String tableName = args[0];
-		String dataTriplesFileName = args[1];
+		String triplesFileName = args[0];
+		String triplesTableName = args[1];
+		String encodedTriplesTableName = args[2];
+		String dictionaryTableName = args[3];
 
 		// this is needed to find the constants associated to special RDF properties
-		RDF2SQLEncoding.setUp(conn, args[2]);
+		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
 		long typeConstantCode = RDF2SQLEncoding.getTypeCode();
 		if (typeConstantCode != -1) {
 			this.typeTriplesExist = true;
 			avoidCollisionsWhenAssigningSummaryNodes(conn);
 		}
 		triplesSummarizedSoFar = 0;
-		String getUntypedTriplesString = ("select *  from " + tableName + " where p <> " + typeConstantCode);
+		String getUntypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p <> " + typeConstantCode);
 		try {
 			conn.setAutoCommit(false);
 			try (Statement getUntypedTriples = conn.createStatement()) {
@@ -90,15 +90,12 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 						|| (t.p == RDF2SQLEncoding.getSubPropertyCode())
 						|| (t.p == RDF2SQLEncoding.getDomainCode())
 						|| (t.p == RDF2SQLEncoding.getRangeCode()))
-							//System.out.println("#### Schema triple " + t.toString());
 							addTriple(t.s, t.p, t.o);
 						else
-							//System.out.println("#### Data triple " + t.toString());
 							handleDataTriple(t);
-						//System.out.println("Summary has become: " + this.toString());
 						triplesSummarizedSoFar++;
-						this.drawSummaryAndGraph(conn, dataTriplesFileName, "tmp_triples", "dictionary", "-after-" + triplesSummarizedSoFar + "-"+ t.s + "-" + t.p + "-" + t.o);
-						display();
+						//this.drawSummaryAndGraph(conn, triplesFileName, triplesTableName, dictionaryTableName, "-after-" + triplesSummarizedSoFar + "-"+ t.s + "-" + t.p + "-" + t.o);
+						//display();
 					}
 				}
 			}
@@ -109,7 +106,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 		dataTriplesSummarizationTime = System.currentTimeMillis() - start;
 		System.out.println("Summarized " + triplesSummarizedSoFar + " data triples in " + dataTriplesSummarizationTime + " ms");
 
-		String getTypedTriplesString = ("select *  from " + tableName + " where p =" + typeConstantCode);
+		String getTypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p =" + typeConstantCode);
 		try {
 			try (Statement getTypedTriples = conn.createStatement()) {
 				getTypedTriples.setFetchSize(1000);
@@ -119,9 +116,8 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 						//System.out.println("#### Type triple " + t.toString());
 						this.handleTypeTripleAfterData(t);
 						triplesSummarizedSoFar++;
-						this.drawSummaryAndGraph(conn, dataTriplesFileName, "tmp_triples", "dictionary", "-after-" + triplesSummarizedSoFar + "-" + t.s + "-" + t.p + "-" + t.o);
+						this.drawSummaryAndGraph(conn, triplesFileName, triplesTableName, dictionaryTableName, "-after-" + triplesSummarizedSoFar + "-" + t.s + "-" + t.p + "-" + t.o);
 						//System.out.println("Summary now has " + getSummaryEdges().size() + " triples");
-
 					}
 				}
 			}
@@ -132,7 +128,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 
 		allTriplesSummarizationTime = System.currentTimeMillis() - start;
 		System.out.println("Summarized " + triplesSummarizedSoFar + " triples in " + allTriplesSummarizationTime + " ms");
-		this.display(dataTriplesFileName);
+		this.display(triplesFileName);
 	}
 
 	public void handleDataTriple(Triple t) {
@@ -257,7 +253,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 	@Override
 	protected ResultSet getGraphTriplesCursor1ForDotDrawing(Connection conn, long triplesToDraw, String triplesTableName) {
 		try {
-			return conn.createStatement().executeQuery("select * from " + triplesTableName + " where p<>'<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' limit " + triplesToDraw);
+			return conn.createStatement().executeQuery("select * from " + triplesTableName + " where p <> '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' limit " + triplesToDraw);
 		}
 		catch(SQLException e) {
 			throw new IllegalStateException("Could not get a cursor on the graph triples for drawing"); 

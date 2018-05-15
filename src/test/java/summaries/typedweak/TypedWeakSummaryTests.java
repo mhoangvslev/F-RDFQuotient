@@ -1,4 +1,4 @@
-package summaries.typedstrong;
+package summaries.typedweak;
 
 import fr.inria.cedar.ontosql.db.UnsupportedDatabaseEngineException;
 import fr.inria.cedar.quotientSummary.controller.Builder;
@@ -11,18 +11,18 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import org.junit.Test;
 
-public class TypedStrongSummaryTests {
-	private static final Logger LOGGER = Logger.getLogger(TypedStrongSummaryTests.class.getName());
+public class TypedWeakSummaryTests {
+	private static final Logger LOGGER = Logger.getLogger(TypedWeakSummaryTests.class.getName());
 
-	public File summarizeUsingTypedStrongSummary(int i) {
+	public File summarizeUsingTypedWeakSummary(int i) {
 		System.out.println("################################################################################");
-		System.out.println("Typed Strong summary test " + Integer.toString(i) + " only summarization");
+		System.out.println("Typed Weak summary test " + Integer.toString(i) + " only summarization");
 		System.out.println("################################################################################");
 
-		String inputFileName = "src/test/resources/test" + i + "-typedstrong/test-" + i + ".nt";
-		String outputFileName = "src/test/resources/test" + i + "-typedstrong/test-" + i + "_ts_noSaturation.nt";
+		String inputFileName = "src/test/resources/test" + i + "-typedweak/test-" + i + ".nt";
+		String outputFileName = "src/test/resources/test" + i + "-typedweak/test-" + i + "_tw_noSaturation.nt";
 		try {
-			String[] argsSum = {"loadAndSummarize", "typedstrong", inputFileName};
+			String[] argsSum = {"loadAndSummarize", "typedweak", inputFileName};
 			try {
 				Builder.main(argsSum);
 				String[] argsSave = {"saveSummaryComputedWithoutSaturation"};
@@ -45,25 +45,25 @@ public class TypedStrongSummaryTests {
 			return new File(outputFileName);
 		}
 		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in typedstrong test " + i + " " + e.toString());
+			throw new IllegalStateException("Unable to open .nt files in typedweak test " + i + " " + e.toString());
 		}
 		catch (SQLException e) {
 			throw new IllegalStateException("SQL error while summarizing " + e.toString());
 		}
 	}
 
-	public File saturateAndSummarizeUsingTypedStrongSummary(int i) {
+	public File saturateAndSummarizeUsingTypedWeakSummary(int i) {
 		System.out.println("################################################################################");
-		System.out.println("Typed Strong summary test " + Integer.toString(i) + " saturation and summarization");
+		System.out.println("Typed Weak summary test " + Integer.toString(i) + " saturation and summarization");
 		System.out.println("################################################################################");
 
-		String inputFileName = "src/test/resources/test" + i + "-typedstrong/test-" + i + ".nt";
-		String outputFileName = "src/test/resources/test" + i + "-typedstrong/test-" + i + "_ts_classical.nt";
+		String inputFileName = "src/test/resources/test" + i + "-typedweak/test-" + i + ".nt";
+		String outputFileName = "src/test/resources/test" + i + "-typedweak/test-" + i + "_tw_classical.nt";
 		try {
-			String[] argsSum = {"loadAndSummarize", "typedstrong", inputFileName};
+			String[] argsSum = {"loadWithSaturationAndSummarize", "typedweak", inputFileName};
 			try {
 				Builder.main(argsSum);
-				String[] argsSave = {"saveSummaryComputedWithoutSaturation"};
+				String[] argsSave = {"saveSummaryComputedClassicalWay"};
 				Builder.main(argsSave);
 				String[] argsExport = {"exportSummaryComputedClassicalWay", "draw", inputFileName};
 				Builder.main(argsExport);
@@ -83,25 +83,25 @@ public class TypedStrongSummaryTests {
 			return new File(outputFileName);
 		}
 		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in typedstrong test " + i + " " + e.toString());
+			throw new IllegalStateException("Unable to open .nt files in typedweak test " + i + " " + e.toString());
 		}
 		catch (SQLException e) {
 			throw new IllegalStateException("SQL error while summarizing " + e.toString());
 		}
 	}
 
-	public File summarizeThroughShortcutUsingTypedStrongSummary(int i) {
+	public File summarizeThroughShortcutUsingTypedWeakSummary(int i) {
 		System.out.println("################################################################################");
-		System.out.println("Typed Strong summary test " + Integer.toString(i) + " summarization through shortcut");
+		System.out.println("Typed Weak summary test " + Integer.toString(i) + " summarization through shortcut");
 		System.out.println("################################################################################");
 
-		String inputFileName = "src/test/resources/test" + i + "-typedstrong/test-" + i + ".nt";
-		String outputFileName = "src/test/resources/test" + i + "-typedstrong/test-" + i + "_ts_shortcut.nt";
+		String inputFileName = "src/test/resources/test" + i + "-typedweak/test-" + i + ".nt";
+		String outputFileName = "src/test/resources/test" + i + "-typedweak/test-" + i + "_tw_shortcut.nt";
 		try {
-			String[] argsSum = {"loadAndSummarize", "typedstrong", inputFileName};
+			String[] argsSum = {"loadAndSummarizeUsingShortcut", "typedweak", inputFileName};
 			try {
 				Builder.main(argsSum);
-				String[] argsSave = {"saveSummaryComputedWithoutSaturation"};
+				String[] argsSave = {"saveSummaryComputedUsingShortcut"};
 				Builder.main(argsSave);
 				String[] argsExport = {"exportSummaryComputedUsingShortcut", "draw", inputFileName};
 				Builder.main(argsExport);
@@ -121,7 +121,7 @@ public class TypedStrongSummaryTests {
 			return new File(outputFileName);
 		}
 		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in typedstrong test " + i + " " + e.toString());
+			throw new IllegalStateException("Unable to open .nt files in typedweak test " + i + " " + e.toString());
 		}
 		catch (SQLException e) {
 			throw new IllegalStateException("SQL error while summarizing " + e.toString());
@@ -129,414 +129,405 @@ public class TypedStrongSummaryTests {
 	}
 
 	private String expectedOutput(int i, String summarizationTechnique) {
-		return "src/test/resources/test" + i + "-typedstrong/test-" + i + "_ts_" + summarizationTechnique + "-reference.nt";
+		return "src/test/resources/test" + i + "-typedweak/test-" + i + "_tw_" + summarizationTechnique + "-reference.nt";
 	}
 
 	@Test
-	public void summarizeTypedStrongTest1() {
+	public void summarizeTypedWeakTest1() {
 		String referenceFileName = expectedOutput(1, "noSaturation");
 		File expectedOutput = new File(referenceFileName);
-		if (!expectedOutput.exists()){
-			fail("Expected output not found " + referenceFileName);
-		}
 		try {
-			File testOutput = summarizeUsingTypedStrongSummary(1);
+			File testOutput = summarizeUsingTypedWeakSummary(1);
 			if (!testOutput.exists()){
 				fail("Test output not found ");
 			}
 			if (!expectedOutput.exists()){
 				fail("Expected output not found " + referenceFileName);
 			}
-			assertTrue("Different summary typedstrong 1", FileUtils.contentEquals(testOutput, expectedOutput));
+			assertTrue("Different summary typedweak 1", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in typedstrong test 1 " + e.toString());
+			throw new IllegalStateException("Unable to open .nt files in typedweak test 1 " + e.toString());
 		}
 	}
 
 	@Test
-	public void summarizeTypedStrongTest2() {
+	public void summarizeTypedWeakTest2() {
 		String referenceFileName = expectedOutput(2, "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarizeUsingTypedStrongSummary(2);
+			File testOutput = summarizeUsingTypedWeakSummary(2);
 			if (!testOutput.exists()){
 				fail("Test output not found ");
 			}
 			if (!expectedOutput.exists()){
 				fail("Expected output not found " + referenceFileName);
 			}
-			assertTrue("Different summary typedstrong 2", FileUtils.contentEquals(testOutput, expectedOutput));
+			assertTrue("Different summary typedweak 2", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in typedstrong test 2 " + e.toString());
+			throw new IllegalStateException("Unable to open .nt files in typedweak test 2 " + e.toString());
 		}
 	}
 
 	@Test
-	public void summarizeTypedStrongTest3() {
+	public void summarizeTypedWeakTest3() {
 		String referenceFileName = expectedOutput(3, "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarizeUsingTypedStrongSummary(3);
+			File testOutput = summarizeUsingTypedWeakSummary(3);
 			if (!testOutput.exists()){
 				fail("Test output not found");
 			}
 			if (!expectedOutput.exists()){
 				fail("Expected output not found " + referenceFileName);
 			}
-			assertTrue("Different summary typedstrong 3", FileUtils.contentEquals(testOutput, expectedOutput));
+			assertTrue("Different summary typedweak 3", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in typedstrong test 3 " + e.toString());
+			throw new IllegalStateException("Unable to open .nt files in typedweak test 3 " + e.toString());
 		}
 	}
 
 	@Test
-	public void summarizeTypedStrongTest4() {
+	public void summarizeTypedWeakTest4() {
 		String referenceFileName = expectedOutput(4, "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarizeUsingTypedStrongSummary(4);
+			File testOutput = summarizeUsingTypedWeakSummary(4);
 			if (!testOutput.exists()){
 				fail("Test output not found");
 			}
 			if (!expectedOutput.exists()){
 				fail("Expected output not found " + referenceFileName);
 			}
-			assertTrue("Different summary typedstrong 4", FileUtils.contentEquals(testOutput, expectedOutput));
+			assertTrue("Different summary typedweak 4", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in typedstrong test 4 " + e.toString());
+			throw new IllegalStateException("Unable to open .nt files in typedweak test 4 " + e.toString());
 		}
 	}
 
 	@Test
-	public void summarizeTypedStrongTest5() {
+	public void summarizeTypedWeakTest5() {
 		String referenceFileName = expectedOutput(5, "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarizeUsingTypedStrongSummary(5);
+			File testOutput = summarizeUsingTypedWeakSummary(5);
 			if (!testOutput.exists()){
 				fail("Test output not found");
 			}
 			if (!expectedOutput.exists()){
 				fail("Expected output not found " + referenceFileName);
 			}
-			assertTrue("Different summary typedstrong 5", FileUtils.contentEquals(testOutput, expectedOutput));
+			assertTrue("Different summary typedweak 5", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in typedstrong test 5 " + e.toString());
+			throw new IllegalStateException("Unable to open .nt files in typedweak test 5 " + e.toString());
 		}
 	}
 
 	@Test
-	public void summarizeTypedStrongTest6() {
+	public void summarizeTypedWeakTest6() {
 		String referenceFileName = expectedOutput(6, "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarizeUsingTypedStrongSummary(6);
+			File testOutput = summarizeUsingTypedWeakSummary(6);
 			if (!testOutput.exists()){
 				fail("Test output not found");
 			}
 			if (!expectedOutput.exists()){
 				fail("Expected output not found " + referenceFileName);
 			}
-			assertTrue("Different summary typedstrong 6", FileUtils.contentEquals(testOutput, expectedOutput));
+			assertTrue("Different summary typedweak 6", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in typedstrong test 6 " + e.toString());
+			throw new IllegalStateException("Unable to open .nt files in typedweak test 6 " + e.toString());
 		}
 	}
 
 	@Test
-	public void summarizeTypedStrongTest7() {
+	public void summarizeTypedWeakTest7() {
 		String referenceFileName = expectedOutput(7, "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarizeUsingTypedStrongSummary(7); 
+			File testOutput = summarizeUsingTypedWeakSummary(7); 
 			if (!testOutput.exists()){
 				fail("Test output not found");
 			}
 			if (!expectedOutput.exists()){
 				fail("Expected output not found " + referenceFileName);
 			}
-			assertTrue("Different summary typedstrong 7", FileUtils.contentEquals(testOutput, expectedOutput));
+			assertTrue("Different summary typedweak 7", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in typedstrong test 7 " + e.toString());
+			throw new IllegalStateException("Unable to open .nt files in typedweak test 7 " + e.toString());
 		}
 	}
 
 	@Test
-	public void saturateAndSummarizeTypedStrongTest1() {
+	public void saturateAndSummarizeTypedWeakTest1() {
 		String referenceFileName = expectedOutput(1, "classical");
 		File expectedOutput = new File(referenceFileName);
-		if (!expectedOutput.exists()){
-			fail("Expected output not found " + referenceFileName);
-		}
 		try {
-			File testOutput = saturateAndSummarizeUsingTypedStrongSummary(1);
+			File testOutput = saturateAndSummarizeUsingTypedWeakSummary(1);
 			if (!testOutput.exists()){
 				fail("Test output not found ");
 			}
 			if (!expectedOutput.exists()){
 				fail("Expected output not found " + referenceFileName);
 			}
-			assertTrue("Different summary typedstrong 1", FileUtils.contentEquals(testOutput, expectedOutput));
+			assertTrue("Different summary typedweak 1", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in typedstrong test 1 " + e.toString());
+			throw new IllegalStateException("Unable to open .nt files in typedweak test 1 " + e.toString());
 		}
 	}
 
 	@Test
-	public void saturateAndSummarizeTypedStrongTest2() {
+	public void saturateAndSummarizeTypedWeakTest2() {
 		String referenceFileName = expectedOutput(2, "classical");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = saturateAndSummarizeUsingTypedStrongSummary(2);
+			File testOutput = saturateAndSummarizeUsingTypedWeakSummary(2);
 			if (!testOutput.exists()){
 				fail("Test output not found ");
 			}
 			if (!expectedOutput.exists()){
 				fail("Expected output not found " + referenceFileName);
 			}
-			assertTrue("Different summary typedstrong 2", FileUtils.contentEquals(testOutput, expectedOutput));
+			assertTrue("Different summary typedweak 2", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in typedstrong test 2 " + e.toString());
+			throw new IllegalStateException("Unable to open .nt files in typedweak test 2 " + e.toString());
 		}
 	}
 
 	@Test
-	public void saturateAndSummarizeTypedStrongTest3() {
+	public void saturateAndSummarizeTypedWeakTest3() {
 		String referenceFileName = expectedOutput(3, "classical");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = saturateAndSummarizeUsingTypedStrongSummary(3);
+			File testOutput = saturateAndSummarizeUsingTypedWeakSummary(3);
 			if (!testOutput.exists()){
 				fail("Test output not found");
 			}
 			if (!expectedOutput.exists()){
 				fail("Expected output not found " + referenceFileName);
 			}
-			assertTrue("Different summary typedstrong 3", FileUtils.contentEquals(testOutput, expectedOutput));
+			assertTrue("Different summary typedweak 3", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in typedstrong test 3 " + e.toString());
+			throw new IllegalStateException("Unable to open .nt files in typedweak test 3 " + e.toString());
 		}
 	}
 
 	@Test
-	public void saturateAndSummarizeTypedStrongTest4() {
+	public void saturateAndSummarizeTypedWeakTest4() {
 		String referenceFileName = expectedOutput(4, "classical");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = saturateAndSummarizeUsingTypedStrongSummary(4);
+			File testOutput = saturateAndSummarizeUsingTypedWeakSummary(4);
 			if (!testOutput.exists()){
 				fail("Test output not found");
 			}
 			if (!expectedOutput.exists()){
 				fail("Expected output not found " + referenceFileName);
 			}
-			assertTrue("Different summary typedstrong 4", FileUtils.contentEquals(testOutput, expectedOutput));
+			assertTrue("Different summary typedweak 4", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in typedstrong test 4 " + e.toString());
+			throw new IllegalStateException("Unable to open .nt files in typedweak test 4 " + e.toString());
 		}
 	}
 
 	@Test
-	public void saturateAndSummarizeTypedStrongTest5() {
+	public void saturateAndSummarizeTypedWeakTest5() {
 		String referenceFileName = expectedOutput(5, "classical");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = saturateAndSummarizeUsingTypedStrongSummary(5);
+			File testOutput = saturateAndSummarizeUsingTypedWeakSummary(5);
 			if (!testOutput.exists()){
 				fail("Test output not found");
 			}
 			if (!expectedOutput.exists()){
 				fail("Expected output not found " + referenceFileName);
 			}
-			assertTrue("Different summary typedstrong 5", FileUtils.contentEquals(testOutput, expectedOutput));
+			assertTrue("Different summary typedweak 5", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in typedstrong test 5 " + e.toString());
+			throw new IllegalStateException("Unable to open .nt files in typedweak test 5 " + e.toString());
 		}
 	}
 
 	@Test
-	public void saturateAndSummarizeTypedStrongTest6() {
+	public void saturateAndSummarizeTypedWeakTest6() {
 		String referenceFileName = expectedOutput(6, "classical");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = saturateAndSummarizeUsingTypedStrongSummary(6);
+			File testOutput = saturateAndSummarizeUsingTypedWeakSummary(6);
 			if (!testOutput.exists()){
 				fail("Test output not found");
 			}
 			if (!expectedOutput.exists()){
 				fail("Expected output not found " + referenceFileName);
 			}
-			assertTrue("Different summary typedstrong 6", FileUtils.contentEquals(testOutput, expectedOutput));
+			assertTrue("Different summary typedweak 6", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in typedstrong test 6 " + e.toString());
+			throw new IllegalStateException("Unable to open .nt files in typedweak test 6 " + e.toString());
 		}
 	}
 
 	@Test
-	public void saturateAndSummarizeTypedStrongTest7() {
+	public void saturateAndSummarizeTypedWeakTest7() {
 		String referenceFileName = expectedOutput(7, "classical");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = saturateAndSummarizeUsingTypedStrongSummary(7); 
+			File testOutput = saturateAndSummarizeUsingTypedWeakSummary(7); 
 			if (!testOutput.exists()){
 				fail("Test output not found");
 			}
 			if (!expectedOutput.exists()){
 				fail("Expected output not found " + referenceFileName);
 			}
-			assertTrue("Different summary typedstrong 7", FileUtils.contentEquals(testOutput, expectedOutput));
+			assertTrue("Different summary typedweak 7", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in typedstrong test 7 " + e.toString());
+			throw new IllegalStateException("Unable to open .nt files in typedweak test 7 " + e.toString());
 		}
 	}
 
 	@Test
-	public void summarizeThroughShortcutTypedStrongTest1() {
+	public void summarizeThroughShortcutTypedWeakTest1() {
 		String referenceFileName = expectedOutput(1, "shortcut");
 		File expectedOutput = new File(referenceFileName);
-		if (!expectedOutput.exists()){
-			fail("Expected output not found " + referenceFileName);
-		}
 		try {
-			File testOutput = summarizeThroughShortcutUsingTypedStrongSummary(1);
+			File testOutput = summarizeThroughShortcutUsingTypedWeakSummary(1);
 			if (!testOutput.exists()){
 				fail("Test output not found ");
 			}
 			if (!expectedOutput.exists()){
 				fail("Expected output not found " + referenceFileName);
 			}
-			assertTrue("Different summary typedstrong 1", FileUtils.contentEquals(testOutput, expectedOutput));
+			assertTrue("Different summary typedweak 1", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in typedstrong test 1 " + e.toString());
+			throw new IllegalStateException("Unable to open .nt files in typedweak test 1 " + e.toString());
 		}
 	}
 
 	@Test
-	public void summarizeThroughShortcutTypedStrongTest2() {
+	public void summarizeThroughShortcutTypedWeakTest2() {
 		String referenceFileName = expectedOutput(2, "shortcut");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarizeThroughShortcutUsingTypedStrongSummary(2);
+			File testOutput = summarizeThroughShortcutUsingTypedWeakSummary(2);
 			if (!testOutput.exists()){
 				fail("Test output not found ");
 			}
 			if (!expectedOutput.exists()){
 				fail("Expected output not found " + referenceFileName);
 			}
-			assertTrue("Different summary typedstrong 2", FileUtils.contentEquals(testOutput, expectedOutput));
+			assertTrue("Different summary typedweak 2", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in typedstrong test 2 " + e.toString());
+			throw new IllegalStateException("Unable to open .nt files in typedweak test 2 " + e.toString());
 		}
 	}
 
 	@Test
-	public void summarizeThroughShortcutTypedStrongTest3() {
+	public void summarizeThroughShortcutTypedWeakTest3() {
 		String referenceFileName = expectedOutput(3, "shortcut");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarizeThroughShortcutUsingTypedStrongSummary(3);
+			File testOutput = summarizeThroughShortcutUsingTypedWeakSummary(3);
 			if (!testOutput.exists()){
 				fail("Test output not found");
 			}
 			if (!expectedOutput.exists()){
 				fail("Expected output not found " + referenceFileName);
 			}
-			assertTrue("Different summary typedstrong 3", FileUtils.contentEquals(testOutput, expectedOutput));
+			assertTrue("Different summary typedweak 3", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in typedstrong test 3 " + e.toString());
+			throw new IllegalStateException("Unable to open .nt files in typedweak test 3 " + e.toString());
 		}
 	}
 
 	@Test
-	public void summarizeThroughShortcutTypedStrongTest4() {
+	public void summarizeThroughShortcutTypedWeakTest4() {
 		String referenceFileName = expectedOutput(4, "shortcut");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarizeThroughShortcutUsingTypedStrongSummary(4);
+			File testOutput = summarizeThroughShortcutUsingTypedWeakSummary(4);
 			if (!testOutput.exists()){
 				fail("Test output not found");
 			}
 			if (!expectedOutput.exists()){
 				fail("Expected output not found " + referenceFileName);
 			}
-			assertTrue("Different summary typedstrong 4", FileUtils.contentEquals(testOutput, expectedOutput));
+			assertTrue("Different summary typedweak 4", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in typedstrong test 4 " + e.toString());
+			throw new IllegalStateException("Unable to open .nt files in typedweak test 4 " + e.toString());
 		}
 	}
 
 	@Test
-	public void summarizeThroughShortcutTypedStrongTest5() {
+	public void summarizeThroughShortcutTypedWeakTest5() {
 		String referenceFileName = expectedOutput(5, "shortcut");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarizeThroughShortcutUsingTypedStrongSummary(5);
+			File testOutput = summarizeThroughShortcutUsingTypedWeakSummary(5);
 			if (!testOutput.exists()){
 				fail("Test output not found");
 			}
 			if (!expectedOutput.exists()){
 				fail("Expected output not found " + referenceFileName);
 			}
-			assertTrue("Different summary typedstrong 5", FileUtils.contentEquals(testOutput, expectedOutput));
+			assertTrue("Different summary typedweak 5", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in typedstrong test 5 " + e.toString());
+			throw new IllegalStateException("Unable to open .nt files in typedweak test 5 " + e.toString());
 		}
 	}
 
 	@Test
-	public void summarizeThroughShortcutTypedStrongTest6() {
+	public void summarizeThroughShortcutTypedWeakTest6() {
 		String referenceFileName = expectedOutput(6, "shortcut");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarizeThroughShortcutUsingTypedStrongSummary(6);
+			File testOutput = summarizeThroughShortcutUsingTypedWeakSummary(6);
 			if (!testOutput.exists()){
 				fail("Test output not found");
 			}
 			if (!expectedOutput.exists()){
 				fail("Expected output not found " + referenceFileName);
 			}
-			assertTrue("Different summary typedstrong 6", FileUtils.contentEquals(testOutput, expectedOutput));
+			assertTrue("Different summary typedweak 6", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in typedstrong test 6 " + e.toString());
+			throw new IllegalStateException("Unable to open .nt files in typedweak test 6 " + e.toString());
 		}
 	}
 
 	@Test
-	public void summarizeThroughShortcutTypedStrongTest7() {
+	public void summarizeThroughShortcutTypedWeakTest7() {
 		String referenceFileName = expectedOutput(7, "shortcut");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarizeThroughShortcutUsingTypedStrongSummary(7); 
+			File testOutput = summarizeThroughShortcutUsingTypedWeakSummary(7); 
 			if (!testOutput.exists()){
 				fail("Test output not found");
 			}
 			if (!expectedOutput.exists()){
 				fail("Expected output not found " + referenceFileName);
 			}
-			assertTrue("Different summary typedstrong 7", FileUtils.contentEquals(testOutput, expectedOutput));
+			assertTrue("Different summary typedweak 7", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in typedstrong test 7 " + e.toString());
+			throw new IllegalStateException("Unable to open .nt files in typedweak test 7 " + e.toString());
 		}
 	}
 }

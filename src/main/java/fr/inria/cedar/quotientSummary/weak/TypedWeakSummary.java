@@ -127,7 +127,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		}
 		allTriplesSummarizationTime = System.currentTimeMillis() - start;
 		System.out.println("Summarized in " + allTriplesSummarizationTime + " ms");
-		display(dataTriplesFile); // this prints out and makes a DOT file
+		//display(dataTriplesFile); // this prints out and makes a DOT file
 	}
 
 	/**
@@ -138,20 +138,22 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 	 */
 	@Override
 	public void summarizeFromPostgres(Connection conn, String[] args) {
-		//Debugger.setFlag(true);
 		long start = System.currentTimeMillis();
-		String tableName = args[0];
-		String dataTriplesFileName = args[1];
+
+		String triplesFileName = args[0];
+		String triplesTableName = args[1];
+		String encodedTriplesTableName = args[2];
+		String dictionaryTableName = args[3];
+
 		// this is needed to find the constants associated to special RDF properties
-		RDF2SQLEncoding.setUp(conn, args[2]);
+		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
 		long typeConstantCode = RDF2SQLEncoding.getTypeCode();
 		if (typeConstantCode != -1) {
 			this.typeTriplesExist = true;
 			avoidCollisionsWhenAssigningSummaryNodes(conn);
 		}
-		//System.out.println("TypedWeak: Looking for type triples"); 
 		triplesSummarizedSoFar = 0;
-		String getTypedTriplesString = ("select *  from " + tableName + " where p = " + typeConstantCode);
+		String getTypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p = " + typeConstantCode);
 		try {
 			try (Statement getTypedTriples = conn.createStatement()) {
 				getTypedTriples.setFetchSize(1000);
@@ -182,7 +184,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		//this.drawSummaryAndGraph(conn, dataTriplesFileName, ("_" + triplesSummarizedSoFar));
 
 		// now all the non-type triples
-		String getUntypedTriplesString = ("select *  from " + tableName + " where p <> " + typeConstantCode);
+		String getUntypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p <> " + typeConstantCode);
 		try {
 			conn.setAutoCommit(false);
 			try (Statement getUntypedTriples = conn.createStatement()) {
@@ -214,7 +216,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 
 		allTriplesSummarizationTime = classSetCreationTime + typeTriplesSummarizationTime + dataTriplesSummarizationTime;
 		System.out.println("Summarized " + triplesSummarizedSoFar + " triples overall in " + allTriplesSummarizationTime + " ms");
-		this.display(dataTriplesFileName);
+		//this.display(dataTriplesFileName);
 	}
 
 	protected void handleDataTriple(Triple t) {

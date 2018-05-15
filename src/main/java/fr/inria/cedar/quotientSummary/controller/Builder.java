@@ -46,46 +46,51 @@ public class Builder {
 	 */
 	public static void main(String[] args) throws IOException, UnsupportedDatabaseEngineException, SQLException {
 		LOGGER.setLevel(Level.INFO);
-		if (args.length == 0) {
+		if (args.length < 1) {
 			printUsage();
 			return;
 		}
-		String[] nextArguments = {};
+		String arg0 = args[0];
+		String arg1 = "";
 		String[] filesToLoad = {};
+
 		if (args.length > 1) {
-			nextArguments = extractArguments(args);
-			if (args.length > 2)
-				filesToLoad = extractArguments(nextArguments);
+			arg1 = args[1];
+			if (args.length > 2) {
+				filesToLoad = extractArguments(args, 2);
+			}
 		}
-		switch (args[0]) {
+
+		switch (arg0) {
 			case "loadWithoutSaturation":
-				connectionInUse = loadGraphInPostgres(nextArguments, false, false);
+				connectionInUse = loadGraphInPostgres(false, false, filesToLoad);
 				return;
 			case "loadWithSaturation":
-				connectionInUse = loadGraphInPostgres(nextArguments, true, false);
+				connectionInUse = loadGraphInPostgres(true, false, filesToLoad);
 				return;
 			case "summarizeUnsaturated":
-				summaryInUse = summarizeGraphFromPostgres(nextArguments, false);
+				summaryInUse = summarizeGraphFromPostgres(arg1, false, filesToLoad);
 				return;
 			case "summarizeSaturated":
-				summaryInUse = summarizeGraphFromPostgres(nextArguments, true);
+				summaryInUse = summarizeGraphFromPostgres(arg1, true, filesToLoad);
 				return;
 			case "loadAndSummarize":
-				connectionInUse = loadGraphInPostgres(filesToLoad, false, false);
-				summaryInUse = summarizeGraphFromPostgres(nextArguments, false);
+				connectionInUse = loadGraphInPostgres(false, false, filesToLoad);
+				summaryInUse = summarizeGraphFromPostgres(arg1, false, filesToLoad);
 				return;
 			case "loadWithSaturationAndSummarize":
-				connectionInUse = loadGraphInPostgres(filesToLoad, true, false);
-				summaryInUse = summarizeGraphFromPostgres(nextArguments, true);
+				connectionInUse = loadGraphInPostgres(true, false, filesToLoad);
+				summaryInUse = summarizeGraphFromPostgres(arg1, true, filesToLoad);
 				return;
 			case "loadAndSummarizeUsingShortcut":
-				connectionInUse = loadGraphInPostgres(filesToLoad, false, false);
-				summaryInUse = summarizeGraphFromPostgres(nextArguments, false);
+				connectionInUse = loadGraphInPostgres(false, false, filesToLoad);
+				summaryInUse = summarizeGraphFromPostgres(arg1, false, filesToLoad);
 				saveSummary(Boolean.TRUE, "shortcut");
-				exportSummary(filesToLoad); // TODO: figure out proper fileName
+				exportSummary("noSaturation", arg1.equals("draw"), filesToLoad);
 				closeConnection();
-				connectionInUse = loadGraphInPostgres(filesToLoad, true, true);
-				summaryInUse = summarizeGraphFromPostgres(nextArguments, true); // TODO: edit nextArguments args[1]
+				String[] files = {filesToLoad[0].substring(0, filesToLoad[0].length() - 3) + "_" + prefix(arg1) + "noSaturation.nt"};
+				connectionInUse = loadGraphInPostgres(true, true, files);
+				summaryInUse = summarizeGraphFromPostgres(arg1, true, files);
 				return;
 			case "saveSummaryComputedWithoutSaturation":
 				saveSummary(Boolean.TRUE, "noSaturation");
@@ -96,8 +101,14 @@ public class Builder {
 			case "saveSummaryComputedUsingShortcut":
 				saveSummary(Boolean.FALSE, "shortcut");
 				return;
-			case "exportSummary":
-				exportSummary(nextArguments);
+			case "exportSummaryComputedWithoutSaturation":
+				exportSummary("noSaturation", arg1.equals("draw"), filesToLoad);
+				return;
+			case "exportSummaryComputedClassicalWay":
+				exportSummary("classical", arg1.equals("draw"), filesToLoad);
+				return;
+			case "exportSummaryComputedUsingShortcut":
+				exportSummary("shortcut", arg1.equals("draw"), filesToLoad);
 				return;
 			case "dropPartialResultsTables":
 				dropPartialResultsTables();
@@ -111,6 +122,20 @@ public class Builder {
 		printUsage();
 	}
 
+	private static String prefix(String summarizationTechnique) {
+		switch(summarizationTechnique) {
+			case "weak":
+				return "w_";
+			case "strong":
+				return "s_";
+			case "typedweak":
+				return "tw_";
+			case "typedstrong":
+				return "ts_";
+		}
+		return null;
+	}
+
 	private static void printUsage() {
 		System.out.println("The framework is designed to work with one graph at the time. Tables created until save are to be considered temporary.");
 		System.out.println("Usage:");
@@ -121,9 +146,12 @@ public class Builder {
 		System.out.println("args[0]=loadWithSaturationAndSummarize: loads the graph in Postgres, saturates it, and summarizes it");
 		System.out.println("args[0]=loadAndSummarizeUsingShortcut: loads the graph in Postgres, summarizes it, saturates it, and summarizes again (shortcut)");
 		//System.out.println("args[0]=summarizeEncodedFile: build the summary out of integer-encoded triples in a file");
+		System.out.println("args[0]=saveSummaryComputedWithoutSaturation: saves summary computed using only saturation to Postgres");
 		System.out.println("args[0]=saveSummaryComputedClassicalWay: saves summary computed classical way to Postgres");
 		System.out.println("args[0]=saveSummaryComputedUsingShortcut: saves summary computed using shortcut to Postgres");
-		System.out.println("args[0]=exportSummary: saves summary to the disk in nt, dot and png formats");
+		System.out.println("args[0]=exportSummaryComputedWithoutSaturation: saves summary computed using only saturation to the disk in nt, dot and png formats");
+		System.out.println("args[0]=exportSummaryComputedClassicalWay: saves summaryy computed classical way to the disk in nt, dot and png formats");
+		System.out.println("args[0]=exportSummaryComputedUsingShortcut: saves summary summary computed using only saturation to the disk in nt, dot and png formats");
 		System.out.println("args[0]=dropPartialResultsTables: drops partial results tables in Postgres");
 		System.out.println("args[0]=closeConnection: closes connection to Postgres");
 	}
@@ -135,10 +163,14 @@ public class Builder {
 	 *
 	 * @return
 	 */
-	private static String[] extractArguments(String[] args) {
-		String[] suffix = new String[args.length - 1];
+	private static String[] extractArguments(String[] args, int shift) {
+		if (shift < 1)
+			throw new IllegalArgumentException("Shift must be at least 1");
+		if (shift >= args.length)
+			throw new IllegalArgumentException("Shift must be smaller than the args array size");
+		String[] suffix = new String[args.length - shift];
 		for (int i = 0; i < suffix.length; i++)
-			suffix[i] = args[i + 1];
+			suffix[i] = args[i + shift];
 		return suffix;
 	}
 
@@ -158,7 +190,7 @@ public class Builder {
 	 *     then the first file contains the data and the last contains the schema
 	 *     otherwise (only one file) that file contains everything (data and schema)
 	 */
-	private static Connection loadGraphInPostgres(String[] args, Boolean saturate, Boolean shortcut) throws FileNotFoundException, IOException, UnsupportedDatabaseEngineException, SQLException {
+	private static Connection loadGraphInPostgres(Boolean saturate, Boolean shortcut, String[] files) throws FileNotFoundException, IOException, UnsupportedDatabaseEngineException, SQLException {
 		LOGGER.info("Loading graph to Postgres");
 		LOGGER.debug(System.getProperty("user.dir"));
 
@@ -166,9 +198,9 @@ public class Builder {
 		List<String> rdfsFiles = new ArrayList<>();
 
 		int fileNo;
-		for (fileNo = 0; fileNo < args.length; fileNo++) {
-			String s = args[fileNo];
-			if ((fileNo == 0) || ((args.length > 1) && (fileNo < args.length - 1))) {
+		for (fileNo = 0; fileNo < files.length; fileNo++) {
+			String s = files[fileNo];
+			if ((fileNo == 0) || ((files.length > 1) && (fileNo < files.length - 1))) {
 				LOGGER.debug("Triple file: " + s);
 				tripleFiles.add(s);
 			}
@@ -227,11 +259,10 @@ public class Builder {
 	 * @throws IOException
 	 * @throws SQLException
 	 */
-	private static Summary summarizeGraphFromPostgres(String[] args, Boolean summarizeSaturated) throws SQLException, IOException {
+	private static Summary summarizeGraphFromPostgres(String summaryType, Boolean summarizeSaturated, String[] files) throws SQLException, IOException {
 		LOGGER.info("Summarizing graph from Postgres");
-		Summary sum = createNewSummary(args[0]);
-		args[0] = tableName(summarizeSaturated);
-		String[] sumArgs = {args[0], args[1], dictionaryTableName};
+		Summary sum = createNewSummary(summaryType);
+		String[] sumArgs = {files[0], triplesTableName, tableName(summarizeSaturated), dictionaryTableName};
 		sum.summarizeFromPostgres(connectionInUse, sumArgs);
 		LOGGER.info("Graph from Postgres summarized");
 		return sum;
@@ -287,11 +318,11 @@ public class Builder {
 		dictionaryTableName = summaryInUse.saveSummaryInPostgres(connectionInUse, partialResult, summarizationTechnique, dictionaryTableName);
 	}
 
-	private static void exportSummary(String[] args) {
+	private static void exportSummary(String summarizationTechnique, Boolean draw, String[] files) {
 		LOGGER.info("Exporting summary to disk");
-		summaryInUse.writeDecodedSummaryToNTFile(connectionInUse, args[0], dictionaryTableName);
-		if (args.length > 1 && args[1].equals("draw"))
-			summaryInUse.drawSummaryAndGraph(connectionInUse, args[0], triplesTableName, dictionaryTableName);
+		summaryInUse.writeDecodedSummaryToNTFile(connectionInUse, files[0], dictionaryTableName, summarizationTechnique);
+		if (draw)
+			summaryInUse.drawSummaryAndGraph(connectionInUse, files[0], triplesTableName, dictionaryTableName, summarizationTechnique);
 		LOGGER.info("Statistics: " + summaryInUse.getRunStatistics().toString());
 		LOGGER.info("Summary exported to disk");
 	}

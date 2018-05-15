@@ -14,20 +14,20 @@ import org.junit.Test;
 public class WeakSummaryTests {
 	private static final Logger LOGGER = Logger.getLogger(WeakSummaryTests.class.getName());
 
-	public File weak(int i) {
+	public File summarizeUsingWeakSummary(int i) {
 		System.out.println("################################################################################");
-		System.out.println("Weak summary test " + Integer.toString(i));
+		System.out.println("Weak summary test " + Integer.toString(i) + " only summarization");
 		System.out.println("################################################################################");
 
 		String inputFileName = "src/test/resources/test" + i + "-weak/test-" + i + ".nt";
-		String outputFileName = "src/test/resources/test" + i + "-weak/w_test-" + i + ".nt";
+		String outputFileName = "src/test/resources/test" + i + "-weak/test-" + i + "_w_noSaturation.nt";
 		try {
 			String[] argsSum = {"loadAndSummarize", "weak", inputFileName};
 			try {
 				Builder.main(argsSum);
 				String[] argsSave = {"saveSummaryComputedWithoutSaturation"};
 				Builder.main(argsSave);
-				String[] argsExport = {"exportSummary", inputFileName, "draw"};
+				String[] argsExport = {"exportSummaryComputedWithoutSaturation", "draw", inputFileName};
 				Builder.main(argsExport);
 			}
 			catch (UnsupportedDatabaseEngineException ex) {
@@ -52,12 +52,92 @@ public class WeakSummaryTests {
 		}
 	}
 
+	public File saturateAndSummarizeUsingWeakSummary(int i) {
+		System.out.println("################################################################################");
+		System.out.println("Weak summary test " + Integer.toString(i) + " saturation and summarization");
+		System.out.println("################################################################################");
+
+		String inputFileName = "src/test/resources/test" + i + "-weak/test-" + i + ".nt";
+		String outputFileName = "src/test/resources/test" + i + "-weak/test-" + i + "_w_classical.nt";
+		try {
+			String[] argsSum = {"loadWithSaturationAndSummarize", "weak", inputFileName};
+			try {
+				Builder.main(argsSum);
+				String[] argsSave = {"saveSummaryComputedClassicalWay"};
+				Builder.main(argsSave);
+				String[] argsExport = {"exportSummaryComputedClassicalWay", "draw", inputFileName};
+				Builder.main(argsExport);
+			}
+			catch (UnsupportedDatabaseEngineException ex) {
+				LOGGER.error(ex);
+			}
+			finally {
+				String[] argsCloseConnection = {"closeConnection"};
+				try {
+					Builder.main(argsCloseConnection);
+				}
+				catch (UnsupportedDatabaseEngineException ex1) {
+					LOGGER.error(ex1);
+				}
+			}
+			return new File(outputFileName);
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in weak test " + i + " " + e.toString());
+		}
+		catch (SQLException e) {
+			throw new IllegalStateException("SQL error while summarizing " + e.toString());
+		}
+	}
+
+	public File summarizeThroughShortcutUsingWeakSummary(int i) {
+		System.out.println("################################################################################");
+		System.out.println("Weak summary test " + Integer.toString(i) + " summarization through shortcut");
+		System.out.println("################################################################################");
+
+		String inputFileName = "src/test/resources/test" + i + "-weak/test-" + i + ".nt";
+		String outputFileName = "src/test/resources/test" + i + "-weak/test-" + i + "_w_shortcut.nt";
+		try {
+			String[] argsSum = {"loadAndSummarizeUsingShortcut", "weak", inputFileName};
+			try {
+				Builder.main(argsSum);
+				String[] argsSave = {"saveSummaryComputedUsingShortcut"};
+				Builder.main(argsSave);
+				String[] argsExport = {"exportSummaryComputedUsingShortcut", "draw", inputFileName};
+				Builder.main(argsExport);
+			}
+			catch (UnsupportedDatabaseEngineException ex) {
+				LOGGER.error(ex);
+			}
+			finally {
+				String[] argsCloseConnection = {"closeConnection"};
+				try {
+					Builder.main(argsCloseConnection);
+				}
+				catch (UnsupportedDatabaseEngineException ex1) {
+					LOGGER.error(ex1);
+				}
+			}
+			return new File(outputFileName);
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in weak test " + i + " " + e.toString());
+		}
+		catch (SQLException e) {
+			throw new IllegalStateException("SQL error while summarizing " + e.toString());
+		}
+	}
+
+	private String expectedOutput(int i, String summarizationTechnique) {
+		return "src/test/resources/test" + i + "-weak/test-" + i + "_w_" + summarizationTechnique + "-reference.nt";
+	}
+
 	@Test
-	public void testweak1() {
-		String referenceFileName = "src/test/resources/test1-weak/w_test-1-reference.nt";
+	public void summarizeWeakTest1() {
+		String referenceFileName = expectedOutput(1, "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = weak(1);
+			File testOutput = summarizeUsingWeakSummary(1);
 			if (!testOutput.exists()){
 				fail("Test output not found ");
 			}
@@ -72,11 +152,11 @@ public class WeakSummaryTests {
 	}
 
 	@Test
-	public void testweak2() {
-		String referenceFileName = "src/test/resources/test2-weak/w_test-2-reference.nt";
+	public void summarizeWeakTest2() {
+		String referenceFileName = expectedOutput(2, "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = weak(2);
+			File testOutput = summarizeUsingWeakSummary(2);
 			if (!testOutput.exists()){
 				fail("Test output not found ");
 			}
@@ -91,11 +171,11 @@ public class WeakSummaryTests {
 	}
 
 	@Test
-	public void testweak3() {
-		String referenceFileName = "src/test/resources/test3-weak/w_test-3-reference.nt";
+	public void summarizeWeakTest3() {
+		String referenceFileName = expectedOutput(3, "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = weak(3);
+			File testOutput = summarizeUsingWeakSummary(3);
 			if (!testOutput.exists()){
 				fail("Test output not found");
 			}
@@ -110,11 +190,11 @@ public class WeakSummaryTests {
 	}
 
 	@Test
-	public void testweak4() {
-		String referenceFileName = "src/test/resources/test4-weak/w_test-4-reference.nt";
+	public void summarizeWeakTest4() {
+		String referenceFileName = expectedOutput(4, "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = weak(4);
+			File testOutput = summarizeUsingWeakSummary(4);
 			if (!testOutput.exists()){
 				fail("Test output not found");
 			}
@@ -129,11 +209,11 @@ public class WeakSummaryTests {
 	}
 
 	@Test
-	public void testweak5() {
-		String referenceFileName = "src/test/resources/test5-weak/w_test-5-reference.nt";
+	public void summarizeWeakTest5() {
+		String referenceFileName = expectedOutput(5, "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = weak(5);
+			File testOutput = summarizeUsingWeakSummary(5);
 			if (!testOutput.exists()){
 				fail("Test output not found");
 			}
@@ -148,11 +228,11 @@ public class WeakSummaryTests {
 	}
 
 	@Test
-	public void testweak6() {
-		String referenceFileName = "src/test/resources/test6-weak/w_test-6-reference.nt";
+	public void summarizeWeakTest6() {
+		String referenceFileName = expectedOutput(6, "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = weak(6);
+			File testOutput = summarizeUsingWeakSummary(6);
 			if (!testOutput.exists()){
 				fail("Test output not found");
 			}
@@ -167,11 +247,11 @@ public class WeakSummaryTests {
 	}
 
 	@Test
-	public void testweak7() {
-		String referenceFileName = "src/test/resources/test7-weak/w_test-7-reference.nt";
+	public void summarizeWeakTest7() {
+		String referenceFileName = expectedOutput(7, "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = weak(7); 
+			File testOutput = summarizeUsingWeakSummary(7); 
 			if (!testOutput.exists()){
 				fail("Test output not found");
 			}
@@ -186,11 +266,11 @@ public class WeakSummaryTests {
 	}
 
 	@Test
-	public void testweak8() {
-		String referenceFileName = "src/test/resources/test8-weak/w_test-8-reference.nt";
+	public void summarizeWeakTest8() {
+		String referenceFileName = expectedOutput(8, "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = weak(8); 
+			File testOutput = summarizeUsingWeakSummary(8); 
 			if (!testOutput.exists()){
 				fail("Test output not found");
 			}
@@ -205,11 +285,353 @@ public class WeakSummaryTests {
 	}
 
 	@Test
-	public void testweak9() {
-		String referenceFileName = "src/test/resources/test9-weak/w_test-9-reference.nt";
+	public void summarizeWeakTest9() {
+		String referenceFileName = expectedOutput(9, "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = weak(9); 
+			File testOutput = summarizeUsingWeakSummary(9); 
+			if (!testOutput.exists()){
+				fail("Test output not found");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary weak 9", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in weak test 9 " + e.toString());
+		}
+	}
+
+	@Test
+	public void saturateAndSummarizeWeakTest1() {
+		String referenceFileName = expectedOutput(1, "classical");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = saturateAndSummarizeUsingWeakSummary(1);
+			if (!testOutput.exists()){
+				fail("Test output not found ");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary weak 1", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in weak test 1 " + e.toString());
+		}
+	}
+
+	@Test
+	public void saturateAndSummarizeWeakTest2() {
+		String referenceFileName = expectedOutput(2, "classical");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = saturateAndSummarizeUsingWeakSummary(2);
+			if (!testOutput.exists()){
+				fail("Test output not found ");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary weak 2", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in weak test 2 " + e.toString());
+		}
+	}
+
+	@Test
+	public void saturateAndSummarizeWeakTest3() {
+		String referenceFileName = expectedOutput(3, "classical");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = saturateAndSummarizeUsingWeakSummary(3);
+			if (!testOutput.exists()){
+				fail("Test output not found");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary weak 3", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in weak test 3 " + e.toString());
+		}
+	}
+
+	@Test
+	public void saturateAndSummarizeWeakTest4() {
+		String referenceFileName = expectedOutput(4, "classical");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = saturateAndSummarizeUsingWeakSummary(4);
+			if (!testOutput.exists()){
+				fail("Test output not found");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary weak 4", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in weak test 4 " + e.toString());
+		}
+	}
+
+	@Test
+	public void saturateAndSummarizeWeakTest5() {
+		String referenceFileName = expectedOutput(5, "classical");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = saturateAndSummarizeUsingWeakSummary(5);
+			if (!testOutput.exists()){
+				fail("Test output not found");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary weak 5", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in weak test 5 " + e.toString());
+		}
+	}
+
+	@Test
+	public void saturateAndSummarizeWeakTest6() {
+		String referenceFileName = expectedOutput(6, "classical");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = saturateAndSummarizeUsingWeakSummary(6);
+			if (!testOutput.exists()){
+				fail("Test output not found");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary weak 6", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in weak test 6 " + e.toString());
+		}
+	}
+
+	@Test
+	public void saturateAndSummarizeWeakTest7() {
+		String referenceFileName = expectedOutput(7, "classical");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = saturateAndSummarizeUsingWeakSummary(7); 
+			if (!testOutput.exists()){
+				fail("Test output not found");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary weak 7", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in weak test 7 " + e.toString());
+		}
+	}
+
+	@Test
+	public void saturateAndSummarizeWeakTest8() {
+		String referenceFileName = expectedOutput(8, "classical");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = saturateAndSummarizeUsingWeakSummary(8); 
+			if (!testOutput.exists()){
+				fail("Test output not found");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary weak 8", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in weak test 8 " + e.toString());
+		}
+	}
+
+	@Test
+	public void saturateAndSummarizeWeakTest9() {
+		String referenceFileName = expectedOutput(9, "classical");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = saturateAndSummarizeUsingWeakSummary(9); 
+			if (!testOutput.exists()){
+				fail("Test output not found");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary weak 9", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in weak test 9 " + e.toString());
+		}
+	}
+
+	@Test
+	public void summarizeThroughShortcutWeakTest1() {
+		String referenceFileName = expectedOutput(1, "shortcut");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = summarizeThroughShortcutUsingWeakSummary(1);
+			if (!testOutput.exists()){
+				fail("Test output not found ");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary weak 1", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in weak test 1 " + e.toString());
+		}
+	}
+
+	@Test
+	public void summarizeThroughShortcutWeakTest2() {
+		String referenceFileName = expectedOutput(2, "shortcut");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = summarizeThroughShortcutUsingWeakSummary(2);
+			if (!testOutput.exists()){
+				fail("Test output not found ");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary weak 2", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in weak test 2 " + e.toString());
+		}
+	}
+
+	@Test
+	public void summarizeThroughShortcutWeakTest3() {
+		String referenceFileName = expectedOutput(3, "shortcut");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = summarizeThroughShortcutUsingWeakSummary(3);
+			if (!testOutput.exists()){
+				fail("Test output not found");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary weak 3", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in weak test 3 " + e.toString());
+		}
+	}
+
+	@Test
+	public void summarizeThroughShortcutWeakTest4() {
+		String referenceFileName = expectedOutput(4, "shortcut");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = summarizeThroughShortcutUsingWeakSummary(4);
+			if (!testOutput.exists()){
+				fail("Test output not found");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary weak 4", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in weak test 4 " + e.toString());
+		}
+	}
+
+	@Test
+	public void summarizeThroughShortcutWeakTest5() {
+		String referenceFileName = expectedOutput(5, "shortcut");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = summarizeThroughShortcutUsingWeakSummary(5);
+			if (!testOutput.exists()){
+				fail("Test output not found");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary weak 5", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in weak test 5 " + e.toString());
+		}
+	}
+
+	@Test
+	public void summarizeThroughShortcutWeakTest6() {
+		String referenceFileName = expectedOutput(6, "shortcut");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = summarizeThroughShortcutUsingWeakSummary(6);
+			if (!testOutput.exists()){
+				fail("Test output not found");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary weak 6", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in weak test 6 " + e.toString());
+		}
+	}
+
+	@Test
+	public void summarizeThroughShortcutWeakTest7() {
+		String referenceFileName = expectedOutput(7, "shortcut");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = summarizeThroughShortcutUsingWeakSummary(7); 
+			if (!testOutput.exists()){
+				fail("Test output not found");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary weak 7", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in weak test 7 " + e.toString());
+		}
+	}
+
+	@Test
+	public void summarizeThroughShortcutWeakTest8() {
+		String referenceFileName = expectedOutput(8, "shortcut");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = summarizeThroughShortcutUsingWeakSummary(8); 
+			if (!testOutput.exists()){
+				fail("Test output not found");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary weak 8", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in weak test 8 " + e.toString());
+		}
+	}
+
+	@Test
+	public void summarizeThroughShortcutWeakTest9() {
+		String referenceFileName = expectedOutput(9, "shortcut");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = summarizeThroughShortcutUsingWeakSummary(9); 
 			if (!testOutput.exists()){
 				fail("Test output not found");
 			}
