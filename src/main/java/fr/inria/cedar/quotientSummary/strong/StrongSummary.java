@@ -281,20 +281,4 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 			throw new IllegalStateException("Could not get a cursor on the graph triples for drawing"); 
 		}
 	}
-
-	public void display() {
-		System.out.println("===STRONG SUMMARY\nSource cliques: " + sc.toString());
-		System.out.println("Target cliques: " + tc.toString());
-		System.out.println("Data nodes to source cliques: " + n2sc.display());
-		System.out.println("Data nodes to target cliques: " + n2tc.display());
-		System.out.println("Property to source cliques: " + p2sc.display());
-		System.out.println("Property to target cliques: " + p2tc.display());
-		System.out.println("Untyped summary nodes: " + untypedSummaryNodes.toString());
-		System.out.println("Representation function: ");
-		showRep();
-		System.out.println("Summary edges: ");
-		edgesWithProv.display(); 
-		roundTripConsistencyCheck();
-		System.out.println("===");
-	}
 }
