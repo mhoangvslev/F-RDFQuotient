@@ -97,7 +97,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		long typeConstantCode = RDF2SQLEncoding.getTypeCode();
 		if (typeConstantCode != -1) {
 			this.typeTriplesExist = true;
-			avoidCollisionsWhenAssigningSummaryNodes(conn);
+			avoidCollisionsWhenAssigningSummaryNodes(conn, encodedTriplesTableName);
 		}
 		triplesSummarizedSoFar = 0;
 		String getTypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p = " + typeConstantCode);
