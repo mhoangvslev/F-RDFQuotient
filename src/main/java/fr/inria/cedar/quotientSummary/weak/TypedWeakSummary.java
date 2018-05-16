@@ -20,10 +20,6 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 	Long2LongSet n2c; // for each data node, the set of types we know so far for this node
 	HashMap<TreeSet<Long>, Long> cs2csID; // for each set of types known so far, the ID of that set
 
-	protected final static char TRS_RO = 9;
-	protected final static char TRS_TRO = 10;
-	protected final static char TRS_UO = 11;
-
 	protected final static char TRS_RP_TRO = 12;
 	protected final static char TRS_RP_RO = 13;
 	protected final static char TRS_RP_UO = 14;
@@ -121,7 +117,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		System.out.println("Class sets created in " + classSetCreationTime + " ms");
 
 		start = System.currentTimeMillis();
-		this.postHandleTypeTriples();
+		this.representTypeTriples();
 		long typeTripleCount = triplesSummarizedSoFar;
 		typeTriplesSummarizationTime = System.currentTimeMillis() - start;
 		System.out.println("Summarized " + numberOfTypeTriplesRead + " type triples in " + typeTriplesSummarizationTime + " ms");
@@ -259,38 +255,79 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 
 	/**
 	 * In this case we need to: represent the subject by the property source if it exists, otherwise, create a new node and also register it as the source of p; 
-	 * add a p edge between this and the typed object, if not already there
+	 * add a p edge between this and the typed object, if not already there SEEN (3) 
 	 */
-	private void handleDataTriple_US_RP_TRO(Triple t, Long repS, Long repO, Long pSource, Long pTarget) {
-		Long sourceP = ps.get(t.p);
+	private void handleDataTriple_US_RP_TRO(Triple t, Long repS, Long repO, Long sourceP, Long targetP) {
+		Long addedTripleSource = sourceP; 
+		Long addedTripleTarget = repO;
+
 		if (sourceP != null){
-			rep.put(t.s, sourceP);
+			rep.put(t.s, addedTripleSource);
 		}
 		else{
 			sourceP = this.getNextSummaryNode();
 			rep.put(t.s, sourceP);
 			ps.put(t.p, sourceP); 
 		}
-		edgesWithProv.addTriple(sourceP, t.p, repO); 
+
+		addedTripleSource = sourceP; 
+		edgesWithProv.addTriple(addedTripleSource, t.p, addedTripleTarget); 
 	}
 
+
+	/**
+	 * In this case we need to represent o by the target of p, and add the edge from repS to that node.
+	 * The source of p (if it exists) is not affected.
+	 * The target of p, if it did not exist, may become the representative of o.  SEEN (4) 
+	 */
+	private void handleDataTriple_TRS_RP_UO(Triple t, Long repS, Long repO, Long sourceP, Long targetP) {
+		Long addedTripleSource = repS;
+		Long addedTripleTarget = targetP;
+
+		if (targetP != null){
+			rep.put(t.o, addedTripleTarget); 
+		}
+		else {
+			targetP = this.getNextSummaryNode();
+			rep.put(t.o, targetP);
+			pt.put(t.p, targetP);  
+		}
+
+		addedTripleTarget = targetP;	
+		edgesWithProv.addTriple(addedTripleSource, t.p, addedTripleTarget);
+	}
+	
+	
 	/**
 	 * In this case we need to: create the source of p; we don't create a target for it.
-	 * We represent s by the source of p, and add an edge from that to repO. 
+	 * We represent s by the source of p, and add an edge from that to repO. SEEN (5)
 	 */
-	private void handleDataTriple_US_UP_TRO(Triple t, Long repS, Long repO, Long pSource, Long pTarget) {
-		Long sourceP = this.getNextSummaryNode();
+	private void handleDataTriple_US_UP_TRO(Triple t, Long repS, Long repO, Long sourceP, Long targetP) {
+		sourceP = this.getNextSummaryNode();
 		ps.put(t.p, sourceP);
 		rep.put(t.s, sourceP);
 		edgesWithProv.addTriple(sourceP, t.p, repO);
 	}
 
 	/**
+	 * In this case we need to create the target of p and represent o by it.
+	 * We do not create a source of p.  SEEN (6)
+	 */
+	private void handleDataTriple_TRS_UP_UO(Triple t, Long repS, Long repO, Long sourceP, Long targetP) {
+		targetP = this.getNextSummaryNode();
+		pt.put(t.p, targetP);
+		rep.put(t.o, targetP);
+		edgesWithProv.addTriple(repS, t.p,targetP);
+	}
+
+	
+	
+	/**
 	 * In this case we may have to fuse things between repS and the source of P
-	 * RepO remains unchanged. 
+	 * RepO remains unchanged.  SEEN (1)
 	 */
 	private void handleDataTriple_RS_RP_TRO(Triple t, Long repS, Long repO, Long sourceP, Long targetP) {
-		Long addedTripleSource = sourceP;
+		Long addedTripleSource = repS;
 		Long addedTripleTarget = repO;
 
 		if (sourceP != null){
@@ -307,34 +344,22 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 			// try to add the resulting triple
 		}
 		else{
-			sourceP = repS; 
-			addedTripleSource = repS; 
+			addedTripleSource = sourceP; 
 			ps.put(t.p, sourceP); 
 		}
 		edgesWithProv.addTriple(addedTripleSource, t.p, addedTripleTarget);
 	}
-
-	/**
-	 * In this case we need to: use repS as the source of P; we don't know a target for p.
-	 * We add the edge. 
-	 */
-	private void handleDataTriple_RS_UP_TRO(Triple t, Long repS, Long repO, Long pSource, Long pTarget) {
-		Long addedTripleSource = repS;
-		Long addedTripleTarget = repO;
-		ps.put(t.p, repS);
-		edgesWithProv.addTriple(addedTripleSource, t.p, addedTripleTarget);
-	}
-
+	
 	/**
 	 * In this case we need to possibly fuse the target of p with repO.
-	 * The source of p (if it exists)  remains unchanged.
+	 * The source of p (if it exists)  remains unchanged. SEEN (2)
 	 */
 	private void handleDataTriple_TRS_RP_RO(Triple t, Long repS, Long repO, Long sourceP, Long targetP) {
 		Long addedTripleSource = repS;
 		Long addedTripleTarget = repO;
 
 		if (targetP != null){
-			Substitutions subs = new Substitutions(repS, repS, targetP, repO);
+			Substitutions subs = new Substitutions(targetP, repO);
 			//System.out.println("Substitutions: " + subs.toString());
 
 			// update added triple  target, if needed
@@ -346,62 +371,44 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 			// try to add the resulting triple
 		}
 		else{
-			targetP = repO;
-			pt.put(t.p, targetP); 
-		}
-		edgesWithProv.addTriple(addedTripleSource, t.p, addedTripleTarget);
-	}
-
-	/**
-	 * In this case we need to represent o by the target of p, and add the edge from repS to that node.
-	 * The source of p (if it exists) is not affected.
-	 * The target of p, if it did not exist, may become the representative of o.  
-	 */
-	private void handleDataTriple_TRS_RP_UO(Triple t, Long repS, Long repO, Long sourceP, Long targetP) {
-		Long addedTripleSource = repS;
-		Long addedTripleTarget = targetP;
-
-		if (targetP == null){
-			targetP = this.getNextSummaryNode();
-			pt.put(t.p, targetP); 
 			addedTripleTarget = targetP; 
+			pt.put(t.p, targetP); 
 		}
-		rep.put(t.o, targetP);
-
-		// try to add the resulting triple
 		edgesWithProv.addTriple(addedTripleSource, t.p, addedTripleTarget);
 	}
 
 	/**
-	 * In this case we need to add a p triple (if not already there) between repS and repO. 
-	 * The source of p (if it exists) is not affected.
-	 * The target of p (if it exists) is not affected. 
+	 * In this case we need to: use repS as the source of P; we don't know a target for p.
+	 * We add the edge. SEEN (7)
 	 */
-	private void handleDataTriple_TRS_RP_TRO(Triple t, Long repS, Long repO, Long pSource, Long pTarget) {
+	private void handleDataTriple_RS_UP_TRO(Triple t, Long repS, Long repO, Long pSource, Long pTarget) {
+		ps.put(t.p, repS);
 		edgesWithProv.addTriple(repS, t.p, repO);
 	}
-
-	/**
-	 * In this case we need to create the target of p and represent o by it.
-	 * We do not create a source of p.  
-	 */
-	private void handleDataTriple_TRS_UP_UO(Triple t, Long repS, Long repO, Long pSource, Long pTarget) {
-		Long targetP = this.getNextSummaryNode();
-		pt.put(t.p, targetP);
-		rep.put(t.o, targetP);
-		edgesWithProv.addTriple(repS, t.p,targetP);
-	}
-
 	/**
 	 * In this case we need to use repO as the target of p, and do nothing about p's source.
+	 * SEEN (8)
 	 */
 	private void handleDataTriple_TRS_UP_RO(Triple t, Long repS, Long repO, Long pSource, Long pTarget) {
 		pt.put(t.p, repO);
 		edgesWithProv.addTriple(repS, t.p, repO);
 	}
 
+
+	/**
+	 * In this case we need to add a p triple (if not already there) between repS and repO. 
+	 * The source of p (if it exists) is not affected.
+	 * The target of p (if it exists) is not affected. 
+	 * SEEN (9) 
+	 */
+	private void handleDataTriple_TRS_RP_TRO(Triple t, Long repS, Long repO, Long pSource, Long pTarget) {
+		edgesWithProv.addTriple(repS, t.p, repO);
+	}
+
+
 	/**
 	 * In this case we just add the triple; we do not modify its source nor its target
+	 * SEEN (10)
 	 */
 	private void handleDataTriple_TRS_UP_TRO(Triple t, Long repS, Long repO, Long pSource, Long pTarget) {
 		edgesWithProv.addTriple(repS, t.p, repO);
@@ -443,12 +450,6 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 			return "US_RP_UO";
 		case US_RP_RO:
 			return "US_RP_RO";
-		case TRS_RO:
-			return("TRS_RO");
-		case TRS_TRO:
-			return("TRS_TRO");
-		case TRS_UO:
-			return("TRS_UO");
 		}
 		throw new IllegalStateException("Unrecognized case " + c);
 	}
@@ -556,6 +557,9 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 				// do nothing
 			}
 			else {
+				// n is moving from classSetOfThisNode to newClassSetOfThisNode.
+				// TODO Check if classSetOfThisNode is deserted and if yes, maybe remove it.
+				// (We can also keep it there to reuse it later...)
 				TreeSet<Long> newClassSetOfThisNode = new TreeSet<>();
 				newClassSetOfThisNode.addAll(classSetOfThisNode);
 				newClassSetOfThisNode.add(t.o); 
@@ -579,7 +583,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 	 * This method adds the type triples in the summary, based on the structures previously filled in while traversing those triples.
 	 * It is called only once and will output all the type triples of the summary.
 	 */
-	public void postHandleTypeTriples() {
+	public void representTypeTriples() {
 		//System.out.println("POST HANDLE TYPE TRIPLES");
 		for (Long node: this.n2cs.getKeys()){
 			Long thisClassSetID = this.n2cs.get(node);
