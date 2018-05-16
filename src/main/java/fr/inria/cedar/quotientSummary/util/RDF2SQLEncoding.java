@@ -122,6 +122,7 @@ public class RDF2SQLEncoding {
 	 * @return
 	 */
 	public static long dictionaryEncode(String URI) {
+		//System.out.println("DictionaryEncode will ask query: " + stmtEncode); 
 		// try to use the cache if possible
 		Long alreadyKnownCode = uriOrLiteralToCode.get(URI);
 		if (alreadyKnownCode != null)
@@ -129,7 +130,6 @@ public class RDF2SQLEncoding {
 		long code = -1;
 		try {
 			stmtEncode.setString(1, URI);
-			//LOGGER.debug("Asked query: " + learnCodeQueryString);
 			try (ResultSet rs = stmtEncode.executeQuery()) {
 				//LOGGER.debug("Asked query: " + learnCodeQueryString);
 				if (rs.next()) {

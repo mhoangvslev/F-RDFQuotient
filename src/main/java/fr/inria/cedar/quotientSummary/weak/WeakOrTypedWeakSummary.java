@@ -203,7 +203,10 @@ public class WeakOrTypedWeakSummary extends Summary {
 		Long addedTripleTarget = repO; // initialize with any of them
 		
 		if (targetP != null){ // in this case we need to fuse repO with targetP
-			Substitutions subs = new Substitutions(repO, targetP);
+			Substitutions subs = new Substitutions(sourceP, sourceP, repO, targetP);
+			Long possibleNewTripleSource = subs.get(addedTripleSource);
+			if (possibleNewTripleSource != null)
+				addedTripleSource = possibleNewTripleSource;
 			Long possibleNewTripleTarget = subs.get(addedTripleTarget);
 			if (possibleNewTripleTarget != null)
 				addedTripleTarget = possibleNewTripleTarget;
@@ -234,14 +237,19 @@ public class WeakOrTypedWeakSummary extends Summary {
 		
 		// if repS needs to change through a substitution, do it
 		if (sourceP != null){
-			Substitutions subs = new Substitutions(repS, sourceP);
+			Substitutions subs = new Substitutions(repS, sourceP, targetP, targetP);
+			//System.out.println("RS_RP_UO: source substitution: " + subs.toString());
 			Long possibleNewTripleSubject = subs.get(addedTripleSubject);
 			if (possibleNewTripleSubject != null)
 				addedTripleSubject = possibleNewTripleSubject;
+			Long possibleNewTripleObject = subs.get(addedTripleTarget);
+			if (possibleNewTripleObject != null)
+				addedTripleTarget = possibleNewTripleObject;
 			applySubstitutions(subs);
 		}
 		else{ // p may have empty source if so far we only found it on typed nodes
 			// here, s is represented and untyped. Thus, we put p's source on s' representative.
+			//System.out.println("RS_RP_UO: source of " +  t.p + " is: " + repS); 
 			ps.put(t.p, repS);
 			// addedTripleSubject remains repS
 		}
@@ -273,6 +281,7 @@ public class WeakOrTypedWeakSummary extends Summary {
 
 	protected void handleDataTriple_US_UP_UO(Triple t) {
 		// nothing has been seen so far
+		System.out.println("US_UP_UO: " + RDF2SQLEncoding.dictionaryDecode(t.s) + " " + RDF2SQLEncoding.dictionaryDecode(t.p) + " " + RDF2SQLEncoding.dictionaryDecode(t.o));
 		Long pSource = this.getNextSummaryNode();
 		Long pTarget = this.getNextSummaryNode();
 		ps.put(t.p, pSource);

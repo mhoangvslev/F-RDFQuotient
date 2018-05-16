@@ -98,41 +98,6 @@ public class Summary {
 		dax = new DOTAuxiliary();
 	}
 
-	/**
-	 * Reads an integer-encoded triple out of a string (a line)
-	 *
-	 * @param spo
-	 *
-	 * @return
-	 */
-	protected Triple readTriple(String spo) {
-		int spacePos = spo.indexOf(' ');
-		LOGGER.debug("String position " + spacePos + " out of: " + spo.length());
-		Long s = new Long(spo.substring(0, spacePos));
-		spo = spo.substring(spacePos + 1, spo.length());
-		LOGGER.debug("Read s: " + s + " spo is: #" + spo + "#");
-
-		spacePos = spo.indexOf(' ');
-		LOGGER.debug("String position " + spacePos + " out of: " + spo.length());
-		Long p = new Long(spo.substring(0, spacePos));
-		LOGGER.debug("Read p: "+ p + " spo is: =" + spo + "=");
-		spo = spo.substring(spacePos + 1, spo.length());
-
-		Long o = new Long(spo);
-		LOGGER.debug("Read o: " + o);
-		lastReadTriple = new Triple(s, p, o);
-		return lastReadTriple;
-	}
-
-	
-//	protected void checkTypeIsObject() {
-//		for (Long s : edges.keySet())
-//			for (Long p : edges.get(s).keySet())
-//				for (Long o : edges.get(s).get(p))
-//					if (o == RDF2SQLEncoding.getTypeCode())
-//						throw new Error("Found type in object position for " + s + " " + RDF2SQLEncoding.dictionaryDecode(s) + " and " + RDF2SQLEncoding.dictionaryDecode(p));
-//	}
-
 	// we need to be sure that integers which we invent to represent nodes
 	// will not collide with the codes already given to classes and properties
 	// (which, in this implementation, for simplicity, are preserved).
@@ -360,7 +325,7 @@ public class Summary {
 			try (PreparedStatement insertInSummary = conn.prepareStatement(insertIntoSummary)) {
 				ArrayList<Triple> edges = edgesWithProv.getSummaryEdges();
 				for (Triple t : edges) {
-					LOGGER.debug("Saving in Postgres edge: " + t.toString());
+					//LOGGER.debug("Saving in Postgres edge: " + t.toString());
 					insertInSummary.setLong(1, t.s);
 					insertInSummary.setLong(2, t.p);
 					insertInSummary.setLong(3, t.o);
@@ -700,16 +665,17 @@ public class Summary {
 				String subject = rs.getString(1);
 				Long s = RDF2SQLEncoding.dictionaryEncode(subject);
 				Long sRep = rep.get(s);
-
+				//LOGGER.debug("DrawTriples: Encoded " + subject + " into " + s + " whose representative is: "  + sRep);
+				
 				String object = rs.getString(3);
 				Long o = RDF2SQLEncoding.dictionaryEncode(object);
 				Long oRep = rep.get(o);
-
+				//LOGGER.debug("DrawTriples: Encoded " + object + " into " + o + " whose representative is: " + oRep);
 				String property = rs.getString(2);
 				Long p = RDF2SQLEncoding.dictionaryEncode(property);
 
-				LOGGER.debug("Triple! (" + subject + " " + property + " " + object + ")");
-				LOGGER.debug("Represented by: " + sRep + " " + p + " " + oRep);
+				//LOGGER.debug("Triple! (" + subject + " " + property + " " + object + ")");
+				//LOGGER.debug("Represented by: " + sRep + " " + p + " " + oRep);
 				writeGraphTripleToDotFile(bw, s, p, o, subject, property, object, sRep, oRep);
 				triplesDrawnInDot++;
 
@@ -729,6 +695,9 @@ public class Summary {
 	}
 
 	private void writeGraphTripleToDotFile(BufferedWriter bw, Long s, Long p, Long o, String subject, String property, String object, Long sRep, Long oRep) {
+	
+		//LOGGER.debug("WRITE GRAPH TRIPLE TO DOT s: " + s + " p: " + p + " o: " + o + " subject: "  + subject + " property " + property +  
+		//		" object " + object + " sRep: " + sRep + " oRep: " + oRep); 
 		String subjectForDot = getShortURIForDot(subject).replaceAll("\"", "");
 		String objectForDot = getShortURIForDot(object).replaceAll("\"", "");
 		String propertyForDot = getShortURIForDot(property).replaceAll("\"", "");
@@ -736,7 +705,8 @@ public class Summary {
 		try {
 			if (RDF2SQLEncoding.isDataProperty(p)) {
 				//if (dax.unknownRDFNode(s))
-				//	LOGGER.debug("Data-S " + s + " (" + subject + ") represented by  " + sRep + " colored " + dax.getSummaryNodeColor(sRep));
+				//LOGGER.debug("Data-S " + s + " (" + subject + ") represented by  " + sRep);
+				//LOGGER.debug(" colored " + 	dax.getSummaryNodeColor(sRep));
 				bw.write("\"" + subjectForDot + "\" [style = filled, color=" + dax.getSummaryNodeColor(sRep) + "];\n");
 				//if (dax.unknownRDFNode(o))
 				//	LOGGER.debug("Data-O " + o + " (" + object + ") represented by " + oRep + " colored " + dax.getSummaryNodeColor(oRep));

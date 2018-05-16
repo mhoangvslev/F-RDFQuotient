@@ -86,6 +86,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 						else
 							handleDataTriple(t);
 						triplesSummarizedSoFar++;
+						//display(); 
 						//this.drawSummaryAndGraph(conn, "-after-" + triplesSummarizedSoFar + "-"+ t.s + "-" + t.p + "-" + t.o);
 						if (this.checkConsistency)
 							consistencyChecks();
@@ -127,7 +128,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 	}
 
 	protected void handleDataTriple(Triple t) {
-		//System.out.println("### Data triple: " + t.toString());
+		//System.out.println("\n### Read data triple: " + t.toString());
 		Long repS = rep.get(t.s);
 		Long repO = rep.get(t.o);
 		Long pSource = ps.get(t.p);
@@ -250,6 +251,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 	@Override
 	protected ResultSet getGraphTriplesCursor1ForDotDrawing(Connection conn, long triplesToDraw, String triplesTableName) {
 		try {
+			//System.out.println("WEAK 1st CURSOR: triplesTableName is: " + triplesTableName);
 			return conn.createStatement().executeQuery("select * from " + triplesTableName + " where p<>'<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' limit " + triplesToDraw);
 		}
 		catch(SQLException e) {
