@@ -38,14 +38,18 @@ public class Summary {
 	//     for each property
 	//       the set of objects such that (subject, property, object) is in the summary
 	protected EdgesWithProvenanceCounts edgesWithProv;
+	
+	// TODO possibly rewrite code gathering these
 	// for each summary node, the number of graph nodes it represents
 	protected HashMap<Long, Long> summaryNodeStatistics;
 	// for each summary edge, the number of graph edge it represents
 	protected HashMap<Triple, Long> summaryEdgeStatistics;
+	
 	// these serve to represent the nodes that may have types but no data property
 	protected long typeOnlyNodeID;
 	protected boolean typeOnlyNodeAlreadySeen;
-	protected Triple lastReadTriple;
+	
+	private Triple lastReadTriple;
 	protected long maxSummaryNode;
 	protected Properties properties;
 	protected static String SUMMARY_CONFIG_FILE = "conf/summarization.properties";

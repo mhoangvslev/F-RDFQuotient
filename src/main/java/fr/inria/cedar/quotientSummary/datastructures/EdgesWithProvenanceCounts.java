@@ -31,8 +31,8 @@ public class EdgesWithProvenanceCounts {
 	 * @param o
 	 */
 	public final void addTriple(Long s, Long p, Long o) {
+		System.out.println("ADDING TRIPLE: " + s + " " + p + " " + o);
 		Triple t = new Triple(s, p, o);
-		//System.out.println("ADDING TRIPLE: " + s + " " + p + " " + o);
 		HashMap<Long, TreeSet<Long>> triplesForThisSubject = edges.get(s);
 		HashMap<Long,  HashMap<Long, Long>> countsForThisSubject = counts.get(s); 
 		

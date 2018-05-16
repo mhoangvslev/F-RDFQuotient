@@ -1,12 +1,9 @@
 package fr.inria.cedar.quotientSummary.datastructures;
 
-import fr.inria.cedar.commons.miscellaneous.Debugger;
-import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
-
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.TreeSet;
+
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 

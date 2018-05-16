@@ -1,18 +1,15 @@
 package fr.inria.cedar.quotientSummary.weak;
 
-import fr.inria.cedar.commons.miscellaneous.Debugger;
-import fr.inria.cedar.quotientSummary.datastructures.Triple;
-import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.TreeSet;
+
+import fr.inria.cedar.commons.miscellaneous.Debugger;
+import fr.inria.cedar.quotientSummary.datastructures.Triple;
+import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 
 public class WeakSummary extends WeakOrTypedWeakSummary {
 	public WeakSummary(String triplesFileName, String triplesTableName, String encodedTriplesTableName, String dictionaryTableName) {
@@ -27,7 +24,8 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 
 	/**
 	 * This must be used to read a W summary from Postgres.
-	 *
+	 * TODO make sure that any call to a summarization method made on a summary read from Postgres
+	 * handles that error appropriately (explaining that this object does no longer do such things)
 	 * @param conn
 	 */
 	public WeakSummary(Connection conn) {
@@ -52,50 +50,6 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 											+ " " + e.toString());
 		}
 		System.out.println("Read Weak summary from Postgres");
-	}
-
-	/**
-	 * @param typeTriplesFile
-	 * @param dataTriplesFile
-	 */
-	@Override
-	public void summarizeFromTripleFiles(String typeTriplesFile, String dataTriplesFile) {
-		long start = System.currentTimeMillis();
-		try {
-			//  Second file: data triples
-			try (BufferedReader br = new BufferedReader(new FileReader(new File(dataTriplesFile)))) {
-				while (br.ready()) {
-					String spo = br.readLine();
-					Triple t = readTriple(spo);
-					//System.out.println("\n");
-					//t.display();
-					handleDataTriple(t);
-					//display();
-					//System.out.println();
-				}
-			}
-			//System.out.println("=== After weak data triple summarization of "+ dataTriplesFile + ": ==================================");
-			//display();
-
-			// First file: type triples
-			try (BufferedReader br = new BufferedReader(new FileReader(new File(typeTriplesFile)))) {
-				while (br.ready()) {
-					String spo = br.readLine();
-					Triple t = readTriple(spo);
-					//t.display();
-					handleTypeTripleAfterData(t);
-					//System.out.println();
-				}
-			}
-			//System.out.println("=== After weak type triple summarization of " + typeTriplesFile + ": =================================== ");
-			//display();
-		}
-		catch (IOException e) {
-			throw new IllegalStateException("Unable to open file " + dataTriplesFile + " or " + typeTriplesFile + ": " + e.toString());
-		}
-		allTriplesSummarizationTime = System.currentTimeMillis() - start;
-		System.out.println("Summarized in " + allTriplesSummarizationTime + " ms");
-		//display(dataTriplesFile); // this prints out and makes a DOT file
 	}
 
 	/**
@@ -252,7 +206,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 			edgesWithProv.addTriple(repS, t.p, t.o);
 		else {
 			if (!typeOnlyNodeAlreadySeen) {
-				this.typeOnlyNodeID = getNextSummaryNode();
+				typeOnlyNodeID = getNextSummaryNode();
 				typeOnlyNodeAlreadySeen = true;
 			}
 			edgesWithProv.addTriple(typeOnlyNodeID, t.p, t.o);
