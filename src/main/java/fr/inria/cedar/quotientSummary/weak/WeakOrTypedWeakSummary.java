@@ -1,12 +1,11 @@
 package fr.inria.cedar.quotientSummary.weak;
 
-import java.util.HashMap;
-
 import fr.inria.cedar.commons.miscellaneous.Debugger;
 import fr.inria.cedar.quotientSummary.Summary;
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
 import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 import fr.inria.cedar.quotientSummary.util.Substitutions;
+import java.util.HashMap;
 
 public class WeakOrTypedWeakSummary extends Summary {
 	HashMap<Long, Long> ps; // for each property, the property source

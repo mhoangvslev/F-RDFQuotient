@@ -87,9 +87,10 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 						if ((t.p == RDF2SQLEncoding.getSubClassCode())
 						|| (t.p == RDF2SQLEncoding.getSubPropertyCode())
 						|| (t.p == RDF2SQLEncoding.getDomainCode())
-						|| (t.p == RDF2SQLEncoding.getRangeCode()))
-							//System.out.println("#### Schema triple " + t.toString());
+						|| (t.p == RDF2SQLEncoding.getRangeCode())) {
 							edgesWithProv.addTriple(t.s, t.p, t.o);
+							storeSpecialNodesRepresentation(t, true);
+						}
 						else
 							handleDataTriple(t);
 						triplesSummarizedSoFar++;
@@ -116,6 +117,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 						//System.out.println("#### Type triple " + t.toString());
 						this.handleTypeTripleAfterData(t);
 						triplesSummarizedSoFar++;
+						storeSpecialNodesRepresentation(t, false);
 						//this.drawSummaryAndGraph(conn, "-after-" + triplesSummarizedSoFar + "-" + t.s + "-" + t.p + "-" + t.o);
 						//System.out.println("Summary now has " + getSummaryEdges().size() + " triples");
 					}

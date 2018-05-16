@@ -108,6 +108,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 						this.handleTypeTripleBeforeData(t);
 						triplesSummarizedSoFar++;
 						this.numberOfTypeTriplesRead++;
+						storeSpecialNodesRepresentation(t, false);
 					}
 				}
 			}
@@ -140,8 +141,10 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 						if ((t.p == RDF2SQLEncoding.getSubClassCode())
 						|| (t.p == RDF2SQLEncoding.getSubPropertyCode())
 						|| (t.p == RDF2SQLEncoding.getDomainCode())
-						|| (t.p == RDF2SQLEncoding.getRangeCode()))
+						|| (t.p == RDF2SQLEncoding.getRangeCode())) {
 							edgesWithProv.addTriple(t.s, t.p, t.o);
+							storeSpecialNodesRepresentation(t, true);
+						}
 						else
 							handleDataTriple(t);
 						triplesSummarizedSoFar++;

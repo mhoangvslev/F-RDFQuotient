@@ -108,6 +108,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 						//System.out.println("### Type triple " + t.toString());
 						this.handleTypeTripleBeforeData(t);
 						triplesSummarizedSoFar++;
+						storeSpecialNodesRepresentation(t, false);
 						//display();
 					}
 				}
@@ -142,8 +143,10 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 						if ((t.p == RDF2SQLEncoding.getSubClassCode())
 						|| (t.p == RDF2SQLEncoding.getSubPropertyCode())
 						|| (t.p == RDF2SQLEncoding.getDomainCode())
-						|| (t.p == RDF2SQLEncoding.getRangeCode()))
+						|| (t.p == RDF2SQLEncoding.getRangeCode())) {
 							edgesWithProv.addTriple(t.s, t.p, t.o);
+							storeSpecialNodesRepresentation(t, true);
+						}
 						else
 							handleDataTriple(t);
 						triplesSummarizedSoFar++;
@@ -300,7 +303,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 				addedTripleSource = possibleNewAddedTripleSource;
 
 			// apply replacements, if any
-			applySubstitutions(subs, t.p);
+			applySubstitutions(subs);
 			// try to add the resulting triple
 		}
 		else{
@@ -339,7 +342,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 			if (possibleNewAddedTripleTarget != null)
 				addedTripleTarget = possibleNewAddedTripleTarget;
 			// apply replacements, if any
-			applySubstitutions(subs, t.p);
+			applySubstitutions(subs);
 			// try to add the resulting triple
 		}
 		else{

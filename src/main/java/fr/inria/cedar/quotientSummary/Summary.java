@@ -32,6 +32,7 @@ public class Summary {
 	private static final SimpleDateFormat SD_FORMAT = new SimpleDateFormat("yyyyMMdd_HHmmssSSS");
 
 	protected Long2Long rep; // representative function for untyped nodes
+	protected Long2Long repRDFURIs; // representative function for all nodes
 	protected boolean typeTriplesExist = false;
 	// data, schema and type triples:
 	//   for each subject
@@ -81,6 +82,7 @@ public class Summary {
 	public Summary() {
 		LOGGER.setLevel(Level.INFO);
 		rep = new Long2Long();
+		repRDFURIs = new Long2Long();
 		edgesWithProv = new EdgesWithProvenanceCounts();
 		summaryNodeStatistics = new HashMap<>();
 		summaryEdgeStatistics = new HashMap<>();
@@ -157,7 +159,7 @@ public class Summary {
 	protected void showRepInBuffer(StringBuffer sb) {
 		for (Long node : this.rep.getKeys()) {
 			//sb.append(node).append("=>").append(rep.get(node)).append(" ");
-			sb.append(node + " (" + RDF2SQLEncoding.dictionaryDecode(node)).append(") => ").append(rep.get(node)).append("\n");
+			sb.append(node).append(" (").append(RDF2SQLEncoding.dictionaryDecode(node)).append(") => ").append(rep.get(node)).append("\n");
 		}
 	}
 
@@ -181,6 +183,12 @@ public class Summary {
 	 */
 	protected void jumpSummaryNodeCount(long n) {
 		this.maxSummaryNode += n;
+	}
+	
+	protected void storeSpecialNodesRepresentation(Triple triple, Boolean type) {
+		if (type == true)
+			repRDFURIs.put(triple.s, triple.s);
+		repRDFURIs.put(triple.o, triple.o);
 	}
 
 	protected void gatherStatistics() {
@@ -311,6 +319,18 @@ public class Summary {
 				// if (!hasIndex(conn, "encoded_rep"))
 				//	stmt.executeUpdate("create index indRepS on encoded_rep(graphNode);");
 				// This gives some erros in the JDBC driver, perhaps it is not implemented properly.
+				
+				// now insert all the special rep entries:
+				insertIntoRep = "insert into " + newSummaryTableNameRep + " values(?, ?);";
+				try (PreparedStatement insertInRep = conn.prepareStatement(insertIntoRep)) {
+					Set<Long> origNodes = repRDFURIs.getKeys();
+					for (Long origNode : origNodes) {
+						Long sumNode = repRDFURIs.get(origNode);
+						insertInRep.setLong(1, origNode);
+						insertInRep.setLong(2, sumNode);
+						insertInRep.executeUpdate();
+					}
+				}
 				conn.commit();
 				representationFunctionSavingTime = System.currentTimeMillis() - start;
 				LOGGER.info("Representation function saved in " + representationFunctionSavingTime + " ms");

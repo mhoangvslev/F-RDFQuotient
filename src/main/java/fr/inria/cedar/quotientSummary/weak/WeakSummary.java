@@ -1,15 +1,14 @@
 package fr.inria.cedar.quotientSummary.weak;
 
+import fr.inria.cedar.commons.miscellaneous.Debugger;
+import fr.inria.cedar.quotientSummary.datastructures.Triple;
+import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.TreeSet;
-
-import fr.inria.cedar.commons.miscellaneous.Debugger;
-import fr.inria.cedar.quotientSummary.datastructures.Triple;
-import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 
 public class WeakSummary extends WeakOrTypedWeakSummary {
 	public WeakSummary(String triplesFileName, String triplesTableName, String encodedTriplesTableName, String dictionaryTableName) {
@@ -80,9 +79,10 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 						if ((t.p == RDF2SQLEncoding.getSubClassCode())
 						|| (t.p == RDF2SQLEncoding.getSubPropertyCode())
 						|| (t.p == RDF2SQLEncoding.getDomainCode())
-						|| (t.p == RDF2SQLEncoding.getRangeCode()))
-							//System.out.println("#### Schema triple " + t.toString());
+						|| (t.p == RDF2SQLEncoding.getRangeCode())) {
 							edgesWithProv.addTriple(t.s, t.p, t.o);
+							storeSpecialNodesRepresentation(t, true);
+						}
 						else
 							handleDataTriple(t);
 						triplesSummarizedSoFar++;
@@ -108,6 +108,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 						Triple t = new Triple(rs.getInt(1), rs.getInt(2), rs.getInt(3));
 						this.handleTypeTripleAfterData(t);
 						triplesSummarizedSoFar++;
+						storeSpecialNodesRepresentation(t, false);
 						//this.drawSummaryAndGraph(conn, "-after-" + t.s + "-" + t.p + "-" + t.o);
 						//System.out.println("Summary now has " + getSummaryEdges().size() + " triples");
 					}
