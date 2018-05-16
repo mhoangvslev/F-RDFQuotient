@@ -116,7 +116,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 						//System.out.println("#### Type triple " + t.toString());
 						this.handleTypeTripleAfterData(t);
 						triplesSummarizedSoFar++;
-						this.drawSummaryAndGraph(conn, "-after-" + triplesSummarizedSoFar + "-" + t.s + "-" + t.p + "-" + t.o);
+						//this.drawSummaryAndGraph(conn, "-after-" + triplesSummarizedSoFar + "-" + t.s + "-" + t.p + "-" + t.o);
 						//System.out.println("Summary now has " + getSummaryEdges().size() + " triples");
 					}
 				}

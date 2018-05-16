@@ -87,11 +87,11 @@ public class Builder {
 				connectionInUse = loadGraphInPostgres(false, false, filesToLoad);
 				summaryInUse = summarizeGraphFromPostgres(arg1, false, filesToLoad);
 				saveSummary(Boolean.TRUE, "shortcut");
-				exportSummary("noSaturation", arg1.equals("draw"), filesToLoad);
+				exportSummary("noSaturation", false, filesToLoad);
 				closeConnection();
 				String[] files = {filesToLoad[0].substring(0, filesToLoad[0].length() - 3) + "_" + prefix(arg1) + "noSaturation.nt"};
 				connectionInUse = loadGraphInPostgres(true, true, files);
-				summaryInUse = summarizeGraphFromPostgres(arg1, true, files);
+				summaryInUse = summarizeGraphFromPostgres(arg1, true, filesToLoad);
 				return;
 			case "saveSummaryComputedWithoutSaturation":
 				saveSummary(Boolean.FALSE, "noSaturation");
