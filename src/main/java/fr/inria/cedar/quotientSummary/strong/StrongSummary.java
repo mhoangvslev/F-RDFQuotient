@@ -133,7 +133,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 	}
 
 	public void handleDataTriple(Triple t) {
-		// 8 cases: (US_RS, US_NS) x (UO_RO, UO_NO) x (RP, NP) 
+		// 8 cases: (RS, US) x (RO, UO) x (RP, NP) 
 		Long sourceCliqueS = n2sc.get(t.s);
 		Long targetCliqueS = n2tc.get(t.s);
 		Long sourceCliqueO = n2sc.get(t.o);
@@ -151,36 +151,36 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 
 		System.out.println("\n" + t.toString() + " " + RDF2SQLEncoding.decode(t) + " case: " + this.caseName(caseNumber)); 
 		switch (caseNumber) {
-			case US_RS_UO_RO_RP: {
-				handleDataTriple_US_RS_UO_RO_RP(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+			case RS_RP_RO: {
+				handleDataTriple_RS_RP_RO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
 				break;
 			}
-			case US_RS_UO_NO_RP: {
-				handleDataTriple_US_RS_UO_NO_RP(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+			case RS_RP_UO: {
+				handleDataTriple_RS_RP_UO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
 				break;
 			}
-			case US_NS_UO_RO_RP: {
-				handleDataTriple_US_NS_UO_RO_RP(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+			case US_RP_RO: {
+				handleDataTriple_US_RP_RO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
 				break;
 			}
-			case US_NS_UO_NO_RP: {
-				handleDataTriple_US_NS_UO_NO_RP(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+			case US_RP_UO: {
+				handleDataTriple_US_RP_UO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
 				break;
 			}
-			case US_RS_UO_RO_NP: {
-				handleDataTriple_US_RS_UO_RO_NP(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+			case RS_UP_RO: {
+				handleDataTriple_RS_UP_RO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
 				break;
 			}
-			case US_RS_UO_NO_NP: {
-				handleDataTriple_US_RS_UO_NO_NP(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+			case RS_UP_UO: {
+				handleDataTriple_RS_UP_UO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
 				break;
 			}
-			case US_NS_UO_RO_NP: {
-				handleDataTriple_US_NS_UO_RO_NP(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+			case US_UP_RO: {
+				handleDataTriple_US_UP_RO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
 				break;
 			}
-			case US_NS_UO_NO_NP: {
-				handleDataTriple_US_NS_UO_NO_NP(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+			case US_UP_UO: {
+				handleDataTriple_US_UP_UO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
 				break;
 			}
 			default:
@@ -221,24 +221,24 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 			// US, RS, UO
 			if (repO != null) // RO
 				if (sourceCliqueP != null)
-					return US_RS_UO_RO_RP;
+					return RS_RP_RO;
 				else
-					return US_RS_UO_RO_NP;
+					return RS_UP_RO;
 			else // NO
 				if (sourceCliqueP != null)
-					return US_RS_UO_NO_RP;
+					return RS_RP_UO;
 				else
-					return US_RS_UO_NO_NP;
+					return RS_UP_UO;
 		else // US, NS
 			if (repO != null) // RO
 				if (sourceCliqueP != null) // RP
-					return US_NS_UO_RO_RP;
+					return US_RP_RO;
 				else
-					return US_NS_UO_RO_NP;
+					return US_UP_RO;
 			else // NO
 				if (sourceCliqueP != null) // RP
-					return US_NS_UO_NO_RP;
+					return US_RP_UO;
 				else
-					return US_NS_UO_NO_NP;
+					return US_UP_UO;
 	}
 }

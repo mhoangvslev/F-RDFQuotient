@@ -53,7 +53,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	}
 
 	/**
-	 * This must be used to read a TS summary from Postgres.
+	 * This must be used to read a TRS summary from Postgres.
 	 *
 	 * @param conn
 	 */
@@ -168,55 +168,55 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	}
 
 	private char decode(Long classSetS, Long repS, Long classSetO, Long repO, Long sourceCliqueP) {
-		if (classSetS != null) // TS (also represented)
-			if (classSetO != null) // TO (also represented)
-				return TS_TO;
+		if (classSetS != null) // TRS (also represented)
+			if (classSetO != null) // TRO (also represented)
+				return TRS_TRO;
 			else // UO
 				if (repO != null) // RO
 					if (sourceCliqueP != null) // RP
-						return TS_UO_RO_RP;
+						return TRS_RP_RO;
 					else // NP
-						return TS_UO_RO_NP;
+						return TRS_UP_RO;
 				else // NO
 					if (sourceCliqueP != null) // RP
-						return TS_UO_NO_RP;
+						return TRS_RP_UO;
 					else
-						return TS_UO_NO_NP;
+						return TRS_UP_UO;
 		else // US
 			if (repS != null) // US, RS
-				if (classSetO != null) // TO (also represented)
+				if (classSetO != null) // TRO (also represented)
 					if (sourceCliqueP != null)
-						return US_RS_TO_RP;
+						return RS_RP_TRO;
 					else
-						return US_RS_TO_NP;
+						return RS_UP_TRO;
 				else // US, RS, UO
 					if (repO != null) // RO
 						if (sourceCliqueP != null)
-							return US_RS_UO_RO_RP;
+							return RS_RP_RO;
 						else
-							return US_RS_UO_RO_NP;
+							return RS_UP_RO;
 					else // NO
 						if (sourceCliqueP != null)
-							return US_RS_UO_NO_RP;
+							return RS_RP_UO;
 						else
-							return US_RS_UO_NO_NP;
+							return RS_UP_UO;
 			else // US, NS
-				if (classSetO != null) // TO, also represented
+				if (classSetO != null) // TRO, also represented
 					if (sourceCliqueP != null)
-						return US_NS_TO_RP;
+						return US_RP_TRO;
 					else
-						return US_NS_TO_NP;
+						return US_UP_TRO;
 				else // UO
 					if (repO != null) // RO
 						if (sourceCliqueP != null) // RP
-							return US_NS_UO_RO_RP;
+							return US_RP_RO;
 						else
-							return US_NS_UO_RO_NP;
+							return US_UP_RO;
 					else // NO
 						if (sourceCliqueP != null) // RP
-							return US_NS_UO_NO_RP;
+							return US_RP_UO;
 						else
-							return US_NS_UO_NO_NP;
+							return US_UP_UO;
 	}
 
 	public void display() {
@@ -340,7 +340,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	}
 
 	public void handleDataTriple(Triple t) {
-		// 18 cases: (TS, USR, USN) x (TO, UOR, UON) x (PR, PN) also multiplied by: which cliques are empty and their consequences on fusion
+		// 18 cases: (TRS, USR, USN) x (TRO, UOR, UON) x (PR, PN) also multiplied by: which cliques are empty and their consequences on fusion
 		Long classSetS = n2cs.get(t.s);
 		Long classSetO = n2cs.get(t.o);
 
@@ -361,72 +361,72 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 
 		//Debugger.log("Case " + this.caseName(caseNumber));
 		switch (caseNumber) {
-			case TS_TO: {
-				handleDataTriple_TS_TO(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+			case TRS_TRO: {
+				handleDataTriple_TRS_TRO(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
 				break;
 			}
-			case TS_UO_RO_RP: {
-				handleDataTriple_TS_UO_RO_RP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+			case TRS_RP_RO: {
+				handleDataTriple_TRS_RP_RO(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
 				break;
 			}
-			case TS_UO_NO_RP: {
-				handleDataTriple_TS_UO_NO_RP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+			case TRS_RP_UO: {
+				handleDataTriple_TRS_RP_UO(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
 				break;
 			}
-			case US_RS_TO_RP: {
-				handleDataTriple_US_RS_TO_RP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+			case RS_RP_TRO: {
+				handleDataTriple_RS_RP_TRO(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
 				break;
 			}
-			case US_RS_UO_RO_RP: {
-				handleDataTriple_US_RS_UO_RO_RP(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+			case RS_RP_RO: {
+				handleDataTriple_RS_RP_RO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
 				break;
 			}
-			case US_RS_UO_NO_RP: {
-				handleDataTriple_US_RS_UO_NO_RP(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+			case RS_RP_UO: {
+				handleDataTriple_RS_RP_UO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
 				break;
 			}
-			case US_NS_TO_RP: {
-				handleDataTriple_US_NS_TO_RP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+			case US_RP_TRO: {
+				handleDataTriple_US_RP_TRO(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
 				break;
 			}
-			case US_NS_UO_RO_RP: {
-				handleDataTriple_US_NS_UO_RO_RP(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+			case US_RP_RO: {
+				handleDataTriple_US_RP_RO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
 				break;
 			}
-			case US_NS_UO_NO_RP: {
-				handleDataTriple_US_NS_UO_NO_RP(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+			case US_RP_UO: {
+				handleDataTriple_US_RP_UO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
 				break;
 			}
-			case TS_UO_RO_NP: {
-				handleDataTriple_TS_UO_RO_NP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+			case TRS_UP_RO: {
+				handleDataTriple_TRS_UP_RO(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
 				break;
 			}
-			case TS_UO_NO_NP: {
-				handleDataTriple_TS_UO_NO_NP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+			case TRS_UP_UO: {
+				handleDataTriple_TRS_UP_UO(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
 				break;
 			}
-			case US_RS_TO_NP: {
-				handleDataTriple_US_RS_TO_NP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+			case RS_UP_TRO: {
+				handleDataTriple_RS_UP_TRO(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
 				break;
 			}
-			case US_RS_UO_RO_NP: {
-				handleDataTriple_US_RS_UO_RO_NP(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+			case RS_UP_RO: {
+				handleDataTriple_RS_UP_RO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
 				break;
 			}
-			case US_RS_UO_NO_NP: {
-				handleDataTriple_US_RS_UO_NO_NP(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+			case RS_UP_UO: {
+				handleDataTriple_RS_UP_UO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
 				break;
 			}
-			case US_NS_TO_NP: {
-				handleDataTriple_US_NS_TO_NP(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+			case US_UP_TRO: {
+				handleDataTriple_US_UP_TRO(t, classSetS, classSetO, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
 				break;
 			}
-			case US_NS_UO_RO_NP: {
-				handleDataTriple_US_NS_UO_RO_NP(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+			case US_UP_RO: {
+				handleDataTriple_US_UP_RO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
 				break;
 			}
-			case US_NS_UO_NO_NP: {
-				handleDataTriple_US_NS_UO_NO_NP(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+			case US_UP_UO: {
+				handleDataTriple_US_UP_UO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
 				break;
 			}
 			default:
@@ -438,8 +438,8 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	// untyped, unrepresented subject
 	// typed (thus represented) object
 	// unknown property
-	// copy-then-edit from StrongOrTypedStrong2.US_NS_UO_RO_NP
-	private void handleDataTriple_US_NS_TO_NP(Triple t, Long classSetS, Long classSetO, Long sourceCliqueS,
+	// copy-then-edit from StrongOrTypedStrong2.US_RO_NP
+	private void handleDataTriple_US_UP_TRO(Triple t, Long classSetS, Long classSetO, Long sourceCliqueS,
 											  Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
 		
 		Long scp = this.makeAndAddNewSourceClique(t.p);
@@ -477,7 +477,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	// untyped, represented subject: it has a source clique, which needs to gain p
 	// typed, represented object which won't change
 	// unknown property
-	private void handleDataTriple_US_RS_TO_NP(Triple t, Long classSetS, Long classSetO, Long sourceCliqueS,
+	private void handleDataTriple_RS_UP_TRO(Triple t, Long classSetS, Long classSetO, Long sourceCliqueS,
 											  Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
 		// sourceCliqueP is null, targetCliqueP is null
 		Long repS = rep.get(t.s);
@@ -553,12 +553,12 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	// untyped, unrepresented object
 	// unknown property: both its cliques need to be created
 	// edit-then-copy from StrongOrTypedStrongSummary2.RS_NO_NP
-	private void handleDataTriple_TS_UO_NO_NP(Triple t, Long classSetS, Long classSetO, Long sourceCliqueS,
+	private void handleDataTriple_TRS_UP_UO(Triple t, Long classSetS, Long classSetO, Long sourceCliqueS,
 											  Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
 		// p has no source clique so far, as we only saw it with a typed source.
 		Long repS = rep.get(t.s);
-		//System.out.println("US_RS_UO_NO_NP The subject " + t.s + " was represented by " + repS); 
-		//System.out.println("US_RS_UO_NO_NP Upon starting, n2sc is: " + n2sc.writeToFileAndDraw()); 
+		//System.out.println("RS_UO_NP The subject " + t.s + " was represented by " + repS); 
+		//System.out.println("RS_UO_NP Upon starting, n2sc is: " + n2sc.writeToFileAndDraw()); 
 		
 		// p gets both cliques
 		Long scp = this.makeAndAddNewSourceClique(t.p);
@@ -598,7 +598,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	// untyped, represented object, with a target clique which needs to change as p was unknown
 	// unknown property
 	// copy-then-edit from RS_RO_NP
-	private void handleDataTriple_TS_UO_RO_NP(Triple t, Long classSetS, Long classSetO, Long sourceCliqueS,
+	private void handleDataTriple_TRS_UP_RO(Triple t, Long classSetS, Long classSetO, Long sourceCliqueS,
 											  Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
 		// p gets a new source clique as it was unknown, and its (typed) subject doesn't impact psc 
 		// sourceCliqueP is null, targetCliqueP is null
@@ -672,7 +672,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	// typed, represented object
 	// known property
 	// copy-then-edit from US_RO_RP
-	private void handleDataTriple_US_NS_TO_RP(Triple t, Long classSetS, Long classSetO, Long sourceCliqueS,
+	private void handleDataTriple_US_RP_TRO(Triple t, Long classSetS, Long classSetO, Long sourceCliqueS,
 											  Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
 		Long repS = this.getOrCreateSummaryNode(sourceCliqueP, this.getEmptyTargetCliqueID()); 
 		Long repO = rep.get(t.o);
@@ -703,9 +703,9 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 
 	// untyped, represented subject
 	// typed, represented object
-	// represented propert
+	// represented property
 	// copy-then-edit from RS_RO_RP
-	private void handleDataTriple_US_RS_TO_RP(Triple t, Long classSetS, Long classSetO, Long sourceCliqueS,
+	private void handleDataTriple_RS_RP_TRO(Triple t, Long classSetS, Long classSetO, Long sourceCliqueS,
 											  Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
 		// the target clique of p does not change because o is typed
 		// the representative of o does not change because o is typed
@@ -774,7 +774,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	// untyped, unrepresented object
 	// known property
 	// copy-then-edit from RS_NO_RP
-	private void handleDataTriple_TS_UO_NO_RP(Triple t, Long classSetS, Long classSetO, Long sourceCliqueS,
+	private void handleDataTriple_TRS_RP_UO(Triple t, Long classSetS, Long classSetO, Long sourceCliqueS,
 											  Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
 		
 		Long repS = rep.get(t.s);
@@ -808,7 +808,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	// represented property
 	// we need to unify the target clique of O with the target clique of P
 	// copy-then-edit from RS_RO_RP
-	private void handleDataTriple_TS_UO_RO_RP(Triple t, Long classSetS, Long classSetO, Long sourceCliqueS,
+	private void handleDataTriple_TRS_RP_RO(Triple t, Long classSetS, Long classSetO, Long sourceCliqueS,
 											  Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
 		Long repS = rep.get(t.s);
 		Long repO = rep.get(t.o);
@@ -875,7 +875,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		edgesWithProv.addTriple(repS, t.p, newRepO);
 	}
 
-	private void handleDataTriple_TS_TO(Triple t, Long classSetS, Long classSetO, Long sourceCliqueS,
+	private void handleDataTriple_TRS_TRO(Triple t, Long classSetS, Long classSetO, Long sourceCliqueS,
 										Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
 		// add the edge to the summary
 		edgesWithProv.addTriple(classSetS, t.p, classSetO);
