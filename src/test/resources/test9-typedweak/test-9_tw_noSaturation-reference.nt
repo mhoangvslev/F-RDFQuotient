@@ -1,0 +1,6 @@
+<http://qs.org/tw0> <http://qstest.org/prop2> <http://qs.org/tw0> .
+<http://qs.org/tw0> <http://qstest.org/prop3> <http://qs.org/tw3> .
+<http://qs.org/tw0> <http://qstest.org/prop1> <http://qs.org/tw0> .
+<http://qs.org/tw3> <http://qstest.org/prop4> <http://qs.org/tw4> .
+<http://qs.org/tw4> <http://qstest.org/prop5> <http://qs.org/tw5> .
+<http://qs.org/tw5> <http://qstest.org/prop6> <http://qs.org/tw0> .

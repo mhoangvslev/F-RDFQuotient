@@ -264,14 +264,16 @@ public class WeakOrTypedWeakSummary extends Summary {
 		// the property has been seen so far, not the subject nor the object
 		// in this case we need to represent s by the source of p and o by the target of p
 		Long sourceP = ps.get(t.p);
-		if (sourceP == null){
+		if (sourceP == null) {
 			sourceP = this.getNextSummaryNode();
 			ps.put(t.p, sourceP); 
 		}
 		Long targetP = pt.get(t.p);
-		if (targetP == null){
-			targetP = this.getNextSummaryNode();
-			pt.put(t.p, targetP); 
+		if (targetP == null) {
+			targetP = sourceP;
+			if (t.s != t.o) // if it's not a self loop
+				targetP = this.getNextSummaryNode();
+			pt.put(t.p, targetP);
 		}
 		rep.put(t.s, sourceP);
 		rep.put(t.o, targetP);
@@ -283,7 +285,9 @@ public class WeakOrTypedWeakSummary extends Summary {
 		// nothing has been seen so far
 		System.out.println("US_UP_UO: " + RDF2SQLEncoding.dictionaryDecode(t.s) + " " + RDF2SQLEncoding.dictionaryDecode(t.p) + " " + RDF2SQLEncoding.dictionaryDecode(t.o));
 		Long pSource = this.getNextSummaryNode();
-		Long pTarget = this.getNextSummaryNode();
+		Long pTarget = pSource;
+		if (t.s != t.o) // if it's not a self loop
+			pTarget = this.getNextSummaryNode();
 		ps.put(t.p, pSource);
 		pt.put(t.p, pTarget);
 		rep.put(t.s, pSource);
