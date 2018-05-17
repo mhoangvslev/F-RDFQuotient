@@ -95,7 +95,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 						else
 							handleDataTriple(t);
 						triplesSummarizedSoFar++;
-						//this.drawSummaryAndGraph(conn, "after-" + triplesSummarizedSoFar + "-"+ t.s + "-" + t.p + "-" + t.o);
+						//this.drawSummaryAndGraph(conn, "-" + System.currentTimeMillis() + "-after-" + triplesSummarizedSoFar + "-"+ t.s + "-" + t.p + "-" + t.o);
 						//display();
 					}
 				}

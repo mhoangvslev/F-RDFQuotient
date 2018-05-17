@@ -464,7 +464,8 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		
 		// now modifying rep:
 		rep.put(t.s, newRepS);
-
+		// no other rep modification needed
+		
 		// now fixing s and o's cliques
 		n2sc.put(t.s, scp);
 		n2tc.put(t.s, this.getEmptyTargetCliqueID()); 
@@ -541,6 +542,9 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 
 		// now modifying rep:
 		rep.put(t.s, newRepS);
+		for (ReplacementSpecification reps: nodeReps){
+			rep.replaceValue(reps.getOldNode(), reps.getNewNode()); 
+		}
 
 		// updating cliques of nodes: 
 		n2sc.put(t.s, newSCs);
@@ -583,6 +587,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 
 		// now modifying rep:
 		rep.put(t.o, newRepO);
+		// no other node replacement needed
 		
 		// now fixing o's cliques
 		// no clique for S, because it's typed
@@ -660,6 +665,9 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		// now modifying rep:
 		rep.put(t.s, newRepS);
 		rep.put(t.o, newRepO); 
+		for (ReplacementSpecification reps: nodeReps){
+			rep.replaceValue(reps.getOldNode(), reps.getNewNode()); 
+		}
 		
 		// now fixing o's cliques
 		n2tc.put(t.o, newTCo);
@@ -693,6 +701,8 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		// no patching 
 		// now modifying rep:
 		rep.put(t.s, newRepS);
+		// no other rep modification needed
+		
 		// now fixing s' cliques
 		n2sc.put(t.s, newSCs);
 		n2tc.put(t.s, this.getEmptyTargetCliqueID()); 
@@ -763,6 +773,9 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		
 		// now modifying rep:
 		rep.put(t.s, newRepS);
+		for (ReplacementSpecification reps: nodeReps){
+			rep.replaceValue(reps.getOldNode(), reps.getNewNode()); 
+		}
 		// now fixing s and o's cliques
 		n2sc.put(t.s, newSCs);
 
@@ -793,7 +806,8 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		// now modify summary edges
 		// now modifying rep:
 		rep.put(t.o, repO); 
-
+		// no other rep modification needed
+		
 		// now fixing s and o's cliques
 		n2sc.put(t.o, this.getEmptySourceCliqueID()); 
 		n2tc.put(t.o, newTCo);
@@ -867,7 +881,9 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 
 		// now modifying rep:
 		rep.put(t.o, newRepO); 
-
+		for (ReplacementSpecification reps: nodeReps){
+			rep.replaceValue(reps.getOldNode(), reps.getNewNode()); 
+		}
 		// now fixing s and o's cliques
 		n2tc.put(t.o, newTCo);
 
