@@ -187,7 +187,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 				throw new IllegalStateException("Unknown case " + caseNumber);
 		}
 		cacheTriple(t) ;
-		//this.writeToFileAndDraw();
+		display(); 
 	}
 
 

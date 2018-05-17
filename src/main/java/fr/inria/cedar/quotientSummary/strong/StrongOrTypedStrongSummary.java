@@ -326,6 +326,8 @@ public class StrongOrTypedStrongSummary extends Summary {
 		Long newTCo =  cliqueFusionResult(targetCliqueO, targetCliqueP, TARGET); 
 		System.out.println("RS_UP_RO: newSCS is: " + newSCs + " and newTCO is: " + newTCo);
 		System.out.println("RS_UP_RO: sourceCliqueS is: " + sourceCliqueS + " and newTCO is: " + newTCo);
+		System.out.println("RS_UP_RO: before any change to the summary, we have:\n" + untypedSummaryNodes.toString()); 
+		System.out.println("RS_UP_RO: " + rep.toString());
 		
 		// determine future representatives: we create them but do nothing else so far
 		Long newRepS = getOrCreateSummaryNode(newSCs, targetCliqueS); 
@@ -338,18 +340,18 @@ public class StrongOrTypedStrongSummary extends Summary {
 				// In this case, we should not replace repS with newRepS, but only represent s by newRepS -- and keep repS! 
 				// Also, we should not replace sourceCliqueS with newSC, but create newSCs and keep sourceCliqueS!
 				replaceForS = false; 
-				System.out.println("RS_UP_RO: " + t.s + " moves away from its representative " + repS +
+				System.out.println("RS_UP_RO: subject " + t.s + " gets a non-empty source clique and thus it moves away from its representative " + repS +
 						" which represented more than one node"); 
 			}
 		}
 		if (targetCliqueO.equals(this.getEmptyTargetCliqueID())){
 			if (rep.getInverse(repO).size()>1){
 				replaceForO = false; 	
-				System.out.println("RS_UP_RO: " + t.o + " moves away from its representative " + repO +
-						" which represented more than one node"); 
+				System.out.println("RS_UP_RO: object " + t.o + " gets a non-empty target clique and thus it moves away from its representative " + repO +
+						", which represented more than one node and will stay, to " + newRepO); 
 			}
 		}
-		System.out.println("RS_UP_RO: replaceS is: " + replaceForS  + " and replaceO is: " + replaceForO);
+		System.out.println("RS_UP_RO: replaceForS is: " + replaceForS  + " and replaceForO is: " + replaceForO);
 		
 		// really modify cliques (and do nothing else)
 		if (replaceForS){
@@ -391,19 +393,24 @@ public class StrongOrTypedStrongSummary extends Summary {
 		if (replaceForO){ 
 			computeAndApplyCliqueReplacements(targetCliqueO, targetCliqueP, newTCo, TARGET); 
 		}
+		System.out.println("RS_UP_RO: before edge replacement, we have: ");
+		edgesWithProv.display();
+		
 		// now modify summary edges
 		for (ReplacementSpecification reps: nodeReps){
 			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode()); 
 		}
 		System.out.println("RS_UP_RO: after clique, untyped and edge replacement, we have: ");
-		System.out.println(untypedSummaryNodes.toString()); 
 		edgesWithProv.display();
 
 		// now patching summary edges if needed
 		if (!replaceForS){
+			System.out.println("RS_UP_RO: split TARGET"); 
 			updateEdgesAfterSplit(distributeSummaryEdgesThroughCounts(repS, newRepS, t.s, TARGET), repS, newRepS, TARGET); 
 		}
 		if (!replaceForO){
+			System.out.println("RS_UP_RO: split SOURCE, rep is: "); 
+			System.out.println(rep.toString());
 			updateEdgesAfterSplit(distributeSummaryEdgesThroughCounts(repO, newRepO, t.o, SOURCE), repO, newRepO, SOURCE); 
 		}
 
@@ -586,10 +593,10 @@ public class StrongOrTypedStrongSummary extends Summary {
 	}
 
 
-	// untyped, unrepresented subject
+	// untyped, represented subject
 	// untyped, represented object
 	// represented property 
-	// in this case the subject should be represented based on the source clique of P and the empty target clique
+	// in this case the object should be represented based on the target clique of P and the empty target clique
 	// copy-then-edit from handleDataTriple_RS_RO_RP
 	protected void handleDataTriple_RS_RP_UO(Triple t, Long sourceCliqueS,
 			Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
@@ -612,7 +619,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 			if (rep.getInverse(repS).size()  > 1){ // other nodes were (and still are) on the empty scs and targetCliqueS.
 				// In this case, we should not replace repS with newRepS, but only represent s by newRepS -- and keep repS! 
 				// Also, we should not replace sourceCliqueS with newSC, but create newSCs and keep sourceCliqueS!
-				//System.out.println("RS_UO_RP subject "  + t.s + " requires a split not a replace"); 
+				System.out.println("RS_RP_UO subject "  + t.s + " requires a split not a replace"); 
 				replaceForS = false; 
 			}
 		}
@@ -627,9 +634,12 @@ public class StrongOrTypedStrongSummary extends Summary {
 		ArrayList <ReplacementSpecification> nodeReps = new ArrayList<ReplacementSpecification>(); 
 		if (replaceForS) {
 			if (!newRepS.equals(repS)){
-				//System.out.println("RS_UO_RP We will replace " + repS + " with " + newRepS + " on " + newSCs + " and " + targetCliqueS); 
+				System.out.println("RS_RP_UO We will replace " + repS + " with " + newRepS + " on " + newSCs + " and " + targetCliqueS); 
 				ReplacementSpecification reps = new ReplacementSpecification(newSCs, targetCliqueS, repS, newRepS); 
 				nodeReps.add(reps); 
+				if (newRepO == repS){ // apply replacement also to the newly created repO
+					newRepO = newRepS; // TODO apply all over (one issue discussed with Pawel EOD May 17).
+				}
 			}
 		}
 		// no replacement for o because repO==newRepO
@@ -664,7 +674,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		// now patching summary edges if needed
 		if (!replaceForS){
 			updateEdgesAfterSplit(distributeSummaryEdgesThroughCounts(repS, newRepS, t.s, TARGET), repS, newRepS, TARGET); 
-			//System.out.println("RS_UO_RP after edge distribution, edges : " + this.getEdgesToString()); 	
+			System.out.println("RS_RP_UO after edge distribution, edges : " + this.getEdgesToString()); 	
 		}
 
 		// now modifying rep:
@@ -1007,7 +1017,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 
 		if (param == SOURCE){ // we must distribute edges outgoing from oldRep and newRep, which now represents dataNode
 
-			System.out.println("DISTRIBUTING OUTGOING SUMMARY EDGES of summary node " + oldRep + " with the new summary " + newRep + " due to " + dataNode);
+			System.out.println("DISTRIBUTING OUTGOING SUMMARY EDGES of summary node " + oldRep + " with the new summary node " + newRep + " due to " + dataNode);
 
 			// traverse the data edges outgoing node and, for each of them:
 			// - mark the corresponding summary edge as needing to be added to the new summary node; 
@@ -1016,11 +1026,12 @@ public class StrongOrTypedStrongSummary extends Summary {
 			if (dataEdgesFromNode != null){
 				for (Long p: dataEdgesFromNode.keys()){
 					for (Long o: dataEdgesFromNode.get(p)){
-						// data edge node--p-->o
-						Long repO = rep.get(o); 
+						// data edge dataNode--p-->o
+						System.out.println("For " +  dataNode  + "--" + p + "-->" + o + ")");
+						Long repO = rep.get(o); // this supposes that rep(o) has not been updated yet
 						if (repO != null){ // represented by summary edge oldRep--p-->repO
 							summEdgesToAddOnNewRep.add(p, repO); 
-							System.out.println("oldRep: " + oldRep + " p: " + p + " repO: " + repO);
+							System.out.println("Seeking repr. counter  of: oldRep (" + oldRep + ")--" + p + "-->repO(" + repO + ")");
 							edgesWithProv.display();
 							Long edgeCountLeft = edgesWithProv.getCounter(oldRep, p, repO) - 1; //was: o instead of repO
 							if (edgeCountLeft == 0){
