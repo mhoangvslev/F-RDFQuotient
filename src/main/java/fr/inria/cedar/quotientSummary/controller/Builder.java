@@ -323,8 +323,8 @@ public class Builder {
 	private static void exportSummary(String summarizationTechnique, Boolean draw, String[] files) {
 		LOGGER.info("Exporting summary to disk");
 		summaryInUse.writeDecodedSummaryToNTFile(connectionInUse, summarizationTechnique);
-		//if (draw)
-		//	summaryInUse.drawSummaryAndGraph(connectionInUse, summarizationTechnique);
+		if (draw)
+			summaryInUse.drawSummaryAndGraph(connectionInUse, summarizationTechnique);
 		LOGGER.info("Statistics: " + summaryInUse.getRunStatistics().toString());
 		LOGGER.info("Summary exported to disk");
 	}

@@ -39,6 +39,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		numberOfDataTriplesRead = 0;
 		numberOfTypeTriplesRead = 0;
 		this.summaryTablePrefix = TYPED_STRONG_SUMMARY_PREFIX;
+		isTypeFirst = true;
 	}
 
 	/**
@@ -127,7 +128,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		start = System.currentTimeMillis();
 
 		//this.drawSummaryAndGraph(conn, "_" + triplesSummarizedSoFar);
-		//this.display();
+		//this.writeToFileAndDraw();
 		// now all the non-type triples
 		String getUntypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p <> " + typeConstantCode);
 		try {
@@ -149,7 +150,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 							handleDataTriple(t);
 						triplesSummarizedSoFar++;
 						this.numberOfDataTriplesRead++;
-						//this.drawSummaryAndGraph(conn, "_" + triplesSummarizedSoFar);
+						//this.drawSummaryAndGraph(conn, "after-" + triplesSummarizedSoFar + "-" + t.s + "-" + t.p + "-" + t.o);
 						//this.roundTripConsistencyCheck(); 
 					}
 				}
@@ -163,7 +164,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 
 		allTriplesSummarizationTime = classSetCreationTime + typeTriplesSummarizationTime + dataTriplesSummarizationTime;
 		System.out.println("Summarized " + triplesSummarizedSoFar + " triples overall in " + allTriplesSummarizationTime + " ms");
-		//this.display(dataTriplesFileName);
+		//this.writeToFileAndDraw(dataTriplesFileName);
 	}
 
 	private char decode(Long classSetS, Long repS, Long classSetO, Long repO, Long sourceCliqueP) {
@@ -431,7 +432,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 			default:
 				throw new IllegalStateException("Unknown case;");
 		}
-		//this.display();
+		//this.writeToFileAndDraw();
 	}
 
 	// untyped, unrepresented subject
@@ -557,7 +558,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		// p has no source clique so far, as we only saw it with a typed source.
 		Long repS = rep.get(t.s);
 		//System.out.println("US_RS_UO_NO_NP The subject " + t.s + " was represented by " + repS); 
-		//System.out.println("US_RS_UO_NO_NP Upon starting, n2sc is: " + n2sc.display()); 
+		//System.out.println("US_RS_UO_NO_NP Upon starting, n2sc is: " + n2sc.writeToFileAndDraw()); 
 		
 		// p gets both cliques
 		Long scp = this.makeAndAddNewSourceClique(t.p);
@@ -878,45 +879,5 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 										Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
 		// add the edge to the summary
 		edgesWithProv.addTriple(classSetS, t.p, classSetO);
-	}
-
-
-	/**
-	 * This is used only when drawing the graph using Dot. 
-	 * Different summaries need to traverse their triples in different orders, thus the two cursors which differ between the typed and untyped summaries.
-	 * Returns the first cursor, over the type triples
-	 * @param conn
-	 * @param triplesToDraw
-	 * @param triplesTableName
-	 * @return
-	 */
-	@Override
-	protected ResultSet getGraphTriplesCursor1ForDotDrawing(Connection conn, long triplesToDraw, String triplesTableName) {
-		try{
-			String query = ("select * from triples where p='<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' limit " + triplesToDraw);
-			Debugger.log("get cursor 1: " + query);
-			return conn.createStatement().executeQuery("select * from " + triplesTableName + " where p='<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' limit " + triplesToDraw);
-		}
-		catch(SQLException e){
-			throw new IllegalStateException("Could not get a cursor on the graph triples for drawing"); 
-		}
-	}
-	/**
-	 * This is used only when drawing the graph using Dot. 
-	 * Different summaries need to traverse their triples in different orders, thus the two cursors which differ between the typed and untyped summaries.
-	 * Returns the second cursor, over the non-type triples.
-	 * @param conn
-	 * @param triplesToDraw
-	 * @param triplesTableName
-	 * @return
-	 */
-	@Override
-	protected ResultSet getGraphTriplesCursor2ForDotDrawing(Connection conn, long triplesToDraw, String triplesTableName) {
-		try{
-			return conn.createStatement().executeQuery("select * from " + triplesTableName + " where p<>'<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' limit " + triplesToDraw);
-		}
-		catch(SQLException e){
-			throw new IllegalStateException("Could not get a cursor on the graph triples for drawing"); 
-		}
 	}
 }

@@ -16,6 +16,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 		this.encodedTriplesTableName = encodedTriplesTableName;
 		this.dictionaryTableName = dictionaryTableName;
 		this.summaryTablePrefix = STRONG_SUMMARY_PREFIX;
+		this.isTypeFirst = false;
 	}
 
 	/**
@@ -94,8 +95,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 						else
 							handleDataTriple(t);
 						triplesSummarizedSoFar++;
-
-						//this.drawSummaryAndGraph(conn, "-after-" + triplesSummarizedSoFar + "-"+ t.s + "-" + t.p + "-" + t.o);
+						//this.drawSummaryAndGraph(conn, "after-" + triplesSummarizedSoFar + "-"+ t.s + "-" + t.p + "-" + t.o);
 						//display();
 					}
 				}
@@ -118,7 +118,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 						this.handleTypeTripleAfterData(t);
 						triplesSummarizedSoFar++;
 						storeSpecialNodesRepresentation(t, false);
-						//this.drawSummaryAndGraph(conn, "-after-" + triplesSummarizedSoFar + "-" + t.s + "-" + t.p + "-" + t.o);
+						//this.drawSummaryAndGraph(conn, "after-" + triplesSummarizedSoFar + "-" + t.s + "-" + t.p + "-" + t.o);
 						//System.out.println("Summary now has " + getSummaryEdges().size() + " triples");
 					}
 				}
@@ -130,7 +130,6 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 
 		allTriplesSummarizationTime = System.currentTimeMillis() - start;
 		System.out.println("Summarized " + triplesSummarizedSoFar + " triples in " + allTriplesSummarizationTime + " ms");
-		//display(triplesFileName);
 	}
 
 	public void handleDataTriple(Triple t) {
@@ -188,7 +187,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 				throw new IllegalStateException("Unknown case " + caseNumber);
 		}
 		cacheTriple(t) ;
-		//this.display();
+		//this.writeToFileAndDraw();
 	}
 
 
@@ -241,42 +240,5 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 					return US_NS_UO_NO_RP;
 				else
 					return US_NS_UO_NO_NP;
-	}
-
-	/**
-	 * This is used only when drawing the graph using Dot. 
-	 * Different summaries need to traverse their triples in different orders, thus the two cursors which differ between the typed and untyped summaries.
-	 * Returns the first cursor, over the non-type triples
-	 * @param conn
-	 * @param triplesToDraw
-	 * @param triplesTableName
-	 * @return
-	 */
-	@Override
-	protected ResultSet getGraphTriplesCursor1ForDotDrawing(Connection conn, long triplesToDraw, String triplesTableName) {
-		try {
-			return conn.createStatement().executeQuery("select * from " + triplesTableName + " where p <> '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' limit " + triplesToDraw);
-		}
-		catch(SQLException e) {
-			throw new IllegalStateException("Could not get a cursor on the graph triples for drawing"); 
-		}
-	}
-	/**
-	 * This is used only when drawing the graph using Dot. 
-	 * Different summaries need to traverse their triples in different orders, thus the two cursors which differ between the typed and untyped summaries.
-	 * Returns the second cursor, over the type triples.
-	 * @param conn
-	 * @param triplesToDraw
-	 * @param triplesTableName
-	 * @return
-	 */
-	@Override
-	protected ResultSet getGraphTriplesCursor2ForDotDrawing(Connection conn, long triplesToDraw, String triplesTableName) {
-		try{
-			return conn.createStatement().executeQuery("select * from " + triplesTableName + " where p='<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' limit " + triplesToDraw);
-		}
-		catch(SQLException e){
-			throw new IllegalStateException("Could not get a cursor on the graph triples for drawing"); 
-		}
 	}
 }

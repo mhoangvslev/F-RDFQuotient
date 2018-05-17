@@ -46,6 +46,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		n2c = new Long2LongSet();
 		cs2csID = new HashMap<>();
 		this.summaryTablePrefix = TYPED_WEAK_SUMMARY_PREFIX;
+		this.isTypeFirst = true;
 	}
 
 	/**
@@ -163,7 +164,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 
 		allTriplesSummarizationTime = classSetCreationTime + typeTriplesSummarizationTime + dataTriplesSummarizationTime;
 		System.out.println("Summarized " + triplesSummarizedSoFar + " triples overall in " + allTriplesSummarizationTime + " ms");
-		//this.display(dataTriplesFileName);
+		//this.writeToFileAndDraw(dataTriplesFileName);
 	}
 
 	protected void handleDataTriple(Triple t) {
@@ -645,43 +646,4 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 			}
 		}
 	}
-	/**
-	 * This is used only when drawing the graph using Dot. 
-	 * Different summaries need to traverse their triples in different orders, thus the two cursors which differ between the typed and untyped summaries.
-	 * Returns the first cursor, over the type triples
-	 * @param conn
-	 * @param triplesToDraw
-	 * @param triplesTableName
-	 * @return
-	 */
-	@Override
-	protected ResultSet getGraphTriplesCursor1ForDotDrawing(Connection conn, long triplesToDraw, String triplesTableName) {
-		try{
-			return conn.createStatement().executeQuery("select * from " + triplesTableName + " where p='<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' limit " + triplesToDraw);
-		}
-		catch(SQLException e){
-			throw new IllegalStateException("Could not get a cursor on the graph triples for drawing"); 
-		}
-	}
-	/**
-	 * This is used only when drawing the graph using Dot. 
-	 * Different summaries need to traverse their triples in different orders, thus the two cursors which differ between the typed and untyped summaries.
-	 * Returns the second cursor, over the non-type triples.
-	 * @param conn
-	 * @param triplesToDraw
-	 * @param triplesTableName
-	 * @return
-	 */
-	@Override
-	protected ResultSet getGraphTriplesCursor2ForDotDrawing(Connection conn, long triplesToDraw, String triplesTableName) {
-		try{
-			return conn.createStatement().executeQuery("select * from " + triplesTableName + " where p<>'<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' limit " + triplesToDraw);
-		}
-		catch(SQLException e){
-			throw new IllegalStateException("Could not get a cursor on the graph triples for drawing"); 
-		}
-	}
-	
-	
-
 }

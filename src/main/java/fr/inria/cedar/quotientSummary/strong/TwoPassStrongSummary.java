@@ -10,10 +10,14 @@ import fr.inria.cedar.quotientSummary.datastructures.Triple;
 import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 
 public class TwoPassStrongSummary extends StrongOrTypedStrongSummary {
-
-	public TwoPassStrongSummary() {
+	public TwoPassStrongSummary(String triplesFileName, String triplesTableName, String encodedTriplesTableName, String dictionaryTableName) {
 		super();
-		this.summaryTablePrefix = TWO_PASS_STRONG_SUMMARY_PREFIX; 
+		this.triplesFileName = triplesFileName;
+		this.triplesTableName = triplesTableName;
+		this.encodedTriplesTableName = encodedTriplesTableName;
+		this.dictionaryTableName = dictionaryTableName;
+		this.summaryTablePrefix = TWO_PASS_STRONG_SUMMARY_PREFIX;
+		this.isTypeFirst = false;
 	}
 
 	/**
@@ -92,7 +96,7 @@ public class TwoPassStrongSummary extends StrongOrTypedStrongSummary {
 						updateCliquesOutOf(t);
 						//System.out.println("Summary has become: " + this.toString());
 						triplesSummarizedSoFar++;
-						//this.drawSummaryAndGraph(conn, dataTriplesFileName, "tmp_triples", "dictionary", "-after-" + triplesSummarizedSoFar + "-"+ t.s + "-" + t.p + "-" + t.o);
+						//this.drawSummaryAndGraph(conn, "after-" + triplesSummarizedSoFar + "-"+ t.s + "-" + t.p + "-" + t.o);
 					}
 				}
 			}
@@ -115,7 +119,7 @@ public class TwoPassStrongSummary extends StrongOrTypedStrongSummary {
 						//System.out.println("#### Type triple " + t.toString());
 						this.handleTypeTripleAfterData(t);
 						triplesSummarizedSoFar++;
-						//this.drawSummaryAndGraph(conn, dataTriplesFileName, "tmp_triples", "dictionary", "-after-" + triplesSummarizedSoFar + "-" + t.s + "-" + t.p + "-" + t.o);
+						//this.drawSummaryAndGraph(conn, "after-" + triplesSummarizedSoFar + "-" + t.s + "-" + t.p + "-" + t.o);
 						//System.out.println("Summary now has " + getSummaryEdges().size() + " triples");
 
 					}
@@ -129,7 +133,7 @@ public class TwoPassStrongSummary extends StrongOrTypedStrongSummary {
 		allTriplesSummarizationTime = System.currentTimeMillis() - start;
 		System.out.println("Summarized " + triplesSummarizedSoFar + " triples in " + allTriplesSummarizationTime + " ms");
 		display();
-		this.display(dataTriplesFileName);
+		this.writeToFileAndDraw();
 	}
 
 	private void updateCliquesOutOf(Triple t) {

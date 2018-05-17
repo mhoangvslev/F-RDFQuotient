@@ -776,7 +776,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		// null sourceCliqueP, targetCliqueP, sourceCliqueO, targetCliqueO
 		Long repS = rep.get(t.s);
 		//System.out.println("US_RS_UO_NO_NP The subject " + t.s + " was represented by " + repS); 
-		//System.out.println("US_RS_UO_NO_NP Upon starting, n2sc is: " + n2sc.display()); 
+		//System.out.println("US_RS_UO_NO_NP Upon starting, n2sc is: " + n2sc.writeToFileAndDraw()); 
 		
 		Long scp = this.makeAndAddNewSourceClique(t.p);
 		Long tcp = this.makeAndAddNewTargetClique(t.p);
@@ -806,13 +806,13 @@ public class StrongOrTypedStrongSummary extends Summary {
 		}
 
 		// really modify cliques (and do nothing else)
-		//System.out.println("US_RS_UO_NO_NP Before real clique fusion, n2sc is: " + n2sc.display()); 
+		//System.out.println("US_RS_UO_NO_NP Before real clique fusion, n2sc is: " + n2sc.writeToFileAndDraw()); 
 		if (replaceForS){
 			fuseCliqueInto(sourceCliqueS, newSCs, SOURCE);
-			//System.out.println("US_RS_UO_NO_NP Mid-fusion, n2sc is: " + n2sc.display()); 
+			//System.out.println("US_RS_UO_NO_NP Mid-fusion, n2sc is: " + n2sc.writeToFileAndDraw()); 
 			fuseCliqueInto(scp, newSCs, SOURCE);
 		}
-		//System.out.println("US_RS_UO_NO_NP After real clique fusion, n2sc is : " + n2sc.display()); 
+		//System.out.println("US_RS_UO_NO_NP After real clique fusion, n2sc is : " + n2sc.writeToFileAndDraw()); 
 		// compute node replacements:
 		ArrayList<ReplacementSpecification> nodeReps = new ArrayList<ReplacementSpecification>();
 		if (replaceForS) {
@@ -830,7 +830,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		// if repS and/or repO did not need to be replaced (becase scs and/or tco were empty), there is nothing to do at this stage,
 		// because newRepS resp. newRepO are already well inserted in untyped, on their respective cliques
 
-		//System.out.println("US_RS_UO_NO_NP n2sc before clique replacements: " + n2sc.display()); 
+		//System.out.println("US_RS_UO_NO_NP n2sc before clique replacements: " + n2sc.writeToFileAndDraw()); 
 		//System.out.println("US_RS_UO_NO_NP untyped after node and before clique replacements (possibly inconsistent): " + untypedSummaryNodes.toString()); 
 		//System.out.println("US_RS_UO_NO_NP scs before clique replacements: " + sc.toString()); 
 		
@@ -841,7 +841,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		} // else, nothing to do because newRepS is correctly inserted in untypedNodes, on its cliques
 		// no target clique replacement needed
 		//System.out.println("US_RS_UO_NO_NP untyped after clique replacements: " + untypedSummaryNodes.toString()); 
-		//System.out.println("US_RS_UO_NO_NP n2sc after clique replacements: " + n2sc.display()); 
+		//System.out.println("US_RS_UO_NO_NP n2sc after clique replacements: " + n2sc.writeToFileAndDraw()); 
 		
 		
 		// now modify summary edges

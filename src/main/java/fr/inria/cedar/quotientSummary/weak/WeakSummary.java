@@ -18,7 +18,8 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 		this.encodedTriplesTableName = encodedTriplesTableName;
 		this.dictionaryTableName = dictionaryTableName;
 		this.summaryTablePrefix = WEAK_SUMMARY_PREFIX;
-		typeOnlyNodeID = -1;
+		this.isTypeFirst = false;
+		this.typeOnlyNodeID = -1;
 	}
 
 	/**
@@ -87,7 +88,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 							handleDataTriple(t);
 						triplesSummarizedSoFar++;
 						//display(); 
-						//this.drawSummaryAndGraph(conn, "-after-" + triplesSummarizedSoFar + "-"+ t.s + "-" + t.p + "-" + t.o);
+						//this.drawSummaryAndGraph(conn, "after-" + triplesSummarizedSoFar + "-"+ t.s + "-" + t.p + "-" + t.o);
 						if (this.checkConsistency)
 							consistencyChecks();
 					}
@@ -110,7 +111,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 						this.handleTypeTripleAfterData(t);
 						triplesSummarizedSoFar++;
 						storeSpecialNodesRepresentation(t, false);
-						//this.drawSummaryAndGraph(conn, "-after-" + t.s + "-" + t.p + "-" + t.o);
+						//this.drawSummaryAndGraph(conn, "after-" + t.s + "-" + t.p + "-" + t.o);
 						//System.out.println("Summary now has " + getSummaryEdges().size() + " triples");
 					}
 				}
@@ -124,7 +125,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 		if (checkConsistency){
 			consistencyChecks();
 		}
-		//this.display(dataTriplesFileName);
+		//this.writeToFileAndDraw(dataTriplesFileName);
 	}
 
 	protected void handleDataTriple(Triple t) {
@@ -236,44 +237,6 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 						throw new IllegalStateException("Target of " + p + " is not " + o + " but " + this.pt.get(p));
 				}
 			}
-		}
-	}
-
-	/**
-	 * This is used only when drawing the graph using Dot. 
-	 * Different summaries need to traverse their triples in different orders, thus the two cursors which differ between the typed and untyped summaries.
-	 * Returns the first cursor, over the non-type triples
-	 * @param conn
-	 * @param triplesToDraw
-	 * @param triplesTableName
-	 * @return
-	 */
-	@Override
-	protected ResultSet getGraphTriplesCursor1ForDotDrawing(Connection conn, long triplesToDraw, String triplesTableName) {
-		try {
-			//System.out.println("WEAK 1st CURSOR: triplesTableName is: " + triplesTableName);
-			return conn.createStatement().executeQuery("select * from " + triplesTableName + " where p<>'<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' limit " + triplesToDraw);
-		}
-		catch(SQLException e) {
-			throw new IllegalStateException("Could not get a cursor on the graph triples for drawing"); 
-		}
-	}
-	/**
-	 * This is used only when drawing the graph using Dot. 
-	 * Different summaries need to traverse their triples in different orders, thus the two cursors which differ between the typed and untyped summaries.
-	 * Returns the second cursor, over the type triples.
-	 * @param conn
-	 * @param triplesToDraw
-	 * @param triplesTableName
-	 * @return
-	 */
-	@Override
-	protected ResultSet getGraphTriplesCursor2ForDotDrawing(Connection conn, long triplesToDraw, String triplesTableName) {
-		try {
-			return conn.createStatement().executeQuery("select * from " + triplesTableName + " where p='<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' limit " + triplesToDraw);
-		}
-		catch(SQLException e) {
-			throw new IllegalStateException("Could not get a cursor on the graph triples for drawing"); 
 		}
 	}
 }

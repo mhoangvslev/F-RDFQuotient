@@ -29,7 +29,7 @@ import org.apache.log4j.Logger;
 
 public class Summary {
 	private static final Logger LOGGER = Logger.getLogger(Summary.class.getName());
-	private static final SimpleDateFormat SD_FORMAT = new SimpleDateFormat("yyyyMMdd_HHmmssSSS");
+	protected static final SimpleDateFormat SD_FORMAT = new SimpleDateFormat("yyyyMMdd_HHmmssSSS");
 
 	protected Long2Long rep; // representative function for untyped nodes
 	protected Long2Long repRDFURIs; // representative function for all nodes
@@ -50,18 +50,19 @@ public class Summary {
 	protected long typeOnlyNodeID;
 	protected boolean typeOnlyNodeAlreadySeen;
 	
-	private Triple lastReadTriple;
+	protected Triple lastReadTriple;
 	protected long maxSummaryNode;
 	protected Properties properties;
 	protected static String SUMMARY_CONFIG_FILE = "conf/summarization.properties";
 	// repTablePrefix must be instantiated with a specific string for each summary type, so that each summary is saved as separated Postgres tables
 	protected String summaryTablePrefix;
+	protected boolean isTypeFirst = false;
 	protected static String ROOT_SUMMARY_PREFIX = "";
 	protected static String WEAK_SUMMARY_PREFIX = "w_";
 	protected static String STRONG_SUMMARY_PREFIX = "s_";
 	protected static String TYPED_WEAK_SUMMARY_PREFIX = "tw_";
 	protected static String TYPED_STRONG_SUMMARY_PREFIX = "ts_";
-	protected static String TWO_PASS_STRONG_SUMMARY_PREFIX = "ts2_";
+	protected static String TWO_PASS_STRONG_SUMMARY_PREFIX = "s2_";
 	protected static String TWO_PASS_TYPED_STRONG_SUMMARY_PREFIX = "ts2_";
 	
 	protected String triplesFileName = "";
@@ -96,6 +97,25 @@ public class Summary {
 		}
 		summaryTablePrefix = ROOT_SUMMARY_PREFIX;
 		dax = new DOTAuxiliary();
+	}
+	
+	public Summary(Connection conn) throws SQLException {
+		LOGGER.info("Trying to read summary from Postgres");
+		RDF2SQLEncoding.setUp(conn, "dictionary");
+		LOGGER.debug("Set up special URIs from dictionary");
+		String getSummaryTriples = getSummaryTriplesSQLQuery();
+		try (
+			Statement getTriples = conn.createStatement();
+			ResultSet rs = getTriples.executeQuery(getSummaryTriples);
+		) {
+			while (rs.next()) {
+				Long s = rs.getLong(1);
+				Long p = rs.getLong(2);
+				Long o = rs.getLong(3);
+				edgesWithProv.addTriple(s, p, o);
+			}
+		}
+		LOGGER.info("Summary read from Postgres");
 	}
 
 	// we need to be sure that integers which we invent to represent nodes
@@ -155,7 +175,7 @@ public class Summary {
 			repRDFURIs.put(triple.s, triple.s);
 		repRDFURIs.put(triple.o, triple.o);
 	}
-
+	
 	protected void gatherStatistics() {
 		gatherNodeStatistics();
 		gatherEdgeStatistics();
@@ -165,7 +185,7 @@ public class Summary {
 	 * Computes node statistics through a GROUP-BY query. Should be called after
 	 * the summary is completely computed and stored in Postgres.
 	 */
-	private void gatherNodeStatistics() {
+	protected void gatherNodeStatistics() {
 		try {
 			try (
 				Statement nodeStatisticQuery = RDF2SQLEncoding.getConnection().createStatement();
@@ -187,7 +207,7 @@ public class Summary {
 	 * Computes edge statistics through a GROUP-BY query. Should be called after
 	 * the summary is completely computed and stored in Postgres.
 	 */
-	private void gatherEdgeStatistics() {
+	protected void gatherEdgeStatistics() {
 		try {
 			try (
 				Statement edgeStatisticQuery = RDF2SQLEncoding.getConnection().createStatement();
@@ -209,7 +229,7 @@ public class Summary {
 			throw new IllegalStateException("Could not compute edge representation statistics from Postgres: " + e.toString());
 		}
 	}
-
+	
 	protected void handleTypeTripleAfterData(Triple t) {
 		throw new IllegalStateException("Not implemented at this level");
 	}
@@ -380,7 +400,7 @@ public class Summary {
 
 		String URIprefix = properties.getProperty("prefixURIForSummaryNodes");
 
-		String summaryNTFileName = getNTSummaryFileName(triplesFileName, summarizationTechnique);
+		String summaryNTFileName = getNTSummaryFileName(summarizationTechnique);
 
 		//LOGGER.info("Decoding summary and writing it in .nt format to " + summaryNTFileName);
 
@@ -446,12 +466,12 @@ public class Summary {
 		LOGGER.info("Summary decoded and saved in .nt format");
 	}
 
-	private String getNTSummaryFileName(String graphFileName, String summarizationTechnique) {
-		int lastDotPosition = Math.max(0, graphFileName.lastIndexOf("."));
-		int lastSlashPosition = Math.max(0, graphFileName.lastIndexOf("/"));
+	protected String getNTSummaryFileName(String summarizationTechnique) {
+		int lastDotPosition = Math.max(0, triplesFileName.lastIndexOf("."));
+		int lastSlashPosition = Math.max(0, triplesFileName.lastIndexOf("/"));
 		if (lastDotPosition - lastSlashPosition < 1)
-			throw new IllegalStateException("Was not able to extract a core component of the file name " + graphFileName);
-		return graphFileName.substring(0, lastDotPosition) + "_" + summaryTablePrefix + summarizationTechnique + ".nt";
+			throw new IllegalStateException("Was not able to extract a core component of the file name " + triplesFileName);
+		return triplesFileName.substring(0, lastDotPosition) + "_" + summaryTablePrefix + summarizationTechnique + ".nt";
 	}
 
 	/**
@@ -462,15 +482,15 @@ public class Summary {
 	 *
 	 * @return
 	 */
-	private String getSummaryNodeURI(String uriPrefix, long n) {
+	protected String getSummaryNodeURI(String uriPrefix, long n) {
 		return ("<" + uriPrefix + this.getSummaryURIPrefix() + n + ">");
 	}
 
 	public void drawSummaryAndGraph(Connection conn, String suffix) {
-		String summaryDotFileName = getDotFileName(triplesFileName, suffix);
-		writeSummaryToDotFile(conn, summaryDotFileName, dictionaryTableName);
-		String graphDotFileName = getRDFDotFileName(triplesFileName, suffix);
-		writeRDFGraphToDotFile(conn, graphDotFileName, triplesTableName);
+		String summaryDotFileName = getDotFileName(suffix);
+		writeSummaryToDotFile(conn, summaryDotFileName);
+		String graphDotFileName = getRDFDotFileName(suffix);
+		writeRDFGraphToDotFile(conn, graphDotFileName);
 	}
 
 	/**
@@ -479,17 +499,10 @@ public class Summary {
 	 *
 	 * @param conn
 	 * @param dotFileName
-	 * @param dictionaryTableName
 	 */
-	protected void writeSummaryToDotFile(Connection conn, String dotFileName, String dictionaryTableName) {
+	protected void writeSummaryToDotFile(Connection conn, String dotFileName) {
 		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
 		dax.resetColors();
-		Properties properties = new Properties();
-		try {
-			properties.load(new FileReader(SUMMARY_CONFIG_FILE));
-		} catch (IOException e) {
-			throw new IllegalStateException("Unable to read config file: " + e.toString());
-		}
 		String URIprefix = properties.getProperty("prefixURIForSummaryNodes");
 		LOGGER.debug("writeSummaryToDotFile:");
 
@@ -529,7 +542,7 @@ public class Summary {
 						subjectInDot = subject.replaceAll("\"", "");
 						object = getShortURIForDot(RDF2SQLEncoding.dictionaryDecode(t.o));
 						objectInDot = object.replaceAll("\"", "");
-						property = "rdf:type";
+						propertyInDot = "rdf:type";
 						if (dax.unknownSummaryNode(t.s))
 							bw.write("\"" + subjectInDot + "\" [style = filled, color=" + dax.getSummaryNodeColor(t.s) + "];\n");
 						bw.write("\"" + objectInDot + "\" [fontcolor=white, style = filled, color=black];\n");
@@ -563,17 +576,16 @@ public class Summary {
 	 *
 	 * It also inserts the suffix before the ".".
 	 *
-	 * @param fullGraphFileName
 	 * @param suffix
 	 *
 	 * @return
 	 */
-	private String getDotFileName(String graphFileName, String suffix) {
-		int lastDotPosition = Math.max(0, graphFileName.lastIndexOf("."));
-		int lastSlashPosition = Math.max(0, graphFileName.lastIndexOf("/"));
+	protected String getDotFileName(String suffix) {
+		int lastDotPosition = Math.max(0, triplesFileName.lastIndexOf("."));
+		int lastSlashPosition = Math.max(0, triplesFileName.lastIndexOf("/"));
 		if (lastDotPosition - lastSlashPosition < 1)
-			throw new IllegalStateException("Was not able to extract a core component of the file name " + graphFileName);
-		return graphFileName.substring(0, lastDotPosition) + "_" + summaryTablePrefix + suffix + ".dot"; // replace .nt with .dot
+			throw new IllegalStateException("Was not able to extract a core component of the file name " + triplesFileName);
+		return triplesFileName.substring(0, lastDotPosition) + "_" + summaryTablePrefix + suffix + ".dot"; // replace .nt with .dot
 	}
 
 	/**
@@ -582,13 +594,12 @@ public class Summary {
 	 *
 	 * It also adds the suffix just before the "."
 	 *
-	 * @param fullGraphFileName
 	 * @param suffix
 	 *
 	 * @return
 	 */
-	private String getRDFDotFileName(String fullGraphFileName, String suffix) {
-		return (fullGraphFileName.substring(0, fullGraphFileName.length() - 3)) + "_" + suffix + ".dot";
+	protected String getRDFDotFileName(String suffix) {
+		return (triplesFileName.substring(0, triplesFileName.length() - 3)) + "_" + suffix + ".dot";
 	}
 
 	/**
@@ -598,7 +609,7 @@ public class Summary {
 	 *
 	 * @return
 	 */
-	private String getShortURIForDot(String URI) {
+	protected String getShortURIForDot(String URI) {
 		int maxNodeLabelLength = Integer.parseInt(properties.getProperty("maxNodeLabelLength"));
 		if (URI.length() < maxNodeLabelLength)
 			return URI;
@@ -606,27 +617,31 @@ public class Summary {
 			return "..." + URI.substring(URI.length() - (maxNodeLabelLength - 4), URI.length());
 	}
 
-	public void writeRDFGraphToDotFile(Connection conn, String dotFileName, String triplesTableName) {
-		Properties properties = new Properties();
-		try {
-			properties.load(new FileReader(SUMMARY_CONFIG_FILE));
-		}
-		catch (IOException e) {
-			throw new IllegalStateException("Unable to read config file");
-		}
-
+	public void writeRDFGraphToDotFile(Connection conn, String dotFileName) {
 		try {
 			try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(dotFileName)))) {
 				bw.write("digraph g{\n");
 				long triplesToDraw = Math.min(25, triplesSummarizedSoFar);
 				LOGGER.debug("Writing " + triplesToDraw + " RDF graph triples to DOT");
 				long triplesDrawn;
-				try (ResultSet rs = getGraphTriplesCursor1ForDotDrawing(conn, triplesToDraw, triplesTableName)) {
-					triplesDrawn = drawTriples(rs, bw);
+				if (this.isTypeFirst) {
+					try (ResultSet rs = getTypeTriplesCursorForDotDrawing(conn, triplesToDraw)) {
+						triplesDrawn = drawTriples(rs, bw);
+					}
+					if (triplesDrawn < triplesToDraw){
+						try (ResultSet rs2 = getNonTypeTriplesCursorForDotDrawing(conn, triplesToDraw-triplesDrawn)) {
+							drawTriples(rs2, bw);
+						}
+					}
 				}
-				if (triplesDrawn < triplesToDraw){
-					try (ResultSet rs2 = getGraphTriplesCursor2ForDotDrawing(conn, (triplesToDraw-triplesDrawn), triplesTableName)) {
-						drawTriples(rs2, bw);
+				else {
+					try (ResultSet rs = getNonTypeTriplesCursorForDotDrawing(conn, triplesToDraw)) {
+						triplesDrawn = drawTriples(rs, bw);
+					}
+					if (triplesDrawn < triplesToDraw){
+						try (ResultSet rs2 = getTypeTriplesCursorForDotDrawing(conn, triplesToDraw-triplesDrawn)) {
+							drawTriples(rs2, bw);
+						}
 					}
 				}
 				bw.write("}\n");
@@ -687,14 +702,50 @@ public class Summary {
 		return triplesDrawnInDot; 
 	}
 
-	protected ResultSet getGraphTriplesCursor1ForDotDrawing(Connection conn, long limit, String triplesTableName) {
-		throw new IllegalStateException("Not supposed to be called at this level"); 
+	/**
+	 * This is used only when drawing the graph using Dot. 
+	 * Different summaries need to traverse their triples in different orders, thus the two cursors which differ between the typed and untyped summaries.
+	 * Returns the first cursor, over the non-type triples
+	 * @param conn
+	 * @param triplesToDraw
+	 * @return
+	 */
+	protected ResultSet getNonTypeTriplesCursorForDotDrawing(Connection conn, long triplesToDraw) {
+		try {
+			String query = "select d1.value, d2.value, d3.value from "
+						   + encodedTriplesTableName + " t join " + dictionaryTableName
+						   + " d1 on t.s = d1.key join " + dictionaryTableName
+						   + " d2 on t.p = d2.key join " + dictionaryTableName
+						   + " d3 on t.o = d3.key where d2.value <> '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' limit " + triplesToDraw;
+			return conn.createStatement().executeQuery(query);
+		}
+		catch(SQLException e) {
+			throw new IllegalStateException("Could not get a cursor on the graph triples for drawing"); 
+		}
 	}
-	protected ResultSet getGraphTriplesCursor2ForDotDrawing(Connection conn, long limit, String triplesTableName) {
-		throw new IllegalStateException("Not supposed to be called at this level"); 
+	/**
+	 * This is used only when drawing the graph using Dot. 
+	 * Different summaries need to traverse their triples in different orders, thus the two cursors which differ between the typed and untyped summaries.
+	 * Returns the second cursor, over the type triples.
+	 * @param conn
+	 * @param triplesToDraw
+	 * @return
+	 */
+	protected ResultSet getTypeTriplesCursorForDotDrawing(Connection conn, long triplesToDraw) {
+		try{
+			String query = "select d1.value, d2.value, d3.value from "
+						   + encodedTriplesTableName + " t join " + dictionaryTableName
+						   + " d1 on t.s = d1.key join " + dictionaryTableName
+						   + " d2 on t.p = d2.key join " + dictionaryTableName
+						   + " d3 on t.o = d3.key where d2.value = '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' limit " + triplesToDraw;
+			return conn.createStatement().executeQuery(query);
+		}
+		catch(SQLException e){
+			throw new IllegalStateException("Could not get a cursor on the graph triples for drawing"); 
+		}
 	}
 
-	private void writeGraphTripleToDotFile(BufferedWriter bw, Long s, Long p, Long o, String subject, String property, String object, Long sRep, Long oRep) {
+	protected void writeGraphTripleToDotFile(BufferedWriter bw, Long s, Long p, Long o, String subject, String property, String object, Long sRep, Long oRep) {
 	
 		//LOGGER.debug("WRITE GRAPH TRIPLE TO DOT s: " + s + " p: " + p + " o: " + o + " subject: "  + subject + " property " + property +  
 		//		" object " + object + " sRep: " + sRep + " oRep: " + oRep); 
@@ -723,6 +774,7 @@ public class Summary {
 			}
 			else { // type
 				LOGGER.debug("Type triple");
+				propertyForDot = "rdf:type";
 				//if (dax.unknownRDFNode(s))
 				//	LOGGER.debug("TYP1 " + s + " (" + subject + ") represented by  " + sRep);
 				if (dax == null) {
@@ -745,9 +797,9 @@ public class Summary {
 		}
 	}
 
-	public void display(String fullGraphFileName) {
-		writeEncodedSummaryToFile(getNTSummaryFileName(fullGraphFileName, ""));
-		writeEncodedSummaryToDotFile(getDotFileName(fullGraphFileName, ""));
+	public void writeToFileAndDraw() {
+		writeEncodedSummaryToFile(getNTSummaryFileName(""));
+		writeEncodedSummaryToDotFile(getDotFileName(""));
 	}
 
 	public void writeEncodedSummaryToFile(String fileName) {
@@ -761,12 +813,11 @@ public class Summary {
 		}
 	}
 
-	private void writeEncodedTripleToFile(BufferedWriter bw) throws IOException {
+	protected void writeEncodedTripleToFile(BufferedWriter bw) throws IOException {
 		for (Triple t : edgesWithProv.getSummaryEdges())
 			bw.write(t.toString() + "\n");
 	}
 
-	
 	public void display() {
 		System.out.println("SUMMARY " + this.getClass().getName());
 		edgesWithProv.display();
@@ -786,25 +837,6 @@ public class Summary {
 		catch (IOException e) {
 			throw new IllegalStateException("Could not write encoded summary to dot file: " + dotFile + ". Is the path correct?");
 		}
-	}
-
-	public Summary(Connection conn) throws SQLException {
-		LOGGER.info("Trying to read summary from Postgres");
-		RDF2SQLEncoding.setUp(conn, "dictionary");
-		LOGGER.debug("Set up special URIs from dictionary");
-		String getSummaryTriples = getSummaryTriplesSQLQuery();
-		try (
-			Statement getTriples = conn.createStatement();
-			ResultSet rs = getTriples.executeQuery(getSummaryTriples);
-		) {
-			while (rs.next()) {
-				Long s = rs.getLong(1);
-				Long p = rs.getLong(2);
-				Long o = rs.getLong(3);
-				edgesWithProv.addTriple(s, p, o);
-			}
-		}
-		LOGGER.info("Summary read from Postgres");
 	}
 
 	public void summarizeFromPostgres(Connection conn) {
@@ -856,6 +888,7 @@ public class Summary {
 	protected void showClique(TreeSet<Long> clique) {
 		LOGGER.info(showCliqueAsString(clique));
 	}
+	
 	protected String showCliqueAsString(TreeSet<Long> clique) {
 		StringBuffer sb = new StringBuffer();
 		sb.append("[");
@@ -868,6 +901,7 @@ public class Summary {
 	protected HashMap<Long, TreeSet<Long>> getEdgesFrom(Long s){
 		return this.edgesWithProv.get(s); 
 	}
+	
 	protected HashMap<Long, TreeSet<Long>> getEdgesTo(Long o){
 		HashMap<Long, TreeSet<Long>> res = new HashMap<Long, TreeSet<Long>>();
 		for (Long s: edgesWithProv.keySet()){
@@ -885,6 +919,7 @@ public class Summary {
 		}
 		return res;  
 	}
+	
 	protected void addIncomingEdges(Long node, Long2LongSet newEdges){
 		//System.out.println("SUMMARY ADD INCOMING EDGES INTO " + node);
 		for (Long p: newEdges.keys()){
@@ -895,6 +930,7 @@ public class Summary {
 			}
 		}
 	}
+	
 	protected void removeIncomingEdges(Long node, Long2LongSet removedEdges){
 		for (Long p: removedEdges.keys()){
 			for (Long s: removedEdges.get(p)){
@@ -902,6 +938,7 @@ public class Summary {
 			}
 		}
 	}
+	
 	protected void addOutgoingEdges(Long node, Long2LongSet newEdges){
 		for (Long p: newEdges.keys()){
 			for (Long o: newEdges.get(p)){
@@ -909,6 +946,7 @@ public class Summary {
 			}
 		}
 	}
+	
 	protected void removeOutgoingEdges(Long node, Long2LongSet removedEdges){
 		for (Long p: removedEdges.keys()){
 			for (Long o: removedEdges.get(p)){
@@ -916,6 +954,7 @@ public class Summary {
 			}
 		}
 	}
+	
 	public String getEdgesToString(){
 		StringBuffer sb = new StringBuffer();
 		for (Triple t: edgesWithProv.getSummaryEdges()){
