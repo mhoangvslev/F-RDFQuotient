@@ -92,44 +92,6 @@ public class TypedStrongSummaryTests {
 		}
 	}
 
-	public File summarizeThroughShortcutUsingTypedStrongSummary(int i) {
-		System.out.println("################################################################################");
-		System.out.println("Typed Strong summary test " + Integer.toString(i) + " summarization through shortcut");
-		System.out.println("################################################################################");
-
-		String inputFileName = "src/test/resources/test" + i + "-typedstrong/test-" + i + ".nt";
-		String outputFileName = "src/test/resources/test" + i + "-typedstrong/test-" + i + "_ts_shortcut.nt";
-		try {
-			String[] argsSum = {"loadAndSummarize", "typedstrong", inputFileName};
-			try {
-				Builder.main(argsSum);
-				String[] argsSave = {"saveSummaryComputedWithoutSaturation"};
-				Builder.main(argsSave);
-				String[] argsExport = {"exportSummaryComputedUsingShortcut", "draw", inputFileName};
-				Builder.main(argsExport);
-			}
-			catch (UnsupportedDatabaseEngineException ex) {
-				LOGGER.error(ex);
-			}
-			finally {
-				String[] argsCloseConnection = {"closeConnection"};
-				try {
-					Builder.main(argsCloseConnection);
-				}
-				catch (UnsupportedDatabaseEngineException ex1) {
-					LOGGER.error(ex1);
-				}
-			}
-			return new File(outputFileName);
-		}
-		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in typedstrong test " + i + " " + e.toString());
-		}
-		catch (SQLException e) {
-			throw new IllegalStateException("SQL error while summarizing " + e.toString());
-		}
-	}
-
 	private String expectedOutput(int i, String summarizationTechnique) {
 		return "src/test/resources/test" + i + "-typedstrong/test-" + i + "_ts_" + summarizationTechnique + "-reference.nt";
 	}
@@ -269,6 +231,44 @@ public class TypedStrongSummaryTests {
 			throw new IllegalStateException("Unable to open .nt files in typedstrong test 7 " + e.toString());
 		}
 	}
+	
+	@Test
+	public void summarizeTypedStrongTest8() {
+		String referenceFileName = expectedOutput(8, "noSaturation");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = summarizeUsingTypedStrongSummary(8); 
+			if (!testOutput.exists()){
+				fail("Test output not found");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary typedstrong 8", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in typedstrong test 8 " + e.toString());
+		}
+	}
+	
+	@Test
+	public void summarizeTypedStrongTest9() {
+		String referenceFileName = expectedOutput(9, "noSaturation");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = summarizeUsingTypedStrongSummary(9); 
+			if (!testOutput.exists()){
+				fail("Test output not found");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary typedstrong 9", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in typedstrong test 9 " + e.toString());
+		}
+	}
 
 	@Test
 	public void saturateAndSummarizeTypedStrongTest1() {
@@ -405,140 +405,42 @@ public class TypedStrongSummaryTests {
 			throw new IllegalStateException("Unable to open .nt files in typedstrong test 7 " + e.toString());
 		}
 	}
-
+	
 	@Test
-	public void summarizeThroughShortcutTypedStrongTest1() {
-		String referenceFileName = expectedOutput(1, "shortcut");
-		File expectedOutput = new File(referenceFileName);
-		if (!expectedOutput.exists()){
-			fail("Expected output not found " + referenceFileName);
-		}
-		try {
-			File testOutput = summarizeThroughShortcutUsingTypedStrongSummary(1);
-			if (!testOutput.exists()){
-				fail("Test output not found ");
-			}
-			if (!expectedOutput.exists()){
-				fail("Expected output not found " + referenceFileName);
-			}
-			assertTrue("Different summary typedstrong 1", FileUtils.contentEquals(testOutput, expectedOutput));
-		}
-		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in typedstrong test 1 " + e.toString());
-		}
-	}
-
-	@Test
-	public void summarizeThroughShortcutTypedStrongTest2() {
-		String referenceFileName = expectedOutput(2, "shortcut");
+	public void saturateAndSummarizeTypedStrongTest8() {
+		String referenceFileName = expectedOutput(8, "classical");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarizeThroughShortcutUsingTypedStrongSummary(2);
-			if (!testOutput.exists()){
-				fail("Test output not found ");
-			}
-			if (!expectedOutput.exists()){
-				fail("Expected output not found " + referenceFileName);
-			}
-			assertTrue("Different summary typedstrong 2", FileUtils.contentEquals(testOutput, expectedOutput));
-		}
-		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in typedstrong test 2 " + e.toString());
-		}
-	}
-
-	@Test
-	public void summarizeThroughShortcutTypedStrongTest3() {
-		String referenceFileName = expectedOutput(3, "shortcut");
-		File expectedOutput = new File(referenceFileName);
-		try {
-			File testOutput = summarizeThroughShortcutUsingTypedStrongSummary(3);
+			File testOutput = saturateAndSummarizeUsingTypedStrongSummary(8); 
 			if (!testOutput.exists()){
 				fail("Test output not found");
 			}
 			if (!expectedOutput.exists()){
 				fail("Expected output not found " + referenceFileName);
 			}
-			assertTrue("Different summary typedstrong 3", FileUtils.contentEquals(testOutput, expectedOutput));
+			assertTrue("Different summary typedstrong 8", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in typedstrong test 3 " + e.toString());
+			throw new IllegalStateException("Unable to open .nt files in typedstrong test 8 " + e.toString());
 		}
 	}
-
+	
 	@Test
-	public void summarizeThroughShortcutTypedStrongTest4() {
-		String referenceFileName = expectedOutput(4, "shortcut");
+	public void saturateAndSummarizeTypedStrongTest9() {
+		String referenceFileName = expectedOutput(9, "classical");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarizeThroughShortcutUsingTypedStrongSummary(4);
+			File testOutput = saturateAndSummarizeUsingTypedStrongSummary(9); 
 			if (!testOutput.exists()){
 				fail("Test output not found");
 			}
 			if (!expectedOutput.exists()){
 				fail("Expected output not found " + referenceFileName);
 			}
-			assertTrue("Different summary typedstrong 4", FileUtils.contentEquals(testOutput, expectedOutput));
+			assertTrue("Different summary typedstrong 9", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in typedstrong test 4 " + e.toString());
-		}
-	}
-
-	@Test
-	public void summarizeThroughShortcutTypedStrongTest5() {
-		String referenceFileName = expectedOutput(5, "shortcut");
-		File expectedOutput = new File(referenceFileName);
-		try {
-			File testOutput = summarizeThroughShortcutUsingTypedStrongSummary(5);
-			if (!testOutput.exists()){
-				fail("Test output not found");
-			}
-			if (!expectedOutput.exists()){
-				fail("Expected output not found " + referenceFileName);
-			}
-			assertTrue("Different summary typedstrong 5", FileUtils.contentEquals(testOutput, expectedOutput));
-		}
-		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in typedstrong test 5 " + e.toString());
-		}
-	}
-
-	@Test
-	public void summarizeThroughShortcutTypedStrongTest6() {
-		String referenceFileName = expectedOutput(6, "shortcut");
-		File expectedOutput = new File(referenceFileName);
-		try {
-			File testOutput = summarizeThroughShortcutUsingTypedStrongSummary(6);
-			if (!testOutput.exists()){
-				fail("Test output not found");
-			}
-			if (!expectedOutput.exists()){
-				fail("Expected output not found " + referenceFileName);
-			}
-			assertTrue("Different summary typedstrong 6", FileUtils.contentEquals(testOutput, expectedOutput));
-		}
-		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in typedstrong test 6 " + e.toString());
-		}
-	}
-
-	@Test
-	public void summarizeThroughShortcutTypedStrongTest7() {
-		String referenceFileName = expectedOutput(7, "shortcut");
-		File expectedOutput = new File(referenceFileName);
-		try {
-			File testOutput = summarizeThroughShortcutUsingTypedStrongSummary(7); 
-			if (!testOutput.exists()){
-				fail("Test output not found");
-			}
-			if (!expectedOutput.exists()){
-				fail("Expected output not found " + referenceFileName);
-			}
-			assertTrue("Different summary typedstrong 7", FileUtils.contentEquals(testOutput, expectedOutput));
-		}
-		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in typedstrong test 7 " + e.toString());
+			throw new IllegalStateException("Unable to open .nt files in typedstrong test 9 " + e.toString());
 		}
 	}
 }

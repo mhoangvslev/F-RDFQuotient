@@ -88,7 +88,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 							handleDataTriple(t);
 						triplesSummarizedSoFar++;
 						//display(); 
-						//this.drawSummaryAndGraph(conn, "after-" + triplesSummarizedSoFar + "-"+ t.s + "-" + t.p + "-" + t.o);
+						//this.drawSummaryAndGraph(conn, "after-" + triplesSummarizedSoFar + "-" + t.s + "-" + t.p + "-" + t.o);
 						if (this.checkConsistency)
 							consistencyChecks();
 					}
@@ -101,7 +101,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 		dataTriplesSummarizationTime = System.currentTimeMillis() - start;
 		System.out.println("Summarized " + triplesSummarizedSoFar + " data triples in " + dataTriplesSummarizationTime + " ms");
 
-		String getTypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p =" + typeConstantCode);
+		String getTypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p = " + typeConstantCode);
 		try {
 			try (Statement getTypedTriples = conn.createStatement()) {
 				getTypedTriples.setFetchSize(1000);
@@ -111,7 +111,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 						this.handleTypeTripleAfterData(t);
 						triplesSummarizedSoFar++;
 						storeSpecialNodesRepresentation(t, false);
-						//this.drawSummaryAndGraph(conn, "after-" + t.s + "-" + t.p + "-" + t.o);
+						//this.drawSummaryAndGraph(conn, "after-" + triplesSummarizedSoFar + "-" + t.s + "-" + t.p + "-" + t.o);
 						//System.out.println("Summary now has " + getSummaryEdges().size() + " triples");
 					}
 				}

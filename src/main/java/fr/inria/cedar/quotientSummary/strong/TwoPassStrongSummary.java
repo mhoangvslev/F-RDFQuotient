@@ -83,9 +83,7 @@ public class TwoPassStrongSummary extends StrongOrTypedStrongSummary {
 			avoidCollisionsWhenAssigningSummaryNodes(conn);
 		}
 		triplesSummarizedSoFar = 0;
-		String getUntypedTriplesString = ("select *  from " + tableName + " where p <> " + typeConstantCode + 
-				" and p<>" + RDF2SQLEncoding.getSubClassCode() + " and p<> " + RDF2SQLEncoding.getSubPropertyCode() + 
-				" and p<> " + RDF2SQLEncoding.getDomainCode() + " and p<> " + RDF2SQLEncoding.getRangeCode()); 
+		String getUntypedTriplesString = ("select *  from " + tableName + " where p <> " + typeConstantCode); 
 		try {
 			conn.setAutoCommit(false);
 			try (Statement getUntypedTriples = conn.createStatement()) {
@@ -96,7 +94,7 @@ public class TwoPassStrongSummary extends StrongOrTypedStrongSummary {
 						updateCliquesOutOf(t);
 						//System.out.println("Summary has become: " + this.toString());
 						triplesSummarizedSoFar++;
-						//this.drawSummaryAndGraph(conn, "after-" + triplesSummarizedSoFar + "-"+ t.s + "-" + t.p + "-" + t.o);
+						//this.drawSummaryAndGraph(conn, "after-" + triplesSummarizedSoFar + "-" + t.s + "-" + t.p + "-" + t.o);
 					}
 				}
 			}
@@ -109,7 +107,7 @@ public class TwoPassStrongSummary extends StrongOrTypedStrongSummary {
 		dataTriplesSummarizationTime = System.currentTimeMillis() - start;
 		System.out.println("Summarized " + triplesSummarizedSoFar + " data triples in " + dataTriplesSummarizationTime + " ms");
 
-		String getTypedTriplesString = ("select *  from " + tableName + " where p =" + typeConstantCode);
+		String getTypedTriplesString = ("select *  from " + tableName + " where p = " + typeConstantCode);
 		try {
 			try (Statement getTypedTriples = conn.createStatement()) {
 				getTypedTriples.setFetchSize(1000);
