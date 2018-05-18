@@ -712,11 +712,11 @@ public class Summary {
 	 */
 	protected ResultSet getNonTypeTriplesCursorForDotDrawing(Connection conn, long triplesToDraw) {
 		try {
-			String query = "select d1.value, d2.value, d3.value from "
-						   + encodedTriplesTableName + " t join " + dictionaryTableName
+			String query = "select d1.value, d2.value, d3.value from (select row_number() over () as id, s, p, o from "
+						   + encodedTriplesTableName + ") t join " + dictionaryTableName
 						   + " d1 on t.s = d1.key join " + dictionaryTableName
 						   + " d2 on t.p = d2.key join " + dictionaryTableName
-						   + " d3 on t.o = d3.key where d2.value <> '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' limit " + triplesToDraw;
+						   + " d3 on t.o = d3.key where d2.value <> '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' order by id limit " + triplesToDraw;
 			return conn.createStatement().executeQuery(query);
 		}
 		catch(SQLException e) {
