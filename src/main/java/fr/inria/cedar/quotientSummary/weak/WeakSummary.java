@@ -1,6 +1,5 @@
 package fr.inria.cedar.quotientSummary.weak;
 
-import fr.inria.cedar.commons.miscellaneous.Debugger;
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
 import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 import java.sql.Connection;
@@ -9,10 +8,15 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.TreeSet;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 public class WeakSummary extends WeakOrTypedWeakSummary {
+	private static final Logger LOGGER = Logger.getLogger(WeakSummary.class.getName());
+
 	public WeakSummary(String triplesFileName, String triplesTableName, String encodedTriplesTableName, String dictionaryTableName) {
 		super();
+		LOGGER.setLevel(Level.INFO);
 		this.triplesFileName = triplesFileName;
 		this.triplesTableName = triplesTableName;
 		this.encodedTriplesTableName = encodedTriplesTableName;
@@ -30,14 +34,14 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 	 */
 	public WeakSummary(Connection conn) {
 		this.summaryTablePrefix = WEAK_SUMMARY_PREFIX;
-		Debugger.log("Reading Weak summary from Postgres, setting up special URIs from the dictionary");
+		LOGGER.info("Reading Weak summary from Postgres, setting up special URIs from the dictionary");
 		RDF2SQLEncoding.setUp(conn, "dictionary");
 		String getSummaryTriples = getSummaryTriplesSQLQuery();
 		try {
 			Statement getTriples = conn.createStatement();
-			// Debugger.log("Created statement");
+			// LOGGER.debug("Created statement");
 			ResultSet rs = getTriples.executeQuery(getSummaryTriples);
-			// Debugger.log("Asking for summary triples")
+			// LOGGER.debug("Asking for summary triples")
 			while (rs.next()) {
 				Long s = rs.getLong(1);
 				Long p = rs.getLong(2);
@@ -214,7 +218,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 			}
 			edgesWithProv.addTriple(typeOnlyNodeID, t.p, t.o);
 			rep.put(t.s, typeOnlyNodeID);
-			rep.put(t.o, t.o); 
+			rep.put(t.o, t.o);
 		}
 		this.numberOfTypeTriplesRead++;
 	}

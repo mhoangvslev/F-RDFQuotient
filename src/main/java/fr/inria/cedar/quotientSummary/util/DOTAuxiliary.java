@@ -2,8 +2,12 @@ package fr.inria.cedar.quotientSummary.util;
 
 import java.util.HashMap;
 import java.util.TreeSet;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 public class DOTAuxiliary {
+	private static final Logger LOGGER = Logger.getLogger(DOTAuxiliary.class.getName());
+
 	public static String[] svgColorNames = {"antiquewhite1", "aquamarine1",
 											"cornflowerblue", "gold", "tomato", "chartreuse", "cadetblue1",
 											"blueviolet", "lightpink", "magenta", "yellow",
@@ -19,6 +23,7 @@ public class DOTAuxiliary {
 	public int nextSummaryColorToGive;
 
 	public DOTAuxiliary() {
+		LOGGER.setLevel(Level.INFO);
 		coloredSummaryNodes = new HashMap<>();
 		coloredRDFNodes = new TreeSet<>();
 		nextSummaryColorToGive = -1;

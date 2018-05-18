@@ -134,7 +134,6 @@ public class WeakSummaryTests {
 		return "src/test/resources/test" + i + "-weak/test-" + i + "_w_" + summarizationTechnique + "-reference.nt";
 	}
 
-	
 	@Test
 	public void summarizeWeakTest1() {
 		String referenceFileName = expectedOutput(1, "noSaturation");
@@ -324,7 +323,7 @@ public class WeakSummaryTests {
 			throw new IllegalStateException("Unable to open .nt files in weak test 10 " + e.toString());
 		}
 	}
-	
+
 	@Test
 	public void summarizeWeakTest11() {
 		String referenceFileName = expectedOutput(11, "noSaturation");
@@ -343,7 +342,7 @@ public class WeakSummaryTests {
 			throw new IllegalStateException("Unable to open .nt files in weak test 11 " + e.toString());
 		}
 	}
-	
+
 	@Test
 	public void summarizeWeakTest12() {
 		String referenceFileName = expectedOutput(12, "noSaturation");
@@ -362,8 +361,7 @@ public class WeakSummaryTests {
 			throw new IllegalStateException("Unable to open .nt files in weak test 12 " + e.toString());
 		}
 	}
-	
-	
+
 	@Test
 	public void saturateAndSummarizeWeakTest1() {
 		String referenceFileName = expectedOutput(1, "classical");
@@ -535,7 +533,6 @@ public class WeakSummaryTests {
 		}
 	}
 
-
 	@Test
 	public void saturateAndSummarizeWeakTest12() {
 		String referenceFileName = expectedOutput(12, "classical");
@@ -554,7 +551,7 @@ public class WeakSummaryTests {
 			throw new IllegalStateException("Unable to open .nt files in weak test 12 " + e.toString());
 		}
 	}
-	
+
 	@Test
 	public void summarizeThroughShortcutWeakTest1() {
 		String referenceFileName = expectedOutput(1, "shortcut");

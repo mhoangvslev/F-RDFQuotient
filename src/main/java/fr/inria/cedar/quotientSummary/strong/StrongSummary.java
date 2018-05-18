@@ -1,14 +1,17 @@
 package fr.inria.cedar.quotientSummary.strong;
 
-import fr.inria.cedar.commons.miscellaneous.Debugger;
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
 import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 public class StrongSummary extends StrongOrTypedStrongSummary {
+	private static final Logger LOGGER = Logger.getLogger(StrongSummary.class.getName());
+
 	public StrongSummary(String triplesFileName, String triplesTableName, String encodedTriplesTableName, String dictionaryTableName) {
 		super();
 		this.triplesFileName = triplesFileName;
@@ -25,16 +28,17 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 	 * @param conn
 	 */
 	public StrongSummary(Connection conn) {
+		LOGGER.setLevel(Level.INFO);
 		this.conn = conn; 
 		this.summaryTablePrefix = STRONG_SUMMARY_PREFIX;
-		Debugger.log("Reading Strong summary from Postgres, setting up special URIs from the dictionary");
+		LOGGER.info("Reading Strong summary from Postgres, setting up special URIs from the dictionary");
 		RDF2SQLEncoding.setUp(conn, "dictionary");
 		String getSummaryTriples = getSummaryTriplesSQLQuery();
 		try {
 			Statement getTriples = conn.createStatement();
-			// Debugger.log("Created statement");
+			// LOGGER.debug("Created statement");
 			ResultSet rs = getTriples.executeQuery(getSummaryTriples);
-			// Debugger.log("Asking for summary triples")
+			// LOGGER.debug("Asking for summary triples")
 			while (rs.next()) {
 				Long s = rs.getLong(1);
 				Long p = rs.getLong(2);
@@ -47,7 +51,6 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 		}
 		System.out.println("Read Strong summary from Postgres");
 	}
-
 
 	/**
 	 * this must be called after the constructor as the summary needs to ask more queries
@@ -133,7 +136,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 	}
 
 	public void handleDataTriple(Triple t) {
-		// 8 cases: (RS, US) x (RO, UO) x (RP, NP) 
+		// 8 cases: (RS, US) x (RP, UP) x (RO, UO)
 		Long sourceCliqueS = n2sc.get(t.s);
 		Long targetCliqueS = n2tc.get(t.s);
 		Long sourceCliqueO = n2sc.get(t.o);
@@ -190,7 +193,6 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 		display(); 
 	}
 
-
 	/** This implementation should be shared by Weak and Strong
 	 *
 	 * @param t
@@ -212,7 +214,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 			}
 			edgesWithProv.addTriple(typeOnlyNodeID, t.p, t.o);
 			rep.put(t.s, typeOnlyNodeID);
-			rep.put(t.o, t.o); 
+			rep.put(t.o, t.o);
 		}
 		this.numberOfTypeTriplesRead++;
 	}

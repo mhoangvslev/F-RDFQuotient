@@ -4,11 +4,15 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Objects;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 public class Path implements Comparable<Path> {
+	private static final Logger LOGGER = Logger.getLogger(Path.class.getName());
 	final ArrayList<Triple> triples;
 
 	public Path() {
+		LOGGER.setLevel(Level.INFO);
 		triples = new ArrayList<>();
 	}
 

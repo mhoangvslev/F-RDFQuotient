@@ -157,11 +157,11 @@ public class Substitutions {
 		StringBuffer sb = new StringBuffer();
 		sb.append("Substitution created with l1=[");
 		for (Long l: l1){
-			sb.append(l + " ");
+			sb.append(l).append(" ");
 		}
 		sb.append("] and l2=[");
 		for (Long l: l2){
-			sb.append(l + " ");
+			sb.append(l).append(" ");
 		}
 		sb.append("] leads to: "); 
 		for (Long k: substitutions.keySet())
@@ -176,7 +176,7 @@ public class Substitutions {
 	public Set<Long> getNodesToBeReplaced() {
 		return substitutions.keySet();
 	}
-	
+
 	public static void main(String[] argv){
 		Substitutions s = new Substitutions(1L, 2L, 3L, 5L);
 		System.out.println(s.toString());

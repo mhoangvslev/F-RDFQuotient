@@ -1,6 +1,5 @@
 package fr.inria.cedar.quotientSummary.weak;
 
-import fr.inria.cedar.commons.miscellaneous.Debugger;
 import fr.inria.cedar.quotientSummary.datastructures.Long2Long;
 import fr.inria.cedar.quotientSummary.datastructures.Long2LongSet;
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
@@ -12,31 +11,32 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.TreeSet;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 public class TypedWeakSummary extends WeakOrTypedWeakSummary {
+	private static final Logger LOGGER = Logger.getLogger(TypedWeakSummary.class.getName());
+
 	// The following three attribute serve to identify and store the class sets for RDF resources
 	Long2LongSet cs; // for each class set ID, a class set
 	Long2Long n2cs; // for each data node, its class set ID. This is also the rep function for typed nodes
 	Long2LongSet n2c; // for each data node, the set of types we know so far for this node
 	HashMap<TreeSet<Long>, Long> cs2csID; // for each set of types known so far, the ID of that set
 
-	protected final static char TRS_RP_TRO = 12;
-	protected final static char TRS_RP_RO = 13;
-	protected final static char TRS_RP_UO = 14;
-
-	protected final static char TRS_UP_TRO = 15; 
-	protected final static char TRS_UP_RO = 16; 
-	protected final static char TRS_UP_UO = 17; 
-
-	protected final static char RS_RP_TRO = 18;
-	protected final static char RS_UP_TRO = 19; 
-
-	protected final static char US_UP_TRO = 20; 
-	protected final static char US_RP_TRO = 21; 
-
+	protected final static char TRS_RP_TRO = 9;
+	protected final static char TRS_RP_RO = 10;
+	protected final static char TRS_RP_UO = 11;
+	protected final static char TRS_UP_TRO = 12; 
+	protected final static char TRS_UP_RO = 13; 
+	protected final static char TRS_UP_UO = 14; 
+	protected final static char RS_RP_TRO = 15;
+	protected final static char RS_UP_TRO = 16; 
+	protected final static char US_UP_TRO = 17; 
+	protected final static char US_RP_TRO = 18; 
 
 	public TypedWeakSummary(String triplesFileName, String triplesTableName, String encodedTriplesTableName, String dictionaryTableName) {
 		super();
+		LOGGER.setLevel(Level.INFO);
 		this.triplesFileName = triplesFileName;
 		this.triplesTableName = triplesTableName;
 		this.encodedTriplesTableName = encodedTriplesTableName;
@@ -56,14 +56,14 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 	 */
 	public TypedWeakSummary(Connection conn) {
 		this.summaryTablePrefix = TYPED_WEAK_SUMMARY_PREFIX;
-		Debugger.log("Reading TypedWeak summary from Postgres, setting up special URIs from the dictionary");
+		LOGGER.info("Reading TypedWeak summary from Postgres, setting up special URIs from the dictionary");
 		RDF2SQLEncoding.setUp(conn, "dictionary");
 		String getSummaryTriples = getSummaryTriplesSQLQuery();
 		try {
 			Statement getTriples = conn.createStatement();
-			// Debugger.log("Created statement");
+			// LOGGER.debug("Created statement");
 			ResultSet rs = getTriples.executeQuery(getSummaryTriples);
-			// Debugger.log("Asking for summary triples")
+			// LOGGER.debug("Asking for summary triples")
 			while (rs.next()) {
 				Long s = rs.getLong(1);
 				Long p = rs.getLong(2);
@@ -76,7 +76,6 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		}
 		System.out.println("Read TypedWeak summary from Postgres");
 	}
-
 
 	/**
 	 * Summarizes an RDF graph assuming the data triples are in Postgres
@@ -168,7 +167,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 	}
 
 	protected void handleDataTriple(Triple t) {
-		//Debugger.log("### Data triple: " + t.toString());
+		//LOGGER.debug("### Data triple: " + t.toString());
 		Long repS = rep.get(t.s);
 		Long repO = rep.get(t.o);
 		Long pSource = ps.get(t.p);
@@ -190,7 +189,8 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 //				RDF2SQLEncoding.dictionaryDecode(t.p) + " " +
 //				RDF2SQLEncoding.dictionaryDecode(t.o));
 		switch (caseNumber) {
-		case TRS_UP_TRO: // six cases for TRS
+		// six cases for TRS
+		case TRS_UP_TRO:
 			handleDataTriple_TRS_UP_TRO(t, repS, repO, pSource, pTarget);
 			break;
 		case TRS_UP_RO:
@@ -208,7 +208,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		case TRS_RP_RO:
 			handleDataTriple_TRS_RP_RO(t, repS, repO, pSource, pTarget);
 			break;
-			// six cases for RS: 
+		// six cases for RS: 
 		case RS_UP_UO:
 			handleDataTriple_RS_UP_UO(t);
 			break;
@@ -227,7 +227,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		case RS_RP_TRO:
 			handleDataTriple_RS_RP_TRO(t, repS, repO, pSource, pTarget);
 			break;
-			// six cases for US:  
+		// six cases for US:  
 		case US_UP_UO: 
 			handleDataTriple_US_UP_UO(t);
 			break;
@@ -250,13 +250,13 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 			throw new IllegalStateException("This case should not be encountered here");
 		}
 
-		//Debugger.log("After processing triple " + t.toString() + ", we have:\n" + this.toString()); 
+		//LOGGER.debug("After processing triple " + t.toString() + ", we have:\n" + this.toString()); 
 		//safetyCheck(); 
 	}
 
 	/**
 	 * In this case we need to: represent the subject by the property source if it exists, otherwise, create a new node and also register it as the source of p; 
-	 * add a p edge between this and the typed object, if not already there SEEN (3) 
+	 * add a p edge between this and the typed object, if not already there
 	 */
 	private void handleDataTriple_US_RP_TRO(Triple t, Long repS, Long repO, Long sourceP, Long targetP) {
 		Long addedTripleSource = sourceP; 
@@ -275,18 +275,17 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		edgesWithProv.addTriple(addedTripleSource, t.p, addedTripleTarget); 
 	}
 
-
 	/**
 	 * In this case we need to represent o by the target of p, and add the edge from repS to that node.
 	 * The source of p (if it exists) is not affected.
-	 * The target of p, if it did not exist, may become the representative of o.  SEEN (4) 
+	 * The target of p, if it did not exist, may become the representative of o
 	 */
 	private void handleDataTriple_TRS_RP_UO(Triple t, Long repS, Long repO, Long sourceP, Long targetP) {
 		Long addedTripleSource = repS;
 		Long addedTripleTarget = targetP;
 
-		if (targetP != null){
-			rep.put(t.o, addedTripleTarget); 
+		if (targetP != null) {
+			rep.put(t.o, addedTripleTarget);
 		}
 		else {
 			targetP = this.getNextSummaryNode();
@@ -294,11 +293,10 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 			pt.put(t.p, targetP);  
 		}
 
-		addedTripleTarget = targetP;	
+		addedTripleTarget = targetP;
 		edgesWithProv.addTriple(addedTripleSource, t.p, addedTripleTarget);
 	}
-	
-	
+
 	/**
 	 * In this case we need to: create the source of p; we don't create a target for it.
 	 * We represent s by the source of p, and add an edge from that to repO. SEEN (5)
@@ -321,8 +319,6 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		edgesWithProv.addTriple(repS, t.p,targetP);
 	}
 
-	
-	
 	/**
 	 * In this case we may have to fuse things between repS and the source of P
 	 * RepO remains unchanged.  SEEN (1)
@@ -350,7 +346,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		}
 		edgesWithProv.addTriple(addedTripleSource, t.p, addedTripleTarget);
 	}
-	
+
 	/**
 	 * In this case we need to possibly fuse the target of p with repO.
 	 * The source of p (if it exists)  remains unchanged. SEEN (2)
@@ -395,7 +391,6 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		edgesWithProv.addTriple(repS, t.p, repO);
 	}
 
-
 	/**
 	 * In this case we need to add a p triple (if not already there) between repS and repO. 
 	 * The source of p (if it exists) is not affected.
@@ -405,7 +400,6 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 	private void handleDataTriple_TRS_RP_TRO(Triple t, Long repS, Long repO, Long pSource, Long pTarget) {
 		edgesWithProv.addTriple(repS, t.p, repO);
 	}
-
 
 	/**
 	 * In this case we just add the triple; we do not modify its source nor its target
@@ -539,7 +533,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		}
 	}
 
-
+	@Override
 	public void handleTypeTripleBeforeData(Triple t) {
 		//System.out.println("@@@ Type triple: " + t.toString()); 
 
@@ -594,12 +588,6 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 				rep.put(node, thisClassSetID);
 			}
 		}
-	}
-
-
-	@Override
-	protected void handleTypeTripleAfterData(Triple t) {
-		throw new IllegalStateException("This method does not belong to " + this.getClass().getName());
 	}
 
 	@Override
