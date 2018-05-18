@@ -39,17 +39,17 @@ public class Summary {
 	//     for each property
 	//       the set of objects such that (subject, property, object) is in the summary
 	protected EdgesWithProvenanceCounts edgesWithProv;
-	
+
 	// TODO possibly rewrite code gathering these
 	// for each summary node, the number of graph nodes it represents
 	protected HashMap<Long, Long> summaryNodeStatistics;
 	// for each summary edge, the number of graph edge it represents
 	protected HashMap<Triple, Long> summaryEdgeStatistics;
-	
+
 	// these serve to represent the nodes that may have types but no data property
 	protected long typeOnlyNodeID;
 	protected boolean typeOnlyNodeAlreadySeen;
-	
+
 	protected Triple lastReadTriple;
 	protected long maxSummaryNode;
 	protected Properties properties;
@@ -64,7 +64,7 @@ public class Summary {
 	protected static String TYPED_STRONG_SUMMARY_PREFIX = "ts_";
 	protected static String TWO_PASS_STRONG_SUMMARY_PREFIX = "s2_";
 	protected static String TWO_PASS_TYPED_STRONG_SUMMARY_PREFIX = "ts2_";
-	
+
 	protected String triplesFileName = "";
 	protected String triplesTableName = "";
 	protected String encodedTriplesTableName = "";
@@ -98,16 +98,16 @@ public class Summary {
 		summaryTablePrefix = ROOT_SUMMARY_PREFIX;
 		dax = new DOTAuxiliary();
 	}
-	
+
 	public Summary(Connection conn) throws SQLException {
 		LOGGER.info("Trying to read summary from Postgres");
 		RDF2SQLEncoding.setUp(conn, "dictionary");
 		LOGGER.debug("Set up special URIs from dictionary");
 		String getSummaryTriples = getSummaryTriplesSQLQuery();
 		try (
-			Statement getTriples = conn.createStatement();
-			ResultSet rs = getTriples.executeQuery(getSummaryTriples);
-		) {
+				Statement getTriples = conn.createStatement();
+				ResultSet rs = getTriples.executeQuery(getSummaryTriples);
+				) {
 			while (rs.next()) {
 				Long s = rs.getLong(1);
 				Long p = rs.getLong(2);
@@ -169,13 +169,13 @@ public class Summary {
 	protected void jumpSummaryNodeCount(long n) {
 		this.maxSummaryNode += n;
 	}
-	
+
 	protected void storeSpecialNodesRepresentation(Triple triple, Boolean type) {
 		if (type == true)
 			repRDFURIs.put(triple.s, triple.s);
 		repRDFURIs.put(triple.o, triple.o);
 	}
-	
+
 	protected void gatherStatistics() {
 		gatherNodeStatistics();
 		gatherEdgeStatistics();
@@ -188,10 +188,10 @@ public class Summary {
 	protected void gatherNodeStatistics() {
 		try {
 			try (
-				Statement nodeStatisticQuery = RDF2SQLEncoding.getConnection().createStatement();
-				ResultSet rs = nodeStatisticQuery.executeQuery("select summarynode, count(*) from " + this.getSummaryTablePrefix() + "encoded_rep group by summarynode;")
-				// TODO: needs to be modified to account new naming convention
-			) {
+					Statement nodeStatisticQuery = RDF2SQLEncoding.getConnection().createStatement();
+					ResultSet rs = nodeStatisticQuery.executeQuery("select summarynode, count(*) from " + this.getSummaryTablePrefix() + "encoded_rep group by summarynode;")
+							// TODO: needs to be modified to account new naming convention
+					) {
 				while (rs.next()) {
 					Long summaryNode = rs.getLong(1);
 					Long numberOfReprGraphNodes = rs.getLong(2);
@@ -210,15 +210,15 @@ public class Summary {
 	protected void gatherEdgeStatistics() {
 		try {
 			try (
-				Statement edgeStatisticQuery = RDF2SQLEncoding.getConnection().createStatement();
-				ResultSet rs = edgeStatisticQuery.executeQuery(
-					"select es.s as summary_source, es.p as summary_prop, es.o as summary_target, count(*) " + "from "
-					+ summaryTablePrefix + "encoded_rep rep1, " + summaryTablePrefix
-					+ "encoded_rep rep2, encoded_triples t, " + summaryTablePrefix + "encoded_summary es " // TODO: needs to be modified to account new naming convention
-					+ "where rep1.graphnode = t.s and rep2.graphnode=t.o and es.s = rep1.summarynode and es.o = rep2.summarynode and es.p = t.p "
-					+ "group by es.s, es.p, es.o;")
-					// + "order by es.s, es.p, es.o;");
-			) {
+					Statement edgeStatisticQuery = RDF2SQLEncoding.getConnection().createStatement();
+					ResultSet rs = edgeStatisticQuery.executeQuery(
+							"select es.s as summary_source, es.p as summary_prop, es.o as summary_target, count(*) " + "from "
+									+ summaryTablePrefix + "encoded_rep rep1, " + summaryTablePrefix
+									+ "encoded_rep rep2, encoded_triples t, " + summaryTablePrefix + "encoded_summary es " // TODO: needs to be modified to account new naming convention
+									+ "where rep1.graphnode = t.s and rep2.graphnode=t.o and es.s = rep1.summarynode and es.o = rep2.summarynode and es.p = t.p "
+									+ "group by es.s, es.p, es.o;")
+							// + "order by es.s, es.p, es.o;");
+					) {
 				while (rs.next()) {
 					Triple t = new Triple(rs.getLong(1), rs.getLong(2), rs.getLong(3));
 					this.summaryEdgeStatistics.put(t, rs.getLong(4));
@@ -229,7 +229,7 @@ public class Summary {
 			throw new IllegalStateException("Could not compute edge representation statistics from Postgres: " + e.toString());
 		}
 	}
-	
+
 	protected void handleTypeTripleAfterData(Triple t) {
 		throw new IllegalStateException("Not implemented at this level");
 	}
@@ -304,7 +304,7 @@ public class Summary {
 				// if (!hasIndex(conn, "encoded_rep"))
 				//	stmt.executeUpdate("create index indRepS on encoded_rep(graphNode);");
 				// This gives some erros in the JDBC driver, perhaps it is not implemented properly.
-				
+
 				// now insert all the special rep entries:
 				insertIntoRep = "insert into " + newSummaryTableNameRep + " values(?, ?);";
 				try (PreparedStatement insertInRep = conn.prepareStatement(insertIntoRep)) {
@@ -446,15 +446,15 @@ public class Summary {
 					for (Triple ts : this.summaryEdgeStatistics.keySet()) {
 						Long numberOfRepresentedEdges = this.summaryEdgeStatistics.get(ts);
 						String reifEdgeURI = getSummaryNodeURI(properties.getProperty("reifiedSummaryEdgeURIPrefix"),
-														   reifiedEdgeNumber);
+								reifiedEdgeNumber);
 						bw.write(reifEdgeURI + " <" + properties.getProperty("reifiedEdgeHasSubject") + "> "
-							 + getSummaryNodeURI(URIprefix, ts.s) + " .\n");
+								+ getSummaryNodeURI(URIprefix, ts.s) + " .\n");
 						bw.write(reifEdgeURI + " <" + properties.getProperty("reifiedEdgeHasProperty") + "> <"
-							 + RDF2SQLEncoding.dictionaryDecode(ts.p) + "> .\n");
+								+ RDF2SQLEncoding.dictionaryDecode(ts.p) + "> .\n");
 						bw.write(reifEdgeURI + " <" + properties.getProperty("reifiedEdgeHasObject") + "> "
-							 + getSummaryNodeURI(URIprefix, ts.o) + " .\n");
+								+ getSummaryNodeURI(URIprefix, ts.o) + " .\n");
 						bw.write(reifEdgeURI + " <" + properties.getProperty("summaryEdgeSupportURI") + "> \""
-							 + numberOfRepresentedEdges + "\" .\n");
+								+ numberOfRepresentedEdges + "\" .\n");
 						reifiedEdgeNumber++;
 					}
 				}
@@ -529,8 +529,6 @@ public class Summary {
 					} else if (RDF2SQLEncoding.isSchemaProperty(t.p)) { // schema
 						subject = getVeryShortForDot(RDF2SQLEncoding.dictionaryDecode(t.s));
 						subjectInDot = subject.replaceAll("\"", "");
-						//property = getVeryShortForDot(RDF2SQLEncoding.dictionaryDecode(t.p));
-						//propertyInDot = property.replaceAll("\"", "");
 						if (t.p == RDF2SQLEncoding.getSubClassCode()){
 							propertyInDot = "subClass";
 						}
@@ -545,10 +543,8 @@ public class Summary {
 						}
 						object = getVeryShortForDot(RDF2SQLEncoding.dictionaryDecode(t.o));
 						objectInDot = object.replaceAll("\"", "");
-						if (dax.unknownSummaryNode(t.s))
-							bw.write("\"" + subjectInDot + "\" [fontcolor=white, style = filled, color=black];\n");
-						if (dax.unknownSummaryNode(t.o))
-							bw.write("\"" + objectInDot + "\" [fontcolor=white, style = filled, color=black];\n");
+						bw.write("\"" + subjectInDot + "\" [fontcolor=white, style = filled, color=black];\n");
+						bw.write("\"" + objectInDot + "\" [fontcolor=white, style = filled, color=black];\n");
 					} else { // type
 						subject = this.getSummaryNodeURI(URIprefix, t.s);
 						subjectInDot = getVeryShortForDot(subject).replaceAll("\"", "");
@@ -628,7 +624,7 @@ public class Summary {
 		else
 			return "..." + URI.substring(URI.length() - (maxNodeLabelLength - 4), URI.length());
 	}
-	
+
 	protected String getVeryShortForDot(String URIorLiteral){
 		boolean URI = false;
 		if (URIorLiteral.charAt(0) == '<' && (URIorLiteral.charAt(URIorLiteral.length() - 1)) == '>'){
@@ -721,11 +717,11 @@ public class Summary {
 				Long s = RDF2SQLEncoding.dictionaryEncode(subject);
 				Long sRep = rep.get(s);
 				//LOGGER.debug("DrawTriples: Encoded " + subject + " into " + s + " whose representative is: "  + sRep);
-				
+
 				String object = rs.getString(3);
 				Long o = RDF2SQLEncoding.dictionaryEncode(object);
 				Long oRep = rep.get(o);
-				
+
 				//LOGGER.debug("DrawTriples: Encoded " + object + " into " + o + " whose representative is: " + oRep);
 				String property = rs.getString(2);
 				Long p = RDF2SQLEncoding.dictionaryEncode(property);
@@ -753,10 +749,10 @@ public class Summary {
 	protected ResultSet getNonTypeTriplesCursorForDotDrawing(Connection conn, long triplesToDraw) {
 		try {
 			String query = "select d1.value, d2.value, d3.value from (select row_number() over () as id, s, p, o from "
-						   + encodedTriplesTableName + ") t join " + dictionaryTableName
-						   + " d1 on t.s = d1.key join " + dictionaryTableName
-						   + " d2 on t.p = d2.key join " + dictionaryTableName
-						   + " d3 on t.o = d3.key where d2.value <> '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' order by id limit " + triplesToDraw;
+					+ encodedTriplesTableName + ") t join " + dictionaryTableName
+					+ " d1 on t.s = d1.key join " + dictionaryTableName
+					+ " d2 on t.p = d2.key join " + dictionaryTableName
+					+ " d3 on t.o = d3.key where d2.value <> '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' order by id limit " + triplesToDraw;
 			return conn.createStatement().executeQuery(query);
 		}
 		catch(SQLException e) {
@@ -772,13 +768,12 @@ public class Summary {
 	 * @return
 	 */
 	protected ResultSet getTypeTriplesCursorForDotDrawing(Connection conn, long triplesToDraw) {
-		//System.out.println("GETTING TYPE TRIPLES CURSOR");
 		try{
 			String query = "select d1.value, d2.value, d3.value from "
-						   + encodedTriplesTableName + " t join " + dictionaryTableName
-						   + " d1 on t.s = d1.key join " + dictionaryTableName
-						   + " d2 on t.p = d2.key join " + dictionaryTableName
-						   + " d3 on t.o = d3.key where d2.value = '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' limit " + triplesToDraw;
+					+ encodedTriplesTableName + " t join " + dictionaryTableName
+					+ " d1 on t.s = d1.key join " + dictionaryTableName
+					+ " d2 on t.p = d2.key join " + dictionaryTableName
+					+ " d3 on t.o = d3.key where d2.value = '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' limit " + triplesToDraw;
 			return conn.createStatement().executeQuery(query);
 		}
 		catch(SQLException e){
@@ -787,7 +782,7 @@ public class Summary {
 	}
 
 	protected void writeGraphTripleToDotFile(BufferedWriter bw, Long s, Long p, Long o, String subject, String property, String object, Long sRep, Long oRep) {
-	
+
 		//System.out.println("WRITE GRAPH TRIPLE TO DOT s: " + s + " p: " + p + " o: " + o + " subject: "  + subject + " property " + property +  
 		//		" object " + object + " sRep: " + sRep + " oRep: " + oRep); 
 		String subjectForDot = getVeryShortForDot(subject).replaceAll("\"", "");
@@ -796,15 +791,14 @@ public class Summary {
 
 		try {
 			if (RDF2SQLEncoding.isDataProperty(p)) {
-				//if (dax.unknownRDFNode(s))
 				//LOGGER.debug("Data-S " + s + " (" + subject + ") represented by  " + sRep);
 				//LOGGER.debug(" colored " + 	dax.getSummaryNodeColor(sRep));
 				bw.write("\"" + subjectForDot + "\" [style = filled, color=" + dax.getSummaryNodeColor(sRep) + "];\n");
-				//if (dax.unknownRDFNode(o))
 				//	LOGGER.debug("Data-O " + o + " (" + object + ") represented by " + oRep + " colored " + dax.getSummaryNodeColor(oRep));
 				bw.write("\"" + objectForDot + "\" [style = filled, color=" + dax.getSummaryNodeColor(oRep) + "];\n");
 			}
 			else if (RDF2SQLEncoding.isSchemaProperty(p)) {
+				//System.out.println("SCHEMA TRIPLE"); 
 				if (p.equals(RDF2SQLEncoding.getSubClassCode())){
 					propertyForDot = "subClass"; 
 				}
@@ -817,18 +811,15 @@ public class Summary {
 				if (p.equals(RDF2SQLEncoding.getRangeCode())){
 					propertyForDot = "range"; 
 				}
-				//propertyForDot = getVeryShortForDot(property).replaceAll("\"", "");
-				//if (dax.unknownRDFNode(s))
-				//	LOGGER.debug("SCH1 " + s + " (" + subject + ") represented by  " + sRep);
+				//System.out.println("SCH1 " + s + " (" + subject + ") represented by  " + sRep + " written alone as " + subjectForDot); 
 				bw.write("\"" + subjectForDot + "\" [fontcolor=white, style = filled, color=black];\n");
-				//if (dax.unknownRDFNode(o))
-				//	LOGGER.debug("SCH2 " + s + " (" + subject + ") represented by  " + sRep);
+
+				//System.out.println("SCH2 " + o + " (" + object + ") represented by  " + oRep + " written alone as  "+ objectForDot);
 				bw.write("\"" + objectForDot + "\" [fontcolor=white, style = filled, color=black];\n");
 			}
 			else { // type
-				//LOGGER.debug("Type triple");
+				//LOGGER.debug("TYPE TRIPLE"); 
 				propertyForDot = "rdf:type";
-				//if (dax.unknownRDFNode(s))
 				//	LOGGER.debug("TYP1 " + s + " (" + subject + ") represented by  " + sRep);
 				if (dax == null) {
 					throw new IllegalStateException("Null dax");
@@ -838,12 +829,10 @@ public class Summary {
 				}
 				bw.write("\"" + subjectForDot + "\" [style = filled, color=" + dax.getSummaryNodeColor(sRep) + "];\n");
 
-				//if (dax.unknownRDFNode(o))
 				//	LOGGER.debug("TYP2 " + o + " (" + object + ") represented by  " + oRep);
 				bw.write("\"" + objectForDot + "\" [fontcolor=white, style = filled, color=black];\n");
 			}
 			bw.write("\"" + subjectForDot + "\"" + " -> \"" + objectForDot + "\" [label=\"" + propertyForDot + "\"];\n");
-			//LOGGER.debug("Written a line in dot");
 		}
 		catch (IOException e) {
 			throw new IllegalStateException("Unable to open the DOT file to for the summary: " + e.toString());
@@ -941,7 +930,7 @@ public class Summary {
 	protected void showClique(TreeSet<Long> clique) {
 		LOGGER.info(showCliqueAsString(clique));
 	}
-	
+
 	protected String showCliqueAsString(TreeSet<Long> clique) {
 		StringBuffer sb = new StringBuffer();
 		sb.append("[");
@@ -954,7 +943,7 @@ public class Summary {
 	protected HashMap<Long, TreeSet<Long>> getEdgesFrom(Long s){
 		return this.edgesWithProv.get(s); 
 	}
-	
+
 	protected HashMap<Long, TreeSet<Long>> getEdgesTo(Long o){
 		HashMap<Long, TreeSet<Long>> res = new HashMap<Long, TreeSet<Long>>();
 		for (Long s: edgesWithProv.keySet()){
@@ -972,7 +961,7 @@ public class Summary {
 		}
 		return res;  
 	}
-	
+
 	protected void addIncomingEdges(Long node, Long2LongSet newEdges){
 		//System.out.println("SUMMARY ADD INCOMING EDGES INTO " + node);
 		for (Long p: newEdges.keys()){
@@ -983,7 +972,7 @@ public class Summary {
 			}
 		}
 	}
-	
+
 	protected void removeIncomingEdges(Long node, Long2LongSet removedEdges){
 		for (Long p: removedEdges.keys()){
 			for (Long s: removedEdges.get(p)){
@@ -991,7 +980,7 @@ public class Summary {
 			}
 		}
 	}
-	
+
 	protected void addOutgoingEdges(Long node, Long2LongSet newEdges){
 		for (Long p: newEdges.keys()){
 			for (Long o: newEdges.get(p)){
@@ -999,7 +988,7 @@ public class Summary {
 			}
 		}
 	}
-	
+
 	protected void removeOutgoingEdges(Long node, Long2LongSet removedEdges){
 		for (Long p: removedEdges.keys()){
 			for (Long o: removedEdges.get(p)){
@@ -1007,7 +996,7 @@ public class Summary {
 			}
 		}
 	}
-	
+
 	public String getEdgesToString(){
 		StringBuffer sb = new StringBuffer();
 		for (Triple t: edgesWithProv.getSummaryEdges()){
