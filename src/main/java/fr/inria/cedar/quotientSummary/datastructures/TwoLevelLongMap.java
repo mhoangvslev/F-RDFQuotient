@@ -1,15 +1,18 @@
 package fr.inria.cedar.quotientSummary.datastructures;
 
+import fr.inria.cedar.quotientSummary.strong.ReplacementSpecification;
 import java.util.HashMap;
 import java.util.Set;
-
-import fr.inria.cedar.quotientSummary.strong.ReplacementSpecification;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 public class TwoLevelLongMap {
+	private static final Logger LOGGER = Logger.getLogger(TwoLevelLongMap.class.getName());
 	HashMap<Long, HashMap<Long, Long>> map;
 
 	public TwoLevelLongMap(){
-		map = new HashMap<Long, HashMap<Long, Long>>();
+		LOGGER.setLevel(Level.INFO);
+		map = new HashMap<>();
 	}
 
 	// modifies only untyped
@@ -28,7 +31,7 @@ public class TwoLevelLongMap {
 			}
 		}
 	}
-	
+
 	public Set<Long> keySet(){
 		return map.keySet(); 
 	}
@@ -74,14 +77,13 @@ public class TwoLevelLongMap {
 					else{ // there was no previous node on newSC and tc; put the one from the oldSC:
 						entriesOnNew.put(key2ndLevel, aNodeOnOld);
 					}
-				}	
+				}
 			// now we can remove entriesOnOld as all its entries have been moved on newX or overwritten
 			map.remove(old); 
 		}
 		else{ // there is nothing on old (old source clique), thus nothing to do.
 		}
 	}
-
 
 	public Long getIfExists(Long flk, Long slk) {
 		if (map.get(flk) == null){
@@ -107,15 +109,16 @@ public class TwoLevelLongMap {
 		}
 	}
 
+	@Override
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
 		for(Long flk: map.keySet()){
-			sb.append(flk + "=>{");
+			sb.append(flk).append("=>{");
 			//System.out.println("Source clique: " + sc);
 			HashMap<Long, Long> entriesOnFlk = map.get(flk);
 			for (Long slk: entriesOnFlk.keySet()){
 				Long v = entriesOnFlk.get(slk);
-				sb.append(slk + ":" + v + " ");
+				sb.append(slk).append(":").append(v).append(" ");
 			}
 			sb.append("} ");
 		}
@@ -143,5 +146,4 @@ public class TwoLevelLongMap {
 			}
 		}
 	}
-
 }

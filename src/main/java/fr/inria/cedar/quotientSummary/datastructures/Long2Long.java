@@ -3,7 +3,6 @@ package fr.inria.cedar.quotientSummary.datastructures;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.TreeSet;
-
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
@@ -37,10 +36,10 @@ public class Long2Long {
 	 */
 	public boolean put(Long k, Long v) {
 		//System.out.println("Long2Long: upon entering put " + clique + " on " + node + ": " + this.display()); 
-		boolean res = false; 
-		
+		boolean res = false;
+
 		Long previous = map.get(k);
-		
+
 		if (previous != null){
 			TreeSet<Long> inversePrev = inverse.get(previous);
 			if (inversePrev == null){
@@ -49,14 +48,14 @@ public class Long2Long {
 			}
 			inversePrev.remove(k);
 			//System.out.println("Long2Long: " + k + " no  longer mapped to " + previous);
-			if (inversePrev.size() == 0){
+			if (inversePrev.isEmpty()){
 				//LOGGER.debug("Long2Long: No one is represented by " + previous + " any more!");
 				res = true;
 				inverse.remove(previous); 
 			}
 		}
 		map.put(k, v);
-		
+
 		TreeSet<Long> keysForV = inverse.get(v);
 		if (keysForV == null) {
 			keysForV = new TreeSet<>();
@@ -68,6 +67,7 @@ public class Long2Long {
 		return res; 
 	}
 
+	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		if (!map.keySet().isEmpty()) {
@@ -105,7 +105,7 @@ public class Long2Long {
 		if (keysWithV1 != null){
 			TreeSet<Long> keysWithV2 = inverse.get(v2);
 			if (keysWithV2 == null){
-				keysWithV2 = new TreeSet<Long>();
+				keysWithV2 = new TreeSet<>();
 				inverse.put(v2, keysWithV2); 
 			}
 			for (Long l: keysWithV1) {

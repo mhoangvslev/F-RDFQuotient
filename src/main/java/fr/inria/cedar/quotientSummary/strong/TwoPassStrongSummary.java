@@ -1,17 +1,20 @@
 package fr.inria.cedar.quotientSummary.strong;
 
+import fr.inria.cedar.quotientSummary.datastructures.Triple;
+import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-
-import fr.inria.cedar.commons.miscellaneous.Debugger;
-import fr.inria.cedar.quotientSummary.datastructures.Triple;
-import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 public class TwoPassStrongSummary extends StrongOrTypedStrongSummary {
+	private static final Logger LOGGER = Logger.getLogger(TwoPassStrongSummary.class.getName());
+
 	public TwoPassStrongSummary(String triplesFileName, String triplesTableName, String encodedTriplesTableName, String dictionaryTableName) {
 		super();
+		LOGGER.setLevel(Level.INFO);
 		this.triplesFileName = triplesFileName;
 		this.triplesTableName = triplesTableName;
 		this.encodedTriplesTableName = encodedTriplesTableName;
@@ -28,14 +31,14 @@ public class TwoPassStrongSummary extends StrongOrTypedStrongSummary {
 	public TwoPassStrongSummary(Connection conn) {
 		this.conn = conn; 
 		this.summaryTablePrefix = TWO_PASS_STRONG_SUMMARY_PREFIX; 
-		Debugger.log("Reading Two-pass Strong summary from Postgres, setting up special URIs from the dictionary");
+		LOGGER.info("Reading Two-pass Strong summary from Postgres, setting up special URIs from the dictionary");
 		RDF2SQLEncoding.setUp(conn, "dictionary");
 		String getSummaryTriples = getSummaryTriplesSQLQuery();
 		try {
 			Statement getTriples = conn.createStatement();
-			// Debugger.log("Created statement");
+			// LOGGER.debug("Created statement");
 			ResultSet rs = getTriples.executeQuery(getSummaryTriples);
-			// Debugger.log("Asking for summary triples")
+			// LOGGER.debug("Asking for summary triples")
 			while (rs.next()) {
 				Long s = rs.getLong(1);
 				Long p = rs.getLong(2);
@@ -48,7 +51,6 @@ public class TwoPassStrongSummary extends StrongOrTypedStrongSummary {
 		}
 		System.out.println("Read Two-Pass Strong summary from Postgres");
 	}
-
 
 	/**
 	 * this must be called after the constructor as the summary needs to ask more queries
@@ -64,12 +66,10 @@ public class TwoPassStrongSummary extends StrongOrTypedStrongSummary {
 	 * Summarizes an RDF graph assuming the data triples are in Postgres
 	 *
 	 * @param conn
-	 * @param args
 	 */
 	@Override
 	public void summarizeFromPostgres(Connection conn){
 		this.setConn(conn);
-		Debugger.setFlag(true);
 		long start = System.currentTimeMillis();
 
 		String tableName = ""; 
@@ -102,8 +102,9 @@ public class TwoPassStrongSummary extends StrongOrTypedStrongSummary {
 		catch (SQLException e) {
 			throw new IllegalStateException("Postgres error encountered while summarizing data triples " + e.toString());
 		}
+
 		// TODO: second pass here.
-		
+
 		dataTriplesSummarizationTime = System.currentTimeMillis() - start;
 		System.out.println("Summarized " + triplesSummarizedSoFar + " data triples in " + dataTriplesSummarizationTime + " ms");
 
@@ -136,9 +137,9 @@ public class TwoPassStrongSummary extends StrongOrTypedStrongSummary {
 
 	private void updateCliquesOutOf(Triple t) {
 		updateSourceCliques(t);
-		updateTargetCliques(t);	
+		updateTargetCliques(t);
 	}
-	
+
 	protected void updateSourceCliques(Triple t){
 		Long ssc = n2sc.get(t.s);
 		Long psc = p2sc.get(t.p); 
@@ -166,14 +167,14 @@ public class TwoPassStrongSummary extends StrongOrTypedStrongSummary {
 				}
 			}
 		}
-		
+
 		Long osc = n2sc.get(t.o);
 		if (osc == null){
 			Long emptySC = this.getEmptySourceCliqueID();
 			n2sc.put(t.o, emptySC); 
 		}
 	}
-	
+
 	protected void updateTargetCliques(Triple t){
 		Long otc = n2tc.get(t.o);
 		Long ptc = p2tc.get(t.p); 
@@ -200,12 +201,11 @@ public class TwoPassStrongSummary extends StrongOrTypedStrongSummary {
 					p2tc.put(t.p, newTC); 
 				}
 			}
-		}		
+		}
 		Long stc = n2tc.get(t.s);
 		if (stc == null){
 			Long emptyTC = this.getEmptyTargetCliqueID();
 			n2tc.put(t.o, emptyTC); 
 		}
 	}
-	
 }

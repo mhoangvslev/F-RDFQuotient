@@ -247,7 +247,7 @@ public class TypedWeakSummaryTests {
 			throw new IllegalStateException("Unable to open .nt files in typedweak test 8 " + e.toString());
 		}
 	}
-	
+
 	@Test
 	public void summarizeTypedWeakTest9() {
 		String referenceFileName = expectedOutput(9, "noSaturation");
@@ -418,7 +418,7 @@ public class TypedWeakSummaryTests {
 			throw new IllegalStateException("Unable to open .nt files in typedweak test 8 " + e.toString());
 		}
 	}
-	
+
 	@Test
 	public void saturateAndSummarizeTypedWeakTest9() {
 		String referenceFileName = expectedOutput(9, "classical");

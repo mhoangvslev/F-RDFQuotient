@@ -39,17 +39,17 @@ public class Summary {
 	//     for each property
 	//       the set of objects such that (subject, property, object) is in the summary
 	protected EdgesWithProvenanceCounts edgesWithProv;
-	
+
 	// TODO possibly rewrite code gathering these
 	// for each summary node, the number of graph nodes it represents
 	protected HashMap<Long, Long> summaryNodeStatistics;
 	// for each summary edge, the number of graph edge it represents
 	protected HashMap<Triple, Long> summaryEdgeStatistics;
-	
+
 	// these serve to represent the nodes that may have types but no data property
 	protected long typeOnlyNodeID;
 	protected boolean typeOnlyNodeAlreadySeen;
-	
+
 	protected Triple lastReadTriple;
 	protected long maxSummaryNode;
 	protected Properties properties;
@@ -64,7 +64,7 @@ public class Summary {
 	protected static String TYPED_STRONG_SUMMARY_PREFIX = "ts_";
 	protected static String TWO_PASS_STRONG_SUMMARY_PREFIX = "s2_";
 	protected static String TWO_PASS_TYPED_STRONG_SUMMARY_PREFIX = "ts2_";
-	
+
 	protected String triplesFileName = "";
 	protected String triplesTableName = "";
 	protected String encodedTriplesTableName = "";
@@ -98,7 +98,7 @@ public class Summary {
 		summaryTablePrefix = ROOT_SUMMARY_PREFIX;
 		dax = new DOTAuxiliary();
 	}
-	
+
 	public Summary(Connection conn) throws SQLException {
 		LOGGER.info("Trying to read summary from Postgres");
 		RDF2SQLEncoding.setUp(conn, "dictionary");
@@ -169,13 +169,13 @@ public class Summary {
 	protected void jumpSummaryNodeCount(long n) {
 		this.maxSummaryNode += n;
 	}
-	
+
 	protected void storeSpecialNodesRepresentation(Triple triple, Boolean type) {
 		if (type == true)
 			repRDFURIs.put(triple.s, triple.s);
 		repRDFURIs.put(triple.o, triple.o);
 	}
-	
+
 	protected void gatherStatistics() {
 		gatherNodeStatistics();
 		gatherEdgeStatistics();
@@ -229,7 +229,11 @@ public class Summary {
 			throw new IllegalStateException("Could not compute edge representation statistics from Postgres: " + e.toString());
 		}
 	}
-	
+
+	protected void handleTypeTripleBeforeData(Triple t) {
+		throw new IllegalStateException("Not implemented at this level");
+	}
+
 	protected void handleTypeTripleAfterData(Triple t) {
 		throw new IllegalStateException("Not implemented at this level");
 	}
@@ -304,7 +308,7 @@ public class Summary {
 				// if (!hasIndex(conn, "encoded_rep"))
 				//	stmt.executeUpdate("create index indRepS on encoded_rep(graphNode);");
 				// This gives some erros in the JDBC driver, perhaps it is not implemented properly.
-				
+
 				// now insert all the special rep entries:
 				insertIntoRep = "insert into " + newSummaryTableNameRep + " values(?, ?);";
 				try (PreparedStatement insertInRep = conn.prepareStatement(insertIntoRep)) {
@@ -681,7 +685,7 @@ public class Summary {
 				Long s = RDF2SQLEncoding.dictionaryEncode(subject);
 				Long sRep = rep.get(s);
 				//LOGGER.debug("DrawTriples: Encoded " + subject + " into " + s + " whose representative is: "  + sRep);
-				
+
 				String object = rs.getString(3);
 				Long o = RDF2SQLEncoding.dictionaryEncode(object);
 				Long oRep = rep.get(o);
@@ -746,7 +750,6 @@ public class Summary {
 	}
 
 	protected void writeGraphTripleToDotFile(BufferedWriter bw, Long s, Long p, Long o, String subject, String property, String object, Long sRep, Long oRep) {
-	
 		//LOGGER.debug("WRITE GRAPH TRIPLE TO DOT s: " + s + " p: " + p + " o: " + o + " subject: "  + subject + " property " + property +  
 		//		" object " + object + " sRep: " + sRep + " oRep: " + oRep); 
 		String subjectForDot = getShortURIForDot(subject).replaceAll("\"", "");
@@ -888,12 +891,12 @@ public class Summary {
 	protected void showClique(TreeSet<Long> clique) {
 		LOGGER.info(showCliqueAsString(clique));
 	}
-	
+
 	protected String showCliqueAsString(TreeSet<Long> clique) {
 		StringBuffer sb = new StringBuffer();
 		sb.append("[");
 		for (Long l : clique)
-			sb.append(l).append("(" + RDF2SQLEncoding.dictionaryDecode(l) + ") ");
+			sb.append(l).append("(").append(RDF2SQLEncoding.dictionaryDecode(l)).append(") ");
 		sb.append("]");
 		return new String(sb); 
 	}
@@ -901,16 +904,16 @@ public class Summary {
 	protected HashMap<Long, TreeSet<Long>> getEdgesFrom(Long s){
 		return this.edgesWithProv.get(s); 
 	}
-	
+
 	protected HashMap<Long, TreeSet<Long>> getEdgesTo(Long o){
-		HashMap<Long, TreeSet<Long>> res = new HashMap<Long, TreeSet<Long>>();
+		HashMap<Long, TreeSet<Long>> res = new HashMap<>();
 		for (Long s: edgesWithProv.keySet()){
 			for (Long p: edgesWithProv.get(s).keySet()){
 				// if there is an edge s--p-->o
 				if (edgesWithProv.get(s).get(p).equals(o)) {
 					TreeSet<Long> onP = res.get(p);
 					if (onP == null){ // the first edge labeled p which goes into o 
-						onP = new TreeSet<Long>();
+						onP = new TreeSet<>();
 						res.put(p, onP);
 					}
 					onP.add(s); // add s on p in the result
@@ -919,7 +922,7 @@ public class Summary {
 		}
 		return res;  
 	}
-	
+
 	protected void addIncomingEdges(Long node, Long2LongSet newEdges){
 		//System.out.println("SUMMARY ADD INCOMING EDGES INTO " + node);
 		for (Long p: newEdges.keys()){
@@ -930,7 +933,7 @@ public class Summary {
 			}
 		}
 	}
-	
+
 	protected void removeIncomingEdges(Long node, Long2LongSet removedEdges){
 		for (Long p: removedEdges.keys()){
 			for (Long s: removedEdges.get(p)){
@@ -938,7 +941,7 @@ public class Summary {
 			}
 		}
 	}
-	
+
 	protected void addOutgoingEdges(Long node, Long2LongSet newEdges){
 		for (Long p: newEdges.keys()){
 			for (Long o: newEdges.get(p)){
@@ -946,7 +949,7 @@ public class Summary {
 			}
 		}
 	}
-	
+
 	protected void removeOutgoingEdges(Long node, Long2LongSet removedEdges){
 		for (Long p: removedEdges.keys()){
 			for (Long o: removedEdges.get(p)){
@@ -954,11 +957,11 @@ public class Summary {
 			}
 		}
 	}
-	
+
 	public String getEdgesToString(){
 		StringBuffer sb = new StringBuffer();
 		for (Triple t: edgesWithProv.getSummaryEdges()){
-			sb.append(t.toString() + " ");
+			sb.append(t.toString()).append(" ");
 		}
 		return new String(sb); 
 	}

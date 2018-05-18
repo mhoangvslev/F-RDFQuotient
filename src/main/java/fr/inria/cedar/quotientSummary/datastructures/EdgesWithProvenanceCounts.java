@@ -4,19 +4,18 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.TreeSet;
-
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
-import fr.inria.cedar.quotientSummary.Summary;
-
 public class EdgesWithProvenanceCounts {
-	private static final Logger LOGGER = Logger.getLogger(Summary.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(EdgesWithProvenanceCounts.class.getName());
 	protected HashMap<Long, HashMap<Long, TreeSet<Long>>> edges;
 	protected HashMap<Long, HashMap<Long, HashMap<Long, Long>>> counts;
 
 	public EdgesWithProvenanceCounts(){
-		edges = new HashMap<Long, HashMap<Long, TreeSet<Long>>>();
-		counts = new HashMap<Long, HashMap<Long, HashMap<Long, Long>>>();
+		LOGGER.setLevel(Level.DEBUG);
+		edges = new HashMap<>();
+		counts = new HashMap<>();
 	}
 
 	public HashMap<Long, TreeSet<Long>> get(Long s){
@@ -31,15 +30,15 @@ public class EdgesWithProvenanceCounts {
 	 * @param o
 	 */
 	public final void addTriple(Long s, Long p, Long o) {
-		System.out.println("ADDING SUMMARY TRIPLE: " + s + " " + p + " " + o);
+		LOGGER.debug("ADDING SUMMARY TRIPLE: " + s + " " + p + " " + o);
 		Triple t = new Triple(s, p, o);
 		HashMap<Long, TreeSet<Long>> triplesForThisSubject = edges.get(s);
 		HashMap<Long,  HashMap<Long, Long>> countsForThisSubject = counts.get(s); 
-		
+
 		if (triplesForThisSubject == null) { // no edges yet for this subject;
 			// otherwise, s has already some edges
 			triplesForThisSubject = new HashMap<>();
-			countsForThisSubject = new  HashMap<Long, HashMap<Long, Long>>();
+			countsForThisSubject = new  HashMap<>();
 			edges.put(s, triplesForThisSubject);
 			counts.put(s, countsForThisSubject); 
 		}
@@ -48,7 +47,7 @@ public class EdgesWithProvenanceCounts {
 		if (objectsForThisSubjectAndProperty == null) { // no edges yet for this subject and property; otherwise, s has already some p edges
 			objectsForThisSubjectAndProperty = new TreeSet<>();
 			triplesForThisSubject.put(t.p, objectsForThisSubjectAndProperty);
-			countsForThisSubjectAndProperty = new HashMap<Long, Long>(); 
+			countsForThisSubjectAndProperty = new HashMap<>(); 
 			countsForThisSubject.put(t.p, countsForThisSubjectAndProperty); 
 		}
 		if (!objectsForThisSubjectAndProperty.contains(t.o)) { // otherwise, s p o
@@ -64,12 +63,12 @@ public class EdgesWithProvenanceCounts {
 	public void setCounter(Long s, Long p, Long o, Long value){
 		HashMap<Long,  HashMap<Long, Long>> countsForS = counts.get(s); 
 		if (countsForS == null){
-			countsForS = new HashMap<Long, HashMap<Long, Long>>();
+			countsForS = new HashMap<>();
 			counts.put(s, countsForS);
 		}
 		HashMap<Long, Long> countsForSP = countsForS.get(p);
 		if (countsForSP == null){
-			countsForSP = new HashMap<Long, Long>();
+			countsForSP = new HashMap<>();
 			countsForS.put(p, countsForSP);
 		}
 		countsForSP.put(o, value); // overwrites whatever was there
@@ -86,8 +85,7 @@ public class EdgesWithProvenanceCounts {
 		}
 		return countsForSP.get(o); 
 	}
-	
-	
+
 	// replaces in summary edges
 	public void replaceNodeInSummaryEdges(Long oldNode, Long newNode) {
 		// replace oldNode wherever it existed as an object:
@@ -118,7 +116,7 @@ public class EdgesWithProvenanceCounts {
 		}
 		// above we have replaced old with new wherever it appeared as an object.
 		// now let's also do it ***as a subject:***
-		
+
 		HashMap<Long, TreeSet<Long>> oldNodeIsSubject = edges.get(oldNode);
 		HashMap<Long, HashMap<Long, Long>> countsOnOldSubject = counts.get(oldNode);
 		if (oldNodeIsSubject != null) { // in some edges, oldNode was subject
@@ -145,7 +143,7 @@ public class EdgesWithProvenanceCounts {
 						if (newNodeObjectsForP == null) { // the new node did not have this one => initializing
 							//System.out.println("   SUMMARY.REPLACE IN EDGES: " + newNode + " did not have edges labeled " + oldNodeProperty
 							//		+ ", he is taking them from " + oldNode);
-							newNodeObjectsForP = new TreeSet<Long>();
+							newNodeObjectsForP = new TreeSet<>();
 							newNodeIsSubject.put(p, newNodeObjectsForP);
 						}
 						// whether the new node did or did not have triples labeled
@@ -217,10 +215,11 @@ public class EdgesWithProvenanceCounts {
 		}
 		return res; 
 	}
+
 	public void display() {
 		StringBuffer sb = new StringBuffer();
 		for (Triple t: this.getSummaryEdges()){
-			sb.append(t.toString() + ": " + getCounter(t.s, t.p, t.o) + "\n"); 
+			sb.append(t.toString()).append(": ").append(getCounter(t.s, t.p, t.o)).append("\n"); 
 		}
 		System.out.println(new String(sb)); 
 	}
