@@ -125,21 +125,67 @@ public class Summary {
 		long maxClassOrPropertyCode = 0;
 		long typeConstantCode = RDF2SQLEncoding.getTypeCode();
 
-		try {
-			String jumpRepString = ("select max(o) from " + encodedTriplesTableName + " t1 where p = " + typeConstantCode);
-			try (ResultSet rs = conn.createStatement().executeQuery(jumpRepString)) {
-				while (rs.next()) {
-					maxClassOrPropertyCode = rs.getLong(1);
-					break;
-				}
+		if (typeConstantCode != -1){
+			maxClassOrPropertyCode = this.maxO(conn, typeConstantCode); 
+		}
+		long subClassCode = RDF2SQLEncoding.getSubClassCode();
+		if (subClassCode != -1){
+			maxClassOrPropertyCode = Math.max(maxClassOrPropertyCode, this.maxSPO(conn, subClassCode));
+		}	
+		long domainCode = RDF2SQLEncoding.getDomainCode();
+		if (domainCode != -1){
+			maxClassOrPropertyCode = Math.max(maxClassOrPropertyCode, this.maxSPO(conn, domainCode));
+		}
+		long rangeCode = RDF2SQLEncoding.getRangeCode();
+		if (rangeCode != -1){
+			maxClassOrPropertyCode = Math.max(maxClassOrPropertyCode, this.maxSPO(conn, domainCode));
+		}
+		this.jumpSummaryNodeCount(maxClassOrPropertyCode + 1);
+	}
+	
+	protected long maxSPO(Connection conn, long property){
+		long maxS = maxS(conn, property);
+		long maxP = maxO(conn, property);
+		long maxO = maxO(conn, property);
+		return Math.max(maxS, Math.max(maxP, maxO));
+	}
+	protected long maxS(Connection conn, long property){
+		String jumpRepString = ("select max(s) from " + encodedTriplesTableName + " t1 where p = " + property);
+		try (ResultSet rs = conn.createStatement().executeQuery(jumpRepString)) {
+			while (rs.next()) {
+				return rs.getLong(1); 
 			}
 		}
 		catch (SQLException e) {
-			throw new IllegalStateException("Unable to determine the highest dictionary code for a type " + e.toString());
+			throw new IllegalStateException("Unable to determine the highest subject code" + e.toString());
 		}
-
-		this.jumpSummaryNodeCount(maxClassOrPropertyCode + 1);
+		return -1; 
 	}
+	protected long maxP(Connection conn, long property){
+		String jumpRepString = ("select max(p) from " + encodedTriplesTableName + " t1 where p = " + property);
+		try (ResultSet rs = conn.createStatement().executeQuery(jumpRepString)) {
+			while (rs.next()) {
+				return rs.getLong(1); 
+			}
+		}
+		catch (SQLException e) {
+			throw new IllegalStateException("Unable to determine the highest property code " + e.toString());
+		}
+		return -1; 
+	}
+	protected long maxO(Connection conn, long property){
+		String jumpRepString = ("select max(o) from " + encodedTriplesTableName + " t1 where p = " + property);
+		try (ResultSet rs = conn.createStatement().executeQuery(jumpRepString)) {
+			while (rs.next()) {
+				return rs.getLong(1); 
+			}
+		}
+		catch (SQLException e) {
+			throw new IllegalStateException("Unable to determine the highest object code " + e.toString());
+		}
+		return -1; 
+	}
+
 
 	protected void showRepInBuffer(StringBuffer sb) {
 		for (Long node : this.rep.getKeys()) {
