@@ -10,6 +10,7 @@ public class DOTAuxiliary {
 											"plum", "wheat", "mediumpurple1", "coral",
 											"lightgoldenrod", "orange", "khaki1", "orangered", "navy",
 											"lightpink", "magenta", "cyan", "firebrick"};
+	public static TreeSet<String> darkColorNames; 
 	// color index for each summary node (may cycle if there are more summary nodes than colors)
 	public HashMap<Long, Integer> coloredSummaryNodes;
 	// whether or not the RDF node has already been colored. We do not store colors for them
@@ -21,8 +22,17 @@ public class DOTAuxiliary {
 		coloredSummaryNodes = new HashMap<>();
 		coloredRDFNodes = new TreeSet<>();
 		nextSummaryColorToGive = -1;
+		initDarkColors();
 	}
-
+	private void initDarkColors(){
+		darkColorNames = new TreeSet<String>();
+		darkColorNames.add("blueviolet");
+		darkColorNames.add("navy");
+		darkColorNames.add("firebrick"); 
+	}
+	public boolean isDarkColor(String s){
+		return darkColorNames.contains(s); 
+	}
 	public String getSummaryNodeColor(long summaryNodeCode) {
 		Integer colorForThisNode = coloredSummaryNodes.get(summaryNodeCode);
 		if (colorForThisNode == null) {
