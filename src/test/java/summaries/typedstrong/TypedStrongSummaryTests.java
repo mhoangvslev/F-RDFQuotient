@@ -270,6 +270,44 @@ public class TypedStrongSummaryTests {
 		}
 	}
 
+	// no point in adding test10 as the graph number 10 does not have type triples
+	@Test
+	public void summarizeTypedStrongTest11() {
+		String referenceFileName = expectedOutput(11, "noSaturation");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = summarizeUsingTypedStrongSummary(11); 
+			if (!testOutput.exists()){
+				fail("Test output not found");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary typedstrong 11", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in typedstrong test 11 " + e.toString());
+		}
+	}
+	@Test
+	// this is currently a bug! https://gitlab.inria.fr/cedar/quotientSummary/issues/15
+	public void summarizeTypedStrongTest12() {
+		String referenceFileName = expectedOutput(12, "noSaturation");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = summarizeUsingTypedStrongSummary(12); 
+			if (!testOutput.exists()){
+				fail("Test output not found");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary typedstrong 12", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in typedstrong test 12 " + e.toString());
+		}
+	}
 	@Test
 	public void saturateAndSummarizeTypedStrongTest1() {
 		String referenceFileName = expectedOutput(1, "classical");
@@ -407,6 +445,26 @@ public class TypedStrongSummaryTests {
 	}
 
 	@Test
+	// this is currently a bug! https://gitlab.inria.fr/cedar/quotientSummary/issues/15
+	public void saturateAndSummarizeTypedStrongTest12() {
+		String referenceFileName = expectedOutput(12, "classical");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = saturateAndSummarizeUsingTypedStrongSummary(12); 
+			if (!testOutput.exists()){
+				fail("Test output not found");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary typedstrong 12", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in typedstrong test 12 " + e.toString());
+		}
+	}
+	
+	@Test
 	public void summarizeThroughShortcutTypedStrongTest1() {
 		String referenceFileName = expectedOutput(1, "shortcut");
 		File expectedOutput = new File(referenceFileName);
@@ -539,6 +597,26 @@ public class TypedStrongSummaryTests {
 		}
 		catch (IOException e) {
 			throw new IllegalStateException("Unable to open .nt files in typedstrong test 7 " + e.toString());
+		}
+	}
+	
+	@Test
+	// this is currently a bug! https://gitlab.inria.fr/cedar/quotientSummary/issues/15
+	public void summarizeThroughShortcutTypedStrongTest12() {
+		String referenceFileName = expectedOutput(12, "shortcut");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = summarizeThroughShortcutUsingTypedStrongSummary(12); 
+			if (!testOutput.exists()){
+				fail("Test output not found");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary typedstrong 12", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in typedstrong test 12 " + e.toString());
 		}
 	}
 }

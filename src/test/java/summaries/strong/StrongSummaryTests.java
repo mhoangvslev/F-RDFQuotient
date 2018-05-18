@@ -285,6 +285,58 @@ public class StrongSummaryTests {
 			throw new IllegalStateException("Unable to open .nt files in strong test 9 " + e.toString());
 		}
 	}
+	@Test
+	public void summarizeStrongTest10() {
+		String referenceFileName = expectedOutput(10, "noSaturation");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = summarizeUsingStrongSummary(10);
+			if (!testOutput.exists()){
+				fail("Test output not found ");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary strong 10", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in strong test 10 " + e.toString());
+		}
+	}@Test
+	public void summarizeStrongTest11() {
+		String referenceFileName = expectedOutput(11, "noSaturation");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = summarizeUsingStrongSummary(11);
+			if (!testOutput.exists()){
+				fail("Test output not found ");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary strong 11", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in strong test 11 " + e.toString());
+		}
+	}@Test
+	public void summarizeStrongTest12() {
+		String referenceFileName = expectedOutput(12, "noSaturation");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = summarizeUsingStrongSummary(12);
+			if (!testOutput.exists()){
+				fail("Test output not found ");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary strong 12", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in strong test 12 " + e.toString());
+		}
+	}
 
 	@Test
 	public void saturateAndSummarizeStrongTest1() {
@@ -437,6 +489,25 @@ public class StrongSummaryTests {
 			throw new IllegalStateException("Unable to open .nt files in strong test 9 " + e.toString());
 		}
 	}
+	// not worth adding 10 and 11 as saturation does nothing (other than reorder triples :) 
+	@Test
+	public void saturateAndSummarizeStrongTest12() {
+		String referenceFileName = expectedOutput(12, "classical");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = saturateAndSummarizeUsingStrongSummary(12);
+			if (!testOutput.exists()){
+				fail("Test output not found ");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary strong 12", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in strong test 12 " + e.toString());
+		}
+	}
 
 	@Test
 	public void summarizeThroughShortcutStrongTest1() {
@@ -587,6 +658,24 @@ public class StrongSummaryTests {
 		}
 		catch (IOException e) {
 			throw new IllegalStateException("Unable to open .nt files in strong test 9 " + e.toString());
+		}
+	}
+	@Test
+	public void summarizeThroughShortcutStrongTest12() {
+		String referenceFileName = expectedOutput(12, "shortcut");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = summarizeThroughShortcutUsingStrongSummary(12);
+			if (!testOutput.exists()){
+				fail("Test output not found ");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary strong 12", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in strong test 12 " + e.toString());
 		}
 	}
 }

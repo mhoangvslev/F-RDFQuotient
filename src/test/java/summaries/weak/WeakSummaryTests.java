@@ -134,6 +134,7 @@ public class WeakSummaryTests {
 		return "src/test/resources/test" + i + "-weak/test-" + i + "_w_" + summarizationTechnique + "-reference.nt";
 	}
 
+	
 	@Test
 	public void summarizeWeakTest1() {
 		String referenceFileName = expectedOutput(1, "noSaturation");
@@ -306,6 +307,64 @@ public class WeakSummaryTests {
 	}
 
 	@Test
+	public void summarizeWeakTest10() {
+		String referenceFileName = expectedOutput(10, "noSaturation");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = summarizeUsingWeakSummary(10);
+			if (!testOutput.exists()){
+				fail("Test output not found ");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary weak 10", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in weak test 10 " + e.toString());
+		}
+	}
+	
+	@Test
+	public void summarizeWeakTest11() {
+		String referenceFileName = expectedOutput(11, "noSaturation");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = summarizeUsingWeakSummary(11);
+			if (!testOutput.exists()){
+				fail("Test output not found ");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary weak 11", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in weak test 11 " + e.toString());
+		}
+	}
+	
+	@Test
+	public void summarizeWeakTest12() {
+		String referenceFileName = expectedOutput(12, "noSaturation");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = summarizeUsingWeakSummary(12);
+			if (!testOutput.exists()){
+				fail("Test output not found ");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary weak 12", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in weak test 12 " + e.toString());
+		}
+	}
+	
+	
+	@Test
 	public void saturateAndSummarizeWeakTest1() {
 		String referenceFileName = expectedOutput(1, "classical");
 		File expectedOutput = new File(referenceFileName);
@@ -476,6 +535,26 @@ public class WeakSummaryTests {
 		}
 	}
 
+
+	@Test
+	public void saturateAndSummarizeWeakTest12() {
+		String referenceFileName = expectedOutput(12, "classical");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = saturateAndSummarizeUsingWeakSummary(12); 
+			if (!testOutput.exists()){
+				fail("Test output not found");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary weak 12", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in weak test 12 " + e.toString());
+		}
+	}
+	
 	@Test
 	public void summarizeThroughShortcutWeakTest1() {
 		String referenceFileName = expectedOutput(1, "shortcut");
@@ -644,6 +723,25 @@ public class WeakSummaryTests {
 		}
 		catch (IOException e) {
 			throw new IllegalStateException("Unable to open .nt files in weak test 9 " + e.toString());
+		}
+	}
+	// not adding 10 and 11 because they don't have a schema 
+	@Test
+	public void summarizeThroughShortcutWeakTest12() {
+		String referenceFileName = expectedOutput(12, "shortcut");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = summarizeThroughShortcutUsingWeakSummary(12); 
+			if (!testOutput.exists()){
+				fail("Test output not found");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary weak 12", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in weak test 12 " + e.toString());
 		}
 	}
 }
