@@ -514,24 +514,36 @@ public class Summary {
 				for (Triple t : summEdges) {
 					String subject, property, object, subjectInDot, propertyInDot, objectInDot;
 					// in all cases, edge labels are preserved:
-					property = getShortURIForDot(RDF2SQLEncoding.dictionaryDecode(t.p));
-					propertyInDot = property.replaceAll("\"", "");
+					property = RDF2SQLEncoding.dictionaryDecode(t.p);
+					propertyInDot = getVeryShortForDot(property.replaceAll("\"", ""));
 
 					if (RDF2SQLEncoding.isDataProperty(t.p)) { // data
 						subject = this.getSummaryNodeURI(URIprefix, t.s);
-						subjectInDot = getShortURIForDot(subject).replaceAll("\"", "");
+						subjectInDot = getVeryShortForDot(subject).replaceAll("\"", "");
 						if (dax.unknownSummaryNode(t.s))
 							bw.write("\"" + subjectInDot + "\" [style = filled, color=" + dax.getSummaryNodeColor(t.s) + "];\n");
 						object = this.getSummaryNodeURI(URIprefix, t.o);
-						objectInDot = getShortURIForDot(object).replaceAll("\"", "");
+						objectInDot = getVeryShortForDot(object).replaceAll("\"", "");
 						if (dax.unknownSummaryNode(t.o))
 							bw.write("\"" + objectInDot + "\" [style = filled, color=" + dax.getSummaryNodeColor(t.o) + "];\n");
 					} else if (RDF2SQLEncoding.isSchemaProperty(t.p)) { // schema
-						subject = getShortURIForDot(RDF2SQLEncoding.dictionaryDecode(t.s));
+						subject = getVeryShortForDot(RDF2SQLEncoding.dictionaryDecode(t.s));
 						subjectInDot = subject.replaceAll("\"", "");
-						property = getShortURIForDot(RDF2SQLEncoding.dictionaryDecode(t.p));
-						propertyInDot = property.replaceAll("\"", "");
-						object = getShortURIForDot(RDF2SQLEncoding.dictionaryDecode(t.o));
+						//property = getVeryShortForDot(RDF2SQLEncoding.dictionaryDecode(t.p));
+						//propertyInDot = property.replaceAll("\"", "");
+						if (t.p == RDF2SQLEncoding.getSubClassCode()){
+							propertyInDot = "subClass";
+						}
+						if (t.p == RDF2SQLEncoding.getSubPropertyCode()){
+							propertyInDot = "subProperty";
+						}
+						if (t.p == RDF2SQLEncoding.getDomainCode()){
+							propertyInDot = "domain";
+						}
+						if (t.p == RDF2SQLEncoding.getRangeCode()){
+							propertyInDot = "range";
+						}
+						object = getVeryShortForDot(RDF2SQLEncoding.dictionaryDecode(t.o));
 						objectInDot = object.replaceAll("\"", "");
 						if (dax.unknownSummaryNode(t.s))
 							bw.write("\"" + subjectInDot + "\" [fontcolor=white, style = filled, color=black];\n");
@@ -539,8 +551,8 @@ public class Summary {
 							bw.write("\"" + objectInDot + "\" [fontcolor=white, style = filled, color=black];\n");
 					} else { // type
 						subject = this.getSummaryNodeURI(URIprefix, t.s);
-						subjectInDot = subject.replaceAll("\"", "");
-						object = getShortURIForDot(RDF2SQLEncoding.dictionaryDecode(t.o));
+						subjectInDot = getVeryShortForDot(subject).replaceAll("\"", "");
+						object = getVeryShortForDot(RDF2SQLEncoding.dictionaryDecode(t.o));
 						objectInDot = object.replaceAll("\"", "");
 						propertyInDot = "rdf:type";
 						if (dax.unknownSummaryNode(t.s))
@@ -616,6 +628,34 @@ public class Summary {
 		else
 			return "..." + URI.substring(URI.length() - (maxNodeLabelLength - 4), URI.length());
 	}
+	
+	protected String getVeryShortForDot(String URIorLiteral){
+		boolean URI = false;
+		if (URIorLiteral.charAt(0) == '<' && (URIorLiteral.charAt(URIorLiteral.length() - 1)) == '>'){
+			URI = true; 
+		}
+		if (!URI){
+			return last4(URIorLiteral); 
+		}
+		else{
+			int closing = URIorLiteral.length() - 1;
+			int lastSlash = URIorLiteral.lastIndexOf('/');
+			if (lastSlash == -1){
+				return last4(URIorLiteral);
+			}
+			else{
+				return URIorLiteral.substring(lastSlash+1, closing); 
+			}
+		}
+	}
+	protected String last4(String s){
+		if (s.length() <= 4){
+			return s; 
+		}
+		else{
+			return  s.substring(s.length() - 4, s.length());
+		}
+	}
 
 	public void writeRDFGraphToDotFile(Connection conn, String dotFileName) {
 		try {
@@ -685,12 +725,12 @@ public class Summary {
 				String object = rs.getString(3);
 				Long o = RDF2SQLEncoding.dictionaryEncode(object);
 				Long oRep = rep.get(o);
+				
 				//LOGGER.debug("DrawTriples: Encoded " + object + " into " + o + " whose representative is: " + oRep);
 				String property = rs.getString(2);
 				Long p = RDF2SQLEncoding.dictionaryEncode(property);
-
-				//LOGGER.debug("Triple! (" + subject + " " + property + " " + object + ")");
-				//LOGGER.debug("Represented by: " + sRep + " " + p + " " + oRep);
+				//LOGGER.debug("DRAW Triple! (" + subject + " " + property + " " + object + ")");
+				//LOGGER.debug("DRAW Represented by: " + sRep + " " + p + " " + oRep);
 				writeGraphTripleToDotFile(bw, s, p, o, subject, property, object, sRep, oRep);
 				triplesDrawnInDot++;
 
@@ -732,6 +772,7 @@ public class Summary {
 	 * @return
 	 */
 	protected ResultSet getTypeTriplesCursorForDotDrawing(Connection conn, long triplesToDraw) {
+		//System.out.println("GETTING TYPE TRIPLES CURSOR");
 		try{
 			String query = "select d1.value, d2.value, d3.value from "
 						   + encodedTriplesTableName + " t join " + dictionaryTableName
@@ -747,11 +788,11 @@ public class Summary {
 
 	protected void writeGraphTripleToDotFile(BufferedWriter bw, Long s, Long p, Long o, String subject, String property, String object, Long sRep, Long oRep) {
 	
-		//LOGGER.debug("WRITE GRAPH TRIPLE TO DOT s: " + s + " p: " + p + " o: " + o + " subject: "  + subject + " property " + property +  
+		//System.out.println("WRITE GRAPH TRIPLE TO DOT s: " + s + " p: " + p + " o: " + o + " subject: "  + subject + " property " + property +  
 		//		" object " + object + " sRep: " + sRep + " oRep: " + oRep); 
-		String subjectForDot = getShortURIForDot(subject).replaceAll("\"", "");
-		String objectForDot = getShortURIForDot(object).replaceAll("\"", "");
-		String propertyForDot = getShortURIForDot(property).replaceAll("\"", "");
+		String subjectForDot = getVeryShortForDot(subject).replaceAll("\"", "");
+		String objectForDot = getVeryShortForDot(object).replaceAll("\"", "");
+		String propertyForDot = getVeryShortForDot(property).replaceAll("\"", "");
 
 		try {
 			if (RDF2SQLEncoding.isDataProperty(p)) {
@@ -764,7 +805,19 @@ public class Summary {
 				bw.write("\"" + objectForDot + "\" [style = filled, color=" + dax.getSummaryNodeColor(oRep) + "];\n");
 			}
 			else if (RDF2SQLEncoding.isSchemaProperty(p)) {
-				propertyForDot = getShortURIForDot(property).replaceAll("\"", "");
+				if (p.equals(RDF2SQLEncoding.getSubClassCode())){
+					propertyForDot = "subClass"; 
+				}
+				if (p.equals(RDF2SQLEncoding.getSubPropertyCode())){
+					propertyForDot = "subProperty"; 
+				}
+				if (p.equals(RDF2SQLEncoding.getDomainCode())){
+					propertyForDot = "domain"; 
+				}
+				if (p.equals(RDF2SQLEncoding.getRangeCode())){
+					propertyForDot = "range"; 
+				}
+				//propertyForDot = getVeryShortForDot(property).replaceAll("\"", "");
 				//if (dax.unknownRDFNode(s))
 				//	LOGGER.debug("SCH1 " + s + " (" + subject + ") represented by  " + sRep);
 				bw.write("\"" + subjectForDot + "\" [fontcolor=white, style = filled, color=black];\n");
@@ -773,7 +826,7 @@ public class Summary {
 				bw.write("\"" + objectForDot + "\" [fontcolor=white, style = filled, color=black];\n");
 			}
 			else { // type
-				LOGGER.debug("Type triple");
+				//LOGGER.debug("Type triple");
 				propertyForDot = "rdf:type";
 				//if (dax.unknownRDFNode(s))
 				//	LOGGER.debug("TYP1 " + s + " (" + subject + ") represented by  " + sRep);
@@ -790,7 +843,7 @@ public class Summary {
 				bw.write("\"" + objectForDot + "\" [fontcolor=white, style = filled, color=black];\n");
 			}
 			bw.write("\"" + subjectForDot + "\"" + " -> \"" + objectForDot + "\" [label=\"" + propertyForDot + "\"];\n");
-			LOGGER.debug("Written a line in dot");
+			//LOGGER.debug("Written a line in dot");
 		}
 		catch (IOException e) {
 			throw new IllegalStateException("Unable to open the DOT file to for the summary: " + e.toString());
