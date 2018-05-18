@@ -566,12 +566,14 @@ public class Summary {
 					if (RDF2SQLEncoding.isDataProperty(t.p)) { // data
 						subject = this.getSummaryNodeURI(URIprefix, t.s);
 						subjectInDot = getVeryShortForDot(subject).replaceAll("\"", "");
-						if (dax.unknownSummaryNode(t.s))
-							bw.write("\"" + subjectInDot + "\" [style = filled, color=" + dax.getSummaryNodeColor(t.s) + "];\n");
+						if (dax.unknownSummaryNode(t.s)){
+							writeNodeToDot(bw, t.s, subjectInDot); 
+						}
 						object = this.getSummaryNodeURI(URIprefix, t.o);
 						objectInDot = getVeryShortForDot(object).replaceAll("\"", "");
-						if (dax.unknownSummaryNode(t.o))
-							bw.write("\"" + objectInDot + "\" [style = filled, color=" + dax.getSummaryNodeColor(t.o) + "];\n");
+						if (dax.unknownSummaryNode(t.o)){
+							writeNodeToDot(bw, t.o, objectInDot); 
+						}
 					} else if (RDF2SQLEncoding.isSchemaProperty(t.p)) { // schema
 						subject = getVeryShortForDot(RDF2SQLEncoding.dictionaryDecode(t.s));
 						subjectInDot = subject.replaceAll("\"", "");
@@ -597,8 +599,9 @@ public class Summary {
 						object = getVeryShortForDot(RDF2SQLEncoding.dictionaryDecode(t.o));
 						objectInDot = object.replaceAll("\"", "");
 						propertyInDot = "rdf:type";
-						if (dax.unknownSummaryNode(t.s))
-							bw.write("\"" + subjectInDot + "\" [style = filled, color=" + dax.getSummaryNodeColor(t.s) + "];\n");
+						if (dax.unknownSummaryNode(t.s)){
+							this.writeNodeToDot(bw, t.s, subjectInDot);
+						}
 						bw.write("\"" + objectInDot + "\" [fontcolor=white, style = filled, color=black];\n");
 					}
 					// write the triple in all cases:
@@ -623,6 +626,20 @@ public class Summary {
 		}
 	}
 
+	private void writeNodeToDot(BufferedWriter bw, Long node, String label) {
+	try{
+		String nColor = dax.getSummaryNodeColor(node);
+		bw.write("\"" + label + "\" [style = filled, color=" + 
+				nColor +
+				(dax.isDarkColor(nColor)?", fontcolor=white ":"")
+				+ "];\n");
+	}
+	catch (IOException e) {
+		LOGGER.error("Could not turn .dot file into .png (check the pathToDot value in summarization.properties)" + e.toString());
+	}
+}
+	
+	
 	/**
 	 * Given a path to an .nt RDF data file, computes a file name by inserting
 	 * the prefix encoding the summary type before the main file name, and
@@ -839,9 +856,15 @@ public class Summary {
 			if (RDF2SQLEncoding.isDataProperty(p)) {
 				//LOGGER.debug("Data-S " + s + " (" + subject + ") represented by  " + sRep);
 				//LOGGER.debug(" colored " + 	dax.getSummaryNodeColor(sRep));
-				bw.write("\"" + subjectForDot + "\" [style = filled, color=" + dax.getSummaryNodeColor(sRep) + "];\n");
+				String sColor =  dax.getSummaryNodeColor(sRep); 
+				String oColor =  dax.getSummaryNodeColor(oRep); 
+				bw.write("\"" + subjectForDot + "\" [style = filled, color=" + sColor + 
+						(dax.isDarkColor(sColor)?", fontcolor=white ":"")+ 
+						"];\n");
 				//	LOGGER.debug("Data-O " + o + " (" + object + ") represented by " + oRep + " colored " + dax.getSummaryNodeColor(oRep));
-				bw.write("\"" + objectForDot + "\" [style = filled, color=" + dax.getSummaryNodeColor(oRep) + "];\n");
+				bw.write("\"" + objectForDot + "\" [style = filled, color=" + oColor + 
+						(dax.isDarkColor(oColor)?", fontcolor=white ":"")+ 
+						"];\n");
 			}
 			else if (RDF2SQLEncoding.isSchemaProperty(p)) {
 				//System.out.println("SCHEMA TRIPLE"); 
