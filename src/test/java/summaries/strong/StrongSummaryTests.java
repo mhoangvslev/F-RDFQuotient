@@ -266,7 +266,7 @@ public class StrongSummaryTests {
 			throw new IllegalStateException("Unable to open .nt files in strong test 7 " + e.toString());
 		}
 	}
-	
+
 	@Test
 	public void summarizeStrongTest8() {
 		String referenceFileName = expectedOutput(8, "noSaturation");
@@ -489,7 +489,7 @@ public class StrongSummaryTests {
 			throw new IllegalStateException("Unable to open .nt files in strong test 7 " + e.toString());
 		}
 	}
-	
+
 	@Test
 	public void saturateAndSummarizeStrongTest8() {
 		String referenceFileName = expectedOutput(8, "classical");
@@ -679,7 +679,7 @@ public class StrongSummaryTests {
 			throw new IllegalStateException("Unable to open .nt files in strong test 7 " + e.toString());
 		}
 	}
-	
+
 	@Test
 	public void summarizeThroughShortcutStrongTest8() {
 		String referenceFileName = expectedOutput(8, "shortcut");

@@ -231,7 +231,7 @@ public class TypedStrongSummaryTests {
 			throw new IllegalStateException("Unable to open .nt files in typedstrong test 7 " + e.toString());
 		}
 	}
-	
+
 	@Test
 	public void summarizeTypedStrongTest8() {
 		String referenceFileName = expectedOutput(8, "noSaturation");
@@ -250,7 +250,7 @@ public class TypedStrongSummaryTests {
 			throw new IllegalStateException("Unable to open .nt files in typedstrong test 8 " + e.toString());
 		}
 	}
-	
+
 	@Test
 	public void summarizeTypedStrongTest9() {
 		String referenceFileName = expectedOutput(9, "noSaturation");
@@ -443,7 +443,7 @@ public class TypedStrongSummaryTests {
 			throw new IllegalStateException("Unable to open .nt files in typedstrong test 7 " + e.toString());
 		}
 	}
-	
+
 	@Test
 	// this is currently a bug! https://gitlab.inria.fr/cedar/quotientSummary/issues/15
 	public void saturateAndSummarizeTypedStrongTest12() {
@@ -463,7 +463,6 @@ public class TypedStrongSummaryTests {
 			throw new IllegalStateException("Unable to open .nt files in typedstrong test 12 " + e.toString());
 		}
 	}
-	
 
 	public void saturateAndSummarizeTypedStrongTest8() {
 		String referenceFileName = expectedOutput(8, "classical");
@@ -482,7 +481,7 @@ public class TypedStrongSummaryTests {
 			throw new IllegalStateException("Unable to open .nt files in typedstrong test 8 " + e.toString());
 		}
 	}
-	
+
 	@Test
 	public void saturateAndSummarizeTypedStrongTest9() {
 		String referenceFileName = expectedOutput(9, "classical");
@@ -501,5 +500,4 @@ public class TypedStrongSummaryTests {
 			throw new IllegalStateException("Unable to open .nt files in typedstrong test 9 " + e.toString());
 		}
 	}
-	
 }

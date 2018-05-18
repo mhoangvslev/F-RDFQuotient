@@ -29,6 +29,9 @@ public class RDF2SQLEncoding {
 	protected static PreparedStatement stmtDecode;
 	protected static PreparedStatement stmtEncode;
 
+	public RDF2SQLEncoding() {
+	}
+
 	/**
 	 * It is crucial to call this method in order for the summarization or any summary usage code to work OK.
 	 *
@@ -36,6 +39,7 @@ public class RDF2SQLEncoding {
 	 * @param dictionaryTableName
 	 */
 	public static void setUp(Connection givenConn, String dictionaryTableName) {
+		LOGGER.setLevel(Level.INFO);
 		conn = givenConn;
 		try {
 			stmtDecode = conn.prepareStatement("select value from " + dictionaryTableName + " where key=?");
@@ -47,9 +51,6 @@ public class RDF2SQLEncoding {
 		codeToURIOrLiteral = new HashMap<>();
 		uriOrLiteralToCode = new HashMap<>();
 		setRDFBuiltInPropertyCodes();
-	}
-
-	public RDF2SQLEncoding() {
 	}
 
 	public static Connection getConnection() {
@@ -81,7 +82,6 @@ public class RDF2SQLEncoding {
 	}
 
 	public static void setRDFBuiltInPropertyCodes() {
-		LOGGER.setLevel(Level.INFO);
 		setTypeCode();
 		LOGGER.debug("rdf:type code is " + typeCode);
 		setSubClassCode();

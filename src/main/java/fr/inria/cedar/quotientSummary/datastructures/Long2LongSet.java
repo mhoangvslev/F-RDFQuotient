@@ -1,15 +1,18 @@
 package fr.inria.cedar.quotientSummary.datastructures;
 
+import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.TreeSet;
-
-import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 public class Long2LongSet {
+	private static final Logger LOGGER = Logger.getLogger(Long2LongSet.class.getName());
 	final HashMap<Long, TreeSet<Long>> map;
 
 	public Long2LongSet() {
+		LOGGER.setLevel(Level.INFO);
 		map = new HashMap<>();
 	}
 
@@ -51,6 +54,7 @@ public class Long2LongSet {
 		}
 	}
 
+	@Override
 	public String toString() {
 		//System.out.println("LONG2LONGSET DISPLAY");
 		StringBuffer sb = new StringBuffer();
@@ -66,11 +70,11 @@ public class Long2LongSet {
 					catch(Exception e){
 						// nothing -- this value was not part of the dictionary
 					}
-					sb.append(val + (decodedVal.equals("")?"":(" (" + decodedVal + ")")) + ", ");
+					sb.append(val).append(decodedVal.equals("")?"":(" (" + decodedVal + ")")).append(", ");
 				}
 				sb.append("} ");
 			}
-			sb.append("(" + map.size()  + " entries)");
+			sb.append("(").append(map.size()).append(" entries)");
 		}
 		return new String(sb);
 	}

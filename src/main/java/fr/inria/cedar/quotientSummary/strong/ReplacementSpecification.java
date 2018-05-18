@@ -1,21 +1,24 @@
 package fr.inria.cedar.quotientSummary.strong;
 
 import java.util.ArrayList;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 public class ReplacementSpecification {
-
+	private static final Logger LOGGER = Logger.getLogger(ReplacementSpecification.class.getName());
 	Long sc;
 	Long tc;
 	Long oldNode;
 	Long newNode;
-	
+
 	public ReplacementSpecification(Long sc, Long tc, Long oldNode, Long newNode){
+		LOGGER.setLevel(Level.INFO);
 		this.sc = sc;
 		this.tc = tc; 
 		this.oldNode = oldNode;
 		this.newNode = newNode;
 	}
-	
+
 	/*
 	 * if we want to remove all over
 	 */

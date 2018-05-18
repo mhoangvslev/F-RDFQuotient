@@ -131,7 +131,7 @@ public class Summary {
 		long subClassCode = RDF2SQLEncoding.getSubClassCode();
 		if (subClassCode != -1){
 			maxClassOrPropertyCode = Math.max(maxClassOrPropertyCode, this.maxSPO(conn, subClassCode));
-		}	
+		}
 		long domainCode = RDF2SQLEncoding.getDomainCode();
 		if (domainCode != -1){
 			maxClassOrPropertyCode = Math.max(maxClassOrPropertyCode, this.maxSPO(conn, domainCode));
@@ -142,13 +142,14 @@ public class Summary {
 		}
 		this.jumpSummaryNodeCount(maxClassOrPropertyCode + 1);
 	}
-	
+
 	protected long maxSPO(Connection conn, long property){
 		long maxS = maxS(conn, property);
 		long maxP = maxO(conn, property);
 		long maxO = maxO(conn, property);
 		return Math.max(maxS, Math.max(maxP, maxO));
 	}
+
 	protected long maxS(Connection conn, long property){
 		String jumpRepString = ("select max(s) from " + encodedTriplesTableName + " t1 where p = " + property);
 		try (ResultSet rs = conn.createStatement().executeQuery(jumpRepString)) {
@@ -161,6 +162,7 @@ public class Summary {
 		}
 		return -1; 
 	}
+
 	protected long maxP(Connection conn, long property){
 		String jumpRepString = ("select max(p) from " + encodedTriplesTableName + " t1 where p = " + property);
 		try (ResultSet rs = conn.createStatement().executeQuery(jumpRepString)) {
@@ -173,6 +175,7 @@ public class Summary {
 		}
 		return -1; 
 	}
+
 	protected long maxO(Connection conn, long property){
 		String jumpRepString = ("select max(o) from " + encodedTriplesTableName + " t1 where p = " + property);
 		try (ResultSet rs = conn.createStatement().executeQuery(jumpRepString)) {
@@ -185,7 +188,6 @@ public class Summary {
 		}
 		return -1; 
 	}
-
 
 	protected void showRepInBuffer(StringBuffer sb) {
 		for (Long node : this.rep.getKeys()) {
@@ -274,6 +276,10 @@ public class Summary {
 		catch (SQLException e) {
 			throw new IllegalStateException("Could not compute edge representation statistics from Postgres: " + e.toString());
 		}
+	}
+
+	protected void handleTypeTripleBeforeData(Triple t) {
+		throw new IllegalStateException("Not implemented at this level");
 	}
 
 	protected void handleTypeTripleAfterData(Triple t) {
@@ -828,9 +834,7 @@ public class Summary {
 	}
 
 	protected void writeGraphTripleToDotFile(BufferedWriter bw, Long s, Long p, Long o, String subject, String property, String object, Long sRep, Long oRep) {
-
-		//System.out.println("WRITE GRAPH TRIPLE TO DOT s: " + s + " p: " + p + " o: " + o + " subject: "  + subject + " property " + property +  
-		//		" object " + object + " sRep: " + sRep + " oRep: " + oRep); 
+		//LOGGER.debug("WRITE GRAPH TRIPLE TO DOT s: " + s + " p: " + p + " o: " + o + " subject: "  + subject + " property " + property + " object " + object + " sRep: " + sRep + " oRep: " + oRep); 
 		String subjectForDot = getVeryShortForDot(subject).replaceAll("\"", "");
 		String objectForDot = getVeryShortForDot(object).replaceAll("\"", "");
 		String propertyForDot = getVeryShortForDot(property).replaceAll("\"", "");
@@ -981,7 +985,7 @@ public class Summary {
 		StringBuffer sb = new StringBuffer();
 		sb.append("[");
 		for (Long l : clique)
-			sb.append(l).append("(" + RDF2SQLEncoding.dictionaryDecode(l) + ") ");
+			sb.append(l).append("(").append(RDF2SQLEncoding.dictionaryDecode(l)).append(") ");
 		sb.append("]");
 		return new String(sb); 
 	}
@@ -991,14 +995,14 @@ public class Summary {
 	}
 
 	protected HashMap<Long, TreeSet<Long>> getEdgesTo(Long o){
-		HashMap<Long, TreeSet<Long>> res = new HashMap<Long, TreeSet<Long>>();
+		HashMap<Long, TreeSet<Long>> res = new HashMap<>();
 		for (Long s: edgesWithProv.keySet()){
 			for (Long p: edgesWithProv.get(s).keySet()){
 				// if there is an edge s--p-->o
 				if (edgesWithProv.get(s).get(p).equals(o)) {
 					TreeSet<Long> onP = res.get(p);
 					if (onP == null){ // the first edge labeled p which goes into o 
-						onP = new TreeSet<Long>();
+						onP = new TreeSet<>();
 						res.put(p, onP);
 					}
 					onP.add(s); // add s on p in the result
@@ -1046,7 +1050,7 @@ public class Summary {
 	public String getEdgesToString(){
 		StringBuffer sb = new StringBuffer();
 		for (Triple t: edgesWithProv.getSummaryEdges()){
-			sb.append(t.toString() + " ");
+			sb.append(t.toString()).append(" ");
 		}
 		return new String(sb); 
 	}

@@ -1,13 +1,15 @@
 package fr.inria.cedar.quotientSummary.weak;
 
-import fr.inria.cedar.commons.miscellaneous.Debugger;
 import fr.inria.cedar.quotientSummary.Summary;
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
 import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 import fr.inria.cedar.quotientSummary.util.Substitutions;
 import java.util.HashMap;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 public class WeakOrTypedWeakSummary extends Summary {
+	private static final Logger LOGGER = Logger.getLogger(WeakOrTypedWeakSummary.class.getName());
 	HashMap<Long, Long> ps; // for each property, the property source
 	HashMap<Long, Long> pt; // for each property, the property target
 
@@ -29,6 +31,7 @@ public class WeakOrTypedWeakSummary extends Summary {
 
 	public WeakOrTypedWeakSummary() {
 		super();
+		LOGGER.setLevel(Level.INFO);
 		ps = new HashMap<>();
 		pt = new HashMap<>();
 
@@ -80,8 +83,16 @@ public class WeakOrTypedWeakSummary extends Summary {
 				}
 	}
 
+	protected void applySubstitutions(Substitutions subs) {
+		for (Long n: subs.getNodesToBeReplaced())
+			replaceAll(n, subs.get(n));
+	}
+
+	protected void consistencyChecks() {
+		throw new IllegalStateException("This check is not defined here, define it in specialized classes");
+	}
+
 	protected void handleDataTriple_RS_RP_RO(Triple t) {
-		Debugger.log("============ RS_RP_RO " + t.toString());
 		// everything has been represented. In this case we must:
 		// - fuse the subject of p with the representative of s (keep the smallest)
 		// - fuse the object of p with the representative of s (keep the smallest)
@@ -136,23 +147,10 @@ public class WeakOrTypedWeakSummary extends Summary {
 
 		// try to add the resulting triple
 		edgesWithProv.addTriple(addedTripleSource, t.p, addedTripleTarget);
-
-	}
-
-	protected void applySubstitutions(Substitutions subs) {
-		for (Long n: subs.getNodesToBeReplaced())
-			replaceAll(n, subs.get(n));
-	}
-
-
-
-	protected void consistencyChecks() {
-		throw new IllegalStateException("This check is not defined here, define it in specialized classes");
 	}
 
 	// here, we inform the property from the source and object
 	protected void handleDataTriple_RS_UP_RO(Triple t) {
-		//Debugger.log("RS_UP_RO");
 		// the subject and object have been represented, not the property
 		// represent the property by the subject and object codes
 		Long sourceP = rep.get(t.s);
@@ -201,7 +199,7 @@ public class WeakOrTypedWeakSummary extends Summary {
 		Long repO = rep.get(t.o);
 		Long targetP = pt.get(t.p);
 		Long addedTripleTarget = repO; // initialize with any of them
-		
+
 		if (targetP != null){ // in this case we need to fuse repO with targetP
 			Substitutions subs = new Substitutions(sourceP, sourceP, repO, targetP);
 			Long possibleNewTripleSource = subs.get(addedTripleSource);
@@ -234,7 +232,7 @@ public class WeakOrTypedWeakSummary extends Summary {
 			pt.put(t.p, targetP);
 			addedTripleTarget = targetP;  
 		}
-		
+
 		// if repS needs to change through a substitution, do it
 		if (sourceP != null){
 			Substitutions subs = new Substitutions(repS, sourceP, targetP, targetP);
@@ -253,12 +251,11 @@ public class WeakOrTypedWeakSummary extends Summary {
 			ps.put(t.p, repS);
 			// addedTripleSubject remains repS
 		}
-		
+
 		edgesWithProv.addTriple(addedTripleSubject, t.p, addedTripleTarget);
 		rep.put(t.o, addedTripleTarget);
 
 	}
-
 
 	protected void handleDataTriple_US_RP_UO(Triple t) {
 		// the property has been seen so far, not the subject nor the object
@@ -280,7 +277,6 @@ public class WeakOrTypedWeakSummary extends Summary {
 		edgesWithProv.addTriple(sourceP, t.p, targetP);
 	}
 
-
 	protected void handleDataTriple_US_UP_UO(Triple t) {
 		// nothing has been seen so far
 		System.out.println("US_UP_UO: " + RDF2SQLEncoding.dictionaryDecode(t.s) + " " + RDF2SQLEncoding.dictionaryDecode(t.p) + " " + RDF2SQLEncoding.dictionaryDecode(t.o));
@@ -295,6 +291,7 @@ public class WeakOrTypedWeakSummary extends Summary {
 		edgesWithProv.addTriple(pSource, t.p, pTarget);
 	}
 
+	@Override
 	public void display() {
 		System.out.println("SUMMARY " + this.getClass().getName());
 		edgesWithProv.display();

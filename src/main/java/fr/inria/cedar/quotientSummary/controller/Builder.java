@@ -227,17 +227,23 @@ public class Builder {
 		Parameters settings = new Parameters();
 		settings.setPropertiesFileName(configFile);
 
-		if (rdfsFiles.isEmpty())
-			for (String tripleFile: tripleFiles) {
-				settings.getAllInFiles().add(tripleFile);
-				DataLoading.process(settings);
-			}
-		else
-			for (String tripleFile: tripleFiles) {
-				settings.getTripleFiles().add(tripleFile);
-				settings.setRdfsFile(rdfsFiles.get(0));
-				DataLoading.process(settings);
-			}
+		try {
+			if (rdfsFiles.isEmpty())
+				for (String tripleFile: tripleFiles) {
+					settings.getAllInFiles().add(tripleFile);
+					DataLoading.process(settings);
+				}
+			else
+				for (String tripleFile: tripleFiles) {
+					settings.getTripleFiles().add(tripleFile);
+					settings.setRdfsFile(rdfsFiles.get(0));
+					DataLoading.process(settings);
+				}
+		}
+		catch (IOException ex) {
+			LOGGER.error("Data loading failed: " + ex);
+			throw ex;
+		}
 		LOGGER.info("Graph loaded to Postgres");
 
 		Properties connectionProps = new Properties();
