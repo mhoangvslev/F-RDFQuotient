@@ -362,6 +362,10 @@ public class WeakSummaryTests {
 		}
 	}
 
+	// Saturation and summarization tests with all graphs (saturation has no
+	// impact on the input graph if it doesn't contain the schema however it
+	// may change the order of the triples and it may be useful to check for
+	// the correctness)
 	@Test
 	public void saturateAndSummarizeWeakTest1() {
 		String referenceFileName = expectedOutput(1, "classical");
@@ -534,6 +538,44 @@ public class WeakSummaryTests {
 	}
 
 	@Test
+	public void saturateAndSummarizeWeakTest10() {
+		String referenceFileName = expectedOutput(10, "classical");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = saturateAndSummarizeUsingWeakSummary(10); 
+			if (!testOutput.exists()){
+				fail("Test output not found");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary weak 10", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in weak test 10 " + e.toString());
+		}
+	}
+
+	@Test
+	public void saturateAndSummarizeWeakTest11() {
+		String referenceFileName = expectedOutput(11, "classical");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = saturateAndSummarizeUsingWeakSummary(11); 
+			if (!testOutput.exists()){
+				fail("Test output not found");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary weak 11", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in weak test 11 " + e.toString());
+		}
+	}
+
+	@Test
 	public void saturateAndSummarizeWeakTest12() {
 		String referenceFileName = expectedOutput(12, "classical");
 		File expectedOutput = new File(referenceFileName);
@@ -552,101 +594,7 @@ public class WeakSummaryTests {
 		}
 	}
 
-	@Test
-	public void summarizeThroughShortcutWeakTest1() {
-		String referenceFileName = expectedOutput(1, "shortcut");
-		File expectedOutput = new File(referenceFileName);
-		try {
-			File testOutput = summarizeThroughShortcutUsingWeakSummary(1);
-			if (!testOutput.exists()){
-				fail("Test output not found ");
-			}
-			if (!expectedOutput.exists()){
-				fail("Expected output not found " + referenceFileName);
-			}
-			assertTrue("Different summary weak 1", FileUtils.contentEquals(testOutput, expectedOutput));
-		}
-		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in weak test 1 " + e.toString());
-		}
-	}
-
-	@Test
-	public void summarizeThroughShortcutWeakTest2() {
-		String referenceFileName = expectedOutput(2, "shortcut");
-		File expectedOutput = new File(referenceFileName);
-		try {
-			File testOutput = summarizeThroughShortcutUsingWeakSummary(2);
-			if (!testOutput.exists()){
-				fail("Test output not found ");
-			}
-			if (!expectedOutput.exists()){
-				fail("Expected output not found " + referenceFileName);
-			}
-			assertTrue("Different summary weak 2", FileUtils.contentEquals(testOutput, expectedOutput));
-		}
-		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in weak test 2 " + e.toString());
-		}
-	}
-
-	@Test
-	public void summarizeThroughShortcutWeakTest3() {
-		String referenceFileName = expectedOutput(3, "shortcut");
-		File expectedOutput = new File(referenceFileName);
-		try {
-			File testOutput = summarizeThroughShortcutUsingWeakSummary(3);
-			if (!testOutput.exists()){
-				fail("Test output not found");
-			}
-			if (!expectedOutput.exists()){
-				fail("Expected output not found " + referenceFileName);
-			}
-			assertTrue("Different summary weak 3", FileUtils.contentEquals(testOutput, expectedOutput));
-		}
-		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in weak test 3 " + e.toString());
-		}
-	}
-
-	@Test
-	public void summarizeThroughShortcutWeakTest4() {
-		String referenceFileName = expectedOutput(4, "shortcut");
-		File expectedOutput = new File(referenceFileName);
-		try {
-			File testOutput = summarizeThroughShortcutUsingWeakSummary(4);
-			if (!testOutput.exists()){
-				fail("Test output not found");
-			}
-			if (!expectedOutput.exists()){
-				fail("Expected output not found " + referenceFileName);
-			}
-			assertTrue("Different summary weak 4", FileUtils.contentEquals(testOutput, expectedOutput));
-		}
-		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in weak test 4 " + e.toString());
-		}
-	}
-
-	@Test
-	public void summarizeThroughShortcutWeakTest5() {
-		String referenceFileName = expectedOutput(5, "shortcut");
-		File expectedOutput = new File(referenceFileName);
-		try {
-			File testOutput = summarizeThroughShortcutUsingWeakSummary(5);
-			if (!testOutput.exists()){
-				fail("Test output not found");
-			}
-			if (!expectedOutput.exists()){
-				fail("Expected output not found " + referenceFileName);
-			}
-			assertTrue("Different summary weak 5", FileUtils.contentEquals(testOutput, expectedOutput));
-		}
-		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in weak test 5 " + e.toString());
-		}
-	}
-
+	// Shortcut tests only with the graphs that have a schema
 	@Test
 	public void summarizeThroughShortcutWeakTest6() {
 		String referenceFileName = expectedOutput(6, "shortcut");
@@ -666,63 +614,6 @@ public class WeakSummaryTests {
 		}
 	}
 
-	@Test
-	public void summarizeThroughShortcutWeakTest7() {
-		String referenceFileName = expectedOutput(7, "shortcut");
-		File expectedOutput = new File(referenceFileName);
-		try {
-			File testOutput = summarizeThroughShortcutUsingWeakSummary(7); 
-			if (!testOutput.exists()){
-				fail("Test output not found");
-			}
-			if (!expectedOutput.exists()){
-				fail("Expected output not found " + referenceFileName);
-			}
-			assertTrue("Different summary weak 7", FileUtils.contentEquals(testOutput, expectedOutput));
-		}
-		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in weak test 7 " + e.toString());
-		}
-	}
-
-	@Test
-	public void summarizeThroughShortcutWeakTest8() {
-		String referenceFileName = expectedOutput(8, "shortcut");
-		File expectedOutput = new File(referenceFileName);
-		try {
-			File testOutput = summarizeThroughShortcutUsingWeakSummary(8); 
-			if (!testOutput.exists()){
-				fail("Test output not found");
-			}
-			if (!expectedOutput.exists()){
-				fail("Expected output not found " + referenceFileName);
-			}
-			assertTrue("Different summary weak 8", FileUtils.contentEquals(testOutput, expectedOutput));
-		}
-		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in weak test 8 " + e.toString());
-		}
-	}
-
-	@Test
-	public void summarizeThroughShortcutWeakTest9() {
-		String referenceFileName = expectedOutput(9, "shortcut");
-		File expectedOutput = new File(referenceFileName);
-		try {
-			File testOutput = summarizeThroughShortcutUsingWeakSummary(9); 
-			if (!testOutput.exists()){
-				fail("Test output not found");
-			}
-			if (!expectedOutput.exists()){
-				fail("Expected output not found " + referenceFileName);
-			}
-			assertTrue("Different summary weak 9", FileUtils.contentEquals(testOutput, expectedOutput));
-		}
-		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in weak test 9 " + e.toString());
-		}
-	}
-	// not adding 10 and 11 because they don't have a schema 
 	@Test
 	public void summarizeThroughShortcutWeakTest12() {
 		String referenceFileName = expectedOutput(12, "shortcut");

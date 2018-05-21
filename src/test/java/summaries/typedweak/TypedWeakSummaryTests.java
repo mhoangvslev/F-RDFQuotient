@@ -96,6 +96,7 @@ public class TypedWeakSummaryTests {
 		return "src/test/resources/test" + i + "-typedweak/test-" + i + "_tw_" + summarizationTechnique + "-reference.nt";
 	}
 
+	// Summarization tests only with the graphs that have type triples
 	@Test
 	public void summarizeTypedWeakTest1() {
 		String referenceFileName = expectedOutput(1, "noSaturation");
@@ -230,45 +231,6 @@ public class TypedWeakSummaryTests {
 	}
 
 	@Test
-	public void summarizeTypedWeakTest8() {
-		String referenceFileName = expectedOutput(8, "noSaturation");
-		File expectedOutput = new File(referenceFileName);
-		try {
-			File testOutput = summarizeUsingTypedWeakSummary(8);
-			if (!testOutput.exists()){
-				fail("Test output not found");
-			}
-			if (!expectedOutput.exists()){
-				fail("Expected output not found " + referenceFileName);
-			}
-			assertTrue("Different summary typedweak 8", FileUtils.contentEquals(testOutput, expectedOutput));
-		}
-		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in typedweak test 8 " + e.toString());
-		}
-	}
-
-	@Test
-	public void summarizeTypedWeakTest9() {
-		String referenceFileName = expectedOutput(9, "noSaturation");
-		File expectedOutput = new File(referenceFileName);
-		try {
-			File testOutput = summarizeUsingTypedWeakSummary(9);
-			if (!testOutput.exists()){
-				fail("Test output not found");
-			}
-			if (!expectedOutput.exists()){
-				fail("Expected output not found " + referenceFileName);
-			}
-			assertTrue("Different summary typedweak 9", FileUtils.contentEquals(testOutput, expectedOutput));
-		}
-		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in typedweak test 9 " + e.toString());
-		}
-	}
-
-    // typedweak 10 is not worth adding, as the graph 10 has  no types, it is identical to the weak one.
-	@Test
 	public void summarizeTypedWeakTest11() {
 		String referenceFileName = expectedOutput(11, "noSaturation");
 		File expectedOutput = new File(referenceFileName);
@@ -286,6 +248,7 @@ public class TypedWeakSummaryTests {
 			throw new IllegalStateException("Unable to open .nt files in typedweak test 11 " + e.toString());
 		}
 	}
+
 	@Test
 	public void summarizeTypedWeakTest12() {
 		String referenceFileName = expectedOutput(12, "noSaturation");
@@ -305,6 +268,10 @@ public class TypedWeakSummaryTests {
 		}
 	}
 
+	// Saturation and summarization tests with all the graphs that have type
+	// triples (saturation has no impact on the input graph if it doesn't
+	// contain the schema however it may change the order of the triples and it
+	// may be useful to check for the correctness)
 	@Test
 	public void saturateAndSummarizeTypedWeakTest1() {
 		String referenceFileName = expectedOutput(1, "classical");
@@ -439,40 +406,40 @@ public class TypedWeakSummaryTests {
 	}
 
 	@Test
-	public void saturateAndSummarizeTypedWeakTest8() {
-		String referenceFileName = expectedOutput(8, "classical");
+	public void saturateAndSummarizeTypedWeakTest11() {
+		String referenceFileName = expectedOutput(11, "classical");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = saturateAndSummarizeUsingTypedWeakSummary(8);
+			File testOutput = saturateAndSummarizeUsingTypedWeakSummary(11);
 			if (!testOutput.exists()){
 				fail("Test output not found");
 			}
 			if (!expectedOutput.exists()){
 				fail("Expected output not found " + referenceFileName);
 			}
-			assertTrue("Different summary typedweak 8", FileUtils.contentEquals(testOutput, expectedOutput));
+			assertTrue("Different summary typedweak 11", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in typedweak test 8 " + e.toString());
+			throw new IllegalStateException("Unable to open .nt files in typedweak test 11 " + e.toString());
 		}
 	}
 
 	@Test
-	public void saturateAndSummarizeTypedWeakTest9() {
-		String referenceFileName = expectedOutput(9, "classical");
+	public void saturateAndSummarizeTypedWeakTest12() {
+		String referenceFileName = expectedOutput(12, "classical");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = saturateAndSummarizeUsingTypedWeakSummary(9);
+			File testOutput = saturateAndSummarizeUsingTypedWeakSummary(12);
 			if (!testOutput.exists()){
 				fail("Test output not found");
 			}
 			if (!expectedOutput.exists()){
 				fail("Expected output not found " + referenceFileName);
 			}
-			assertTrue("Different summary typedweak 9", FileUtils.contentEquals(testOutput, expectedOutput));
+			assertTrue("Different summary typedweak 12", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in typedweak test 9 " + e.toString());
+			throw new IllegalStateException("Unable to open .nt files in typedweak test 12 " + e.toString());
 		}
 	}
 }

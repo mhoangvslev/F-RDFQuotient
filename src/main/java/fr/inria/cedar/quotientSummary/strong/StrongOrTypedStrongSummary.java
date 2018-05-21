@@ -9,6 +9,7 @@ import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.TreeSet;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -185,7 +186,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		// were created -- not connected anywhere yet -- thus the next summary
 		// node number has increased)
 		// now we start to apply the decisions
-		LOGGER.debug("RS_RP_RO REPLACE S: " + replaceForS + " REPLACE O: " + replaceForO);
+		//LOGGER.debug("RS_RP_RO REPLACE S: " + replaceForS + " REPLACE O: " + replaceForO);
 		// really modify cliques (and do nothing else)
 		if (replaceForS) {
 			fuseCliqueInto(sourceCliqueS, newSourceCliqueS, SOURCE);
@@ -201,8 +202,8 @@ public class StrongOrTypedStrongSummary extends Summary {
 		//else {
 		//	otherwise do nothing
 		//}
-		LOGGER.debug("RS_RP_RO After clique fusions, source cliques are " + sc.toString() + "\ntarget cliques are: " + tc.toString());
-		LOGGER.debug("RS_RP_RO while untyped is: " + untypedSummaryNodes.toString());
+		//LOGGER.debug("RS_RP_RO After clique fusions, source cliques are " + sc.toString() + "\ntarget cliques are: " + tc.toString());
+		//LOGGER.debug("RS_RP_RO while untyped is: " + untypedSummaryNodes.toString());
 
 		ArrayList<ReplacementSpecification> nodeReps = new ArrayList<>();
 		if (replaceForS) {
@@ -232,7 +233,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		// tco were empty), there is nothing to do at this stage, because
 		// newRepS and resp. newRepO are already well inserted in untyped, on
 		// their respective cliques
-		LOGGER.debug("RS_RP_RO after node but before clique replacement, untyped is: " + untypedSummaryNodes.toString());
+		//LOGGER.debug("RS_RP_RO after node but before clique replacement, untyped is: " + untypedSummaryNodes.toString());
 
 		// now compute and then apply the clique replacements in untyped, where
 		// they were still not applied compute sourceCliqueReplacements and
@@ -274,8 +275,8 @@ public class StrongOrTypedStrongSummary extends Summary {
 			rep.replaceValue(reps.getOldNode(), reps.getNewNode());
 		}
 
-		LOGGER.debug("RS_RP_RO after node and clique replacement, untyped is: " + untypedSummaryNodes.toString());
-		LOGGER.debug("RS_RP_RO while rep is: " + rep.toString());
+		//LOGGER.debug("RS_RP_RO after node and clique replacement, untyped is: " + untypedSummaryNodes.toString());
+		//LOGGER.debug("RS_RP_RO while rep is: " + rep.toString());
 
 		// now modifying rep:
 		rep.put(t.s, newRepS);
@@ -439,6 +440,29 @@ public class StrongOrTypedStrongSummary extends Summary {
 		n2tc.put(t.s, getEmptyTargetCliqueID());
 
 		edgesWithProv.addTriple(newRepS, t.p, newRepO);
+
+		if (replaceForO) {
+			// we may need to modify another summary node that has the same subject and property
+			ArrayList<Triple> edgesToCheck = (ArrayList<Triple>) edgesWithProv.getSummaryEdgesBySubjectAndProperty(newRepS, t.p).clone();
+			for (Triple edge: edgesToCheck) {
+				Long oldTargetClique = null;
+				if (rep.getInverse(edge.o) != null) {
+					TreeSet<Long> nodesToBeUpdated = (TreeSet<Long>) rep.getInverse(edge.o).clone();
+					if (Objects.equals(n2sc.get(nodesToBeUpdated.first()), sourceCliqueO) && edge.o != newRepO) {
+						for (Long node: nodesToBeUpdated) {
+							oldTargetClique = n2tc.get(node);
+							rep.put(node, newRepO);
+							n2tc.put(node, newTargetCliqueO);
+							edgesWithProv.replaceNodeInSummaryEdges(edge.o, newRepO);
+						}
+					}
+				}
+				if (oldTargetClique != null) {
+					untypedSummaryNodes.get(oldTargetClique).remove(sourceCliqueO);
+					untypedSummaryNodes.get(newSourceCliqueS).put(sourceCliqueO, newRepO);
+				}
+			}
+		}
 	}
 
 	// untyped, represented subject
@@ -450,7 +474,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		Long newTargetCliqueO = targetCliqueP;
 
 		Long repS = rep.get(t.s);
-		Long repO = this.getOrCreateSummaryNode(getEmptySourceCliqueID(), newTargetCliqueO);
+		Long repO = getOrCreateSummaryNode(getEmptySourceCliqueID(), newTargetCliqueO);
 
 		Long newRepS = getOrCreateSummaryNode(newSourceCliqueS, targetCliqueS);
 		Long newRepO = repO;
@@ -502,6 +526,29 @@ public class StrongOrTypedStrongSummary extends Summary {
 		n2sc.put(t.o, getEmptySourceCliqueID());
 
 		edgesWithProv.addTriple(newRepS, t.p, newRepO);
+
+		if (replaceForS) {
+			// we may need to modify another summary node that has the same property and object
+			ArrayList<Triple> edgesToCheck = (ArrayList<Triple>) edgesWithProv.getSummaryEdgesByPropertyAndObject(t.p, newRepO).clone();
+			for (Triple edge: edgesToCheck) {
+				Long oldSourceClique = null;
+				if (rep.getInverse(edge.s) != null) {
+					TreeSet<Long> nodesToBeUpdated = (TreeSet<Long>) rep.getInverse(edge.s).clone();
+					if (Objects.equals(n2tc.get(nodesToBeUpdated.first()), targetCliqueS) && edge.s != newRepS) {
+						for (Long node: nodesToBeUpdated) {
+							oldSourceClique = n2sc.get(node);
+							rep.put(node, newRepS);
+							n2sc.put(node, newSourceCliqueS);
+							edgesWithProv.replaceNodeInSummaryEdges(edge.s, newRepS);
+						}
+					}
+				}
+				if (oldSourceClique != null) {
+					untypedSummaryNodes.get(oldSourceClique).remove(targetCliqueS);
+					untypedSummaryNodes.get(newSourceCliqueS).put(targetCliqueS, newRepS);
+				}
+			}
+		}
 	}
 
 	// untyped, unrepresented subject
@@ -753,7 +800,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 	// updates untypedSummaryNodes, p2sc, p2tc
 	// decides how many clique replacements we need and applies them
 	protected void computeAndApplyCliqueReplacements(Long clique1, Long clique2, Long cliqueNew, char param){
-		TreeSet<Long> toBeReplaced = new TreeSet<Long>();
+		TreeSet<Long> toBeReplaced = new TreeSet<>();
 		if (param == SOURCE){
 			if (!clique1.equals(this.getEmptySourceCliqueID()) && (!clique1.equals(cliqueNew))){
 				//LOGGER.debug("CLIQUE REPLACE IN UNTYPED, P2, N2 SOURCE: we'll replace " + clique1 + " with " + cliqueNew);
@@ -764,7 +811,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 				toBeReplaced.add(clique2); 
 			}
 		}
-		if (param == TARGET){
+		else if (param == TARGET){
 			if (!clique1.equals(this.getEmptyTargetCliqueID()) && (!clique1.equals(cliqueNew))){
 				//LOGGER.debug("CLIQUE REPLACE IN UNTYPED, P2, N2 TARGET: we'll replace " + clique1 +  " with " + cliqueNew);
 				//LOGGER.debug("CLIQUE REPLACE IN UNTYPED, P2, N2 TARGET: that is " + 
@@ -800,7 +847,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 				this.sc.remove(oldClique);
 			}
 		}
-		if (param == TARGET){
+		else if (param == TARGET){
 			this.tc.get(newClique).addAll(this.tc.get(oldClique)); 
 			if (!oldClique.equals(this.getEmptyTargetCliqueID())){ // if oldClique is empty, it should not be replaced/removed!
 				n2tc.replaceValue(oldClique, newClique);
@@ -818,7 +865,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 			// if this leads to overwriting a node in a different way, throw an error
 			untypedSummaryNodes.replaceAt2ndLevel(oldClique, newClique);
 		}
-		if (param == SOURCE){
+		else if (param == SOURCE){
 			untypedSummaryNodes.replaceAt1stLevel(oldClique, newClique); 
 		}
 	}
@@ -827,7 +874,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		if (param == SOURCE){
 			this.p2sc.replaceValue(oldClique, newClique);
 		}
-		if (param == TARGET){
+		else if (param == TARGET){
 			this.p2tc.replaceValue(oldClique, newClique);
 		}
 	}
@@ -835,7 +882,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		if (param == SOURCE){
 			this.n2sc.replaceValue(oldClique, newClique);
 		}
-		if (param == TARGET){
+		else if (param == TARGET){
 			this.n2tc.replaceValue(oldClique, newClique);
 		}
 	}
@@ -843,15 +890,14 @@ public class StrongOrTypedStrongSummary extends Summary {
 	// returns on oldRep, the edges to remove, 
 	// and on newRep, the edges to create for it
 	protected HashMap<Long, Long2LongSet> distributeSummaryEdgesThroughCounts(long oldRep, long newRep, long dataNode, char param){
-		HashMap<Long, Long2LongSet> res = new HashMap<Long, Long2LongSet>();
+		HashMap<Long, Long2LongSet> res = new HashMap<>();
 		Long2LongSet summEdgesToAddOnNewRep = new Long2LongSet(); 
 		Long2LongSet summEdgesToRemoveOnOldRep = new Long2LongSet(); 
 		res.put(oldRep, summEdgesToRemoveOnOldRep);
 		res.put(newRep, summEdgesToAddOnNewRep);
 
 		if (param == SOURCE){ // we must distribute edges outgoing from oldRep and newRep, which now represents dataNode
-
-			LOGGER.debug("DISTRIBUTING OUTGOING SUMMARY EDGES of summary node " + oldRep + " with the new summary node " + newRep + " due to " + dataNode);
+			//LOGGER.debug("DISTRIBUTING OUTGOING SUMMARY EDGES of summary node " + oldRep + " with the new summary node " + newRep + " due to " + dataNode);
 
 			// traverse the data edges outgoing node and, for each of them:
 			// - mark the corresponding summary edge as needing to be added to the new summary node; 
@@ -861,12 +907,12 @@ public class StrongOrTypedStrongSummary extends Summary {
 				for (Long p: dataEdgesFromNode.keys()){
 					for (Long o: dataEdgesFromNode.get(p)){
 						// data edge dataNode--p-->o
-						LOGGER.debug("For " +  dataNode  + "--" + p + "-->" + o + ")");
+						//LOGGER.debug("For " +  dataNode  + "--" + p + "-->" + o + ")");
 						Long repO = rep.get(o); // this supposes that rep(o) has not been updated yet
 						if (repO != null){ // represented by summary edge oldRep--p-->repO
 							summEdgesToAddOnNewRep.add(p, repO); 
-							LOGGER.debug("Seeking repr. counter  of: oldRep (" + oldRep + ")--" + p + "-->repO(" + repO + ")");
-							edgesWithProv.display();
+							//LOGGER.debug("Seeking repr. counter  of: oldRep (" + oldRep + ")--" + p + "-->repO(" + repO + ")");
+							//edgesWithProv.display();
 							Long edgeCountLeft = edgesWithProv.getCounter(oldRep, p, repO) - 1; //was: o instead of repO
 							if (edgeCountLeft == 0){
 								summEdgesToRemoveOnOldRep.add(p, repO);
@@ -876,7 +922,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 				}
 			}
 		}
-		if (param == TARGET){ // we must distribute edges incoming in oldRep and/or newRep, which now represents node
+		else if (param == TARGET){ // we must distribute edges incoming in oldRep and/or newRep, which now represents node
 			//LOGGER.debug("DISTRIBUTING INCOMING SUMMARY EDGES of " + oldRep + " with the new " + newRep + " due to " + node);
 			//LOGGER.debug("DISTRIBUTING INCOMING SUMMARY EDGES: incoming edges are " + displayTriplesByObject());
 
@@ -911,7 +957,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 			addOutgoingEdges(newRep, edgesToAddAndRemove.get(newRep));
 			removeOutgoingEdges(rep, edgesToAddAndRemove.get(rep));
 		}
-		if (param == TARGET){
+		else if (param == TARGET){
 			addIncomingEdges(newRep, edgesToAddAndRemove.get(newRep));
 			removeIncomingEdges(rep, edgesToAddAndRemove.get(rep));
 		}
@@ -998,7 +1044,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 	 */
 	protected Long makeAndAddNewTargetClique(Long p) {
 		Long targetCliqueID = this.minCliqueID;
-		TreeSet<Long> actualTargetClique = new TreeSet<Long>();
+		TreeSet<Long> actualTargetClique = new TreeSet<>();
 		actualTargetClique.add(p);
 		tc.put(targetCliqueID, actualTargetClique);
 		p2tc.put(p, targetCliqueID);
@@ -1011,7 +1057,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 	protected Long getEmptyTargetCliqueID() {
 		Long res;
 		if (this.emptyTCCount == Long.MAX_VALUE) { // the empty source clique has not been created yet
-			TreeSet<Long> emptyTC = new TreeSet<Long>();
+			TreeSet<Long> emptyTC = new TreeSet<>();
 			res = minCliqueID; // we invent a new source clique
 			//LOGGER.debug("ooooo> Initialized the empty target clique at: " + res);
 			this.emptyTCCount = minCliqueID;
@@ -1041,43 +1087,43 @@ public class StrongOrTypedStrongSummary extends Summary {
 		}
 		edgesOfO.add(t.p, t.s);
 		//LOGGER.debug("CACHED BY OBJECT " + t.o + " on " + t.p + ": " + t.s + " resulting in " + displayTriplesByObject());
-		displayTriplesByObject();
+		//displayTriplesByObject();
 	}
 
 	protected void roundTripConsistencyCheck(){
-		String msg = ""; 
+		String msg;
 		for (Long dataNode: n2sc.getKeys()){
-			LOGGER.debug("Checking from data node: " + dataNode);
+			//LOGGER.debug("Checking from data node: " + dataNode);
 			Long nodeRep = rep.get(dataNode);
 			if (nodeRep == null){
-				msg = ("Unrepresented data node " + dataNode);
-				LOGGER.debug(msg);
+				msg = "Unrepresented data node " + dataNode;
+				//LOGGER.debug(msg);
 				throw new IllegalStateException(msg);
 			}
 			Long nsc = n2sc.get(dataNode);
 			Long ntc = n2tc.get(dataNode);
 			HashMap<Long, Long> tc2Nodes = untypedSummaryNodes.get(nsc);
 			if (tc2Nodes == null){
-				msg = ("untypedSummaryNodes has no (target clique, node) pairs on source clique " + nsc + " of node " + dataNode + "(" + RDF2SQLEncoding.dictionaryDecode(dataNode) + ")"); 
-				LOGGER.debug(msg);
-				throw new IllegalStateException(msg); 
+				msg = "untypedSummaryNodes has no (target clique, node) pairs on source clique " + nsc + " of node " + dataNode + "(" + RDF2SQLEncoding.dictionaryDecode(dataNode) + ")"; 
+				//LOGGER.debug(msg);
+				throw new IllegalStateException(msg);
 			}
 			Long tcn = tc2Nodes.get(ntc);
 			if (tcn == null){
-				msg = ("No node found on source clique " + nsc + " for target clique " + ntc + " of data node " + dataNode + 
-						" or (" + RDF2SQLEncoding.dictionaryDecode(dataNode) + ") while its representative is " + nodeRep); 
-				LOGGER.debug(msg);
+				msg = "No node found on source clique " + nsc + " for target clique " + ntc + " of data node " + dataNode + " or (" + RDF2SQLEncoding.dictionaryDecode(dataNode) + ") while its representative is " + nodeRep;
+				//LOGGER.debug(msg);
 				throw new IllegalStateException(msg);
 			}
 			if (!(tcn.equals(nodeRep))){
-				msg = (nsc + "=>" + ntc + ": " + tcn + " while the representative of " + dataNode + " is " + nodeRep); 
-				LOGGER.debug(msg);
+				msg = nsc + "=>" + ntc + ": " + tcn + " while the representative of " + dataNode + " is " + nodeRep;
+				//LOGGER.debug(msg);
 				throw new IllegalStateException(msg);
 			}
 		}
 		Long totalEdgeCount = edgesWithProv.totalEdgeCount(); 
 		if (!totalEdgeCount.equals(this.numberOfDataTriplesRead)){
-			msg = ("In edges we have a total of " + totalEdgeCount + " edges while we have summarized so far " + numberOfDataTriplesRead + " data triples");  
+			msg = "In edges we have a total of " + totalEdgeCount + " edges while we have summarized so far " + numberOfDataTriplesRead + " data triples";
+			throw new IllegalStateException(msg);
 		}
 	}
 
@@ -1114,7 +1160,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		showRep();
 		LOGGER.debug("Summary edges: ");
 		edgesWithProv.display(); 
-		//roundTripConsistencyCheck();
+		roundTripConsistencyCheck();
 		LOGGER.debug("===");
 	}
 }

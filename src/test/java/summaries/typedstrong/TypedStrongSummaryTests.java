@@ -96,6 +96,7 @@ public class TypedStrongSummaryTests {
 		return "src/test/resources/test" + i + "-typedstrong/test-" + i + "_ts_" + summarizationTechnique + "-reference.nt";
 	}
 
+	// Summarization tests only with the graphs that have type triples
 	@Test
 	public void summarizeTypedStrongTest1() {
 		String referenceFileName = expectedOutput(1, "noSaturation");
@@ -233,45 +234,6 @@ public class TypedStrongSummaryTests {
 	}
 
 	@Test
-	public void summarizeTypedStrongTest8() {
-		String referenceFileName = expectedOutput(8, "noSaturation");
-		File expectedOutput = new File(referenceFileName);
-		try {
-			File testOutput = summarizeUsingTypedStrongSummary(8); 
-			if (!testOutput.exists()){
-				fail("Test output not found");
-			}
-			if (!expectedOutput.exists()){
-				fail("Expected output not found " + referenceFileName);
-			}
-			assertTrue("Different summary typedstrong 8", FileUtils.contentEquals(testOutput, expectedOutput));
-		}
-		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in typedstrong test 8 " + e.toString());
-		}
-	}
-
-	@Test
-	public void summarizeTypedStrongTest9() {
-		String referenceFileName = expectedOutput(9, "noSaturation");
-		File expectedOutput = new File(referenceFileName);
-		try {
-			File testOutput = summarizeUsingTypedStrongSummary(9); 
-			if (!testOutput.exists()){
-				fail("Test output not found");
-			}
-			if (!expectedOutput.exists()){
-				fail("Expected output not found " + referenceFileName);
-			}
-			assertTrue("Different summary typedstrong 9", FileUtils.contentEquals(testOutput, expectedOutput));
-		}
-		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in typedstrong test 9 " + e.toString());
-		}
-	}
-
-	// no point in adding test10 as the graph number 10 does not have type triples
-	@Test
 	public void summarizeTypedStrongTest11() {
 		String referenceFileName = expectedOutput(11, "noSaturation");
 		File expectedOutput = new File(referenceFileName);
@@ -289,8 +251,8 @@ public class TypedStrongSummaryTests {
 			throw new IllegalStateException("Unable to open .nt files in typedstrong test 11 " + e.toString());
 		}
 	}
+
 	@Test
-	// this is currently a bug! https://gitlab.inria.fr/cedar/quotientSummary/issues/15
 	public void summarizeTypedStrongTest12() {
 		String referenceFileName = expectedOutput(12, "noSaturation");
 		File expectedOutput = new File(referenceFileName);
@@ -308,13 +270,15 @@ public class TypedStrongSummaryTests {
 			throw new IllegalStateException("Unable to open .nt files in typedstrong test 12 " + e.toString());
 		}
 	}
+
+	// Saturation and summarization tests with all the graphs that have type
+	// triples (saturation has no impact on the input graph if it doesn't
+	// contain the schema however it may change the order of the triples and it
+	// may be useful to check for the correctness)
 	@Test
 	public void saturateAndSummarizeTypedStrongTest1() {
 		String referenceFileName = expectedOutput(1, "classical");
 		File expectedOutput = new File(referenceFileName);
-		if (!expectedOutput.exists()){
-			fail("Expected output not found " + referenceFileName);
-		}
 		try {
 			File testOutput = saturateAndSummarizeUsingTypedStrongSummary(1);
 			if (!testOutput.exists()){
@@ -445,7 +409,25 @@ public class TypedStrongSummaryTests {
 	}
 
 	@Test
-	// this is currently a bug! https://gitlab.inria.fr/cedar/quotientSummary/issues/15
+	public void saturateAndSummarizeTypedStrongTest11() {
+		String referenceFileName = expectedOutput(11, "classical");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = saturateAndSummarizeUsingTypedStrongSummary(11); 
+			if (!testOutput.exists()){
+				fail("Test output not found");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary typedstrong 11", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in typedstrong test 11 " + e.toString());
+		}
+	}
+
+	@Test
 	public void saturateAndSummarizeTypedStrongTest12() {
 		String referenceFileName = expectedOutput(12, "classical");
 		File expectedOutput = new File(referenceFileName);
@@ -461,43 +443,6 @@ public class TypedStrongSummaryTests {
 		}
 		catch (IOException e) {
 			throw new IllegalStateException("Unable to open .nt files in typedstrong test 12 " + e.toString());
-		}
-	}
-
-	public void saturateAndSummarizeTypedStrongTest8() {
-		String referenceFileName = expectedOutput(8, "classical");
-		File expectedOutput = new File(referenceFileName);
-		try {
-			File testOutput = saturateAndSummarizeUsingTypedStrongSummary(8); 
-			if (!testOutput.exists()){
-				fail("Test output not found");
-			}
-			if (!expectedOutput.exists()){
-				fail("Expected output not found " + referenceFileName);
-			}
-			assertTrue("Different summary typedstrong 8", FileUtils.contentEquals(testOutput, expectedOutput));
-		}
-		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in typedstrong test 8 " + e.toString());
-		}
-	}
-
-	@Test
-	public void saturateAndSummarizeTypedStrongTest9() {
-		String referenceFileName = expectedOutput(9, "classical");
-		File expectedOutput = new File(referenceFileName);
-		try {
-			File testOutput = saturateAndSummarizeUsingTypedStrongSummary(9); 
-			if (!testOutput.exists()){
-				fail("Test output not found");
-			}
-			if (!expectedOutput.exists()){
-				fail("Expected output not found " + referenceFileName);
-			}
-			assertTrue("Different summary typedstrong 9", FileUtils.contentEquals(testOutput, expectedOutput));
-		}
-		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in typedstrong test 9 " + e.toString());
 		}
 	}
 }

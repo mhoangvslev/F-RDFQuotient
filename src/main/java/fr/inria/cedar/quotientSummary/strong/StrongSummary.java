@@ -14,6 +14,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 
 	public StrongSummary(String triplesFileName, String triplesTableName, String encodedTriplesTableName, String dictionaryTableName) {
 		super();
+		LOGGER.setLevel(Level.INFO);
 		this.triplesFileName = triplesFileName;
 		this.triplesTableName = triplesTableName;
 		this.encodedTriplesTableName = encodedTriplesTableName;
@@ -145,14 +146,14 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 		Long sourceCliqueP = p2sc.get(t.p);
 		Long targetCliqueP = p2tc.get(t.p);
 
-		Long repO = rep.get(t.o);
 		Long repS = rep.get(t.s);
+		Long repO = rep.get(t.o);
 
 		//TODO comment this out to improve performance when debugging is finished
 		//checkSymmetry(sourceCliqueS, targetCliqueS, sourceCliqueO, targetCliqueO, sourceCliqueP, targetCliqueP); 
 		char caseNumber = decode(repS, repO, sourceCliqueP);
 
-		System.out.println("\n" + t.toString() + " " + RDF2SQLEncoding.decode(t) + " case: " + this.caseName(caseNumber)); 
+		//LOGGER.debug("\n" + t.toString() + " " + RDF2SQLEncoding.decode(t) + " case: " + this.caseName(caseNumber)); 
 		switch (caseNumber) {
 			case RS_RP_RO: {
 				handleDataTriple_RS_RP_RO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
@@ -189,8 +190,8 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 			default:
 				throw new IllegalStateException("Unknown case " + caseNumber);
 		}
-		cacheTriple(t) ;
-		display(); 
+		cacheTriple(t);
+		//display(); 
 	}
 
 	/** This implementation should be shared by Weak and Strong

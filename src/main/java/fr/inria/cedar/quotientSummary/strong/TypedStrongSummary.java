@@ -251,11 +251,11 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		return new String(sb);
 	}
 	private void showClassSets() {
-		for (TreeSet<Long> cs: cs2csID.keySet()){
+		for (TreeSet<Long> classSets: cs2csID.keySet()){
 			StringBuilder thisCSBuffer = new StringBuilder();
-			thisCSBuffer.append(showLongSet(cs));
+			thisCSBuffer.append(showLongSet(classSets));
 			thisCSBuffer.append("-->");
-			thisCSBuffer.append(cs2csID.get(cs));
+			thisCSBuffer.append(cs2csID.get(classSets));
 			System.out.println(thisCSBuffer.toString());
 		}
 	}

@@ -91,7 +91,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 						else
 							handleDataTriple(t);
 						triplesSummarizedSoFar++;
-						//display(); 
+						//display();
 						//this.drawSummaryAndGraph(conn, "after-" + triplesSummarizedSoFar + "-" + t.s + "-" + t.p + "-" + t.o);
 						if (this.checkConsistency)
 							consistencyChecks();
@@ -175,8 +175,8 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 				throw new IllegalStateException("This case should not be encountered here");
 		}
 
-		//System.out.println("After processing triple " + t.toString() + ", we have:\n" + this.toString()); 
-		//safetyCheck(); 
+		//System.out.println("After processing triple " + t.toString() + ", we have:\n" + this.toString());
+		//safetyCheck();
 	}
 
 	private String showCaseNumber(char caseNumber) {

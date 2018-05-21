@@ -2,6 +2,7 @@ package fr.inria.cedar.quotientSummary.datastructures;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import org.apache.log4j.Level;
@@ -13,7 +14,7 @@ public class EdgesWithProvenanceCounts {
 	protected HashMap<Long, HashMap<Long, HashMap<Long, Long>>> counts;
 
 	public EdgesWithProvenanceCounts(){
-		LOGGER.setLevel(Level.DEBUG);
+		LOGGER.setLevel(Level.INFO);
 		edges = new HashMap<>();
 		counts = new HashMap<>();
 	}
@@ -129,38 +130,36 @@ public class EdgesWithProvenanceCounts {
 				edges.put(newNode, oldNodeIsSubject); // we're done
 				counts.put(newNode, countsOnOldSubject); 
 			} 
-			else {  // there were already edges whose subject was the new node
-				if (oldNodeIsSubject != null) { 
-					// in this case we need to fuse the two maps so that each edge appears only once
-					// we will do this by copying those oldNodeIsSubject triples
-					// which were not already on the new node, into the properties
-					// of the new node
-					//System.out.println("   SUMMARY.REPLACE IN EDGES: There were edges both on old " + oldNode + " and on new " + newNode);
-
-					for (Long p : oldNodeIsSubject.keySet()) { // iterate over the properties of the old node
-						TreeSet<Long> oldNodeObjectsForP = oldNodeIsSubject.get(p);
-						TreeSet<Long> newNodeObjectsForP = newNodeIsSubject.get(p);
-						if (newNodeObjectsForP == null) { // the new node did not have this one => initializing
-							//System.out.println("   SUMMARY.REPLACE IN EDGES: " + newNode + " did not have edges labeled " + oldNodeProperty
-							//		+ ", he is taking them from " + oldNode);
-							newNodeObjectsForP = new TreeSet<>();
-							newNodeIsSubject.put(p, newNodeObjectsForP);
-						}
-						// whether the new node did or did not have triples labeled
-						// oldNodeProperty, try to give him the triples labeled
-						// oldNodeProperty of the old node:
-						for (Long objectOfOldNode : oldNodeObjectsForP) {
-							if (!newNodeObjectsForP.contains(objectOfOldNode)) {
-								//System.out.println("   SUMMARY.REPLACE IN EDGES: " +newNode + " takes property " + oldNodeProperty + " with value "
-								//		+ objectOfOldNode + " from " + oldNode);
-								newNodeObjectsForP.add(objectOfOldNode);
-								setCounter(newNode, p, objectOfOldNode, getCounter(oldNode, p, objectOfOldNode)); // transfer edge counts
-							} 
-							else {
-								//System.out.println("   SUMMARY.REPLACE IN EDGES: " +newNode + " already had property " + oldNodeProperty + " with value "	+ objectOfOldNode);
-								setCounter(newNode, p, objectOfOldNode,
-										(getCounter(oldNode, p, objectOfOldNode) + getCounter(newNode, p, objectOfOldNode))); 
-							}
+			else {
+				// there were already edges whose subject was the new node 
+				// in this case we need to fuse the two maps so that each edge appears only once
+				// we will do this by copying those oldNodeIsSubject triples
+				// which were not already on the new node, into the properties
+				// of the new node
+				//System.out.println("   SUMMARY.REPLACE IN EDGES: There were edges both on old " + oldNode + " and on new " + newNode);
+				for (Long p : oldNodeIsSubject.keySet()) { // iterate over the properties of the old node
+					TreeSet<Long> oldNodeObjectsForP = oldNodeIsSubject.get(p);
+					TreeSet<Long> newNodeObjectsForP = newNodeIsSubject.get(p);
+					if (newNodeObjectsForP == null) { // the new node did not have this one => initializing
+						//System.out.println("   SUMMARY.REPLACE IN EDGES: " + newNode + " did not have edges labeled " + oldNodeProperty
+						//		+ ", he is taking them from " + oldNode);
+						newNodeObjectsForP = new TreeSet<>();
+						newNodeIsSubject.put(p, newNodeObjectsForP);
+					}
+					// whether the new node did or did not have triples labeled
+					// oldNodeProperty, try to give him the triples labeled
+					// oldNodeProperty of the old node:
+					for (Long objectOfOldNode : oldNodeObjectsForP) {
+						if (!newNodeObjectsForP.contains(objectOfOldNode)) {
+							//System.out.println("   SUMMARY.REPLACE IN EDGES: " +newNode + " takes property " + oldNodeProperty + " with value "
+							//		+ objectOfOldNode + " from " + oldNode);
+							newNodeObjectsForP.add(objectOfOldNode);
+							setCounter(newNode, p, objectOfOldNode, getCounter(oldNode, p, objectOfOldNode)); // transfer edge counts
+						} 
+						else {
+							//System.out.println("   SUMMARY.REPLACE IN EDGES: " +newNode + " already had property " + oldNodeProperty + " with value "	+ objectOfOldNode);
+							setCounter(newNode, p, objectOfOldNode,
+									(getCounter(oldNode, p, objectOfOldNode) + getCounter(newNode, p, objectOfOldNode))); 
 						}
 					}
 				}
@@ -170,7 +169,6 @@ public class EdgesWithProvenanceCounts {
 			// there was no edge with oldNode as a subject, no subject replacement to do
 		}
 		//System.out.println("   SUMMARY.REPLACE IN EDGES ends");
-
 	}
 
 	public ArrayList<Triple> getSummaryEdges() {
@@ -188,12 +186,51 @@ public class EdgesWithProvenanceCounts {
 		return res;
 	}
 
+	public ArrayList<Triple> getSummaryEdgesBySubjectAndProperty(Long sub, Long pro) {
+		ArrayList<Triple> res = new ArrayList<>();
+		for (Long s : edges.keySet()) {
+			if (Objects.equals(s, sub)) {
+				HashMap<Long, TreeSet<Long>> triplesOfThisSubject = edges.get(s);
+				for (Long p : triplesOfThisSubject.keySet()) {
+					if (Objects.equals(p, pro)) {
+						TreeSet<Long> objectsOfThisSandP = triplesOfThisSubject.get(p);
+						for (Long o : objectsOfThisSandP) {
+							Triple t = new Triple(s, p, o);
+							res.add(t);
+						}
+					}
+				}
+			}
+		}
+		return res;
+	}
+
+	public ArrayList<Triple> getSummaryEdgesByPropertyAndObject(Long pro, Long obj) {
+		ArrayList<Triple> res = new ArrayList<>();
+		for (Long s : edges.keySet()) {
+			HashMap<Long, TreeSet<Long>> triplesOfThisSubject = edges.get(s);
+			for (Long p : triplesOfThisSubject.keySet()) {
+				if (Objects.equals(p, pro)) {
+					TreeSet<Long> objectsOfThisSandP = triplesOfThisSubject.get(p);
+					for (Long o : objectsOfThisSandP) {
+						if (Objects.equals(o, obj)) {
+							Triple t = new Triple(s, p, o);
+							res.add(t);
+						}
+					}
+				}
+			}
+		}
+		return res;
+	}
+
 	public void removeTriple(Long s, Long p, Long o){
 		HashMap<Long, TreeSet<Long>> edgesOfS = edges.get(s); 
 		if (edgesOfS != null){
 			TreeSet<Long> pEdgesOfS = edgesOfS.get(p);
 			if (pEdgesOfS != null){
-				pEdgesOfS.remove(o); 
+				pEdgesOfS.remove(o);
+				counts.get(s).get(p).remove(o);
 			}
 		}
 	}

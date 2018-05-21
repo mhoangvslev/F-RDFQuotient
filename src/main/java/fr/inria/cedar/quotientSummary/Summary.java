@@ -466,7 +466,7 @@ public class Summary {
 				// write summary triples:
 				for (Triple t : summEdges) {
 					LOGGER.debug("Summary triple: " + t.toString() );
-					String subject = "", property = "", object = "";
+					String subject, property, object;
 					if (RDF2SQLEncoding.isDataProperty(t.p)) { // data
 						subject = getSummaryNodeURI(URIprefix, t.s);
 						property = RDF2SQLEncoding.dictionaryDecode(t.p);
@@ -644,8 +644,7 @@ public class Summary {
 		LOGGER.error("Could not turn .dot file into .png (check the pathToDot value in summarization.properties)" + e.toString());
 	}
 }
-	
-	
+
 	/**
 	 * Given a path to an .nt RDF data file, computes a file name by inserting
 	 * the prefix encoding the summary type before the main file name, and

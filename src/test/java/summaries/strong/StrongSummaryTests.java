@@ -304,6 +304,7 @@ public class StrongSummaryTests {
 			throw new IllegalStateException("Unable to open .nt files in strong test 9 " + e.toString());
 		}
 	}
+
 	@Test
 	public void summarizeStrongTest10() {
 		String referenceFileName = expectedOutput(10, "noSaturation");
@@ -321,7 +322,9 @@ public class StrongSummaryTests {
 		catch (IOException e) {
 			throw new IllegalStateException("Unable to open .nt files in strong test 10 " + e.toString());
 		}
-	}@Test
+	}
+
+	@Test
 	public void summarizeStrongTest11() {
 		String referenceFileName = expectedOutput(11, "noSaturation");
 		File expectedOutput = new File(referenceFileName);
@@ -338,7 +341,9 @@ public class StrongSummaryTests {
 		catch (IOException e) {
 			throw new IllegalStateException("Unable to open .nt files in strong test 11 " + e.toString());
 		}
-	}@Test
+	}
+
+	@Test
 	public void summarizeStrongTest12() {
 		String referenceFileName = expectedOutput(12, "noSaturation");
 		File expectedOutput = new File(referenceFileName);
@@ -357,6 +362,10 @@ public class StrongSummaryTests {
 		}
 	}
 
+	// Saturation and summarization tests with all graphs (saturation has no
+	// impact on the input graph if it doesn't contain the schema however it
+	// may change the order of the triples and it may be useful to check for
+	// the correctness)
 	@Test
 	public void saturateAndSummarizeStrongTest1() {
 		String referenceFileName = expectedOutput(1, "classical");
@@ -527,7 +536,45 @@ public class StrongSummaryTests {
 			throw new IllegalStateException("Unable to open .nt files in strong test 9 " + e.toString());
 		}
 	}
-	// not worth adding 10 and 11 as saturation does nothing (other than reorder triples :) 
+
+	@Test
+	public void saturateAndSummarizeStrongTest10() {
+		String referenceFileName = expectedOutput(10, "classical");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = saturateAndSummarizeUsingStrongSummary(10);
+			if (!testOutput.exists()){
+				fail("Test output not found ");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary strong 10", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in strong test 10 " + e.toString());
+		}
+	}
+
+	@Test
+	public void saturateAndSummarizeStrongTest11() {
+		String referenceFileName = expectedOutput(11, "classical");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = saturateAndSummarizeUsingStrongSummary(11);
+			if (!testOutput.exists()){
+				fail("Test output not found ");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary strong 11", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in strong test 11 " + e.toString());
+		}
+	}
+
 	@Test
 	public void saturateAndSummarizeStrongTest12() {
 		String referenceFileName = expectedOutput(12, "classical");
@@ -547,101 +594,7 @@ public class StrongSummaryTests {
 		}
 	}
 
-	@Test
-	public void summarizeThroughShortcutStrongTest1() {
-		String referenceFileName = expectedOutput(1, "shortcut");
-		File expectedOutput = new File(referenceFileName);
-		try {
-			File testOutput = summarizeThroughShortcutUsingStrongSummary(1);
-			if (!testOutput.exists()){
-				fail("Test output not found ");
-			}
-			if (!expectedOutput.exists()){
-				fail("Expected output not found " + referenceFileName);
-			}
-			assertTrue("Different summary strong 1", FileUtils.contentEquals(testOutput, expectedOutput));
-		}
-		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in strong test 1 " + e.toString());
-		}
-	}
-
-	@Test
-	public void summarizeThroughShortcutStrongTest2() {
-		String referenceFileName = expectedOutput(2, "shortcut");
-		File expectedOutput = new File(referenceFileName);
-		try {
-			File testOutput = summarizeThroughShortcutUsingStrongSummary(2);
-			if (!testOutput.exists()){
-				fail("Test output not found ");
-			}
-			if (!expectedOutput.exists()){
-				fail("Expected output not found " + referenceFileName);
-			}
-			assertTrue("Different summary strong 2", FileUtils.contentEquals(testOutput, expectedOutput));
-		}
-		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in strong test 2 " + e.toString());
-		}
-	}
-
-	@Test
-	public void summarizeThroughShortcutStrongTest3() {
-		String referenceFileName = expectedOutput(3, "shortcut");
-		File expectedOutput = new File(referenceFileName);
-		try {
-			File testOutput = summarizeThroughShortcutUsingStrongSummary(3);
-			if (!testOutput.exists()){
-				fail("Test output not found ");
-			}
-			if (!expectedOutput.exists()){
-				fail("Expected output not found " + referenceFileName);
-			}
-			assertTrue("Different summary strong 3", FileUtils.contentEquals(testOutput, expectedOutput));
-		}
-		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in strong test 3 " + e.toString());
-		}
-	}
-
-	@Test
-	public void summarizeThroughShortcutStrongTest4() {
-		String referenceFileName = expectedOutput(4, "shortcut");
-		File expectedOutput = new File(referenceFileName);
-		try {
-			File testOutput = summarizeThroughShortcutUsingStrongSummary(4);
-			if (!testOutput.exists()){
-				fail("Test output not found ");
-			}
-			if (!expectedOutput.exists()){
-				fail("Expected output not found " + referenceFileName);
-			}
-			assertTrue("Different summary strong 4", FileUtils.contentEquals(testOutput, expectedOutput));
-		}
-		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in strong test 4 " + e.toString());
-		}
-	}
-
-	@Test
-	public void summarizeThroughShortcutStrongTest5() {
-		String referenceFileName = expectedOutput(5, "shortcut");
-		File expectedOutput = new File(referenceFileName);
-		try {
-			File testOutput = summarizeThroughShortcutUsingStrongSummary(5);
-			if (!testOutput.exists()){
-				fail("Test output not found ");
-			}
-			if (!expectedOutput.exists()){
-				fail("Expected output not found " + referenceFileName);
-			}
-			assertTrue("Different summary strong 5", FileUtils.contentEquals(testOutput, expectedOutput));
-		}
-		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in strong test 5 " + e.toString());
-		}
-	}
-
+	// Shortcut tests only with the graphs that have a schema
 	@Test
 	public void summarizeThroughShortcutStrongTest6() {
 		String referenceFileName = expectedOutput(6, "shortcut");
@@ -661,62 +614,6 @@ public class StrongSummaryTests {
 		}
 	}
 
-	@Test
-	public void summarizeThroughShortcutStrongTest7() {
-		String referenceFileName = expectedOutput(7, "shortcut");
-		File expectedOutput = new File(referenceFileName);
-		try {
-			File testOutput = summarizeThroughShortcutUsingStrongSummary(7);
-			if (!testOutput.exists()){
-				fail("Test output not found ");
-			}
-			if (!expectedOutput.exists()){
-				fail("Expected output not found " + referenceFileName);
-			}
-			assertTrue("Different summary strong 7", FileUtils.contentEquals(testOutput, expectedOutput));
-		}
-		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in strong test 7 " + e.toString());
-		}
-	}
-
-	@Test
-	public void summarizeThroughShortcutStrongTest8() {
-		String referenceFileName = expectedOutput(8, "shortcut");
-		File expectedOutput = new File(referenceFileName);
-		try {
-			File testOutput = summarizeThroughShortcutUsingStrongSummary(8);
-			if (!testOutput.exists()){
-				fail("Test output not found ");
-			}
-			if (!expectedOutput.exists()){
-				fail("Expected output not found " + referenceFileName);
-			}
-			assertTrue("Different summary strong 8", FileUtils.contentEquals(testOutput, expectedOutput));
-		}
-		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in strong test 8 " + e.toString());
-		}
-	}
-
-	@Test
-	public void summarizeThroughShortcutStrongTest9() {
-		String referenceFileName = expectedOutput(9, "shortcut");
-		File expectedOutput = new File(referenceFileName);
-		try {
-			File testOutput = summarizeThroughShortcutUsingStrongSummary(9);
-			if (!testOutput.exists()){
-				fail("Test output not found ");
-			}
-			if (!expectedOutput.exists()){
-				fail("Expected output not found " + referenceFileName);
-			}
-			assertTrue("Different summary strong 9", FileUtils.contentEquals(testOutput, expectedOutput));
-		}
-		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in strong test 9 " + e.toString());
-		}
-	}
 	@Test
 	public void summarizeThroughShortcutStrongTest12() {
 		String referenceFileName = expectedOutput(12, "shortcut");
