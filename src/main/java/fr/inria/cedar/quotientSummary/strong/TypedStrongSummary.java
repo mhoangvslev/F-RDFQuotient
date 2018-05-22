@@ -437,6 +437,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 			default:
 				throw new IllegalStateException("Unknown case;");
 		}
+		cacheTriple(t);
 		//this.writeToFileAndDraw();
 	}
 
