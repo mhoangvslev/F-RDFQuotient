@@ -479,12 +479,12 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 			}
 		}
 
-		for (ReplacementSpecification reps: nodeReps) {
-			untypedSummaryNodes.applyTargetedReplacement(reps);
-		}
+		//for (ReplacementSpecification reps: nodeReps) {
+		//	untypedSummaryNodes.applyTargetedReplacement(reps);
+		//}
 
 		if (replaceForS) {
-			computeAndApplyCliqueReplacements(sourceCliqueS, sourceCliqueP, newSourceCliqueS, SOURCE);
+			computeAndApplyCliqueReplacements(sourceCliqueS, sourceCliqueP, newSourceCliqueS, SOURCE, nodeReps);
 		}
 
 		if (!replaceForS) {
@@ -538,12 +538,12 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 			}
 		}
 
-		for (ReplacementSpecification reps: nodeReps) {
-			untypedSummaryNodes.applyTargetedReplacement(reps);
-		}
+		//for (ReplacementSpecification reps: nodeReps) {
+		//	untypedSummaryNodes.applyTargetedReplacement(reps);
+		//}
 
 		if (replaceForO) {
-			computeAndApplyCliqueReplacements(targetCliqueO, targetCliqueP, newTargetCliqueO, TARGET);
+			computeAndApplyCliqueReplacements(targetCliqueO, targetCliqueP, newTargetCliqueO, TARGET, nodeReps);
 		}
 
 		if (!replaceForO) {
@@ -599,12 +599,12 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 			}
 		}
 
-		for (ReplacementSpecification reps: nodeReps) {
-			untypedSummaryNodes.applyTargetedReplacement(reps);
-		}
+		//for (ReplacementSpecification reps: nodeReps) {
+		//	untypedSummaryNodes.applyTargetedReplacement(reps);
+		//}
 
 		if (replaceForS) {
-			computeAndApplyCliqueReplacements(sourceCliqueS, sourceCliqueP, newSourceCliqueS, SOURCE);
+			computeAndApplyCliqueReplacements(sourceCliqueS, sourceCliqueP, newSourceCliqueS, SOURCE, nodeReps);
 		}
 
 		if (!replaceForS) {
@@ -660,12 +660,12 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 			}
 		}
 
-		for (ReplacementSpecification reps: nodeReps) {
-			untypedSummaryNodes.applyTargetedReplacement(reps);
-		}
+		//for (ReplacementSpecification reps: nodeReps) {
+		//	untypedSummaryNodes.applyTargetedReplacement(reps);
+		//}
 
 		if (replaceForO) {
-			computeAndApplyCliqueReplacements(targetCliqueO, targetCliqueP, newTargetCliqueO, TARGET);
+			computeAndApplyCliqueReplacements(targetCliqueO, targetCliqueP, newTargetCliqueO, TARGET, nodeReps);
 		}
 
 		if (!replaceForO) {

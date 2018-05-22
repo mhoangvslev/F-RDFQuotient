@@ -1,6 +1,6 @@
 package fr.inria.cedar.quotientSummary.datastructures;
 
-import fr.inria.cedar.quotientSummary.strong.ReplacementSpecification;
+//import fr.inria.cedar.quotientSummary.strong.ReplacementSpecification;
 import java.util.HashMap;
 import java.util.Set;
 import org.apache.log4j.Level;
@@ -36,7 +36,8 @@ public class TwoLevelLongMap {
 		return map.keySet(); 
 	}
 
-	public void replaceAt2ndLevel(Long old, Long newX){
+	public HashMap<Long, Long> replaceAt2ndLevel(Long old, Long newX){
+		HashMap<Long, Long> replacements = new HashMap<>();
 		for (Long firstLevelKey: map.keySet()) {
 			HashMap<Long, Long> onThisKey = map.get(firstLevelKey);
 			Long valueOnOld = onThisKey.get(old); 
@@ -47,22 +48,26 @@ public class TwoLevelLongMap {
 					// but it may coexist in untypedNodes with "old versions" (clique-node associations from before) 
 					// Thus if below we overwrite the old node (valueOnOld) with the new node, that's OK: 
 					// onThisKey.put(newX, valueOnNew); // not needed as this was already there
-					onThisKey.remove(old); 
+					onThisKey.remove(old);
+					replacements.put(valueOnOld, valueOnNew);
 				}
 				else{ // there is an entry on oldTC but not on newTC. Move the oldTC entry on the new clique. 
 					onThisKey.put(newX, valueOnOld);
-					onThisKey.remove(old); 
+					onThisKey.remove(old);
 				}
 			}
 			else{ // if there was no node for this sc and oldClique, nothing to do.
 			}
 		}
+		return replacements;
 	}
-	public void replaceAt1stLevel(Long old, Long newX){
+
+	public HashMap<Long, Long> replaceAt1stLevel(Long old, Long newX){
+		HashMap<Long, Long> replacements = new HashMap<>();
 		HashMap<Long, Long> entriesOnOld = map.get(old);
 		HashMap<Long, Long> entriesOnNew = map.get(newX);
 		if (entriesOnOld != null){ // there is some stuff to replace
-			if (entriesOnNew != null)// there were already entries on the new 
+			if (entriesOnNew != null){// there were already entries on the new 
 				// try to move entries of the old, onto the new, check for conflicts
 				for (Long key2ndLevel: entriesOnOld.keySet()){
 					Long aNodeOnOld = entriesOnOld.get(key2ndLevel); // for sure not null
@@ -72,17 +77,20 @@ public class TwoLevelLongMap {
 						// but it may coexist in untypedNodes with "old versions" (clique-node associations from before) 
 						// Thus new should overwrite old: 
 						// entriesOnNew.put(key2ndLevel, correspondingNodeOnNew); // not needed as this was already there.
-						// We don't update entriesOnOld as it will be just replaced (at the end). 
+						// We don't update entriesOnOld as it will be just replaced (at the end).
+						replacements.put(aNodeOnOld, correspondingNodeOnNew);
 					}
 					else{ // there was no previous node on newSC and tc; put the one from the oldSC:
 						entriesOnNew.put(key2ndLevel, aNodeOnOld);
 					}
 				}
+			}
 			// now we can remove entriesOnOld as all its entries have been moved on newX or overwritten
 			map.remove(old); 
 		}
 		else{ // there is nothing on old (old source clique), thus nothing to do.
 		}
+		return replacements;
 	}
 
 	public Long getIfExists(Long flk, Long slk) {
@@ -129,7 +137,7 @@ public class TwoLevelLongMap {
 		return map.get(n); 
 	}
 
-	public void applyTargetedReplacement(ReplacementSpecification rspec) {
+	/*public void applyTargetedReplacement(ReplacementSpecification rspec) {
 		Long sc = rspec.getSC();
 		if (sc!= null){
 			HashMap<Long, Long> entriesOnSC = map.get(sc); 
@@ -145,5 +153,5 @@ public class TwoLevelLongMap {
 				}
 			}
 		}
-	}
+	}*/
 }
