@@ -26,19 +26,13 @@ public class WeakOrTypedWeakSummary extends Summary {
 	protected final static char RS_UP_RO = 6;
 	protected final static char RS_RP_UO = 7;
 	protected final static char RS_RP_RO = 8;
-	protected long numberOfDataTriplesRead;
-	protected long numberOfTypeTriplesRead;
 
 	public WeakOrTypedWeakSummary() {
 		super();
 		LOGGER.setLevel(Level.INFO);
 		ps = new HashMap<>();
 		pt = new HashMap<>();
-
-		numberOfDataTriplesRead = 0;
-		numberOfTypeTriplesRead = 0;
 		minSummaryNode = -1;
-
 	}
 
 	protected char identifyTripleSummarizationCase(boolean sRepresented, boolean pRepresented, boolean oRepresented) {
@@ -107,7 +101,7 @@ public class WeakOrTypedWeakSummary extends Summary {
 		if (sourceP != null){
 			if (targetP != null){
 				Substitutions subs = new Substitutions(sourceP, repS, targetP, repO);
-				//System.out.println("Substitutions: " + subs.toString());
+				//LOGGER.debug("Substitutions: " + subs.toString());
 				// update added triple source and target, if needed
 				Long possibleNewAddedTripleSource = subs.get(addedTripleSource);
 				if (possibleNewAddedTripleSource != null)
@@ -120,7 +114,7 @@ public class WeakOrTypedWeakSummary extends Summary {
 			}
 			else{// sourceP not null, targetP is null
 				Substitutions subs = new Substitutions(sourceP, repS);
-				//System.out.println("Substitutions: " + subs.toString());
+				//LOGGER.debug("Substitutions: " + subs.toString());
 				// update added triple source, if needed
 				Long possibleNewAddedTripleSource = subs.get(addedTripleSource);
 				if (possibleNewAddedTripleSource != null)
@@ -132,7 +126,7 @@ public class WeakOrTypedWeakSummary extends Summary {
 		else{// sourceP is null
 			if (targetP != null){//sourceP is null, targetP is not null
 				Substitutions subs = new Substitutions(targetP, repO);
-				//System.out.println("Substitutions: " + subs.toString());
+				//LOGGER.debug("Substitutions: " + subs.toString());
 				// update added triple target, if needed
 				Long possibleNewAddedTripleTarget = subs.get(addedTripleTarget);
 				if (possibleNewAddedTripleTarget != null)
@@ -236,7 +230,7 @@ public class WeakOrTypedWeakSummary extends Summary {
 		// if repS needs to change through a substitution, do it
 		if (sourceP != null){
 			Substitutions subs = new Substitutions(repS, sourceP, targetP, targetP);
-			//System.out.println("RS_RP_UO: source substitution: " + subs.toString());
+			//LOGGER.debug("RS_RP_UO: source substitution: " + subs.toString());
 			Long possibleNewTripleSubject = subs.get(addedTripleSubject);
 			if (possibleNewTripleSubject != null)
 				addedTripleSubject = possibleNewTripleSubject;
@@ -247,7 +241,7 @@ public class WeakOrTypedWeakSummary extends Summary {
 		}
 		else{ // p may have empty source if so far we only found it on typed nodes
 			// here, s is represented and untyped. Thus, we put p's source on s' representative.
-			//System.out.println("RS_RP_UO: source of " +  t.p + " is: " + repS); 
+			//LOGGER.debug("RS_RP_UO: source of " +  t.p + " is: " + repS); 
 			ps.put(t.p, repS);
 			// addedTripleSubject remains repS
 		}
@@ -279,7 +273,7 @@ public class WeakOrTypedWeakSummary extends Summary {
 
 	protected void handleDataTriple_US_UP_UO(Triple t) {
 		// nothing has been seen so far
-		System.out.println("US_UP_UO: " + RDF2SQLEncoding.dictionaryDecode(t.s) + " " + RDF2SQLEncoding.dictionaryDecode(t.p) + " " + RDF2SQLEncoding.dictionaryDecode(t.o));
+		//LOGGER.debug("US_UP_UO: " + RDF2SQLEncoding.dictionaryDecode(t.s) + " " + RDF2SQLEncoding.dictionaryDecode(t.p) + " " + RDF2SQLEncoding.dictionaryDecode(t.o));
 		Long pSource = this.getNextSummaryNode();
 		Long pTarget = pSource;
 		if (t.s != t.o) // if it's not a self loop
@@ -293,19 +287,19 @@ public class WeakOrTypedWeakSummary extends Summary {
 
 	@Override
 	public void display() {
-		System.out.println("SUMMARY " + this.getClass().getName());
+		LOGGER.debug("SUMMARY " + this.getClass().getName());
 		edgesWithProv.display();
-		System.out.println("REPRESENTATION: " + rep.toString()); 
-		System.out.println("PROPERTY SOURCES: ");
+		LOGGER.debug("REPRESENTATION: " + rep.toString()); 
+		LOGGER.debug("PROPERTY SOURCES: ");
 		for (Long p: ps.keySet()){
-			System.out.println(p + " (" + RDF2SQLEncoding.dictionaryDecode(p)
+			LOGGER.debug(p + " (" + RDF2SQLEncoding.dictionaryDecode(p)
 			+ ") => " + ps.get(p)); 
 		}
-		System.out.println("PROPERTY TARGETS: ");
+		LOGGER.debug("PROPERTY TARGETS: ");
 		for (Long p: pt.keySet()){
-			System.out.println(p + " (" + RDF2SQLEncoding.dictionaryDecode(p)
+			LOGGER.debug(p + " (" + RDF2SQLEncoding.dictionaryDecode(p)
 			+ ") => " + pt.get(p)); 
 		}
-		System.out.println("=======");
+		LOGGER.debug("=======");
 	}
 }

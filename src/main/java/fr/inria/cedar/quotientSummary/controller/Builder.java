@@ -193,7 +193,7 @@ public class Builder {
 	 */
 	private static Connection loadGraphInPostgres(Boolean saturate, Boolean shortcut, String[] files) throws FileNotFoundException, IOException, UnsupportedDatabaseEngineException, SQLException {
 		LOGGER.info("Loading graph to Postgres");
-		LOGGER.debug(System.getProperty("user.dir"));
+		//LOGGER.debug(System.getProperty("user.dir"));
 
 		List<String> tripleFiles = new ArrayList<>();
 		List<String> rdfsFiles = new ArrayList<>();
@@ -202,11 +202,11 @@ public class Builder {
 		for (fileNo = 0; fileNo < files.length; fileNo++) {
 			String s = files[fileNo];
 			if ((fileNo == 0) || ((files.length > 1) && (fileNo < files.length - 1))) {
-				LOGGER.debug("Triple file: " + s);
+				//LOGGER.debug("Triple file: " + s);
 				tripleFiles.add(s);
 			}
 			else {
-				LOGGER.debug("Schema file: " + s);
+				//LOGGER.debug("Schema file: " + s);
 				rdfsFiles.add(s);
 			}
 		}
@@ -221,7 +221,7 @@ public class Builder {
 
 		Properties properties = new Properties();
 		properties.load(new FileReader(configFile));
-		LOGGER.debug(properties.toString());
+		//LOGGER.debug(properties.toString());
 		triplesTableName = properties.getProperty("database.triples_table_name");
 		dictionaryTableName = properties.getProperty("database.dictionary_table_name");
 		Parameters settings = new Parameters();
@@ -351,7 +351,6 @@ public class Builder {
 
 		// drop tables matching tmp_* and dictionary
 		try {
-			connectionInUse.setAutoCommit(false);
 			stmt.execute("select 'drop table '||tablename||';' from pg_tables where tablename like 'tmp_%'");
 			connectionInUse.commit();
 		}
@@ -359,6 +358,6 @@ public class Builder {
 			throw new IllegalStateException("Could not drop partial results tables: " + e.toString());
 		}
 
-		LOGGER.info("All partial results tables dropped.");
+		LOGGER.info("All partial results tables dropped");
 	}
 }

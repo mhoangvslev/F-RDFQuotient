@@ -30,7 +30,7 @@ public class EdgesWithProvenanceCounts {
 	 * @param o
 	 */
 	public final void addTriple(Long s, Long p, Long o) {
-		LOGGER.debug("ADDING SUMMARY TRIPLE: " + s + " " + p + " " + o);
+		//LOGGER.debug("ADDING SUMMARY TRIPLE: " + s + " " + p + " " + o);
 		Triple t = new Triple(s, p, o);
 		HashMap<Long, TreeSet<Long>> triplesForThisSubject = edges.get(s);
 		HashMap<Long, HashMap<Long, Long>> countsForThisSubject = counts.get(s);
@@ -132,7 +132,7 @@ public class EdgesWithProvenanceCounts {
 
 			HashMap<Long, TreeSet<Long>> newNodeIsSubject = edges.get(newNode);
 			if (newNodeIsSubject == null) { // the new node was not previously a subject
-				//System.out.println("   SUMMARY.REPLACE IN EDGES: Adding on the new node " + newNode + " the triples of old node " + oldNode);
+				//LOGGER.debug("   SUMMARY.REPLACE IN EDGES: Adding on the new node " + newNode + " the triples of old node " + oldNode);
 				edges.put(newNode, oldNodeIsSubject); // we're done
 				counts.put(newNode, countsOnOldSubject);
 			}
@@ -142,13 +142,12 @@ public class EdgesWithProvenanceCounts {
 				// we will do this by copying those oldNodeIsSubject triples
 				// which were not already on the new node, into the properties
 				// of the new node
-				//System.out.println("   SUMMARY.REPLACE IN EDGES: There were edges both on old " + oldNode + " and on new " + newNode);
+				//LOGGER.debug("   SUMMARY.REPLACE IN EDGES: There were edges both on old " + oldNode + " and on new " + newNode);
 				for (Long p : oldNodeIsSubject.keySet()) { // iterate over the properties of the old node
 					TreeSet<Long> oldNodeObjectsForP = oldNodeIsSubject.get(p);
 					TreeSet<Long> newNodeObjectsForP = newNodeIsSubject.get(p);
 					if (newNodeObjectsForP == null) { // the new node did not have this one => initializing
-						//System.out.println("   SUMMARY.REPLACE IN EDGES: " + newNode + " did not have edges labeled " + oldNodeProperty
-						//		+ ", he is taking them from " + oldNode);
+						//LOGGER.debug("   SUMMARY.REPLACE IN EDGES: " + newNode + " did not have edges labeled " + oldNodeProperty + ", he is taking them from " + oldNode);
 						newNodeObjectsForP = new TreeSet<>();
 						newNodeIsSubject.put(p, newNodeObjectsForP);
 					}
@@ -157,13 +156,12 @@ public class EdgesWithProvenanceCounts {
 					// oldNodeProperty of the old node:
 					for (Long objectOfOldNode : oldNodeObjectsForP) {
 						if (!newNodeObjectsForP.contains(objectOfOldNode)) {
-							//System.out.println("   SUMMARY.REPLACE IN EDGES: " +newNode + " takes property " + oldNodeProperty + " with value "
-							//		+ objectOfOldNode + " from " + oldNode);
+							//LOGGER.debug("   SUMMARY.REPLACE IN EDGES: " +newNode + " takes property " + oldNodeProperty + " with value " + objectOfOldNode + " from " + oldNode);
 							newNodeObjectsForP.add(objectOfOldNode);
 							setCounter(newNode, p, objectOfOldNode, getCounter(oldNode, p, objectOfOldNode)); // transfer edge counts
 						}
 						else {
-							//System.out.println("   SUMMARY.REPLACE IN EDGES: " +newNode + " already had property " + oldNodeProperty + " with value "	+ objectOfOldNode);
+							//LOGGER.debug("   SUMMARY.REPLACE IN EDGES: " +newNode + " already had property " + oldNodeProperty + " with value " + objectOfOldNode);
 							setCounter(newNode, p, objectOfOldNode, (getCounter(oldNode, p, objectOfOldNode) + getCounter(newNode, p, objectOfOldNode)));
 						}
 					}
@@ -174,7 +172,7 @@ public class EdgesWithProvenanceCounts {
 		else {
 			// there was no edge with oldNode as a subject, no subject replacement to do
 		}
-		//System.out.println("   SUMMARY.REPLACE IN EDGES ends");
+		//LOGGER.debug("   SUMMARY.REPLACE IN EDGES ends");
 	}
 
 	public ArrayList<Triple> getSummaryEdges() {
@@ -222,10 +220,10 @@ public class EdgesWithProvenanceCounts {
 	}
 
 	public void display() {
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 		for (Triple t: this.getSummaryEdges()){
 			sb.append(t.toString()).append(": ").append(getCounter(t.s, t.p, t.o)).append("\n");
 		}
-		System.out.println(new String(sb));
+		LOGGER.debug(sb.toString());
 	}
 }

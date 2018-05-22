@@ -6,7 +6,6 @@ import fr.inria.cedar.quotientSummary.datastructures.Long2LongSet;
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
 import fr.inria.cedar.quotientSummary.datastructures.TwoLevelLongMap;
 import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
-import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.TreeSet;
@@ -23,13 +22,11 @@ public class StrongOrTypedStrongSummary extends Summary {
 	Long2Long p2sc; // property to source clique
 	Long2Long p2tc; // property to target clique
 	long minCliqueID;
-	protected long numberOfDataTriplesRead;
-	protected long numberOfTypeTriplesRead;
 	protected long emptySCCount; // empty source clique number (will never change)
 	protected long emptyTCCount; // empty target clique number (will never change) 
 	TwoLevelLongMap untypedSummaryNodes; // source clique --> target clique --> summary node
-	protected char TARGET = 1;
 	protected char SOURCE = 0;
+	protected char TARGET = 1;
 	// case classification
 	// TRS: typed (thus represented), RS: untyped represented, US: untyped, unrepresented
 	// similarly for O
@@ -52,8 +49,6 @@ public class StrongOrTypedStrongSummary extends Summary {
 	protected final char RS_UP_TRO = 11;
 	protected final char US_UP_TRO = 14;
 
-	protected Connection conn; 
-
 	// for patching edges, we really need to store the data graph in memory... :(
 	HashMap<Long, Long2LongSet> triplesBySubject; // s-->{p-->{o}} s, o are data nodes
 	HashMap<Long, Long2LongSet> triplesByObject; // s-->{p-->{o}}
@@ -72,8 +67,6 @@ public class StrongOrTypedStrongSummary extends Summary {
 		minCliqueID = -1;
 		emptySCCount = Long.MAX_VALUE;
 		emptyTCCount = Long.MAX_VALUE;
-		numberOfDataTriplesRead = 0;
-		numberOfTypeTriplesRead = 0;
 		triplesBySubject = new HashMap<>();
 		triplesByObject = new HashMap<>();
 	}
@@ -1053,7 +1046,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		//displayTriplesByObject();
 	}
 
-	protected void roundTripConsistencyCheck(){
+	protected void consistencyChecks(){
 		String msg;
 		for (Long dataNode: n2sc.getKeys()){
 			//LOGGER.debug("Checking from data node: " + dataNode);
@@ -1084,8 +1077,8 @@ public class StrongOrTypedStrongSummary extends Summary {
 			}
 		}
 		Long totalEdgeCount = edgesWithProv.totalEdgeCount(); 
-		if (!totalEdgeCount.equals(this.numberOfDataTriplesRead)){
-			msg = "In edges we have a total of " + totalEdgeCount + " edges while we have summarized so far " + numberOfDataTriplesRead + " data triples";
+		if (!totalEdgeCount.equals(dataTriplesSummarizedSoFar)){
+			msg = "In edges we have a total of " + totalEdgeCount + " edges while we have summarized so far " + dataTriplesSummarizedSoFar + " data triples";
 			throw new IllegalStateException(msg);
 		}
 	}
@@ -1120,10 +1113,9 @@ public class StrongOrTypedStrongSummary extends Summary {
 		LOGGER.debug("Property to target cliques: " + p2tc.toString());
 		LOGGER.debug("Untyped summary nodes: " + untypedSummaryNodes.toString());
 		LOGGER.debug("Representation function: ");
-		showRep();
+		LOGGER.debug(showRep());
 		LOGGER.debug("Summary edges: ");
-		edgesWithProv.display(); 
-		roundTripConsistencyCheck();
+		edgesWithProv.display();
 		LOGGER.debug("===");
 	}
 }

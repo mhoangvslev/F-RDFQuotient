@@ -30,7 +30,7 @@ public class Triple {
 	}
 
 	public void display() {
-		System.out.println(toString());
+		LOGGER.debug(toString());
 	}
 
 	@Override

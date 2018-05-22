@@ -66,20 +66,20 @@ public class Path implements Comparable<Path> {
 		if (!(other instanceof Path))
 			return false;
 		Path p2 = (Path) other;
-		//System.out.println("Checking if " + this.toString() + " equals " + other.toString());
+		//LOGGER.debug("Checking if " + this.toString() + " equals " + other.toString());
 		if (triples.size() != p2.triples.size()) {
-			//System.out.println("false");
+			//LOGGER.debug("false");
 			return false;
 		}
 		for (int i = 0; i < triples.size(); i++) {
 			Triple t = triples.get(i);
 			Triple tOther = p2.triples.get(i);
 			if (!t.equals(tOther)) {
-				//System.out.println("False at " + i);
+				//LOGGER.debug("False at " + i);
 				return false;
 			}
 		}
-		//System.out.println("true");
+		//LOGGER.debug("true");
 		return true;
 	}
 

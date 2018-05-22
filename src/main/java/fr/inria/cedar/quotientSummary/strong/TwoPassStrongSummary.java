@@ -29,16 +29,21 @@ public class TwoPassStrongSummary extends StrongOrTypedStrongSummary {
 	 * @param conn
 	 */
 	public TwoPassStrongSummary(Connection conn) {
-		this.conn = conn; 
+		try {
+			conn.setAutoCommit(false);
+		}
+		catch (SQLException ex) {
+			LOGGER.error(ex);
+		}
 		this.summaryTablePrefix = TWO_PASS_STRONG_SUMMARY_PREFIX; 
 		LOGGER.info("Reading Two-pass Strong summary from Postgres, setting up special URIs from the dictionary");
 		RDF2SQLEncoding.setUp(conn, "dictionary");
 		String getSummaryTriples = getSummaryTriplesSQLQuery();
 		try {
 			Statement getTriples = conn.createStatement();
-			// LOGGER.debug("Created statement");
+			//LOGGER.debug("Created statement");
 			ResultSet rs = getTriples.executeQuery(getSummaryTriples);
-			// LOGGER.debug("Asking for summary triples")
+			//LOGGER.debug("Asking for summary triples")
 			while (rs.next()) {
 				Long s = rs.getLong(1);
 				Long p = rs.getLong(2);
@@ -49,17 +54,7 @@ public class TwoPassStrongSummary extends StrongOrTypedStrongSummary {
 		catch (SQLException e) {
 			throw new IllegalStateException("Unable to read Two-Pass Strong summary from Postgres: " + e.toString());
 		}
-		System.out.println("Read Two-Pass Strong summary from Postgres");
-	}
-
-	/**
-	 * this must be called after the constructor as the summary needs to ask more queries
-	 * for patching itself up during summarization.
-	 * 
-	 * @param conn
-	 */
-	public void setConn(Connection conn){
-		this.conn = conn; 
+		LOGGER.info("Read Two-Pass Strong summary from Postgres");
 	}
 
 	/**
@@ -68,32 +63,31 @@ public class TwoPassStrongSummary extends StrongOrTypedStrongSummary {
 	 * @param conn
 	 */
 	@Override
-	public void summarizeFromPostgres(Connection conn){
-		this.setConn(conn);
+	public void summarizeFromPostgres(Connection conn) {
 		long start = System.currentTimeMillis();
-
-		String tableName = ""; 
-		String dataTriplesFileName =""; 
-
+		try {
+			conn.setAutoCommit(false);
+		}
+		catch (SQLException ex) {
+			LOGGER.error(ex);
+		}
 		// this is needed to find the constants associated to special RDF properties
-		RDF2SQLEncoding.setUp(conn, ""); 
+		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
 		long typeConstantCode = RDF2SQLEncoding.getTypeCode();
 		if (typeConstantCode != -1) {
 			this.typeTriplesExist = true;
 			avoidCollisionsWhenAssigningSummaryNodes(conn);
 		}
-		triplesSummarizedSoFar = 0;
-		String getUntypedTriplesString = ("select *  from " + tableName + " where p <> " + typeConstantCode); 
+		String getUntypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p <> " + typeConstantCode); 
 		try {
-			conn.setAutoCommit(false);
 			try (Statement getUntypedTriples = conn.createStatement()) {
 				getUntypedTriples.setFetchSize(10000);
 				try (ResultSet rs = getUntypedTriples.executeQuery(getUntypedTriplesString)) {
 					while (rs.next()) {
 						Triple t = new Triple(rs.getInt(1), rs.getInt(2), rs.getInt(3));
 						updateCliquesOutOf(t);
-						//System.out.println("Summary has become: " + this.toString());
 						triplesSummarizedSoFar++;
+						dataTriplesSummarizedSoFar++;
 						//this.drawSummaryAndGraph(conn, "after-" + triplesSummarizedSoFar + "-" + t.s + "-" + t.p + "-" + t.o);
 					}
 				}
@@ -102,25 +96,23 @@ public class TwoPassStrongSummary extends StrongOrTypedStrongSummary {
 		catch (SQLException e) {
 			throw new IllegalStateException("Postgres error encountered while summarizing data triples " + e.toString());
 		}
-
-		// TODO: second pass here.
-
 		dataTriplesSummarizationTime = System.currentTimeMillis() - start;
-		System.out.println("Summarized " + triplesSummarizedSoFar + " data triples in " + dataTriplesSummarizationTime + " ms");
+		LOGGER.info("Summarized " + dataTriplesSummarizedSoFar + " data triples in " + dataTriplesSummarizationTime + " ms");
 
-		String getTypedTriplesString = ("select *  from " + tableName + " where p = " + typeConstantCode);
+		// TODO: second pass here
+
+		start = System.currentTimeMillis();
+		String getTypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p = " + typeConstantCode);
 		try {
 			try (Statement getTypedTriples = conn.createStatement()) {
 				getTypedTriples.setFetchSize(1000);
 				try (ResultSet rs = getTypedTriples.executeQuery(getTypedTriplesString)) {
 					while (rs.next()) {
 						Triple t = new Triple(rs.getInt(1), rs.getInt(2), rs.getInt(3));
-						//System.out.println("#### Type triple " + t.toString());
 						this.handleTypeTripleAfterData(t);
 						triplesSummarizedSoFar++;
+						typeTriplesSummarizedSoFar++;
 						//this.drawSummaryAndGraph(conn, "after-" + triplesSummarizedSoFar + "-" + t.s + "-" + t.p + "-" + t.o);
-						//System.out.println("Summary now has " + getSummaryEdges().size() + " triples");
-
 					}
 				}
 			}
@@ -128,11 +120,11 @@ public class TwoPassStrongSummary extends StrongOrTypedStrongSummary {
 		catch (SQLException e) {
 			throw new IllegalStateException("Postgres error encountered while summarizing type triples: " + e.toString());
 		}
+		typeTriplesSummarizationTime = System.currentTimeMillis() - start;
+		LOGGER.info("Summarized " + typeTriplesSummarizedSoFar + " type triples in " + typeTriplesSummarizationTime + " ms");
 
-		allTriplesSummarizationTime = System.currentTimeMillis() - start;
-		System.out.println("Summarized " + triplesSummarizedSoFar + " triples in " + allTriplesSummarizationTime + " ms");
-		display();
-		this.writeToFileAndDraw();
+		allTriplesSummarizationTime = dataTriplesSummarizationTime + typeTriplesSummarizationTime;
+		LOGGER.info("Summarized " + triplesSummarizedSoFar + " overall triples in " + allTriplesSummarizationTime + " ms");
 	}
 
 	private void updateCliquesOutOf(Triple t) {

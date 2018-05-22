@@ -103,17 +103,17 @@ public class TwoLevelLongMap {
 	public void add(Long flk, Long slk, Long v){
 		HashMap<Long, Long> entriesOnFlk = map.get(flk);
 		if (entriesOnFlk == null) {
-			//System.out.println("No target cliques for source clique " + sourceClique);
+			//LOGGER.debug("No target cliques for source clique " + sourceClique);
 			entriesOnFlk = new HashMap<>();
 			map.put(flk, entriesOnFlk);
 		}
 		Long node = entriesOnFlk.get(slk);
 		if (node == null) {
-			//System.out.println("There was no node for target clique " + targetClique + " among those on source clique " + sourceClique);
-			//System.out.println("Created " + this.maxSummaryNode + " for source clique " + targetClique + " " + this.showCliqueAsString(sc.get(sourceClique)));
-			//System.out.println(" and target clique " + this.showCliqueAsString(tc.get(targetClique)));
+			//LOGGER.debug("There was no node for target clique " + targetClique + " among those on source clique " + sourceClique);
+			//LOGGER.debug("Created " + this.maxSummaryNode + " for source clique " + targetClique + " " + this.showCliqueAsString(sc.get(sourceClique)));
+			//LOGGER.debug(" and target clique " + this.showCliqueAsString(tc.get(targetClique)));
 			map.get(flk).put(slk, v);
-			//System.out.println("Put in two-level map: " + flk + "->" + slk + "->" + v);
+			//LOGGER.debug("Put in two-level map: " + flk + "->" + slk + "->" + v);
 		}
 	}
 
@@ -122,7 +122,7 @@ public class TwoLevelLongMap {
 		StringBuffer sb = new StringBuffer();
 		for(Long flk: map.keySet()){
 			sb.append(flk).append("=>{");
-			//System.out.println("Source clique: " + sc);
+			//LOGGER.debug("Source clique: " + sc);
 			HashMap<Long, Long> entriesOnFlk = map.get(flk);
 			for (Long slk: entriesOnFlk.keySet()){
 				Long v = entriesOnFlk.get(slk);

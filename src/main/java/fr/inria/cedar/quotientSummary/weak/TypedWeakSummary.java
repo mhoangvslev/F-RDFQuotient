@@ -55,15 +55,21 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 	 * @param conn
 	 */
 	public TypedWeakSummary(Connection conn) {
+		try {
+			conn.setAutoCommit(false);
+		}
+		catch (SQLException ex) {
+			LOGGER.error(ex);
+		}
 		this.summaryTablePrefix = TYPED_WEAK_SUMMARY_PREFIX;
 		LOGGER.info("Reading TypedWeak summary from Postgres, setting up special URIs from the dictionary");
 		RDF2SQLEncoding.setUp(conn, "dictionary");
 		String getSummaryTriples = getSummaryTriplesSQLQuery();
 		try {
 			Statement getTriples = conn.createStatement();
-			// LOGGER.debug("Created statement");
+			//LOGGER.debug("Created statement");
 			ResultSet rs = getTriples.executeQuery(getSummaryTriples);
-			// LOGGER.debug("Asking for summary triples")
+			//LOGGER.debug("Asking for summary triples")
 			while (rs.next()) {
 				Long s = rs.getLong(1);
 				Long p = rs.getLong(2);
@@ -74,7 +80,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		catch (SQLException e) {
 			throw new IllegalStateException("Unable to read TypedWeak summary from Postgres: " + e.toString());
 		}
-		System.out.println("Read TypedWeak summary from Postgres");
+		LOGGER.info("Read TypedWeak summary from Postgres");
 	}
 
 	/**
@@ -85,7 +91,12 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 	@Override
 	public void summarizeFromPostgres(Connection conn) {
 		long start = System.currentTimeMillis();
-
+		try {
+			conn.setAutoCommit(false);
+		}
+		catch (SQLException ex) {
+			LOGGER.error(ex);
+		}
 		// this is needed to find the constants associated to special RDF properties
 		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
 		long typeConstantCode = RDF2SQLEncoding.getTypeCode();
@@ -93,7 +104,6 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 			this.typeTriplesExist = true;
 			avoidCollisionsWhenAssigningSummaryNodes(conn);
 		}
-		triplesSummarizedSoFar = 0;
 		String getTypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p = " + typeConstantCode);
 		try {
 			try (Statement getTypedTriples = conn.createStatement()) {
@@ -101,11 +111,13 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 				try (ResultSet rs = getTypedTriples.executeQuery(getTypedTriplesString)) {
 					while (rs.next()) {
 						Triple t = new Triple(rs.getInt(1), rs.getInt(2), rs.getInt(3));
-						//System.out.println("### Type triple " + t.toString());
 						this.handleTypeTripleBeforeData(t);
-						triplesSummarizedSoFar++;
 						storeSpecialNodesRepresentation(t, false);
-						//display();
+						triplesSummarizedSoFar++;
+						typeTriplesSummarizedSoFar++;
+						if (checkConsistency) {
+							consistencyChecks();
+						}
 					}
 				}
 			}
@@ -114,28 +126,22 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 			throw new IllegalStateException("Postgres error encountered while summarizing type triples: " + e.toString());
 		}
 		classSetCreationTime = System.currentTimeMillis() - start;
-		System.out.println("Class sets created in " + classSetCreationTime + " ms");
+		LOGGER.info("Class sets created in " + classSetCreationTime + " ms");
 
 		start = System.currentTimeMillis();
 		this.representTypeTriples();
-		long typeTripleCount = triplesSummarizedSoFar;
 		typeTriplesSummarizationTime = System.currentTimeMillis() - start;
-		System.out.println("Summarized " + numberOfTypeTriplesRead + " type triples in " + typeTriplesSummarizationTime + " ms");
+		LOGGER.info("Summarized " + typeTriplesSummarizedSoFar + " type triples in " + typeTriplesSummarizationTime + " ms");
 
 		start = System.currentTimeMillis();
-
-		//this.drawSummaryAndGraph(conn, "_" + triplesSummarizedSoFar);
-
 		// now all the non-type triples
 		String getUntypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p <> " + typeConstantCode);
 		try {
-			conn.setAutoCommit(false);
 			try (Statement getUntypedTriples = conn.createStatement()) {
 				getUntypedTriples.setFetchSize(10000);
 				try (ResultSet rs = getUntypedTriples.executeQuery(getUntypedTriplesString)) {
 					while (rs.next()) {
 						Triple t = new Triple(rs.getLong(1), rs.getLong(2), rs.getLong(3));
-						//System.out.println("#### Data triple " + t.toString());
 						if ((t.p == RDF2SQLEncoding.getSubClassCode())
 						|| (t.p == RDF2SQLEncoding.getSubPropertyCode())
 						|| (t.p == RDF2SQLEncoding.getDomainCode())
@@ -146,11 +152,11 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 						else
 							handleDataTriple(t);
 						triplesSummarizedSoFar++;
-						//System.out.println("Triples summarized so far: " + triplesSummarizedSoFar);
-						if (this.checkConsistency)
+						dataTriplesSummarizedSoFar++;
+						if (checkConsistency) {
 							consistencyChecks();
-						//this.drawSummaryAndGraph(conn, "_" + triplesSummarizedSoFar);
-						//display(); 
+						}
+						//this.drawSummaryAndGraph(conn, "after-" + triplesSummarizedSoFar + "-" + t.s + "-" + t.p + "-" + t.o);
 					}
 				}
 			}
@@ -159,11 +165,10 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 			throw new IllegalStateException("Postgres error encountered while summarizing data triples " + e.toString());
 		}
 		dataTriplesSummarizationTime = System.currentTimeMillis() - start;
-		System.out.println("Summarized " + numberOfDataTriplesRead + " data triples in " + dataTriplesSummarizationTime + " ms");
+		LOGGER.info("Summarized " + dataTriplesSummarizedSoFar + " data triples in " + dataTriplesSummarizationTime + " ms");
 
 		allTriplesSummarizationTime = classSetCreationTime + typeTriplesSummarizationTime + dataTriplesSummarizationTime;
-		System.out.println("Summarized " + triplesSummarizedSoFar + " triples overall in " + allTriplesSummarizationTime + " ms");
-		//this.writeToFileAndDraw(dataTriplesFileName);
+		LOGGER.info("Summarized " + triplesSummarizedSoFar + " triples overall in " + allTriplesSummarizationTime + " ms");
 	}
 
 	protected void handleDataTriple(Triple t) {
@@ -184,7 +189,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 
 		char caseNumber = identifyTripleSummarizationCase(sRepresented, sTyped,
 				pRepresented, oRepresented, oTyped);
-//		System.out.println("\nCase: " + this.caseName(caseNumber) + " " + t.toString() + " " + 
+//		LOGGER.debug("\nCase: " + this.caseName(caseNumber) + " " + t.toString() + " " + 
 //				RDF2SQLEncoding.dictionaryDecode(t.s) + " " + 
 //				RDF2SQLEncoding.dictionaryDecode(t.p) + " " +
 //				RDF2SQLEncoding.dictionaryDecode(t.o));
@@ -329,7 +334,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 
 		if (sourceP != null){
 			Substitutions subs = new Substitutions(sourceP, repS);
-			//System.out.println("Substitutions: " + subs.toString());
+			//LOGGER.debug("Substitutions: " + subs.toString());
 
 			// update added triple source, if needed
 			Long possibleNewAddedTripleSource = subs.get(addedTripleSource);
@@ -357,7 +362,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 
 		if (targetP != null){
 			Substitutions subs = new Substitutions(targetP, repO);
-			//System.out.println("Substitutions: " + subs.toString());
+			//LOGGER.debug("Substitutions: " + subs.toString());
 
 			// update added triple  target, if needed
 			Long possibleNewAddedTripleTarget = subs.get(addedTripleTarget);
@@ -535,7 +540,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 
 	@Override
 	public void handleTypeTripleBeforeData(Triple t) {
-		//System.out.println("@@@ Type triple: " + t.toString()); 
+		//LOGGER.debug("@@@ Type triple: " + t.toString()); 
 
 		TreeSet<Long> classSetOfThisNode = n2c.get(t.s); 
 		if (classSetOfThisNode == null){ // this is the first time we encounter the node: create a class set with exactly this type
@@ -579,7 +584,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 	 * It is called only once and will output all the type triples of the summary.
 	 */
 	public void representTypeTriples() {
-		//System.out.println("POST HANDLE TYPE TRIPLES");
+		//LOGGER.debug("POST HANDLE TYPE TRIPLES");
 		for (Long node: this.n2cs.getKeys()){
 			Long thisClassSetID = this.n2cs.get(node);
 			TreeSet<Long> thisClassSet = this.cs.get(thisClassSetID);// the class set IS the representative

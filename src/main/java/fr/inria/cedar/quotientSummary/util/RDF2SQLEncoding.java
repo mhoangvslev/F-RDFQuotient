@@ -83,15 +83,15 @@ public class RDF2SQLEncoding {
 
 	public static void setRDFBuiltInPropertyCodes() {
 		setTypeCode();
-		LOGGER.debug("rdf:type code is " + typeCode);
+		//LOGGER.debug("rdf:type code is " + typeCode);
 		setSubClassCode();
-		LOGGER.debug("rdfs:subclass  code is: " + subClassCode);
+		//LOGGER.debug("rdfs:subclass  code is: " + subClassCode);
 		setSubPropertyCode();
-		LOGGER.debug("rdfs:subproperty code is: " + subPropertyCode);
+		//LOGGER.debug("rdfs:subproperty code is: " + subPropertyCode);
 		setDomainCode();
-		LOGGER.debug("rdfs:domain code is: " + domainCode);
+		//LOGGER.debug("rdfs:domain code is: " + domainCode);
 		setRangeCode();
-		LOGGER.debug("rdfs:range code is: " + rangeCode);
+		//LOGGER.debug("rdfs:range code is: " + rangeCode);
 	}
 
 	private static void setTypeCode() {
@@ -122,7 +122,7 @@ public class RDF2SQLEncoding {
 	 * @return
 	 */
 	public static long dictionaryEncode(String URI) {
-		//System.out.println("DictionaryEncode will ask query: " + stmtEncode); 
+		//LOGGER.debug("DictionaryEncode will ask query: " + stmtEncode); 
 		// try to use the cache if possible
 		Long alreadyKnownCode = uriOrLiteralToCode.get(URI);
 		if (alreadyKnownCode != null)

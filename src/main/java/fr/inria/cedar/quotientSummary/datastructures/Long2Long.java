@@ -35,7 +35,7 @@ public class Long2Long {
 	 * @return
 	 */
 	public boolean put(Long k, Long v) {
-		//System.out.println("Long2Long: upon entering put " + clique + " on " + node + ": " + this.display()); 
+		//LOGGER.debug("Long2Long: upon entering put " + clique + " on " + node + ": " + this.display()); 
 		boolean res = false;
 
 		Long previous = map.get(k);
@@ -43,11 +43,11 @@ public class Long2Long {
 		if (previous != null){
 			TreeSet<Long> inversePrev = inverse.get(previous);
 			if (inversePrev == null){
-				//System.out.println("Long2Long: Problem " + this.display());
+				//LOGGER.debug("Long2Long: Problem " + this.display());
 				throw new IllegalStateException("Map has " + previous + " on " + k + " but nothing in inverse for " + previous); 
 			}
 			inversePrev.remove(k);
-			//System.out.println("Long2Long: " + k + " no  longer mapped to " + previous);
+			//LOGGER.debug("Long2Long: " + k + " no  longer mapped to " + previous);
 			if (inversePrev.isEmpty()){
 				//LOGGER.debug("Long2Long: No one is represented by " + previous + " any more!");
 				res = true;
@@ -100,7 +100,6 @@ public class Long2Long {
 	 */
 	public void replaceValue(Long v1, Long v2) {
 		//LOGGER.debug("Trying to replace value " + v1 + " with " + v2 + " in:");
-		//this.display();
 		TreeSet<Long> keysWithV1 = inverse.get(v1);
 		if (keysWithV1 != null){
 			TreeSet<Long> keysWithV2 = inverse.get(v2);

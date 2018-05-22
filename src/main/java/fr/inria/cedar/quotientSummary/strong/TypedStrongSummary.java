@@ -40,20 +40,8 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		minCliqueID = -1;
 		emptySCCount = Long.MAX_VALUE;
 		emptyTCCount = Long.MAX_VALUE;
-		numberOfDataTriplesRead = 0;
-		numberOfTypeTriplesRead = 0;
 		this.summaryTablePrefix = TYPED_STRONG_SUMMARY_PREFIX;
 		isTypeFirst = true;
-	}
-
-	/**
-	 * this must be called after the constructor as the summary needs to ask more queries
-	 * for patching itself up during summarization.
-	 * 
-	 * @param conn
-	 */
-	public void setConn(Connection conn) {
-		this.conn = conn; 
 	}
 
 	/**
@@ -62,16 +50,21 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	 * @param conn
 	 */
 	public TypedStrongSummary(Connection conn) {
-		this.conn = conn; 
+		try {
+			conn.setAutoCommit(false);
+		}
+		catch (SQLException ex) {
+			LOGGER.error(ex);
+		}
 		this.summaryTablePrefix = TYPED_STRONG_SUMMARY_PREFIX;
 		LOGGER.info("Reading TypedStrong summary from Postgres, setting up special URIs from the dictionary");
 		RDF2SQLEncoding.setUp(conn, "dictionary");
 		String getSummaryTriples = getSummaryTriplesSQLQuery();
 		try {
 			Statement getTriples = conn.createStatement();
-			// LOGGER.debug("Created statement");
+			//LOGGER.debug("Created statement");
 			ResultSet rs = getTriples.executeQuery(getSummaryTriples);
-			// LOGGER.debug("Asking for summary triples")
+			//LOGGER.debug("Asking for summary triples")
 			while (rs.next()) {
 				Long s = rs.getLong(1);
 				Long p = rs.getLong(2);
@@ -82,7 +75,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		catch (SQLException e) {
 			throw new IllegalStateException("Unable to read Typed Strong summary from Postgres: " + e.toString());
 		}
-		System.out.println("Read Typed Strong summary from Postgres");
+		LOGGER.info("Read Typed Strong summary from Postgres");
 	}
 
 	/**
@@ -92,9 +85,13 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	 */
 	@Override
 	public void summarizeFromPostgres(Connection conn) {
-		this.setConn(conn);
 		long start = System.currentTimeMillis();
-
+		try {
+			conn.setAutoCommit(false);
+		}
+		catch (SQLException ex) {
+			LOGGER.error(ex);
+		}
 		// this is needed to find the constants associated to special RDF properties
 		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
 		long typeConstantCode = RDF2SQLEncoding.getTypeCode();
@@ -102,7 +99,6 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 			this.typeTriplesExist = true;
 			avoidCollisionsWhenAssigningSummaryNodes(conn);
 		}
-		triplesSummarizedSoFar = 0;
 		String getTypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p = " + typeConstantCode);
 		try {
 			try (Statement getTypedTriples = conn.createStatement()) {
@@ -112,7 +108,10 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 						Triple t = new Triple(rs.getInt(1), rs.getInt(2), rs.getInt(3));
 						this.handleTypeTripleBeforeData(t);
 						triplesSummarizedSoFar++;
-						this.numberOfTypeTriplesRead++;
+						typeTriplesSummarizedSoFar++;
+						if (checkConsistency) {
+							consistencyChecks();
+						}
 						storeSpecialNodesRepresentation(t, false);
 					}
 				}
@@ -122,27 +121,22 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 			throw new IllegalStateException("Postgres error encountered while summarizing type triples: " + e.toString());
 		}
 		classSetCreationTime = System.currentTimeMillis() - start;
-		System.out.println("Class sets created in " + classSetCreationTime + " ms");
+		LOGGER.info("Class sets created in " + classSetCreationTime + " ms");
 
 		start = System.currentTimeMillis();
 		this.postHandleTypeTriples();
 		typeTriplesSummarizationTime = System.currentTimeMillis() - start;
-		System.out.println("Summarized " + numberOfTypeTriplesRead + " type triples in " + typeTriplesSummarizationTime + " ms");
+		LOGGER.info("Summarized " + typeTriplesSummarizedSoFar + " type triples in " + typeTriplesSummarizationTime + " ms");
 
 		start = System.currentTimeMillis();
-
-		//this.drawSummaryAndGraph(conn, "_" + triplesSummarizedSoFar);
-		//this.writeToFileAndDraw();
 		// now all the non-type triples
 		String getUntypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p <> " + typeConstantCode);
 		try {
-			conn.setAutoCommit(false);
 			try (Statement getUntypedTriples = conn.createStatement()) {
 				getUntypedTriples.setFetchSize(10000);
 				try (ResultSet rs = getUntypedTriples.executeQuery(getUntypedTriplesString)) {
 					while (rs.next()) {
 						Triple t = new Triple(rs.getLong(1), rs.getLong(2), rs.getLong(3));
-						//LOGGER.debug("#### Data triple " + t.toString());
 						if ((t.p == RDF2SQLEncoding.getSubClassCode())
 						|| (t.p == RDF2SQLEncoding.getSubPropertyCode())
 						|| (t.p == RDF2SQLEncoding.getDomainCode())
@@ -153,9 +147,11 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 						else
 							handleDataTriple(t);
 						triplesSummarizedSoFar++;
-						this.numberOfDataTriplesRead++;
+						dataTriplesSummarizedSoFar++;
+						if (checkConsistency) {
+							consistencyChecks();
+						}
 						//this.drawSummaryAndGraph(conn, "after-" + triplesSummarizedSoFar + "-" + t.s + "-" + t.p + "-" + t.o);
-						//this.roundTripConsistencyCheck(); 
 					}
 				}
 			}
@@ -164,10 +160,10 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 			throw new IllegalStateException("Postgres error encountered while summarizing data triples " + e.toString());
 		}
 		dataTriplesSummarizationTime = System.currentTimeMillis() - start;
-		System.out.println("Summarized " + numberOfDataTriplesRead + " data triples in " + dataTriplesSummarizationTime + " ms");
+		LOGGER.info("Summarized " + dataTriplesSummarizedSoFar + " data triples in " + dataTriplesSummarizationTime + " ms");
 
 		allTriplesSummarizationTime = classSetCreationTime + typeTriplesSummarizationTime + dataTriplesSummarizationTime;
-		System.out.println("Summarized " + triplesSummarizedSoFar + " triples overall in " + allTriplesSummarizationTime + " ms");
+		LOGGER.info("Summarized " + triplesSummarizedSoFar + " triples overall in " + allTriplesSummarizationTime + " ms");
 		//this.writeToFileAndDraw(dataTriplesFileName);
 	}
 
@@ -225,19 +221,19 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 
 	@Override
 	public void display() {
-		System.out.println("TYPED STRONG SUMMARY\nClass set IDs to class sets: " + cs.toString());
-		System.out.println("Nodes to class set IDs: " + n2cs.toString());
-		System.out.println("Source cliques: " + sc.toString());
-		System.out.println("Target cliques: " + tc.toString());
-		System.out.println("Nodes to source cliques: " + n2sc.toString());
-		System.out.println("Nodes to target cliques: " + n2tc.toString());
-		System.out.println("Property to source cliques: " + p2sc.toString());
-		System.out.println("Property to target cliques: " + p2tc.toString());
-		System.out.println("Representation function: ");
-		showRep();
-		System.out.println("Cs to cs ID: ");
+		LOGGER.debug("TYPED STRONG SUMMARY\nClass set IDs to class sets: " + cs.toString());
+		LOGGER.debug("Nodes to class set IDs: " + n2cs.toString());
+		LOGGER.debug("Source cliques: " + sc.toString());
+		LOGGER.debug("Target cliques: " + tc.toString());
+		LOGGER.debug("Nodes to source cliques: " + n2sc.toString());
+		LOGGER.debug("Nodes to target cliques: " + n2tc.toString());
+		LOGGER.debug("Property to source cliques: " + p2sc.toString());
+		LOGGER.debug("Property to target cliques: " + p2tc.toString());
+		LOGGER.debug("Representation function: ");
+		LOGGER.debug(showRep());
+		LOGGER.debug("Cs to cs ID: ");
 		showClassSets();
-		System.out.println("Summary edges: ");
+		LOGGER.debug("Summary edges: ");
 		edgesWithProv.display();
 	}
 
@@ -256,7 +252,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 			thisCSBuffer.append(showLongSet(classSets));
 			thisCSBuffer.append("-->");
 			thisCSBuffer.append(cs2csID.get(classSets));
-			System.out.println(thisCSBuffer.toString());
+			LOGGER.debug(thisCSBuffer.toString());
 		}
 	}
 
@@ -269,7 +265,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 			Long thisNodeSC = n2sc.get(node);
 			if (thisNodeSC == null)
 				throw new IllegalStateException("Null source clique");
-			System.out.println("n2sc: " + node + "->" + thisNodeSC);
+			LOGGER.debug("n2sc: " + node + "->" + thisNodeSC);
 			Long thisNodeTC = n2tc.get(node);
 			if (thisNodeTC == null)
 				throw new IllegalStateException("Null target clique for " + node);
@@ -282,12 +278,12 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 				throw new IllegalStateException("Null summary node");
 			sb.append(node).append("->").append(summaryNode).append(" ");
 		}
-		System.out.println(sb);
+		LOGGER.debug(sb);
 	}
 
 	@Override
 	public void handleTypeTripleBeforeData(Triple t) {
-		//System.out.println("@@@ Type triple: " + t.toString()); 
+		//LOGGER.debug("@@@ Type triple: " + t.toString()); 
 
 		TreeSet<Long> classSetOfThisNode = n2c.get(t.s); 
 		if (classSetOfThisNode == null){ // this is the first time we encounter the node: create a class set with exactly this type
@@ -328,7 +324,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	 * It is called only once and will output all the type triples of the summary.
 	 */
 	public void postHandleTypeTriples() {
-		//System.out.println("POST HANDLE TYPE TRIPLES");
+		//LOGGER.debug("POST HANDLE TYPE TRIPLES");
 		for (Long node: this.n2cs.getKeys()){
 			Long thisClassSetID = this.n2cs.get(node);
 			TreeSet<Long> thisClassSet = this.cs.get(thisClassSetID);
@@ -360,7 +356,6 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		Long repO = rep.get(t.o);
 		Long repS = rep.get(t.s);
 
-		//TODO comment this out to improve performance when debugging is finished
 		//checkSymmetry(sourceCliqueS, targetCliqueS, sourceCliqueO, targetCliqueO, sourceCliqueP, targetCliqueP); 
 		char caseNumber = decode(classSetS, repS, classSetO, repO, sourceCliqueP);
 

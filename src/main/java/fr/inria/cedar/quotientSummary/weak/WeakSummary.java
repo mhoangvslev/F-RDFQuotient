@@ -33,15 +33,21 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 	 * @param conn
 	 */
 	public WeakSummary(Connection conn) {
+		try {
+			conn.setAutoCommit(false);
+		}
+		catch (SQLException ex) {
+			LOGGER.error(ex);
+		}
 		this.summaryTablePrefix = WEAK_SUMMARY_PREFIX;
 		LOGGER.info("Reading Weak summary from Postgres, setting up special URIs from the dictionary");
 		RDF2SQLEncoding.setUp(conn, "dictionary");
 		String getSummaryTriples = getSummaryTriplesSQLQuery();
 		try {
 			Statement getTriples = conn.createStatement();
-			// LOGGER.debug("Created statement");
+			//LOGGER.debug("Created statement");
 			ResultSet rs = getTriples.executeQuery(getSummaryTriples);
-			// LOGGER.debug("Asking for summary triples")
+			//LOGGER.debug("Asking for summary triples")
 			while (rs.next()) {
 				Long s = rs.getLong(1);
 				Long p = rs.getLong(2);
@@ -53,7 +59,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 			throw new IllegalStateException("Unable to read Weak summary from Postgres " + getSummaryTriples
 											+ " " + e.toString());
 		}
-		System.out.println("Read Weak summary from Postgres");
+		LOGGER.info("Read Weak summary from Postgres");
 	}
 
 	/**
@@ -64,7 +70,12 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 	@Override
 	public void summarizeFromPostgres(Connection conn) {
 		long start = System.currentTimeMillis();
-
+		try {
+			conn.setAutoCommit(false);
+		}
+		catch (SQLException ex) {
+			LOGGER.error(ex);
+		}
 		// this is needed to find the constants associated to special RDF properties
 		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
 		long typeConstantCode = RDF2SQLEncoding.getTypeCode();
@@ -72,10 +83,8 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 			this.typeTriplesExist = true;
 			avoidCollisionsWhenAssigningSummaryNodes(conn);
 		}
-		triplesSummarizedSoFar = 0;
 		String getUntypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p <> " + typeConstantCode);
 		try {
-			conn.setAutoCommit(false);
 			try (Statement getUntypedTriples = conn.createStatement()) {
 				getUntypedTriples.setFetchSize(10000);
 				try (ResultSet rs = getUntypedTriples.executeQuery(getUntypedTriplesString)) {
@@ -91,10 +100,11 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 						else
 							handleDataTriple(t);
 						triplesSummarizedSoFar++;
-						//display();
-						//this.drawSummaryAndGraph(conn, "after-" + triplesSummarizedSoFar + "-" + t.s + "-" + t.p + "-" + t.o);
-						if (this.checkConsistency)
+						dataTriplesSummarizedSoFar++;
+						if (checkConsistency) {
 							consistencyChecks();
+						}
+						//drawSummaryAndGraph(conn, "after-" + triplesSummarizedSoFar + "-" + t.s + "-" + t.p + "-" + t.o);
 					}
 				}
 			}
@@ -103,8 +113,9 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 			throw new IllegalStateException("Postgres error encountered while summarizing data triples " + e.toString());
 		}
 		dataTriplesSummarizationTime = System.currentTimeMillis() - start;
-		System.out.println("Summarized " + triplesSummarizedSoFar + " data triples in " + dataTriplesSummarizationTime + " ms");
+		LOGGER.info("Summarized " + dataTriplesSummarizedSoFar + " data triples in " + dataTriplesSummarizationTime + " ms");
 
+		start = System.currentTimeMillis();
 		String getTypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p = " + typeConstantCode);
 		try {
 			try (Statement getTypedTriples = conn.createStatement()) {
@@ -114,9 +125,12 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 						Triple t = new Triple(rs.getInt(1), rs.getInt(2), rs.getInt(3));
 						this.handleTypeTripleAfterData(t);
 						triplesSummarizedSoFar++;
+						typeTriplesSummarizedSoFar++;
 						storeSpecialNodesRepresentation(t, false);
-						//this.drawSummaryAndGraph(conn, "after-" + triplesSummarizedSoFar + "-" + t.s + "-" + t.p + "-" + t.o);
-						//System.out.println("Summary now has " + getSummaryEdges().size() + " triples");
+						if (checkConsistency) {
+							consistencyChecks();
+						}
+						//drawSummaryAndGraph(conn, "after-" + triplesSummarizedSoFar + "-" + t.s + "-" + t.p + "-" + t.o);
 					}
 				}
 			}
@@ -124,16 +138,15 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 		catch (SQLException e) {
 			throw new IllegalStateException("Postgres error encountered while summarizing type triples: " + e.toString());
 		}
-		allTriplesSummarizationTime = System.currentTimeMillis() - start;
-		System.out.println("Summarized " + triplesSummarizedSoFar + " triples in " + allTriplesSummarizationTime + " ms");
-		if (checkConsistency){
-			consistencyChecks();
-		}
-		//this.writeToFileAndDraw(dataTriplesFileName);
+		typeTriplesSummarizationTime = System.currentTimeMillis() - start;
+		LOGGER.info("Summarized " + typeTriplesSummarizedSoFar + " type triples in " + typeTriplesSummarizationTime + " ms");
+
+		allTriplesSummarizationTime = dataTriplesSummarizationTime + typeTriplesSummarizationTime;
+		LOGGER.info("Summarized " + triplesSummarizedSoFar + " triples overall in " + allTriplesSummarizationTime + " ms");
 	}
 
 	protected void handleDataTriple(Triple t) {
-		//System.out.println("\n### Read data triple: " + t.toString());
+		//LOGGER.debug("\n### Read data triple: " + t.toString());
 		Long repS = rep.get(t.s);
 		Long repO = rep.get(t.o);
 		Long pSource = ps.get(t.p);
@@ -145,7 +158,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 		boolean oRepresented = (repO != null);
 
 		char caseNumber = identifyTripleSummarizationCase(sRepresented, pRepresented, oRepresented);
-		//System.out.println(showCaseNumber(caseNumber));
+		//LOGGER.debug(showCaseNumber(caseNumber));
 		switch (caseNumber) {
 			case US_UP_UO:
 				handleDataTriple_US_UP_UO(t);
@@ -175,7 +188,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 				throw new IllegalStateException("This case should not be encountered here");
 		}
 
-		//System.out.println("After processing triple " + t.toString() + ", we have:\n" + this.toString());
+		//LOGGER.debug("After processing triple " + t.toString() + ", we have:\n" + this.toString());
 		//safetyCheck();
 	}
 
@@ -220,7 +233,6 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 			rep.put(t.s, typeOnlyNodeID);
 			rep.put(t.o, t.o);
 		}
-		this.numberOfTypeTriplesRead++;
 	}
 
 	@Override

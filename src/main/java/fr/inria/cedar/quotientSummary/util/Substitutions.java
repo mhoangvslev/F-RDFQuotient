@@ -44,7 +44,7 @@ public class Substitutions {
 		l2 = new ArrayList<>();
 		l2.add(l21);
 		l2.add(l22);
-		System.out.println("Substitution: first source: " +l11 + " second source: " + l21 + " first target: " + l12 + " second target: " + l22);
+		//LOGGER.debug("Substitution: first source: " +l11 + " second source: " + l21 + " first target: " + l12 + " second target: " + l22);
 		computeSubstitutions();
 	}
 
@@ -67,7 +67,7 @@ public class Substitutions {
 	 */
 	public Substitutions(Long n1, Long n2) {
 		LOGGER.setLevel(Level.INFO);
-		System.out.println("Substitution: first: " + n1 + " second: " + n2);
+		//LOGGER.debug("Substitution: first: " + n1 + " second: " + n2);
 		l1 = new ArrayList<>();
 		l1.add(n1);
 		l2 = new ArrayList<>();
@@ -80,14 +80,14 @@ public class Substitutions {
 		for (int i = 0; i < l1.size(); i++) {
 			Long n1 = l1.get(i);
 			Long n2 = l2.get(i);
-			LOGGER.debug("Comparing " + n1 + " " + n2); // lists are compared PAIRWISE, l1[0] with l2[0], then l1[1] with l2[1]
+			//LOGGER.debug("Comparing " + n1 + " " + n2); // lists are compared PAIRWISE, l1[0] with l2[0], then l1[1] with l2[1]
 			// thus if the four values are different
 			// * the smallest among l1[0] and l2[0] will replace the other;
 			// * the smallest among l1[1] and l2[1] will replace the other. 
 			Long n1aux = substitutions.get(n1);
 			Long n2aux = substitutions.get(n2);
 			if (n1 > n2) { // we should replace n1 by n2,
-				LOGGER.debug("n1 > n2");
+				//LOGGER.debug("n1 > n2");
 				// (or by a  (smaller) substitution of n2, if it exists)
 				if (n1aux != null) // in this case we already know the proposed replacement of n1, namely n1aux, and n1aux < n1
 					if (n2aux != null) { // in this case we already know the proposed replacement of n2, namely n2aux, and n2aux< n2
@@ -117,7 +117,7 @@ public class Substitutions {
 						substitutions.put(n1, n2);
 			}
 			if (n2 > n1) { // we should replace n2 by n1,
-				LOGGER.debug("n2 > n1");
+				//LOGGER.debug("n2 > n1");
 				// except if n2 is already replaced by someone smaller
 				// than (n1 or the substitution of n1, if it exists)
 				// in which case, n1 should be replaced by the smallest, too
@@ -149,7 +149,7 @@ public class Substitutions {
 						substitutions.put(n2, n1);
 			}
 		}
-		LOGGER.debug("Now substitutions is: " + this.toString());
+		//LOGGER.debug("Now substitutions is: " + this.toString());
 	}
 
 	@Override
@@ -179,10 +179,10 @@ public class Substitutions {
 
 	public static void main(String[] argv){
 		Substitutions s = new Substitutions(1L, 2L, 3L, 5L);
-		System.out.println(s.toString());
+		//LOGGER.debug(s.toString());
 		Substitutions s2 = new Substitutions(1L, 3L, 3L, 5L);
-		System.out.println(s2.toString());
+		//LOGGER.debug(s2.toString());
 		Substitutions s3 = new Substitutions(1L, 3L);
-		System.out.println(s3.toString());
+		//LOGGER.debug(s3.toString());
 	}
 }
