@@ -117,6 +117,9 @@ public class Builder {
 			case "closeConnection":
 				closeConnection();
 				return;
+			case "readSummaryComputedWithoutSaturation":
+				Summary s = readSummaryFromPostgres(); 
+				return;
 			default:
 				break;
 		}
@@ -305,21 +308,21 @@ public class Builder {
 		return "tmp_encoded_saturated";
 	}
 
-	private static Summary readSummaryFromPostgres(String summaryType, Connection conn) {
-		String lowerCaseSummaryType = summaryType.toLowerCase();
-		switch (lowerCaseSummaryType) {
-			case "weak":
-				return new WeakSummary(conn);
-			case "strong":
-				return new StrongSummary(conn);
-			case "2pstrong":
-				return new TwoPassStrongSummary(conn);
-			case "typedweak":
-				return new TypedWeakSummary(conn);
-			case "typedstrong":
-				return new TypedStrongSummary(conn);
+	// This goes toward the needs of the projects which
+	// use the summaries we build (and read them from
+	// Postgres)
+	// TODO decide on the final form this should take
+	public static Summary readSummaryFromPostgres() {
+		getConnection(DEFAULT_CONFIG_FILE); 
+		try{
+			Summary s = new Summary(connectionInUse); 
+			closeConnection();
+			return s;
 		}
-		return null;
+		catch(Exception e){
+			throw new IllegalStateException("Could not read summary "
+					+ e.toString()); 
+		}
 	}
 
 	private static void saveSummary(Boolean partialResult, String summarizationTechnique) {
@@ -338,6 +341,32 @@ public class Builder {
 	private static void closeConnection() throws SQLException {
 		connectionInUse.close();
 		LOGGER.info("Connection closed");
+	}
+	
+	// encapsulates the work to get a connection
+	// based on the properties specified in configfile
+	// call it with different config files to control which set of
+	// properties to use 
+	private static void getConnection(String configFile){
+		Properties properties = new Properties();
+		try{
+			properties.load(new FileReader(configFile));
+		}
+		catch(Exception e){
+			throw new IllegalStateException("Could not initialize properties " + e.toString());
+		}
+		Properties connectionProps = new Properties();
+		connectionProps.put("user", properties.getProperty("database.user"));
+		connectionProps.put("password", properties.getProperty("database.password"));
+
+		String connectionURL = "jdbc:postgresql://" + properties.getProperty("database.host") + ":" + properties.getProperty("database.port") + "/" + properties.getProperty("database.name");
+		try{
+			connectionInUse = DriverManager.getConnection(connectionURL, connectionProps);
+			LOGGER.info("Connection to Postgres established with URL: " + connectionURL);
+		}
+		catch(SQLException e){
+			throw new IllegalStateException("Could not open connection " + e.toString());
+		}
 	}
 
 	private static void dropPartialResultsTables() throws IllegalStateException {

@@ -224,6 +224,6 @@ public class EdgesWithProvenanceCounts {
 		for (Triple t: this.getSummaryEdges()){
 			sb.append(t.toString()).append(": ").append(getCounter(t.s, t.p, t.o)).append("\n");
 		}
-		LOGGER.debug(sb.toString());
+		System.out.println(sb.toString());
 	}
 }

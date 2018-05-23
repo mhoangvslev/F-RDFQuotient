@@ -69,6 +69,8 @@ public class Summary {
 	protected String triplesTableName = "";
 	protected String encodedTriplesTableName = "";
 	protected String dictionaryTableName = "";
+	protected String repTableName = "";
+	protected String edgeTableName = "";
 	protected boolean checkConsistency = false;
 
 	protected long triplesSummarizedSoFar = 0;
@@ -104,6 +106,9 @@ public class Summary {
 	}
 
 	public Summary(Connection conn) throws SQLException {
+		this.edgesWithProv = new EdgesWithProvenanceCounts();
+		this.rep = new Long2Long();
+		
 		try {
 			conn.setAutoCommit(false);
 		}
@@ -111,7 +116,44 @@ public class Summary {
 			LOGGER.error(ex);
 		}
 		LOGGER.info("Trying to read summary from Postgres");
-		RDF2SQLEncoding.setUp(conn, "dictionary");
+		Statement stmt = conn.createStatement();
+		try{
+			ResultSet rs = stmt.executeQuery("select name from saved_summary_table_names where role='dictionary';");
+			if (rs.next()){
+				this.dictionaryTableName = rs.getString(1);
+			}
+			else{
+				throw new IllegalStateException("Could not learn the name of the dictionary table"); 
+			}
+			rs = stmt.executeQuery("select name from saved_summary_table_names where role='representation';");
+			if (rs.next()){
+				this.repTableName = rs.getString(1);
+			}
+			else{
+				throw new IllegalStateException("Could not learn the name of the representation table"); 
+			}
+			rs = stmt.executeQuery("select name from saved_summary_table_names where role='edges';");
+			if (rs.next()){
+				this.edgeTableName = rs.getString(1);
+			}
+			else{
+				throw new IllegalStateException("Could not learn the name of the edge table"); 
+			}
+			rs = stmt.executeQuery("select name from saved_summary_table_names where role='encoded_triples';");
+			if (rs.next()){
+				this.edgeTableName = rs.getString(1);
+			}
+			else{
+				throw new IllegalStateException("Could not learn the name of the encoded triples table"); 
+			}
+			rs.close();
+		}
+		catch(SQLException e){
+			stmt.close();
+			conn.close();
+			throw new IllegalStateException("Could not read summary from Postgres " + e.toString()); 
+		}
+		RDF2SQLEncoding.setUp(conn, this.dictionaryTableName);
 		//LOGGER.debug("Set up special URIs from dictionary");
 		String getSummaryTriples = getSummaryTriplesSQLQuery();
 		try (
@@ -335,7 +377,7 @@ public class Summary {
 			conn.commit();
 		}
 		catch (SQLException e) {
-			throw new IllegalStateException("Could not insert summary triples in " + newSummaryTableNameRep + ": " + e.toString());
+			throw new IllegalStateException("Could not rename table into " + newDictionaryTableName + ": " + e.toString());
 		}
 
 		if (!partialResult) {
@@ -427,6 +469,21 @@ public class Summary {
 		}
 
 		this.dictionaryTableName = newDictionaryTableName;
+		
+		// saving the table names in Postgres: 
+		try {
+			stmt.executeUpdate("create table saved_summary_table_names(role varchar, name varchar);");
+			stmt.executeUpdate("insert into saved_summary_table_names values ('dictionary', '" + newDictionaryTableName + "');");
+			stmt.executeUpdate("insert into saved_summary_table_names values ('edges', '" + newSummaryTableNameSum + "');" );
+			stmt.executeUpdate("insert into saved_summary_table_names values ('representation', '" + newSummaryTableNameRep+ "');"); 
+			// TODO IM: I am not sure at all of what is the correct encoded triple table name to save. 
+			// @Pawel, please check!
+			stmt.executeUpdate("insert into saved_summary_table_names values ('encoded_triples', 'tmp_encoded');"); 
+			conn.commit();
+		}
+		catch (SQLException e) {
+			throw new IllegalStateException("Could not create table_names: " + e.toString());
+		}
 	}
 
 	static protected boolean existsTable(Connection conn, String tableName) {
@@ -969,11 +1026,13 @@ public class Summary {
 	}
 
 	protected final String getSummaryTriplesSQLQuery() {
-		return "select *  from " + getSummaryTablePrefix() + "encoded_summary"; // TODO: needs to be modified to account new naming convention
+		//return "select *  from " + getSummaryTablePrefix() + "encoded_summary"; // TODO: needs to be modified to account new naming convention
+		return "select * from " + this.edgeTableName + ";"; 
 	}
 
 	public final String getEncodedRepSQLQuery() {
-		return "select summarynode from " + getSummaryTablePrefix() + "encoded_rep where graphnode=?";  // TODO: needs to be modified to account new naming convention
+		//return "select summarynode from " + getSummaryTablePrefix() + "encoded_rep where graphnode=?";  // TODO: needs to be modified to account new naming convention
+		return "select summarynode from " + this.repTableName + ";"; 
 	}
 
 	public static Summary readSummaryFromPostgres(Connection conn) {
