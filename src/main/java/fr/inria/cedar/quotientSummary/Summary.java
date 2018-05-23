@@ -710,25 +710,26 @@ public class Summary {
 			URI = true; 
 		}
 		if (!URI){
-			return last4(URIorLiteral); 
+			return dotSuffixOfStringsAndURIs(URIorLiteral); 
 		}
 		else{
 			int closing = URIorLiteral.length() - 1;
 			int lastSlash = URIorLiteral.lastIndexOf('/');
 			if (lastSlash == -1){
-				return last4(URIorLiteral);
+				return dotSuffixOfStringsAndURIs(URIorLiteral);
 			}
 			else{
 				return URIorLiteral.substring(lastSlash+1, closing); 
 			}
 		}
 	}
-	protected String last4(String s){
-		if (s.length() <= 4){
+	protected String dotSuffixOfStringsAndURIs(String s){
+		int suffixLength = (new Integer(properties.	getProperty("maxNodeLabelLength"))).intValue(); 
+		if (s.length() <= suffixLength){
 			return s; 
 		}
 		else{
-			return  s.substring(s.length() - 4, s.length());
+			return  s.substring(s.length() - suffixLength, s.length());
 		}
 	}
 
