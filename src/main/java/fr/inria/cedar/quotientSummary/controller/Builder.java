@@ -318,13 +318,11 @@ public class Builder {
 	public static Summary readSummaryFromPostgres() {
 		getConnection(DEFAULT_CONFIG_FILE); 
 		try{
-			Summary s = new Summary(connectionInUse); 
-			closeConnection();
+			Summary s = new Summary(connectionInUse);
 			return s;
 		}
-		catch(Exception e){
-			throw new IllegalStateException("Could not read summary "
-					+ e.toString()); 
+		catch(SQLException e){
+			throw new IllegalStateException("Could not read summary " + e.toString());
 		}
 	}
 
