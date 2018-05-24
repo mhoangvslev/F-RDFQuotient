@@ -394,4 +394,5 @@ public class Builder {
 
 		LOGGER.info("All partial results tables dropped");
 	}
+
 }
