@@ -55,6 +55,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 	 * @param conn
 	 */
 	public TypedWeakSummary(Connection conn) {
+		super();
 		try {
 			conn.setAutoCommit(false);
 		}

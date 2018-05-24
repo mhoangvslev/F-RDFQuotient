@@ -441,10 +441,8 @@ public class Summary {
 			stmt.executeUpdate("create table saved_summary_table_names(role varchar, name varchar);");
 			stmt.executeUpdate("insert into saved_summary_table_names values ('dictionary', '" + newDictionaryTableName + "');");
 			stmt.executeUpdate("insert into saved_summary_table_names values ('edges', '" + newSummaryTableNameSum + "');" );
-			stmt.executeUpdate("insert into saved_summary_table_names values ('representation', '" + newSummaryTableNameRep+ "');"); 
-			// TODO IM: I am not sure at all of what is the correct encoded triple table name to save. 
-			// @Pawel, please check!
-			stmt.executeUpdate("insert into saved_summary_table_names values ('encoded_triples', 'tmp_encoded');"); 
+			stmt.executeUpdate("insert into saved_summary_table_names values ('representation', '" + newSummaryTableNameRep + "');");
+			stmt.executeUpdate("insert into saved_summary_table_names values ('encoded_triples', '" + encodedTriplesTableName + "');");
 			conn.commit();
 		}
 		catch (SQLException e) {

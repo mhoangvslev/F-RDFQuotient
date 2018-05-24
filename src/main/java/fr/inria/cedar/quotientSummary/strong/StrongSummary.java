@@ -29,6 +29,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 	 * @param conn
 	 */
 	public StrongSummary(Connection conn) {
+		super();
 		try {
 			conn.setAutoCommit(false);
 		}

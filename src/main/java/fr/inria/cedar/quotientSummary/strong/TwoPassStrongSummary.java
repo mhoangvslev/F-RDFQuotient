@@ -29,6 +29,7 @@ public class TwoPassStrongSummary extends StrongOrTypedStrongSummary {
 	 * @param conn
 	 */
 	public TwoPassStrongSummary(Connection conn) {
+		super();
 		try {
 			conn.setAutoCommit(false);
 		}
