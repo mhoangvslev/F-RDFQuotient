@@ -1152,4 +1152,8 @@ public class Summary {
 		}
 		return new String(sb); 
 	}
+
+	public ArrayList<Triple> getSummaryEdges() {
+		return edgesWithProv.getSummaryEdges(); 
+	}
 }
