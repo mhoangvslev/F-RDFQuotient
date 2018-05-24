@@ -22,8 +22,8 @@ import java.util.Properties;
 
 public class Builder {
 	// Default properties files
-	private static final String DEFAULT_CONFIG_FILE = System.getProperty("user.dir") + "/conf/dataLoading.properties";
-	private static final String SATURATION_CONFIG_FILE = System.getProperty("user.dir") + "/conf/dataLoadingWithSaturation.properties";
+	private static final String DEFAULT_CONFIG_FILE = System.getProperty("user.dir") + "\\conf\\dataLoading.properties";
+	private static final String SATURATION_CONFIG_FILE = System.getProperty("user.dir") + "\\conf\\dataLoadingWithSaturation.properties";
 
 	private static Connection connectionInUse;
 	private static Summary summaryInUse;
