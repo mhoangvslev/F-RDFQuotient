@@ -141,7 +141,7 @@ public class Summary {
 			}
 			rs = stmt.executeQuery("select name from saved_summary_table_names where role='encoded_triples';");
 			if (rs.next()){
-				this.edgeTableName = rs.getString(1);
+				this.encodedTriplesTableName = rs.getString(1);
 			}
 			else{
 				throw new IllegalStateException("Could not learn the name of the encoded triples table"); 
@@ -1032,7 +1032,7 @@ public class Summary {
 
 	public final String getEncodedRepSQLQuery() {
 		//return "select summarynode from " + getSummaryTablePrefix() + "encoded_rep where graphnode=?";  // TODO: needs to be modified to account new naming convention
-		return "select summarynode from " + this.repTableName + ";"; 
+		return "select summarynode from " + this.repTableName + " where graphnode=?;"; 
 	}
 
 	public static Summary readSummaryFromPostgres(Connection conn) {
@@ -1155,5 +1155,13 @@ public class Summary {
 
 	public ArrayList<Triple> getSummaryEdges() {
 		return edgesWithProv.getSummaryEdges(); 
+	}
+
+	public String getEncodedTriplesTableName() {
+		return this.encodedTriplesTableName; 
+	}
+
+	public String getDictionaryTableName() {
+		return this.dictionaryTableName; 
 	}
 }

@@ -316,7 +316,6 @@ public class Builder {
 		getConnection(DEFAULT_CONFIG_FILE); 
 		try{
 			Summary s = new Summary(connectionInUse); 
-			closeConnection();
 			return s;
 		}
 		catch(Exception e){
@@ -388,5 +387,9 @@ public class Builder {
 		}
 
 		LOGGER.info("All partial results tables dropped");
+	}
+
+	public static Connection getConnection() {
+		return connectionInUse; 
 	}
 }
