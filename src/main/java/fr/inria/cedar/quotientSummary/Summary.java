@@ -278,52 +278,18 @@ public class Summary {
 	}
 
 	/**
-	 * Computes node statistics through a GROUP-BY query. Should be called after
-	 * the summary is completely computed and stored in Postgres.
+	 * May 24, 2018: these should be taken directly from rep
 	 */
 	protected void gatherNodeStatistics() {
-		try {
-			try (
-					Statement nodeStatisticQuery = RDF2SQLEncoding.getConnection().createStatement();
-					ResultSet rs = nodeStatisticQuery.executeQuery("select summarynode, count(*) from " + this.getSummaryTablePrefix() + "encoded_rep group by summarynode;")
-							// TODO: needs to be modified to account new naming convention
-					) {
-				while (rs.next()) {
-					Long summaryNode = rs.getLong(1);
-					Long numberOfReprGraphNodes = rs.getLong(2);
-					this.summaryNodeStatistics.put(summaryNode, numberOfReprGraphNodes);
-				}
-			}
-		} catch (SQLException e) {
-			throw new IllegalStateException("Could not compute node representation statistics from Postgres: " + e.toString());
-		}
+		// TODO
 	}
 
 	/**
-	 * Computes edge statistics through a GROUP-BY query. Should be called after
-	 * the summary is completely computed and stored in Postgres.
+	 * 
+	 * May 24, 2018: these statistics should be picked directly from the edgesWithCounter.
 	 */
 	protected void gatherEdgeStatistics() {
-		try {
-			try (
-					Statement edgeStatisticQuery = RDF2SQLEncoding.getConnection().createStatement();
-					ResultSet rs = edgeStatisticQuery.executeQuery(
-							"select es.s as summary_source, es.p as summary_prop, es.o as summary_target, count(*) " + "from "
-									+ summaryTablePrefix + "encoded_rep rep1, " + summaryTablePrefix
-									+ "encoded_rep rep2, encoded_triples t, " + summaryTablePrefix + "encoded_summary es " // TODO: needs to be modified to account new naming convention
-									+ "where rep1.graphnode = t.s and rep2.graphnode=t.o and es.s = rep1.summarynode and es.o = rep2.summarynode and es.p = t.p "
-									+ "group by es.s, es.p, es.o;")
-							// + "order by es.s, es.p, es.o;");
-					) {
-				while (rs.next()) {
-					Triple t = new Triple(rs.getLong(1), rs.getLong(2), rs.getLong(3));
-					this.summaryEdgeStatistics.put(t, rs.getLong(4));
-				}
-			}
-		}
-		catch (SQLException e) {
-			throw new IllegalStateException("Could not compute edge representation statistics from Postgres: " + e.toString());
-		}
+		//TODO
 	}
 
 	protected void handleTypeTripleBeforeData(Triple t) {
@@ -1026,12 +992,10 @@ public class Summary {
 	}
 
 	protected final String getSummaryTriplesSQLQuery() {
-		//return "select *  from " + getSummaryTablePrefix() + "encoded_summary"; // TODO: needs to be modified to account new naming convention
 		return "select * from " + this.edgeTableName + ";"; 
 	}
 
 	public final String getEncodedRepSQLQuery() {
-		//return "select summarynode from " + getSummaryTablePrefix() + "encoded_rep where graphnode=?";  // TODO: needs to be modified to account new naming convention
 		return "select summarynode from " + this.repTableName + " where graphnode=?;"; 
 	}
 
