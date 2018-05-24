@@ -33,6 +33,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 	 * @param conn
 	 */
 	public WeakSummary(Connection conn) {
+		super();
 		try {
 			conn.setAutoCommit(false);
 		}
