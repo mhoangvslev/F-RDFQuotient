@@ -200,7 +200,7 @@ public class Summary {
 	}
 
 	protected String showRep() {
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 		for (Long node : this.rep.getKeys()) {
 			//sb.append(node).append("=>").append(rep.get(node)).append(" ");
 			sb.append(node).append(" (").append(RDF2SQLEncoding.dictionaryDecode(node)).append(") => ").append(rep.get(node)).append("\n");
@@ -1081,6 +1081,24 @@ public class Summary {
 		for (Long p: removedEdges.keys()){
 			for (Long o: removedEdges.get(p)){
 				edgesWithProv.removeTriple(node, p, o); 
+			}
+		}
+	}
+
+	protected void decrementIncomingEdges(Long node, Long2LongSet removedEdges){
+		for (Long p: removedEdges.keys()){
+			for (Long s: removedEdges.get(p)){
+				Long counter = edgesWithProv.getCounter(s, p, node);
+				edgesWithProv.setCounter(s, p, node, counter - 1);
+			}
+		}
+	}
+
+	protected void decrementOutgoingEdges(Long node, Long2LongSet newEdges){
+		for (Long p: newEdges.keys()){
+			for (Long o: newEdges.get(p)){
+				Long counter = edgesWithProv.getCounter(node, p, o);
+				edgesWithProv.setCounter(node, p, o, counter - 1);
 			}
 		}
 	}

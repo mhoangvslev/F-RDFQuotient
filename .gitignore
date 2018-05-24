@@ -12,3 +12,6 @@ src/test/resources/test*/*_w_.nt
 src/test/resources/test*/*_tw_.nt
 src/test/resources/test*/*_s_.nt
 src/test/resources/test*/*_ts_.nt
+src/test/resources/LUBM-1M/LUBM-1M.nt
+src/test/resources/LUBM-10M/LUBM-10M.nt
+src/test/resources/LUBM-100M/LUBM-100M.nt

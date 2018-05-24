@@ -101,12 +101,12 @@ public class EdgesWithProvenanceCounts {
 							newObjectsForSP.add(newNode);
 							setCounter(s, p, newNode, getCounter(s, p, oldNode)); // edge count transferred
 						}
-						else{ // newNode was already there, we need to add the edge count from oldNode to that of newNode
+						else { // newNode was already there, we need to add the edge count from oldNode to that of newNode
 							setCounter(s, p, newNode, (getCounter(s, p, oldNode) + getCounter(s, p, newNode)));
 						}
 						changed = true;
 					}
-					else{
+					else {
 						newObjectsForSP.add(o);
 					}
 				}
