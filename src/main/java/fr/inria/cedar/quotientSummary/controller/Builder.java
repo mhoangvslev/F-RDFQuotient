@@ -6,7 +6,6 @@ import fr.inria.cedar.ontosql.rdfdb.dataloading.DataLoading;
 import fr.inria.cedar.ontosql.rdfdb.dataloading.Parameters;
 import fr.inria.cedar.quotientSummary.Summary;
 import fr.inria.cedar.quotientSummary.strong.StrongSummary;
-import fr.inria.cedar.quotientSummary.strong.TwoPassStrongSummary;
 import fr.inria.cedar.quotientSummary.strong.TypedStrongSummary;
 import fr.inria.cedar.quotientSummary.weak.TypedWeakSummary;
 import fr.inria.cedar.quotientSummary.weak.WeakSummary;
@@ -30,8 +29,10 @@ public class Builder {
 	private static final String DEFAULT_CONFIG_FILE = System.getProperty("user.dir") + "/conf/dataLoading.properties";
 	private static final String SATURATION_CONFIG_FILE = System.getProperty("user.dir") + "/conf/dataLoadingWithSaturation.properties";
 	private static final String SATURATION_SHORTCUT_CONFIG_FILE = System.getProperty("user.dir") + "/conf/dataLoadingWithSaturationForShortcut.properties";
-	private static String triplesTableName = "tmp_triples";
-	private static String dictionaryTableName = "dictionary";
+	private static String triplesTableName;
+	private static String dictionaryTableName;
+	private static String encodedTableName;
+	private static String encodedSaturatedTableName;
 	private static Connection connectionInUse;
 	private static Summary summaryInUse;
 
@@ -227,6 +228,8 @@ public class Builder {
 		//LOGGER.debug(properties.toString());
 		triplesTableName = properties.getProperty("database.triples_table_name");
 		dictionaryTableName = properties.getProperty("database.dictionary_table_name");
+		encodedTableName = properties.getProperty("database.encoded_triples_table_name");
+		encodedSaturatedTableName = properties.getProperty("database.encoded_saturated_triples_table_name");
 		Parameters settings = new Parameters();
 		settings.setPropertiesFileName(configFile);
 
@@ -294,18 +297,18 @@ public class Builder {
 
 	private static String tableName(Boolean saturated) {
 		if (!saturated)
-			return "tmp_encoded";
+			return encodedTableName;
 
 		try {
-			ResultSet res = connectionInUse.getMetaData().getTables(null, null, "tmp_encoded_summarized_saturated", new String[] { "TABLE" });
+			ResultSet res = connectionInUse.getMetaData().getTables(null, null, encodedTableName + "_summarized_saturated", new String[] { "TABLE" });
 			if(res.next()) // if tmp_encoded_summarized_saturated exists
-				return "tmp_encoded_summarized_saturated";
+				return encodedTableName + "_summarized_saturated";
 		}
 		catch (SQLException e) {
-			throw new IllegalStateException("Could not find out if table " + "tmp_encoded_summarized_saturated" + " exists: " + e.toString());
+			throw new IllegalStateException("Could not find out if table " + encodedTableName + "_summarized_saturated" + " exists: " + e.toString());
 		}
 
-		return "tmp_encoded_saturated";
+		return encodedSaturatedTableName;
 	}
 
 	// This goes toward the needs of the projects which
