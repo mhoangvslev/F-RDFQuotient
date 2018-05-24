@@ -343,7 +343,11 @@ public class Builder {
 		connectionInUse.close();
 		LOGGER.info("Connection closed");
 	}
-	
+
+	public static Connection getConnection() {
+		return connectionInUse;
+	}
+
 	// encapsulates the work to get a connection
 	// based on the properties specified in configfile
 	// call it with different config files to control which set of
