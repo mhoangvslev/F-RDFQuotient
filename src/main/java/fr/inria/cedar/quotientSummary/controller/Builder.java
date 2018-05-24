@@ -1,12 +1,12 @@
 package fr.inria.cedar.quotientSummary.controller;
 
 import com.google.common.base.Preconditions;
-import fr.inria.cedar.commons.miscellaneous.Debugger;
 import fr.inria.cedar.ontosql.db.UnsupportedDatabaseEngineException;
 import fr.inria.cedar.ontosql.rdfdb.dataloading.DataLoading;
 import fr.inria.cedar.ontosql.rdfdb.dataloading.Parameters;
 import fr.inria.cedar.quotientSummary.Summary;
 import fr.inria.cedar.quotientSummary.strong.StrongSummary;
+import fr.inria.cedar.quotientSummary.strong.TwoPassStrongSummary;
 import fr.inria.cedar.quotientSummary.strong.TypedStrongSummary;
 import fr.inria.cedar.quotientSummary.weak.TypedWeakSummary;
 import fr.inria.cedar.quotientSummary.weak.WeakSummary;
@@ -15,26 +15,27 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 public class Builder {
+	private static final Logger LOGGER = Logger.getLogger(Builder.class.getName());
 	// Default properties files
-	private static final String DEFAULT_CONFIG_FILE = System.getProperty("user.dir") + "\\conf\\dataLoading.properties";
-	private static final String SATURATION_CONFIG_FILE = System.getProperty("user.dir") + "\\conf\\dataLoadingWithSaturation.properties";
-
+	private static final String DEFAULT_CONFIG_FILE = System.getProperty("user.dir") + "/conf/dataLoading.properties";
+	private static final String SATURATION_CONFIG_FILE = System.getProperty("user.dir") + "/conf/dataLoadingWithSaturation.properties";
+	private static final String SATURATION_SHORTCUT_CONFIG_FILE = System.getProperty("user.dir") + "/conf/dataLoadingWithSaturationForShortcut.properties";
+	private static String triplesTableName = "tmp_triples";
+	private static String dictionaryTableName = "dictionary";
 	private static Connection connectionInUse;
 	private static Summary summaryInUse;
 
 	public Builder() {
-		/*try {
-			getConnection();
-		}
-		catch (UnsupportedDatabaseEngineException | IOException | SQLException e) {
-			e.printStackTrace();
-		}*/
 	}
 
 	/**
@@ -45,51 +46,79 @@ public class Builder {
 	 * @throws UnsupportedDatabaseEngineException
 	 */
 	public static void main(String[] args) throws IOException, UnsupportedDatabaseEngineException, SQLException {
-		if (args.length == 0) {
+		LOGGER.setLevel(Level.INFO);
+		if (args.length < 1) {
 			printUsage();
 			return;
 		}
-		String[] nextArguments = {};
+		String arg0 = args[0];
+		String arg1 = "";
 		String[] filesToLoad = {};
+
 		if (args.length > 1) {
-			nextArguments = extractArguments(args);
-			if (args.length > 2)
-				filesToLoad = extractArguments(nextArguments);
+			arg1 = args[1];
+			if (args.length > 2) {
+				filesToLoad = extractArguments(args, 2);
+			}
 		}
-		switch (args[0]) {
+
+		switch (arg0) {
 			case "loadWithoutSaturation":
-				connectionInUse = loadRDFInPostgres(nextArguments, false);
+				connectionInUse = loadGraphInPostgres(false, false, filesToLoad);
 				return;
 			case "loadWithSaturation":
-				connectionInUse = loadRDFInPostgres(nextArguments, true);
+				connectionInUse = loadGraphInPostgres(true, false, filesToLoad);
 				return;
 			case "summarizeUnsaturated":
-				summaryInUse = summarizeGraphFromPostgres(connectionInUse, nextArguments, false);
+				summaryInUse = summarizeGraphFromPostgres(arg1, false, filesToLoad);
 				return;
 			case "summarizeSaturated":
-				summaryInUse = summarizeGraphFromPostgres(connectionInUse, nextArguments, true);
+				summaryInUse = summarizeGraphFromPostgres(arg1, true, filesToLoad);
+				return;
+			case "loadAndSummarize":
+				connectionInUse = loadGraphInPostgres(false, false, filesToLoad);
+				summaryInUse = summarizeGraphFromPostgres(arg1, false, filesToLoad);
 				return;
 			case "loadWithSaturationAndSummarize":
-				// in this case args[1] is the summary type; the loader doesn't need this information; the loader only gets the files to load
-				connectionInUse = loadRDFInPostgres(filesToLoad, false); // TODO: Fix and change false to true
-				// the summarizer also gets the summary name
-				summaryInUse = summarizeGraphFromPostgres(connectionInUse, nextArguments, false); // TODO: Fix and change false to true
+				connectionInUse = loadGraphInPostgres(true, false, filesToLoad);
+				summaryInUse = summarizeGraphFromPostgres(arg1, true, filesToLoad);
 				return;
-			/*case "loadAndSummarizeUsingShortcut":
-				// in this case args[1] is the summary type; the loader doesn't need this information; the loader only gets the files to load
-				connectionInUse = loadRDFInPostgres(filesToLoad, true); // TODO: Fix and change false to true
-				// the summarizer also gets the summary name
-				summarizeGraphFromPostgres(connectionInUse, nextArguments, false);
-				saturate(connectionInUse);
-				// the summarizer also gets the summary name
-				Summary sum = summarizeGraphFromPostgres(connectionInUse, nextArguments, true);
-				saveSummary(connectionInUse, sum, args);
-				return; */// TODO: not ready yet
-			case "saveSummary":
-				saveSummary(connectionInUse, summaryInUse, nextArguments);
+			case "loadAndSummarizeUsingShortcut":
+				connectionInUse = loadGraphInPostgres(false, false, filesToLoad);
+				summaryInUse = summarizeGraphFromPostgres(arg1, false, filesToLoad);
+				saveSummary(Boolean.TRUE, "shortcut");
+				exportSummary("noSaturation", false, filesToLoad);
+				closeConnection();
+				String[] files = {filesToLoad[0].substring(0, filesToLoad[0].length() - 3) + "_" + prefix(arg1) + "noSaturation.nt"};
+				connectionInUse = loadGraphInPostgres(true, true, files);
+				summaryInUse = summarizeGraphFromPostgres(arg1, true, filesToLoad);
+				return;
+			case "saveSummaryComputedWithoutSaturation":
+				saveSummary(Boolean.FALSE, "noSaturation");
+				return;
+			case "saveSummaryComputedClassicalWay":
+				saveSummary(Boolean.FALSE, "classical");
+				return;
+			case "saveSummaryComputedUsingShortcut":
+				saveSummary(Boolean.FALSE, "shortcut");
+				return;
+			case "exportSummaryComputedWithoutSaturation":
+				exportSummary("noSaturation", arg1.equals("draw"), filesToLoad);
+				return;
+			case "exportSummaryComputedClassicalWay":
+				exportSummary("classical", arg1.equals("draw"), filesToLoad);
+				return;
+			case "exportSummaryComputedUsingShortcut":
+				exportSummary("shortcut", arg1.equals("draw"), filesToLoad);
+				return;
+			case "dropPartialResultsTables":
+				dropPartialResultsTables();
 				return;
 			case "closeConnection":
-				closeConnection(connectionInUse);
+				closeConnection();
+				return;
+			case "readSummaryComputedWithoutSaturation":
+				Summary s = readSummaryFromPostgres(); 
 				return;
 			default:
 				break;
@@ -97,44 +126,37 @@ public class Builder {
 		printUsage();
 	}
 
-	/**
-	 * This method returns the connection to the Postgres database where the dictionary-encoded RDF graph is / will be stored
-	 *
-	 * @return the connection
-	 *
-	 * @throws IOException
-	 * @throws FileNotFoundException
-	 * @throws UnsupportedDatabaseEngineException
-	 * @throws SQLException
-	 */
-	/*private static Connection getConnection() throws FileNotFoundException, IOException, UnsupportedDatabaseEngineException, SQLException {
-		// first fill in the connection properties from the default config file
-		Properties properties = new Properties();
-		properties.load(new FileReader(DEFAULT_CONFIG_FILE));
-		System.out.println(properties.toString());
-
-		// then add the specific properties of this loader
-		Properties connectionProps = new Properties();
-		connectionProps.put("user", properties.getProperty("database.user"));
-		connectionProps.put("password", properties.getProperty("database.password"));
-
-		String connectionURL = "jdbc:postgresql://" + properties.getProperty("database.host") + ":" + properties.getProperty("database.port") + "/" + properties.getProperty("database.name");
-		Connection conn = DriverManager.getConnection(connectionURL, connectionProps);
-		System.out.println("Connection URL is: " + connectionURL);
-		Preconditions.checkState(conn != null, "No connection for " + connectionURL);
-		return conn;
-	}*/
+	private static String prefix(String summarizationTechnique) {
+		switch(summarizationTechnique) {
+			case "weak":
+				return "w_";
+			case "strong":
+				return "s_";
+			case "typedweak":
+				return "tw_";
+			case "typedstrong":
+				return "ts_";
+		}
+		return null;
+	}
 
 	private static void printUsage() {
+		System.out.println("The framework is designed to work with one graph at the time. Tables created until save are to be considered temporary.");
 		System.out.println("Usage:");
-		System.out.println("args[0]=loadWithoutSaturation: loads the graph in Postgres without saturating it");
-		System.out.println("args[0]=loadWithSaturation: loads the graph in Postgres and saturates it");
+		System.out.println("args[0]=loadWithoutSaturation: opens connection and loads the graph in Postgres without saturating it");
+		System.out.println("args[0]=loadWithSaturation: opens connection and loads the graph in Postgres and saturates it");
 		System.out.println("args[0]=summarizeUnsaturated: summarizes the unsaturated graph from Postgres");
 		System.out.println("args[0]=summarizeSaturated: summarizes the saturated graph from Postgres");
 		System.out.println("args[0]=loadWithSaturationAndSummarize: loads the graph in Postgres, saturates it, and summarizes it");
-		//System.out.println("args[0]=loadAndSummarizeUsingShortcut: loads the graph in Postgres, summarizes it, saturates it, and summarizes again (shortcut)");
-		System.out.println("args[0]=saveSummary: saves summary to Postgres and to the disk, draws a DOT graph and closes the connection to Postgres");
+		System.out.println("args[0]=loadAndSummarizeUsingShortcut: loads the graph in Postgres, summarizes it, saturates it, and summarizes again (shortcut)");
 		//System.out.println("args[0]=summarizeEncodedFile: build the summary out of integer-encoded triples in a file");
+		System.out.println("args[0]=saveSummaryComputedWithoutSaturation: saves summary computed using only saturation to Postgres");
+		System.out.println("args[0]=saveSummaryComputedClassicalWay: saves summary computed classical way to Postgres");
+		System.out.println("args[0]=saveSummaryComputedUsingShortcut: saves summary computed using shortcut to Postgres");
+		System.out.println("args[0]=exportSummaryComputedWithoutSaturation: saves summary computed using only saturation to the disk in nt, dot and png formats");
+		System.out.println("args[0]=exportSummaryComputedClassicalWay: saves summaryy computed classical way to the disk in nt, dot and png formats");
+		System.out.println("args[0]=exportSummaryComputedUsingShortcut: saves summary summary computed using only saturation to the disk in nt, dot and png formats");
+		System.out.println("args[0]=dropPartialResultsTables: drops partial results tables in Postgres");
 		System.out.println("args[0]=closeConnection: closes connection to Postgres");
 	}
 
@@ -145,10 +167,14 @@ public class Builder {
 	 *
 	 * @return
 	 */
-	private static String[] extractArguments(String[] args) {
-		String[] suffix = new String[args.length - 1];
+	private static String[] extractArguments(String[] args, int shift) {
+		if (shift < 1)
+			throw new IllegalArgumentException("Shift must be at least 1");
+		if (shift >= args.length)
+			throw new IllegalArgumentException("Shift must be smaller than the args array size");
+		String[] suffix = new String[args.length - shift];
 		for (int i = 0; i < suffix.length; i++)
-			suffix[i] = args[i + 1];
+			suffix[i] = args[i + shift];
 		return suffix;
 	}
 
@@ -168,47 +194,60 @@ public class Builder {
 	 *     then the first file contains the data and the last contains the schema
 	 *     otherwise (only one file) that file contains everything (data and schema)
 	 */
-	private static Connection loadRDFInPostgres(String[] args, Boolean saturate) throws FileNotFoundException, IOException, UnsupportedDatabaseEngineException, SQLException {
-		System.out.println(System.getProperty("user.dir"));
+	private static Connection loadGraphInPostgres(Boolean saturate, Boolean shortcut, String[] files) throws FileNotFoundException, IOException, UnsupportedDatabaseEngineException, SQLException {
+		LOGGER.info("Loading graph to Postgres");
+		//LOGGER.debug(System.getProperty("user.dir"));
 
 		List<String> tripleFiles = new ArrayList<>();
 		List<String> rdfsFiles = new ArrayList<>();
 
 		int fileNo;
-		for (fileNo = 0; fileNo < args.length; fileNo++) {
-			String s = args[fileNo];
-			if ((fileNo == 0) || ((args.length > 1) && (fileNo < args.length - 1))) {
-				System.out.println("Triple file: " + s);
+		for (fileNo = 0; fileNo < files.length; fileNo++) {
+			String s = files[fileNo];
+			if ((fileNo == 0) || ((files.length > 1) && (fileNo < files.length - 1))) {
+				//LOGGER.debug("Triple file: " + s);
 				tripleFiles.add(s);
 			}
 			else {
-				System.out.println("Schema file: " + s);
+				//LOGGER.debug("Schema file: " + s);
 				rdfsFiles.add(s);
 			}
 		}
 
 		String configFile = DEFAULT_CONFIG_FILE;
-		if (saturate)
-			configFile = SATURATION_CONFIG_FILE;
+		if (saturate) {
+			if (shortcut)
+				configFile = SATURATION_SHORTCUT_CONFIG_FILE;
+			else
+				configFile = SATURATION_CONFIG_FILE;
+		}
 
 		Properties properties = new Properties();
 		properties.load(new FileReader(configFile));
-		System.out.println(properties.toString());
+		//LOGGER.debug(properties.toString());
+		triplesTableName = properties.getProperty("database.triples_table_name");
+		dictionaryTableName = properties.getProperty("database.dictionary_table_name");
 		Parameters settings = new Parameters();
 		settings.setPropertiesFileName(configFile);
 
-		if (rdfsFiles.isEmpty())
-			for (String tripleFile: tripleFiles) {
-				settings.getAllInFiles().add(tripleFile);
-				DataLoading.process(settings);
-			}
-		else
-			for (String tripleFile: tripleFiles) {
-				settings.getTripleFiles().add(tripleFile);
-				settings.setRdfsFile(rdfsFiles.get(0));
-				DataLoading.process(settings);
-			}
-		System.out.println("Loading finished");
+		try {
+			if (rdfsFiles.isEmpty())
+				for (String tripleFile: tripleFiles) {
+					settings.getAllInFiles().add(tripleFile);
+					DataLoading.process(settings);
+				}
+			else
+				for (String tripleFile: tripleFiles) {
+					settings.getTripleFiles().add(tripleFile);
+					settings.setRdfsFile(rdfsFiles.get(0));
+					DataLoading.process(settings);
+				}
+		}
+		catch (IOException ex) {
+			LOGGER.error("Data loading failed: " + ex);
+			throw ex;
+		}
+		LOGGER.info("Graph loaded to Postgres");
 
 		Properties connectionProps = new Properties();
 		connectionProps.put("user", properties.getProperty("database.user"));
@@ -216,7 +255,7 @@ public class Builder {
 
 		String connectionURL = "jdbc:postgresql://" + properties.getProperty("database.host") + ":" + properties.getProperty("database.port") + "/" + properties.getProperty("database.name");
 		Connection conn = DriverManager.getConnection(connectionURL, connectionProps);
-		System.out.println("Connection URL is: " + connectionURL);
+		LOGGER.info("Connection to Postgres established with URL: " + connectionURL);
 		Preconditions.checkState(conn != null, "No connection for " + connectionURL);
 		return conn;
 	}
@@ -230,53 +269,124 @@ public class Builder {
 	 * @throws IOException
 	 * @throws SQLException
 	 */
-	private static Summary summarizeGraphFromPostgres(Connection conn, String[] args, Boolean summarizeSaturated) throws SQLException, IOException {
-		Summary sum = createNewSummary(args[0]);
-		Debugger.turnOff();
-		sum.summarizeFromRDBMS(conn, extractArguments(args));
-		System.out.println("RDF graph summarized");
+	private static Summary summarizeGraphFromPostgres(String summaryType, Boolean summarizeSaturated, String[] files) throws SQLException, IOException {
+		LOGGER.info("Summarizing graph from Postgres");
+		Summary sum = createNewSummary(summaryType, files[0], triplesTableName, tableName(summarizeSaturated), dictionaryTableName);
+		sum.summarizeFromPostgres(connectionInUse);
+		LOGGER.info("Graph from Postgres summarized");
 		return sum;
 	}
 
-	private static Summary createNewSummary(String summaryType) {
+	private static Summary createNewSummary(String summaryType, String triplesFileName, String triplesTableName, String encodedTriplesTableName, String dictionaryTableName) {
 		String lowerCaseSummaryType = summaryType.toLowerCase();
 		switch (lowerCaseSummaryType) {
 			case "weak":
-				return new WeakSummary();
+				return new WeakSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 			case "strong":
-				return new StrongSummary();
+				return new StrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 			case "typedweak":
-				return new TypedWeakSummary();
+				return new TypedWeakSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 			case "typedstrong":
-				return new TypedStrongSummary();
+				return new TypedStrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 		}
 		return null;
 	}
 
-	private static Summary readSummaryFromPostgres(String summaryType, Connection conn) {
-		String lowerCaseSummaryType = summaryType.toLowerCase();
-		switch (lowerCaseSummaryType) {
-			case "weak":
-				return new WeakSummary(conn);
-			case "strong":
-				return new StrongSummary(conn);
-			case "typedweak":
-				return new TypedWeakSummary(conn);
-			case "typedstrong":
-				return new TypedStrongSummary(conn);
+	private static String tableName(Boolean saturated) {
+		if (!saturated)
+			return "tmp_encoded";
+
+		try {
+			ResultSet res = connectionInUse.getMetaData().getTables(null, null, "tmp_encoded_summarized_saturated", new String[] { "TABLE" });
+			if(res.next()) // if tmp_encoded_summarized_saturated exists
+				return "tmp_encoded_summarized_saturated";
 		}
-		return null;
+		catch (SQLException e) {
+			throw new IllegalStateException("Could not find out if table " + "tmp_encoded_summarized_saturated" + " exists: " + e.toString());
+		}
+
+		return "tmp_encoded_saturated";
 	}
 
-	private static void saveSummary(Connection conn, Summary sum, String[] args) {
-		sum.saveSummaryInPostgres(conn, args[0]);
-		sum.writeDecodedSummaryToNTFile(conn, args[0]);
-		sum.drawSummaryAndGraph(conn, args[0]);
-		System.out.println(sum.getRunStatistics().toString());
+	// This goes toward the needs of the projects which
+	// use the summaries we build (and read them from
+	// Postgres)
+	// TODO decide on the final form this should take
+	public static Summary readSummaryFromPostgres() {
+		getConnection(DEFAULT_CONFIG_FILE); 
+		try{
+			Summary s = new Summary(connectionInUse); 
+			closeConnection();
+			return s;
+		}
+		catch(Exception e){
+			throw new IllegalStateException("Could not read summary "
+					+ e.toString()); 
+		}
 	}
 
-	private static void closeConnection(Connection conn) throws SQLException {
-		conn.close();
-		System.out.println("Connection closed");
+	private static void saveSummary(Boolean partialResult, String summarizationTechnique) {
+		summaryInUse.saveSummaryInPostgres(connectionInUse, partialResult, summarizationTechnique);
+	}
+
+	private static void exportSummary(String summarizationTechnique, Boolean draw, String[] files) {
+		LOGGER.info("Exporting summary to disk");
+		summaryInUse.writeDecodedSummaryToNTFile(connectionInUse, summarizationTechnique);
+		if (draw)
+			summaryInUse.drawSummaryAndGraph(connectionInUse, summarizationTechnique);
+		LOGGER.info("Statistics: " + summaryInUse.getRunStatistics().toString());
+		LOGGER.info("Summary exported to disk");
+	}
+
+	private static void closeConnection() throws SQLException {
+		connectionInUse.close();
+		LOGGER.info("Connection closed");
+	}
+	
+	// encapsulates the work to get a connection
+	// based on the properties specified in configfile
+	// call it with different config files to control which set of
+	// properties to use 
+	private static void getConnection(String configFile){
+		Properties properties = new Properties();
+		try{
+			properties.load(new FileReader(configFile));
+		}
+		catch(Exception e){
+			throw new IllegalStateException("Could not initialize properties " + e.toString());
+		}
+		Properties connectionProps = new Properties();
+		connectionProps.put("user", properties.getProperty("database.user"));
+		connectionProps.put("password", properties.getProperty("database.password"));
+
+		String connectionURL = "jdbc:postgresql://" + properties.getProperty("database.host") + ":" + properties.getProperty("database.port") + "/" + properties.getProperty("database.name");
+		try{
+			connectionInUse = DriverManager.getConnection(connectionURL, connectionProps);
+			LOGGER.info("Connection to Postgres established with URL: " + connectionURL);
+		}
+		catch(SQLException e){
+			throw new IllegalStateException("Could not open connection " + e.toString());
+		}
+	}
+
+	private static void dropPartialResultsTables() throws IllegalStateException {
+		Statement stmt;
+		try {
+			stmt = connectionInUse.createStatement();
+		}
+		catch (SQLException e) {
+			throw new IllegalStateException("Could not create the statement: " + e.toString());
+		}
+
+		// drop tables matching tmp_* and dictionary
+		try {
+			stmt.execute("select 'drop table '||tablename||';' from pg_tables where tablename like 'tmp_%'");
+			connectionInUse.commit();
+		}
+		catch (SQLException e) {
+			throw new IllegalStateException("Could not drop partial results tables: " + e.toString());
+		}
+
+		LOGGER.info("All partial results tables dropped");
 	}
 }

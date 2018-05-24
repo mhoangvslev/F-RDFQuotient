@@ -5,3 +5,10 @@
 /.settings/
 *.png
 *.dot
+src/test/resources/test*/*_noSaturation.nt
+src/test/resources/test*/*_classical.nt
+src/test/resources/test*/*_shortcut.nt
+src/test/resources/test*/*_w_.nt
+src/test/resources/test*/*_tw_.nt
+src/test/resources/test*/*_s_.nt
+src/test/resources/test*/*_ts_.nt

@@ -1,15 +1,20 @@
 package fr.inria.cedar.quotientSummary.datastructures;
 
+import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 public class Long2LongList {
+	private static final Logger LOGGER = Logger.getLogger(Long2LongList.class.getName());
 	// clique ID --> set of properties
 	// or: class set ID --> set of types
 	final HashMap<Long, ArrayList<Long>> map;
 
 	public Long2LongList() {
+		LOGGER.setLevel(Level.INFO);
 		map = new HashMap<>();
 	}
 
@@ -58,8 +63,10 @@ public class Long2LongList {
 			for (Long key: map.keySet()) {
 				sb.append("#").append(key).append("|{");
 				ArrayList<Long> values = map.get(key);
-				for (Long val: values)
-					sb.append(val).append(", ");
+				for (Long val: values) {
+					//sb.append(val).append(", ");
+					sb.append(val).append(" (").append(RDF2SQLEncoding.dictionaryDecode(val)).append(")"); 
+				}
 				sb.append("} ");
 			}
 		}

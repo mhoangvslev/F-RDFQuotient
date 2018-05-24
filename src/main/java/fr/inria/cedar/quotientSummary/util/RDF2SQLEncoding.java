@@ -7,6 +7,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 /**
  * This class serves exactly to encode / decode the five special RDF properties we are interested in
@@ -15,6 +17,7 @@ import java.util.HashMap;
  *
  */
 public class RDF2SQLEncoding {
+	private static final Logger LOGGER = Logger.getLogger(RDF2SQLEncoding.class.getName());
 	protected static long typeCode = -1; // this is the long associated by OntoSQL to rdf:type. 
 	protected static long subClassCode = -1;
 	protected static long subPropertyCode = -1;
@@ -26,16 +29,21 @@ public class RDF2SQLEncoding {
 	protected static PreparedStatement stmtDecode;
 	protected static PreparedStatement stmtEncode;
 
+	public RDF2SQLEncoding() {
+	}
+
 	/**
 	 * It is crucial to call this method in order for the summarization or any summary usage code to work OK.
 	 *
 	 * @param givenConn
+	 * @param dictionaryTableName
 	 */
-	public static void setUp(Connection givenConn) {
+	public static void setUp(Connection givenConn, String dictionaryTableName) {
+		LOGGER.setLevel(Level.INFO);
 		conn = givenConn;
 		try {
-			stmtDecode = conn.prepareStatement("select value from dictionary where key=?");
-			stmtEncode = conn.prepareStatement("select key from dictionary where value=?");
+			stmtDecode = conn.prepareStatement("select value from " + dictionaryTableName + " where key=?");
+			stmtEncode = conn.prepareStatement("select key from " + dictionaryTableName + " where value=?");
 		}
 		catch (SQLException e) {
 			throw new IllegalStateException("Could not prepare encode/decode statements " + e.toString());
@@ -43,9 +51,6 @@ public class RDF2SQLEncoding {
 		codeToURIOrLiteral = new HashMap<>();
 		uriOrLiteralToCode = new HashMap<>();
 		setRDFBuiltInPropertyCodes();
-	}
-
-	public RDF2SQLEncoding() {
 	}
 
 	public static Connection getConnection() {
@@ -78,15 +83,15 @@ public class RDF2SQLEncoding {
 
 	public static void setRDFBuiltInPropertyCodes() {
 		setTypeCode();
-		System.out.println("rdf:type code is " + typeCode);
+		//LOGGER.debug("rdf:type code is " + typeCode);
 		setSubClassCode();
-		System.out.println("rdfs:subclass  code is: " + subClassCode);
+		//LOGGER.debug("rdfs:subclass  code is: " + subClassCode);
 		setSubPropertyCode();
-		System.out.println("rdfs:subproperty code is: " + subPropertyCode);
+		//LOGGER.debug("rdfs:subproperty code is: " + subPropertyCode);
 		setDomainCode();
-		System.out.println("rdfs:domain code is: " + domainCode);
+		//LOGGER.debug("rdfs:domain code is: " + domainCode);
 		setRangeCode();
-		System.out.println("rdfs:range code is: " + rangeCode);
+		//LOGGER.debug("rdfs:range code is: " + rangeCode);
 	}
 
 	private static void setTypeCode() {
@@ -117,6 +122,7 @@ public class RDF2SQLEncoding {
 	 * @return
 	 */
 	public static long dictionaryEncode(String URI) {
+		//LOGGER.debug("DictionaryEncode will ask query: " + stmtEncode); 
 		// try to use the cache if possible
 		Long alreadyKnownCode = uriOrLiteralToCode.get(URI);
 		if (alreadyKnownCode != null)
@@ -124,11 +130,13 @@ public class RDF2SQLEncoding {
 		long code = -1;
 		try {
 			stmtEncode.setString(1, URI);
-			ResultSet rs = stmtEncode.executeQuery();
-			//Debugger.log("Asked query: " + learnCodeQueryString);
-			if (rs.next())
-				code = rs.getInt(1); //Debugger.log("The code of " + URI + " is: " + constantCode);
-			rs.close();
+			try (ResultSet rs = stmtEncode.executeQuery()) {
+				//LOGGER.debug("Asked query: " + learnCodeQueryString);
+				if (rs.next()) {
+					code = rs.getInt(1);
+					//LOGGER.debug("The code of " + URI + " is: " + constantCode);
+				}
+			}
 		}
 		catch (SQLException e) {
 			throw new IllegalStateException("Not able to encode " + e.toString());

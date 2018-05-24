@@ -1,6 +1,8 @@
 package fr.inria.cedar.quotientSummary.datastructures;
 
 import java.util.Objects;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 /**
  * Represents an integer-encoded triple
@@ -9,11 +11,14 @@ import java.util.Objects;
  *
  */
 public class Triple {
+	private static final Logger LOGGER = Logger.getLogger(Triple.class.getName());
+
 	public final long s;
 	public final long p;
 	public final long o;
 
 	public Triple(long s, long p, long o) {
+		LOGGER.setLevel(Level.INFO);
 		this.s = s;
 		this.o = o;
 		this.p = p;
@@ -25,7 +30,7 @@ public class Triple {
 	}
 
 	public void display() {
-		System.out.println(toString());
+		LOGGER.debug(toString());
 	}
 
 	@Override

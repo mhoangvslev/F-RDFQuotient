@@ -1,18 +1,20 @@
 package fr.inria.cedar.quotientSummary.datastructures;
 
-import fr.inria.cedar.commons.miscellaneous.Debugger;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.TreeSet;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 public class Long2Long {
+	private static final Logger LOGGER = Logger.getLogger(Long2Long.class.getName());
 	// from the node to the ID of its clique
 	final HashMap<Long, Long> map;
 	// from the ID of a clique, to the list of IDs of all the nodes
-	final HashMap<Long, ArrayList<Long>> inverse;
+	final HashMap<Long, TreeSet<Long>> inverse;
 
 	public Long2Long() {
+		LOGGER.setLevel(Level.INFO);
 		map = new HashMap<>();
 		inverse = new HashMap<>();
 	}
@@ -21,26 +23,58 @@ public class Long2Long {
 		return map.get(node);
 	}
 
-	public ArrayList<Long> getInverse(Long l) {
+	public TreeSet<Long> getInverse(Long l) {
 		return inverse.get(l);
 	}
 
-	public void put(Long node, Long clique) {
-		map.put(node, clique);
-		ArrayList<Long> nodesForC = inverse.get(clique);
-		if (nodesForC == null) {
-			nodesForC = new ArrayList<>();
-			inverse.put(clique, nodesForC);
+	/**
+	 * Returns true if node had a previous representative who now becomes a 
+	 * representative of no one.
+	 * @param k
+	 * @param v
+	 * @return
+	 */
+	public boolean put(Long k, Long v) {
+		//LOGGER.debug("Long2Long: upon entering put " + clique + " on " + node + ": " + this.display()); 
+		boolean res = false;
+
+		Long previous = map.get(k);
+
+		if (previous != null){
+			TreeSet<Long> inversePrev = inverse.get(previous);
+			if (inversePrev == null){
+				//LOGGER.debug("Long2Long: Problem " + this.display());
+				throw new IllegalStateException("Map has " + previous + " on " + k + " but nothing in inverse for " + previous); 
+			}
+			inversePrev.remove(k);
+			//LOGGER.debug("Long2Long: " + k + " no  longer mapped to " + previous);
+			if (inversePrev.isEmpty()){
+				//LOGGER.debug("Long2Long: No one is represented by " + previous + " any more!");
+				res = true;
+				inverse.remove(previous); 
+			}
 		}
-		nodesForC.add(node);
+		map.put(k, v);
+
+		TreeSet<Long> keysForV = inverse.get(v);
+		if (keysForV == null) {
+			keysForV = new TreeSet<>();
+			inverse.put(v, keysForV);
+		}
+		if (!keysForV.contains(k)){
+			keysForV.add(k);
+		}
+		return res; 
 	}
 
-	public String display() {
+	@Override
+	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		if (!map.keySet().isEmpty()) {
 			sb.append("\n----------: \n");
 			for (Long key: map.keySet()) {
 				sb.append("#").append(key).append("|");
+				//sb.append(RDF2SQLEncoding.dictionaryDecode(key) + "|");
 				sb.append(map.get(key)).append(" ");
 			}
 			sb.append("Inverse:");
@@ -48,6 +82,7 @@ public class Long2Long {
 				sb.append("*").append(value).append("|");
 				for (Long key: inverse.get(value))
 					sb.append(key).append(",");
+					//sb.append(RDF2SQLEncoding.dictionaryDecode(key) + ",");
 				sb.setLength(sb.length() - 1);
 				sb.append("| ");
 			}
@@ -64,18 +99,19 @@ public class Long2Long {
 	 * @param v2
 	 */
 	public void replaceValue(Long v1, Long v2) {
-		Debugger.log("Trying to replace value " + v1 + " with " + v2 + " in:");
-		this.display();
-		ArrayList<Long> keys1 = inverse.get(v1);
-		ArrayList<Long> keys2 = inverse.get(v2);
-
-		if ((keys1 != null) && (keys2 != null))
-			for (Long l: keys1) {
-				keys2.add(l);
-				map.put(l, v2); // this erases (k1, v1)
+		//LOGGER.debug("Trying to replace value " + v1 + " with " + v2 + " in:");
+		TreeSet<Long> keysWithV1 = inverse.get(v1);
+		if (keysWithV1 != null){
+			TreeSet<Long> keysWithV2 = inverse.get(v2);
+			if (keysWithV2 == null){
+				keysWithV2 = new TreeSet<>();
+				inverse.put(v2, keysWithV2); 
 			}
-		if (keys2 != null)
-			inverse.put(v2, keys2);
+			for (Long l: keysWithV1) {
+				keysWithV2.add(l);
+				map.put(l, v2); // this erases (l, v1)
+			}
+		}
 		inverse.remove(v1);
 	}
 
@@ -87,14 +123,14 @@ public class Long2Long {
 		Long value = map.get(key);
 		if (value != null) {
 			map.remove(key);
-			ArrayList<Long> a = inverse.get(value);
+			TreeSet<Long> a = inverse.get(value);
 			a.remove(key);
 			if (a.isEmpty())
 				inverse.remove(value);
 		}
 	}
 
-	public Set<Long> getNodes() {
+	public Set<Long> getKeys() {
 		return map.keySet();
 	}
 

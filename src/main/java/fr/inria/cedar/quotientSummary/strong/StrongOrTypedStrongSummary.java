@@ -1,128 +1,977 @@
 package fr.inria.cedar.quotientSummary.strong;
 
-import fr.inria.cedar.commons.miscellaneous.Debugger;
 import fr.inria.cedar.quotientSummary.Summary;
 import fr.inria.cedar.quotientSummary.datastructures.Long2Long;
-import fr.inria.cedar.quotientSummary.datastructures.Long2LongList;
+import fr.inria.cedar.quotientSummary.datastructures.Long2LongSet;
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
+import fr.inria.cedar.quotientSummary.datastructures.TwoLevelLongMap;
+import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.TreeSet;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 public class StrongOrTypedStrongSummary extends Summary {
-	Long2LongList sc; // for each source clique ID,  a source clique
-	Long2LongList tc; // for each target clique ID,  its target clique
-	Long2Long n2sc; // for each node, its source clique ID
-	Long2Long n2tc; // for each node, its target clique ID
+	private static final Logger LOGGER = Logger.getLogger(StrongOrTypedStrongSummary.class.getName());
+
+	Long2LongSet sc; // for each source clique ID, its source clique
+	Long2LongSet tc; // for each target clique ID, its target clique
+	Long2Long n2sc; // for each data node, its source clique ID
+	Long2Long n2tc; // for each data node, its target clique ID
 	Long2Long p2sc; // property to source clique
 	Long2Long p2tc; // property to target clique
 	long minCliqueID;
-	protected long numberOfDataTriplesRead;
-	protected long numberOfTypeTriplesRead;
-	protected long emptySCCount; // le numéro de la clique vide
-	protected long emptyTCCount; // le numéro de la clique vide
-	HashMap<Long, HashMap<Long, Long>> untypedSummaryNodes; // source clique --> target clique --> summary node
-	protected char TARGET = 1;
+	protected long emptySCCount; // empty source clique number (will never change)
+	protected long emptyTCCount; // empty target clique number (will never change) 
+	TwoLevelLongMap untypedSummaryNodes; // source clique --> target clique --> summary node
 	protected char SOURCE = 0;
+	protected char TARGET = 1;
 	// case classification
-	// T: typed, U: untyped (apply to S and O)
-	// R: already represented, N: not already represented (apply to S, P, O)
-	protected final char US_RS_UO_RO_RP = 4;
-	protected final char US_RS_UO_NO_RP = 5;
-	protected final char US_NS_UO_RO_RP = 7;
-	protected final char US_NS_UO_NO_RP = 8;
-	protected final char US_RS_UO_RO_NP = 12;
-	protected final char US_RS_UO_NO_NP = 13;
-	protected final char US_NS_UO_RO_NP = 15;
-	protected final char US_NS_UO_NO_NP = 16;
-	
-	// case classification
-	// T: typed, U: untyped (apply to S and O)
-	// R: already represented, N: not already represented (apply to S, P, O)
-	protected final char TS_TO = 0;
-	protected final char TS_UO_RO_RP = 1;
-	protected final char TS_UO_NO_RP = 2;
-	protected final char US_RS_TO_RP = 3;
-	protected final char US_NS_TO_RP = 6;
-	protected final char TS_UO_RO_NP = 9;
-	protected final char TS_UO_NO_NP = 10;
-	protected final char US_RS_TO_NP = 11;
-	protected final char US_NS_TO_NP = 14;
+	// TRS: typed (thus represented), RS: untyped represented, US: untyped, unrepresented
+	// similarly for O
+	// UP: unknown property (no source nor target clique), RP: represented property (source and/or target clique)
+	protected final char RS_RP_RO = 4;
+	protected final char RS_RP_UO = 5;
+	protected final char US_RP_RO = 7;
+	protected final char US_RP_UO = 8;
+	protected final char RS_UP_RO = 12;
+	protected final char RS_UP_UO = 13;
+	protected final char US_UP_RO = 15;
+	protected final char US_UP_UO = 16;
+	protected final char TRS_TRO = 0;
+	protected final char TRS_RP_RO = 1;
+	protected final char TRS_RP_UO = 2;
+	protected final char RS_RP_TRO = 3;
+	protected final char US_RP_TRO = 6;
+	protected final char TRS_UP_RO = 9;
+	protected final char TRS_UP_UO = 10;
+	protected final char RS_UP_TRO = 11;
+	protected final char US_UP_TRO = 14;
 
+	// for patching edges, we really need to store the data graph in memory... :(
+	HashMap<Long, Long2LongSet> triplesBySubject; // s-->{p-->{o}} s, o are data nodes
+	HashMap<Long, Long2LongSet> triplesByObject; // s-->{p-->{o}}
 
 	public StrongOrTypedStrongSummary() {
 		super();
-		sc = new Long2LongList();
-		tc = new Long2LongList();
+		LOGGER.setLevel(Level.INFO);
+		sc = new Long2LongSet();
+		tc = new Long2LongSet();
 		n2sc = new Long2Long();
 		n2tc = new Long2Long();
 		p2sc = new Long2Long();
 		p2tc = new Long2Long();
 		rep = new Long2Long();
-		untypedSummaryNodes = new HashMap<Long, HashMap<Long, Long>> ();
+		untypedSummaryNodes = new TwoLevelLongMap();
 		minCliqueID = -1;
 		emptySCCount = Long.MAX_VALUE;
 		emptyTCCount = Long.MAX_VALUE;
-		numberOfDataTriplesRead = 0;
-		numberOfTypeTriplesRead = 0;
+		triplesBySubject = new HashMap<>();
+		triplesByObject = new HashMap<>();
 	}
 
-	protected String caseName(char c) { // 17 cases
+	protected String caseName(char c) {
+		// 17 cases
 		switch (c) {
-			case TS_TO: {
-				return "TS_TO";
+			// this cases cover both TRS_UP_TRO and TRS_RP_TRO
+			case TRS_TRO: { 
+				return "TRS_TRO";
 			}
-			case TS_UO_RO_RP: {
-				return "TS_UO_RO_RP";
+			case TRS_RP_RO: {
+				return "TRS_RO_RP";
 			}
-			case TS_UO_NO_RP: {
-				return "TS_UO_NO_RP";
+			case TRS_RP_UO: {
+				return "TRS_RP_RO";
 			}
-			case US_RS_TO_RP: {
-				return "US_RS_TO_RP";
+			case RS_RP_TRO: {
+				return "RS_RP_TRO";
 			}
-			case US_RS_UO_RO_RP: {
-				return "US_RS_UO_RO_RP";
+			case RS_RP_RO: {
+				return "RS_RP_RO";
 			}
-			case US_RS_UO_NO_RP: {
-				return "US_RS_UO_NO_RP";
+			case RS_RP_UO: {
+				return "RS_RP_UO";
 			}
-			case US_NS_TO_RP: {
-				return "US_NS_TO_RP";
+			case US_RP_TRO: {
+				return "US_RP_TRO";
 			}
-			case US_NS_UO_RO_RP: {
-				return "US_NS_UO_RO_RP";
+			case US_RP_RO: {
+				return "US_RP_RO";
 			}
-			case US_NS_UO_NO_RP: {
-				return "US_NS_UO_NO_RP";
+			case US_RP_UO: {
+				return "US_RP_UO";
 			}
-			case TS_UO_RO_NP: {
-				return "TS_UO_RO_NP";
+			case TRS_UP_RO: {
+				return "TRS_UP_RO";
 			}
-			case TS_UO_NO_NP: {
-				return "TS_UO_NO_NP";
+			case TRS_UP_UO: {
+				return "TRS_UP_UO";
 			}
-			case US_RS_TO_NP: {
-				return "US_RS_TO_NP";
+			case RS_UP_TRO: {
+				return "RS_UP_TRO";
 			}
-			case US_RS_UO_RO_NP: {
-				return "US_RS_UO_RO_NP";
+			case RS_UP_RO: {
+				return "RS_UP_RO";
 			}
-			case US_RS_UO_NO_NP: {
-				return "US_RS_UO_NO_NP";
+			case RS_UP_UO: {
+				return "RS_UP_UO";
 			}
-			case US_NS_TO_NP: {
-				return "US_NS_TO_NP";
+			case US_UP_TRO: {
+				return "US_UP_TRO";
 			}
-			case US_NS_UO_RO_NP: {
-				return "US_NS_UO_RO_NP";
+			case US_UP_RO: {
+				return "US_UP_RO";
 			}
-			case US_NS_UO_NO_NP: {
-				return "US_NS_UO_NO_NP";
+			case US_UP_UO: {
+				return "US_UP_UO";
 			}
 		}
 		throw new IllegalStateException("Unrecognized case " + c);
 	}
-	
+
+	// toughest case:
+	// untyped, represented object
+	// represented property
+	// untyped, represented subject
+	protected void handleDataTriple_RS_RP_RO(Triple t, Long sourceCliqueS, Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
+		// determine future cliques
+		Long newSourceCliqueS = cliqueFusionResult(sourceCliqueS, sourceCliqueP, SOURCE);
+		Long newTargetCliqueO = cliqueFusionResult(targetCliqueO, targetCliqueP, TARGET);
+
+		// determine current representatives
+		Long repS = rep.get(t.s);
+		Long repO = rep.get(t.o);
+
+		// determine future representatives: we create them but do nothing else so far
+		Long newRepS = getOrCreateSummaryNode(newSourceCliqueS, targetCliqueS);
+		Long newRepO = getOrCreateSummaryNode(sourceCliqueO, newTargetCliqueO);
+
+		// for s (o), we will either replace the former with the new
+		// representative, or change the representative just of s (o) while
+		// leaving its old representative in the summary, together with the
+		// other nodes it used to represent
+		// if replaceForS = true, we replace, otherwise, we give the new
+		// representative to s and leave it untouched for the others
+		// replaceForS = true also leads to many clique replacements and
+		// fusions, which the other does not
+		boolean replaceForS = true;
+		boolean replaceForO = true;
+		// due to the current triple, newSourceCliqueS for sure is not empty
+		if (sourceCliqueS.equals(getEmptySourceCliqueID())) {
+			// other nodes were (and still are) on the empty sourceCliqueS and targetCliqueS
+			if (rep.getInverse(repS).size() > 1) {
+				// In this case, we should not replace repS with newRepS, but
+				// only represent s by newRepS -- and keep repS!
+				// Also, we should not replace sourceCliqueS with newSC, but
+				// create newSourceCliqueS and keep sourceCliqueS!
+				replaceForS = false;
+			}
+		}
+		if (targetCliqueO.equals(getEmptyTargetCliqueID())) {
+			if (rep.getInverse(repO).size() > 1) {
+				replaceForO = false;
+			}
+		}
+
+		// so far summary unchanged (except for the side effect that some nodes
+		// were created -- not connected anywhere yet -- thus the next summary
+		// node number has increased)
+		// now we start to apply the decisions
+		//LOGGER.debug("RS_RP_RO REPLACE S: " + replaceForS + " REPLACE O: " + replaceForO);
+		// really modify cliques (and do nothing else)
+		if (replaceForS) {
+			fuseCliqueInto(sourceCliqueS, newSourceCliqueS, SOURCE);
+			fuseCliqueInto(sourceCliqueP, newSourceCliqueS, SOURCE);
+		}
+		//else {
+		//	if we are not replacing but splitting, scs was empty, the new clique of S is that of P, no clique creation is needed
+		//}
+		if (replaceForO) {
+			fuseCliqueInto(targetCliqueO, newTargetCliqueO, TARGET);
+			fuseCliqueInto(targetCliqueP, newTargetCliqueO, TARGET);
+		}
+		//else {
+		//	otherwise do nothing
+		//}
+		//LOGGER.debug("RS_RP_RO After clique fusions, source cliques are " + sc.toString() + "\ntarget cliques are: " + tc.toString());
+		//LOGGER.debug("RS_RP_RO while untyped is: " + untypedSummaryNodes.toString());
+
+		ArrayList<ReplacementSpecification> nodeReps = new ArrayList<>();
+		if (replaceForS) {
+			if (!newRepS.equals(repS)) {
+				ReplacementSpecification repsS = new ReplacementSpecification(newSourceCliqueS, targetCliqueS, repS, newRepS);
+				nodeReps.add(repsS);
+			}
+		}
+		if (replaceForO) {
+			if (!newRepO.equals(repO)) {
+				ReplacementSpecification repsO = new ReplacementSpecification(sourceCliqueO, newTargetCliqueO, repO, newRepO);
+				repsO.checkForConflicts(nodeReps);
+				nodeReps.add(repsO);
+			}
+		}
+
+		// now we replace just the nodes in untyped (not the cliques yet),
+		// because the nodes are at the lowest (value) level
+		// IMPORTANT: If we replace the cliques first, we may be wrongly
+		// overwriting nodes: sc1-->tc1-->n1, sc1-->tc2-->n2, if we need to
+		// replace tc1 with tc2, we will overwrite n2 and lose it!
+		// serious problem!
+		//for (ReplacementSpecification reps: nodeReps) {
+		//	untypedSummaryNodes.applyTargetedReplacement(reps);
+		//}
+		// if repS and/or repO did not need to be replaced (because scs and/or
+		// tco were empty), there is nothing to do at this stage, because
+		// newRepS and resp. newRepO are already well inserted in untyped, on
+		// their respective cliques
+		//LOGGER.debug("RS_RP_RO after node but before clique replacement, untyped is: " + untypedSummaryNodes.toString());
+
+		// now compute and then apply the clique replacements in untyped, where
+		// they were still not applied compute sourceCliqueReplacements and
+		// apply them:
+		if (replaceForS) {
+			computeAndApplyCliqueReplacements(sourceCliqueS, sourceCliqueP, newSourceCliqueS, SOURCE, nodeReps);
+		}
+		//else {
+		//	nothing to do because newRepS is correctly inserted in untypedNodes, on its cliques
+		//}
+		if (replaceForO) {
+			computeAndApplyCliqueReplacements(targetCliqueO, targetCliqueP, newTargetCliqueO, TARGET, nodeReps);
+		}
+		//else {
+		//	otherwise do nothing
+		//}
+
+		// now patching summary edges if needed; this may involve the removal of
+		// a summary node that no longer represents anybody (because t.s or t.o
+		// was the only node it represented, and now t.s/t.o has moved away to
+		// another representative). This happens only if t.s/t.o had an empty
+		// source/target clique and has split to another summary representative.
+		if (!replaceForS) {
+			updateEdgesWithDistribution(distributeSummaryEdgesThroughCounts(repS, newRepS, t.s, TARGET), repS, newRepS, TARGET);
+		}
+		if (!replaceForO) {
+			updateEdgesWithDistribution(distributeSummaryEdgesThroughCounts(repO, newRepO, t.o, SOURCE), repO, newRepO, SOURCE);
+		}
+
+		// now modify summary edges
+		// apply nodeReplacements in all cases, because it only contains
+		// replacements that should be made; e.g., if replaceForS is false but
+		// replaceForO is true, it contains those node replacements that are
+		// needed because of O, and will replace nothing wrongly around s
+		for (ReplacementSpecification reps: nodeReps) {
+			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode());
+		}
+		for (ReplacementSpecification reps: nodeReps) {
+			rep.replaceValue(reps.getOldNode(), reps.getNewNode());
+		}
+
+		//LOGGER.debug("RS_RP_RO after node and clique replacement, untyped is: " + untypedSummaryNodes.toString());
+		//LOGGER.debug("RS_RP_RO while rep is: " + rep.toString());
+
+		// now modifying rep:
+		rep.put(t.s, newRepS);
+		rep.put(t.o, newRepO);
+
+		// now fixing s and o's cliques
+		n2sc.put(t.s, newSourceCliqueS);
+		n2tc.put(t.o, newTargetCliqueO);
+
+		// adding the triple:
+		edgesWithProv.addTriple(newRepS, t.p, newRepO);
+	}
+
+	// untyped, represented object
+	// unrepresented property
+	// untyped, represented subject
+	protected void handleDataTriple_RS_UP_RO(Triple t, Long sourceCliqueS, Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
+		// sourceCliqueP is null, targetCliqueP is null
+		sourceCliqueP = makeAndAddNewSourceClique(t.p);
+		targetCliqueP = makeAndAddNewTargetClique(t.p);
+
+		Long newSourceCliqueS = cliqueFusionResult(sourceCliqueS, sourceCliqueP, SOURCE);
+		Long newTargetCliqueO = cliqueFusionResult(targetCliqueO, targetCliqueP, TARGET);
+
+		Long repS = rep.get(t.s);
+		Long repO = rep.get(t.o);
+
+		Long newRepS = getOrCreateSummaryNode(newSourceCliqueS, targetCliqueS);
+		Long newRepO = getOrCreateSummaryNode(sourceCliqueO, newTargetCliqueO);
+
+		boolean replaceForS = true;
+		boolean replaceForO = true;
+		if (sourceCliqueS.equals(getEmptySourceCliqueID())) {
+			if (rep.getInverse(repS).size() > 1) {
+				replaceForS = false;
+			}
+		}
+		if (targetCliqueO.equals(getEmptyTargetCliqueID())) {
+			if (rep.getInverse(repO).size() > 1) {
+				replaceForO = false;
+			}
+		}
+
+		if (replaceForS) {
+			fuseCliqueInto(sourceCliqueS, newSourceCliqueS, SOURCE);
+			fuseCliqueInto(sourceCliqueP, newSourceCliqueS, SOURCE);
+		}
+		if (replaceForO) {
+			fuseCliqueInto(targetCliqueO, newTargetCliqueO, TARGET);
+			fuseCliqueInto(targetCliqueP, newTargetCliqueO, TARGET);
+		}
+
+		ArrayList<ReplacementSpecification> nodeReps = new ArrayList<>();
+		if (replaceForS) {
+			if (!newRepS.equals(repS)) {
+				ReplacementSpecification repsS = new ReplacementSpecification(newSourceCliqueS, targetCliqueS, repS, newRepS);
+				nodeReps.add(repsS);
+			}
+		}
+		if (replaceForO) {
+			if (!newRepO.equals(repO)) {
+				ReplacementSpecification repsO = new ReplacementSpecification(sourceCliqueO, newTargetCliqueO, repO, newRepO);
+				repsO.checkForConflicts(nodeReps);
+				nodeReps.add(repsO);
+			}
+		}
+
+		//for (ReplacementSpecification reps: nodeReps) {
+		//	untypedSummaryNodes.applyTargetedReplacement(reps);
+		//}
+
+		if (replaceForS) {
+			computeAndApplyCliqueReplacements(sourceCliqueS, sourceCliqueP, newSourceCliqueS, SOURCE, nodeReps);
+		}
+		if (replaceForO) {
+			computeAndApplyCliqueReplacements(targetCliqueO, targetCliqueP, newTargetCliqueO, TARGET, nodeReps);
+		}
+
+		if (!replaceForS) {
+			updateEdgesWithDistribution(distributeSummaryEdgesThroughCounts(repS, newRepS, t.s, TARGET), repS, newRepS, TARGET);
+		}
+		if (!replaceForO) {
+			updateEdgesWithDistribution(distributeSummaryEdgesThroughCounts(repO, newRepO, t.o, SOURCE), repO, newRepO, SOURCE);
+		}
+
+		for (ReplacementSpecification reps: nodeReps) {
+			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode());
+		}
+		for (ReplacementSpecification reps: nodeReps) {
+			rep.replaceValue(reps.getOldNode(), reps.getNewNode());
+		}
+
+		rep.put(t.s, newRepS);
+		rep.put(t.o, newRepO);
+
+		n2sc.put(t.s, newSourceCliqueS);
+		n2tc.put(t.o, newTargetCliqueO);
+
+		edgesWithProv.addTriple(newRepS, t.p, newRepO);
+	}
+
+	// untyped, unrepresented subject
+	// represented property
+	// untyped, represented object
+	// in this case the subject should be represented based on the source clique of P and the empty target clique
+	protected void handleDataTriple_US_RP_RO(Triple t, Long sourceCliqueS, Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
+		Long newSourceCliqueS = sourceCliqueP;
+		Long newTargetCliqueO = cliqueFusionResult(targetCliqueO, targetCliqueP, TARGET);
+
+		// unrepresented subject
+		Long repS = getOrCreateSummaryNode(newSourceCliqueS, getEmptyTargetCliqueID());
+		Long repO = rep.get(t.o);
+
+		Long newRepS = repS;
+		Long newRepO = getOrCreateSummaryNode(sourceCliqueO, newTargetCliqueO);
+
+		boolean replaceForO = true;
+		if (targetCliqueO.equals(getEmptyTargetCliqueID())) {
+			if (rep.getInverse(repO).size() > 1) {
+				replaceForO = false;
+			}
+		}
+
+		if (replaceForO) {
+			fuseCliqueInto(targetCliqueO, newTargetCliqueO, TARGET);
+			fuseCliqueInto(targetCliqueP, newTargetCliqueO, TARGET);
+		}
+
+		ArrayList<ReplacementSpecification> nodeReps = new ArrayList<>();
+		if (replaceForO) {
+			if (!newRepO.equals(repO)) {
+				ReplacementSpecification repsO = new ReplacementSpecification(sourceCliqueO, newTargetCliqueO, repO, newRepO);
+				nodeReps.add(repsO);
+			}
+		}
+
+		//for (ReplacementSpecification reps: nodeReps) {
+		//	untypedSummaryNodes.applyTargetedReplacement(reps);
+		//}
+
+		if (replaceForO) {
+			computeAndApplyCliqueReplacements(targetCliqueO, targetCliqueP, newTargetCliqueO, TARGET, nodeReps);
+		}
+
+		if (!replaceForO) {
+			updateEdgesWithDistribution(distributeSummaryEdgesThroughCounts(repO, newRepO, t.o, SOURCE), repO, newRepO, SOURCE);
+		}
+
+		for (ReplacementSpecification reps: nodeReps) {
+			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode());
+		}
+		for (ReplacementSpecification reps: nodeReps) {
+			rep.replaceValue(reps.getOldNode(), reps.getNewNode());
+		}
+
+		rep.put(t.s, newRepS);
+		rep.put(t.o, newRepO);
+
+		n2sc.put(t.s, newSourceCliqueS);
+		n2tc.put(t.o, newTargetCliqueO);
+		n2tc.put(t.s, getEmptyTargetCliqueID());
+
+		edgesWithProv.addTriple(newRepS, t.p, newRepO);
+	}
+
+	// untyped, represented subject
+	// represented property
+	// untyped, represented object
+	// in this case the object should be represented based on the target clique of P and the empty target clique
+	protected void handleDataTriple_RS_RP_UO(Triple t, Long sourceCliqueS, Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
+		Long newSourceCliqueS = cliqueFusionResult(sourceCliqueS, sourceCliqueP, SOURCE);
+		Long newTargetCliqueO = targetCliqueP;
+
+		Long repS = rep.get(t.s);
+		Long repO = getOrCreateSummaryNode(getEmptySourceCliqueID(), newTargetCliqueO);
+
+		Long newRepS = getOrCreateSummaryNode(newSourceCliqueS, targetCliqueS);
+		Long newRepO = repO;
+
+		boolean replaceForS = true;
+		if (sourceCliqueS.equals(getEmptySourceCliqueID())) {
+			if (rep.getInverse(repS).size() > 1) {
+				replaceForS = false;
+			}
+		}
+
+		if (replaceForS) {
+			fuseCliqueInto(sourceCliqueS, newSourceCliqueS, SOURCE);
+			fuseCliqueInto(sourceCliqueP, newSourceCliqueS, SOURCE);
+		}
+
+		ArrayList<ReplacementSpecification> nodeReps = new ArrayList<>();
+		if (replaceForS) {
+			if (!newRepS.equals(repS)) {
+				ReplacementSpecification repsS = new ReplacementSpecification(newSourceCliqueS, targetCliqueS, repS, newRepS);
+				nodeReps.add(repsS);
+			}
+		}
+
+		//for (ReplacementSpecification reps: nodeReps) {
+		//	untypedSummaryNodes.applyTargetedReplacement(reps);
+		//}
+
+		if (replaceForS) {
+			computeAndApplyCliqueReplacements(sourceCliqueS, sourceCliqueP, newSourceCliqueS, SOURCE, nodeReps);
+		}
+
+		if (!replaceForS) {
+			updateEdgesWithDistribution(distributeSummaryEdgesThroughCounts(repS, newRepS, t.s, TARGET), repS, newRepS, TARGET);
+		}
+
+		for (ReplacementSpecification reps: nodeReps) {
+			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode());
+		}
+		for (ReplacementSpecification reps: nodeReps) {
+			rep.replaceValue(reps.getOldNode(), reps.getNewNode());
+		}
+
+		rep.put(t.s, newRepS);
+		rep.put(t.o, newRepO);
+
+		n2sc.put(t.s, newSourceCliqueS);
+		n2tc.put(t.o, newTargetCliqueO);
+		n2sc.put(t.o, getEmptySourceCliqueID());
+
+		edgesWithProv.addTriple(newRepS, t.p, newRepO);
+	}
+
+	// untyped, unrepresented subject
+	// unknown property
+	// untyped, represented object
+	// in this case the subject should be represented based on the (newly created) source clique of P and the empty target clique
+	protected void handleDataTriple_US_UP_RO(Triple t, Long sourceCliqueS, Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
+		// sourceCliqueS is null, targetCliqueS is null, sourceCliqueP is null, targetCliqueP is null
+		sourceCliqueP = makeAndAddNewSourceClique(t.p);
+		targetCliqueP = makeAndAddNewTargetClique(t.p);
+
+		Long newSourceCliqueS = sourceCliqueP;
+		Long newTargetCliqueO = cliqueFusionResult(targetCliqueO, targetCliqueP, TARGET);
+
+		Long repS = getOrCreateSummaryNode(newSourceCliqueS, getEmptyTargetCliqueID()); 
+		Long repO = rep.get(t.o);
+
+		Long newRepS = repS;
+		Long newRepO = getOrCreateSummaryNode(sourceCliqueO, newTargetCliqueO);
+
+		boolean replaceForO = true;
+		if (targetCliqueO.equals(getEmptyTargetCliqueID())) {
+			if (rep.getInverse(repO).size() > 1) {
+				replaceForO = false;
+			}
+		}
+
+		if (replaceForO) {
+			fuseCliqueInto(targetCliqueO, newTargetCliqueO, TARGET);
+			fuseCliqueInto(targetCliqueP, newTargetCliqueO, TARGET);
+		}
+
+		ArrayList<ReplacementSpecification> nodeReps = new ArrayList<>();
+		if (replaceForO) {
+			if (!newRepO.equals(repO)) {
+				ReplacementSpecification repsO = new ReplacementSpecification(sourceCliqueO, newTargetCliqueO, repO, newRepO);
+				nodeReps.add(repsO);
+			}
+		}
+
+		//for (ReplacementSpecification reps: nodeReps) {
+		//	untypedSummaryNodes.applyTargetedReplacement(reps);
+		//}
+
+		if (replaceForO) {
+			computeAndApplyCliqueReplacements(targetCliqueO, targetCliqueP, newTargetCliqueO, TARGET, nodeReps);
+		}
+
+		if (!replaceForO) {
+			updateEdgesWithDistribution(distributeSummaryEdgesThroughCounts(repO, newRepO, t.o, SOURCE), repO, newRepO, SOURCE);
+		}
+
+		for (ReplacementSpecification reps: nodeReps) {
+			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode());
+		}
+		for (ReplacementSpecification reps: nodeReps) {
+			rep.replaceValue(reps.getOldNode(), reps.getNewNode());
+		}
+
+		rep.put(t.s, newRepS);
+		rep.put(t.o, newRepO);
+
+		n2sc.put(t.s, newSourceCliqueS);
+		n2tc.put(t.o, newTargetCliqueO);
+		n2tc.put(t.s, getEmptyTargetCliqueID());
+
+		edgesWithProv.addTriple(newRepS, t.p, newRepO);
+	}
+
+	// untyped, represented subject
+	// unknown property
+	// untyped, unrepresented object
+	// in this case the object should be represented based on the empty source clique and the (newly created) target clique of p
+	protected void handleDataTriple_RS_UP_UO(Triple t, Long sourceCliqueS, Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
+		// sourceCliqueP is null, targetCliqueP is null, sourceCliqueO is null, targetCliqueO is null
+		sourceCliqueP = makeAndAddNewSourceClique(t.p);
+		targetCliqueP = makeAndAddNewTargetClique(t.p);
+
+		Long newSourceCliqueS = cliqueFusionResult(sourceCliqueS, sourceCliqueP, SOURCE);
+		Long newTargetCliqueO = targetCliqueP;
+
+		Long repS = rep.get(t.s);
+		Long repO = getOrCreateSummaryNode(getEmptySourceCliqueID(), newTargetCliqueO);
+
+		Long newRepS = getOrCreateSummaryNode(newSourceCliqueS, targetCliqueS);
+		Long newRepO = repO;
+
+		boolean replaceForS = true;
+		if (sourceCliqueS.equals(getEmptySourceCliqueID())) {
+			if (rep.getInverse(repS).size() > 1) {
+				replaceForS = false;
+			}
+		}
+
+		if (replaceForS) {
+			fuseCliqueInto(sourceCliqueS, newSourceCliqueS, SOURCE);
+			fuseCliqueInto(sourceCliqueP, newSourceCliqueS, SOURCE);
+		}
+
+		ArrayList<ReplacementSpecification> nodeReps = new ArrayList<>();
+		if (replaceForS) {
+			if (!newRepS.equals(repS)) {
+				ReplacementSpecification repsS = new ReplacementSpecification(newSourceCliqueS, targetCliqueS, repS, newRepS);
+				nodeReps.add(repsS);
+			}
+		}
+
+		//for (ReplacementSpecification reps: nodeReps) {
+		//	untypedSummaryNodes.applyTargetedReplacement(reps);
+		//}
+
+		if (replaceForS) {
+			computeAndApplyCliqueReplacements(sourceCliqueS, sourceCliqueP, newSourceCliqueS, SOURCE, nodeReps);
+		}
+
+		if (!replaceForS) {
+			updateEdgesWithDistribution(distributeSummaryEdgesThroughCounts(repS, newRepS, t.s, TARGET), repS, newRepS, TARGET);
+		}
+
+		for (ReplacementSpecification reps: nodeReps) {
+			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode());
+		}
+		for (ReplacementSpecification reps: nodeReps) {
+			rep.replaceValue(reps.getOldNode(), reps.getNewNode());
+		}
+
+		rep.put(t.s, newRepS);
+		rep.put(t.o, newRepO);
+
+		n2sc.put(t.s, newSourceCliqueS);
+		n2tc.put(t.o, newTargetCliqueO);
+		n2sc.put(t.o, getEmptySourceCliqueID());
+
+		edgesWithProv.addTriple(newRepS, t.p, newRepO);
+	}
+
+	// untyped, unrepresented subject
+	// represented property
+	// untyped, unrepresented object
+	// in this case the subject should be represented based on the source clique
+	// of P and the empty target clique and the object should be represented
+	// based on the empty source clique and the target source clique of P
+	protected void handleDataTriple_US_RP_UO(Triple t, Long sourceCliqueS, Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
+		Long newSourceCliqueS = sourceCliqueP;
+		Long newTargetCliqueO = targetCliqueP;
+
+		Long repS = getOrCreateSummaryNode(sourceCliqueP, getEmptyTargetCliqueID());
+		Long repO = getOrCreateSummaryNode(getEmptySourceCliqueID(), targetCliqueP);
+
+		Long newRepS = repS;
+		Long newRepO = repO;
+
+		rep.put(t.s, newRepS);
+		rep.put(t.o, newRepO);
+
+		n2sc.put(t.s, newSourceCliqueS);
+		n2tc.put(t.o, newTargetCliqueO);
+		n2sc.put(t.o, getEmptySourceCliqueID());
+		n2tc.put(t.s, getEmptyTargetCliqueID());
+
+		edgesWithProv.addTriple(newRepS, t.p, newRepO);
+	}
+
+	// untyped, unrepresented subject
+	// unknown property
+	// untyped, unrepresented object
+	// in this case the subject should be represented based on the (newly
+	// created) source clique of P and the empty target clique and the object
+	// should be represented based on the empty source clique and the (newly
+	// created) target source clique of P
+	protected void handleDataTriple_US_UP_UO(Triple t, Long sourceCliqueS, Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
+		sourceCliqueP = makeAndAddNewSourceClique(t.p);
+		targetCliqueP = makeAndAddNewTargetClique(t.p);
+
+		Long newSourceCliqueS = sourceCliqueP;
+		Long newTargetCliqueO = targetCliqueP;
+
+		Long repS = getOrCreateSummaryNode(newSourceCliqueS, getEmptyTargetCliqueID());
+		Long repO = getOrCreateSummaryNode(getEmptySourceCliqueID(), newTargetCliqueO);
+
+		Long newRepS = repS;
+		Long newRepO = repO;
+
+		rep.put(t.s, newRepS);
+		rep.put(t.o, newRepO);
+
+		n2sc.put(t.s, newSourceCliqueS);
+		n2tc.put(t.o, newTargetCliqueO);
+		n2sc.put(t.o, getEmptySourceCliqueID());
+		n2tc.put(t.s, getEmptyTargetCliqueID());
+
+		edgesWithProv.addTriple(newRepS, t.p, newRepO);
+	}
+
+	/**************************** auxiliary methods below **************************/ 
+
+	/**
+	 * Read-only
+	 * 
+	 * Clique IDs are negative. So, the higher value is the one created first. We will keep the higher value and replace the
+	 * lower value with this higher value.
+	 * An exception is made if one of the cliques is the empty clique: in this case, fusion systematically
+	 * takes the other clique.
+	 * @param c1
+	 * @param c2
+	 * @param code
+	 * @return 
+	 */
+	protected Long cliqueFusionResult(Long c1, Long c2, char code) {
+		if (code == SOURCE){
+			boolean c1empty = c1.equals(this.getEmptySourceCliqueID());
+			boolean c2empty = c2.equals(this.getEmptySourceCliqueID());
+			//LOGGER.debug("FuseCliquesIntoCreatedFirst SOURCE " + c1 + (c1empty?" (empty)":"") + " " + c2 + (c2empty?" (empty)":""));
+			if (c1empty){
+				return c2;
+			}
+			if (c2empty){
+				return c1;
+			}
+			if (c1 > c2){// we know none is empty
+				return c1;
+			}
+			if (c2 > c1){// we know none is empty
+				return c2;
+			}
+		}
+		else if (code == TARGET){
+			boolean c1empty = c1.equals(this.getEmptyTargetCliqueID());
+			boolean c2empty = c2.equals(this.getEmptyTargetCliqueID());
+			//LOGGER.debug("FuseCliquesIntoCreatedFirst TARGET " + c1 + (c1empty?" (empty)":"") + " " + c2 + (c2empty?" (empty)":""));
+
+			if (c1empty){
+				return c2;
+			}
+			if (c2empty){
+				return c1;
+			}
+			if (c1 > c2){// we know none is empty
+				return c1;
+			}
+			if (c2 > c1){// we know none is empty
+				return c2;
+			}
+		}
+		else throw new IllegalStateException("Unknown code!");
+		return c1;
+	}
+
+	// updates untypedSummaryNodes, p2sc, p2tc
+	// decides how many clique replacements we need and applies them
+	protected void computeAndApplyCliqueReplacements(Long clique1, Long clique2, Long cliqueNew, char param, ArrayList<ReplacementSpecification> nodeReps) {
+		TreeSet<Long> toBeReplaced = new TreeSet<>();
+		if (param == SOURCE){
+			if (!clique1.equals(this.getEmptySourceCliqueID()) && (!clique1.equals(cliqueNew))){
+				//LOGGER.debug("CLIQUE REPLACE IN UNTYPED, P2, N2 SOURCE: we'll replace " + clique1 + " with " + cliqueNew);
+				toBeReplaced.add(clique1); 
+			}
+			if (!clique2.equals(this.getEmptySourceCliqueID()) && (!clique2.equals(cliqueNew))){
+				//LOGGER.debug("CLIQUE REPLACE IN UNTYPED, P2, N2 SOURCE: we'll replace " + clique2 + " with " + cliqueNew);
+				toBeReplaced.add(clique2); 
+			}
+		}
+		else if (param == TARGET){
+			if (!clique1.equals(this.getEmptyTargetCliqueID()) && (!clique1.equals(cliqueNew))){
+				//LOGGER.debug("CLIQUE REPLACE IN UNTYPED, P2, N2 TARGET: we'll replace " + clique1 +  " with " + cliqueNew);
+				//LOGGER.debug("CLIQUE REPLACE IN UNTYPED, P2, N2 TARGET: that is " + 
+				//		this.showCliqueAsString(tc.get(clique1)) + 
+				//		" with " + this.showCliqueAsString(tc.get(clique2))); 
+				toBeReplaced.add(clique1); 
+			}
+			if (!clique2.equals(this.getEmptyTargetCliqueID()) && (!clique2.equals(cliqueNew))){
+				//LOGGER.debug("CLIQUE REPLACE IN UNTYPED, P2, N2 TARGET: we'll replace " + clique2 + " with " + cliqueNew);
+				toBeReplaced.add(clique2); 
+			}
+		}
+		// apply: 
+		for (Long oldClique: toBeReplaced){
+			replaceCliqueInUntyped(oldClique, cliqueNew, param, nodeReps);
+			replaceCliqueInP2(oldClique, cliqueNew, param);
+			replaceCliqueInN2(oldClique, cliqueNew, param);
+		}
+	}
+
+	// modifies sc, tc, n2sc, n2tc (NOT untyped nodes)
+	// physically moves properties of the old clique into the new clique,
+	// replace old clique with new clique in n2tc (or n2sc), 
+	// remove the old clique from sc or tc
+	protected void fuseCliqueInto(Long oldClique, Long newClique, char param){
+		if (oldClique.equals(newClique)){
+			return; 
+		}
+		if (param == SOURCE){
+			this.sc.get(newClique).addAll(this.sc.get(oldClique)); 
+			if (!oldClique.equals(this.getEmptySourceCliqueID())){ // if oldClique is empty, it should not be replaced/removed!
+				n2sc.replaceValue(oldClique, newClique);
+				this.sc.remove(oldClique);
+			}
+		}
+		else if (param == TARGET){
+			this.tc.get(newClique).addAll(this.tc.get(oldClique)); 
+			if (!oldClique.equals(this.getEmptyTargetCliqueID())){ // if oldClique is empty, it should not be replaced/removed!
+				n2tc.replaceValue(oldClique, newClique);
+				this.tc.remove(oldClique);
+			}
+		}
+	}
+
+	// modifies only untyped
+	protected void replaceCliqueInUntyped(Long oldClique, Long newClique, char param, ArrayList<ReplacementSpecification> nodeReps){
+		if (oldClique.equals(newClique)){
+			return; 
+		}
+		if (param == TARGET){ // we find all occurrences of the old cliques (in the 2nd level), remove them and replace with the new clique
+			// if this leads to overwriting a node in a different way, throw an error
+			HashMap<Long, Long> replacements = untypedSummaryNodes.replaceAt2ndLevel(oldClique, newClique);
+			// source and target cliques don't matter any more, don't check for conflicts in replacements
+			for (Long repl: replacements.keySet()) {
+				ReplacementSpecification reps = new ReplacementSpecification(0L, 0L, repl, replacements.get(repl));
+				nodeReps.add(reps);
+			}
+		}
+		else if (param == SOURCE){
+			HashMap<Long, Long> replacements = untypedSummaryNodes.replaceAt1stLevel(oldClique, newClique);
+			// source and target cliques don't matter any more, don't check for conflicts in replacements
+			for (Long repl: replacements.keySet()) {
+				ReplacementSpecification reps = new ReplacementSpecification(0L, 0L, repl, replacements.get(repl));
+				nodeReps.add(reps);
+			}
+		}
+	}
+
+	protected void replaceCliqueInP2(Long oldClique, Long newClique, char param){
+		if (param == SOURCE){
+			this.p2sc.replaceValue(oldClique, newClique);
+		}
+		else if (param == TARGET){
+			this.p2tc.replaceValue(oldClique, newClique);
+		}
+	}
+	protected void replaceCliqueInN2(Long oldClique, Long newClique, char param){
+		if (param == SOURCE){
+			this.n2sc.replaceValue(oldClique, newClique);
+		}
+		else if (param == TARGET){
+			this.n2tc.replaceValue(oldClique, newClique);
+		}
+	}
+
+	// returns on oldRep, the edges to remove, 
+	// and on newRep, the edges to create for it
+	protected HashMap<Long, Long2LongSet> distributeSummaryEdgesThroughCounts(long oldRep, long newRep, long dataNode, char param){
+		HashMap<Long, Long2LongSet> res = new HashMap<>();
+		Long2LongSet summEdgesToAddOnNewRep = new Long2LongSet(); 
+		Long2LongSet summEdgesToRemoveOnOldRep = new Long2LongSet(); 
+		res.put(oldRep, summEdgesToRemoveOnOldRep);
+		res.put(newRep, summEdgesToAddOnNewRep);
+
+		if (param == SOURCE){ // we must distribute edges outgoing from oldRep and newRep, which now represents dataNode
+			//LOGGER.debug("DISTRIBUTING OUTGOING SUMMARY EDGES of summary node " + oldRep + " with the new summary node " + newRep + " due to " + dataNode);
+
+			// traverse the data edges outgoing node and, for each of them:
+			// - mark the corresponding summary edge as needing to be added to the new summary node; 
+			// - decrease the counter of the corresponding summary edge starting from the old node, and if the counter is 0, mark that edge for removal
+			Long2LongSet dataEdgesFromNode = this.triplesBySubject.get(dataNode); 
+			if (dataEdgesFromNode != null){
+				for (Long p: dataEdgesFromNode.keys()){
+					for (Long o: dataEdgesFromNode.get(p)){
+						// data edge dataNode--p-->o
+						//LOGGER.debug("For " +  dataNode  + "--" + p + "-->" + o + ")");
+						Long repO = rep.get(o); // this supposes that rep(o) has not been updated yet
+						if (repO != null){ // represented by summary edge oldRep--p-->repO
+							summEdgesToAddOnNewRep.add(p, repO); 
+							//LOGGER.debug("Seeking repr. counter  of: oldRep (" + oldRep + ")--" + p + "-->repO(" + repO + ")");
+							//edgesWithProv.display();
+							Long edgeCountLeft = edgesWithProv.getCounter(oldRep, p, repO) - 1; //was: o instead of repO
+							if (edgeCountLeft == 0){
+								summEdgesToRemoveOnOldRep.add(p, repO);
+							}
+						}
+					}
+				}
+			}
+		}
+		else if (param == TARGET){ // we must distribute edges incoming in oldRep and/or newRep, which now represents node
+			//LOGGER.debug("DISTRIBUTING INCOMING SUMMARY EDGES of " + oldRep + " with the new " + newRep + " due to " + node);
+			//LOGGER.debug("DISTRIBUTING INCOMING SUMMARY EDGES: incoming edges are " + displayTriplesByObject());
+
+			Long2LongSet dataEdgesToNode = this.triplesByObject.get(dataNode); 
+			if (dataEdgesToNode != null){
+				//LOGGER.debug("DISTRIBUTING INCOMING SUMMARY EDGES: " + node + " has " + edgesToNode.keys().size() + " distinct incoming properties");
+				for (Long p: dataEdgesToNode.keys()){
+					//LOGGER.debug("DISTRIBUTING INCOMING SUMMARY EDGES: " + node + " has " + p + " incoming edge(s)");  
+					for (Long s: dataEdgesToNode.get(p)){
+						// data edge s--p-->node
+						Long repS = rep.get(s); 
+						//LOGGER.debug("DISTRIBUTING INCOMING SUMMARY EDGES " + node + " had a " + p + " edge from " + s + " and representative of " + s + " is " + repS); 
+						if (repS != null){ // represented by summary edge: repS --p-->oldRep); 
+							summEdgesToAddOnNewRep.add(p, repS); 
+							Long edgeCountLeft = edgesWithProv.getCounter(repS,  p, oldRep) - 1; // was: s instead of repS
+							if (edgeCountLeft == 0){
+								summEdgesToRemoveOnOldRep.add(p, repS); 
+							}
+							//LOGGER.debug("DISTRIBUTING INCOMING SUMMARY EDGES adding to new node " + newRep + " a " + p + " edge from " + repS); 
+						}
+					}
+				}
+			}
+		}
+		return res; 
+	}
+
+	// on rep there are edges to remove
+	// on newRep there are edges to add
+	protected void updateEdgesWithDistribution(HashMap<Long, Long2LongSet> edgesToAddAndRemove, Long rep, Long newRep, char param){
+		if (param == SOURCE){
+			addOutgoingEdges(newRep, edgesToAddAndRemove.get(newRep));
+			removeOutgoingEdges(rep, edgesToAddAndRemove.get(rep));
+		}
+		else if (param == TARGET){
+			addIncomingEdges(newRep, edgesToAddAndRemove.get(newRep));
+			removeIncomingEdges(rep, edgesToAddAndRemove.get(rep));
+		}
+	}
+
+	protected boolean addingPropertyToSWillCauseASplit(Long repS, Long sourceCliqueS, Long s){
+		if (sourceCliqueS.equals(this.getEmptySourceCliqueID())){ // due to the current triple, newSCS for sure is not empty.
+			TreeSet<Long> inverseRep = rep.getInverse(repS); 
+			if (inverseRep.size()  > 1){ // several nodes shared this representative: they all had empty sourceCliqueID
+				// and is is the only one for which this situation changes. Thus, we will split.
+				return true; 
+			}
+			if (inverseRep.size() == 1){ // there was only one node with this representative, and empty sourceClique.
+				for (Long l: inverseRep){
+					if (l.equals(s)){ // but it is exactly 
+						return true; 
+					}
+				}
+			}
+		}
+		return false; 
+	}
+
+	/**
+	 * Creates a new (untyped) summary node and inserts it into untypedSummaryNodes
+	 *
+	 * @param sourceClique
+	 * @param targetClique
+	 *
+	 * @return
+	 */
+	protected Long getOrCreateSummaryNode(Long sourceClique, Long targetClique) {
+		Long node = untypedSummaryNodes.getIfExists(sourceClique, targetClique); 
+		if (node != null){
+			return node; 
+		}
+		else{
+			node = getNextSummaryNode(); // from the Summary class; 
+			untypedSummaryNodes.add(sourceClique, targetClique, node);
+			return node;
+		}
+	}
+
+	protected Long getEmptySourceCliqueID() {
+		Long res;
+		if (this.emptySCCount == Long.MAX_VALUE) { // the empty source clique has not been created yet
+			TreeSet<Long> emptySC = new TreeSet<>();
+			res = minCliqueID; // we invent a new source clique
+			this.emptySCCount = minCliqueID;
+			// add this to sc
+			sc.put(minCliqueID, emptySC);
+			minCliqueID--;
+		}
+		else // the empty source clique has already been created, just copy it 
+			res = this.emptySCCount;
+		return res;
+	}
+
 	/**
 	 * Creates a new source clique with just p; updates sc and p2sc
 	 *
@@ -132,11 +981,11 @@ public class StrongOrTypedStrongSummary extends Summary {
 	 */
 	protected Long makeAndAddNewSourceClique(Long p) {
 		Long res = this.minCliqueID;
-		ArrayList<Long> actualSourceClique = new ArrayList<>();
+		TreeSet<Long> actualSourceClique = new TreeSet<>();
 		actualSourceClique.add(p);
 		sc.put(res, actualSourceClique);
 		p2sc.put(p, res);
-		Debugger.log("Added the new source clique for: " + res + " with property " + p);
+		//LOGGER.debug("NEW SOURCE CLIQUE FOR " + p+ "(" + RDF2SQLEncoding.dictionaryDecode(p) + "): " + res);  
 		minCliqueID--;
 		return res;
 	}
@@ -151,11 +1000,12 @@ public class StrongOrTypedStrongSummary extends Summary {
 	 */
 	protected Long makeAndAddNewTargetClique(Long p) {
 		Long targetCliqueID = this.minCliqueID;
-		ArrayList<Long> actualTargetClique = new ArrayList<>();
+		TreeSet<Long> actualTargetClique = new TreeSet<>();
 		actualTargetClique.add(p);
 		tc.put(targetCliqueID, actualTargetClique);
 		p2tc.put(p, targetCliqueID);
-		//Debugger.log("Added the new target clique " + targetCliqueID + " which is [" + p + "]");
+		//LOGGER.debug("Added the new target clique " + targetCliqueID + " which is [" + p + "]");
+		//LOGGER.debug("NEW TARGET CLIQUE FOR " + p+ "(" + RDF2SQLEncoding.dictionaryDecode(p) + "): " + targetCliqueID);  
 		minCliqueID--;
 		return targetCliqueID;
 	}
@@ -163,9 +1013,9 @@ public class StrongOrTypedStrongSummary extends Summary {
 	protected Long getEmptyTargetCliqueID() {
 		Long res;
 		if (this.emptyTCCount == Long.MAX_VALUE) { // the empty source clique has not been created yet
-			ArrayList<Long> emptyTC = new ArrayList<>();
+			TreeSet<Long> emptyTC = new TreeSet<>();
 			res = minCliqueID; // we invent a new source clique
-			Debugger.log("ooooo> Initialized the empty target clique at: " + res);
+			//LOGGER.debug("ooooo> Initialized the empty target clique at: " + res);
 			this.emptyTCCount = minCliqueID;
 			// add this to tc
 			tc.put(minCliqueID, emptyTC);
@@ -176,446 +1026,96 @@ public class StrongOrTypedStrongSummary extends Summary {
 		return res;
 	}
 
-	/**
-	 * Clique IDs are negative. So, the higher value is the one created first. We will keep the higher value and replace the
-	 * lower value with this higher value.
-	 * An exception is made if one of the cliques is the empty clique: in this case, fusion systematically
-	 * takes the other clique.
-	 * Updates sc, tc, n2tc, p2sc, p2tc, summary (edges)
-	 * @param c1
-	 * @param c2
-	 * @param code
-	 * @return 
-	 */
-	protected Long fuseCliquesIntoCreatedFirst(Long c1, Long c2, char code) {
-		if (code == SOURCE) {
-			// if c2 is the empty source clique OR (c2 was created before c1), replace c2 with c1
-			if ((c1 > c2) || (c2.equals(this.getEmptySourceCliqueID()))) {
-				// this method treats its first parameter as "old" and the second as "new" 
-				fuseSourceCliques(c2, c1);
-				return c1;
+	protected void cacheTriple(Triple t){
+		// cache it by the subject:
+		Long2LongSet edgesOfS = this.triplesBySubject.get(t.s);
+		if (edgesOfS == null){
+			edgesOfS = new Long2LongSet();
+			this.triplesBySubject.put(t.s, edgesOfS);
+		}
+		edgesOfS.add(t.p, t.o);
+		//LOGGER.debug("CACHED BY SUBJECT " + t.s + " on " + t.p + ": " + t.o + " resulting in " + displayTriplesBySubject());
+		// cache it by the object:
+		Long2LongSet edgesOfO = this.triplesByObject.get(t.s);
+		if (edgesOfO == null){
+			edgesOfO = new Long2LongSet();
+			this.triplesByObject.put(t.o, edgesOfO);
+		}
+		edgesOfO.add(t.p, t.s);
+		//LOGGER.debug("CACHED BY OBJECT " + t.o + " on " + t.p + ": " + t.s + " resulting in " + displayTriplesByObject());
+		//displayTriplesByObject();
+	}
+
+	protected void consistencyChecks(){
+		String msg;
+		for (Long dataNode: n2sc.getKeys()){
+			//LOGGER.debug("Checking from data node: " + dataNode);
+			Long nodeRep = rep.get(dataNode);
+			if (nodeRep == null){
+				msg = "Unrepresented data node " + dataNode;
+				//LOGGER.debug(msg);
+				throw new IllegalStateException(msg);
 			}
-			else
-				if ((c2 > c1) || (c1.equals(this.getEmptySourceCliqueID()))) {
-					fuseSourceCliques(c1, c2);
-					return c2;
-				}
-		}
-		else
-			if (code == TARGET) {
-				if ((c1 > c2) || (c2.equals(this.getEmptyTargetCliqueID()))) {
-					// this method treats its first parameter as "old" and the second as "new" 
-					fuseTargetCliques(c2, c1);
-					return c1;
-				}
-				else
-					if ((c2 > c1) || (c1.equals(this.getEmptyTargetCliqueID()))) {
-						fuseTargetCliques(c1, c2);
-						return c2;
-					}
+			Long nsc = n2sc.get(dataNode);
+			Long ntc = n2tc.get(dataNode);
+			HashMap<Long, Long> tc2Nodes = untypedSummaryNodes.get(nsc);
+			if (tc2Nodes == null){
+				msg = "untypedSummaryNodes has no (target clique, node) pairs on source clique " + nsc + " of node " + dataNode + "(" + RDF2SQLEncoding.dictionaryDecode(dataNode) + ")"; 
+				//LOGGER.debug(msg);
+				throw new IllegalStateException(msg);
 			}
-			else
-				throw new Error("Unknown code!");
-		return c1;
-	}
-
-	// untyped subject, already represented: thus, it has a source clique that p must join
-	// untyped object, not represented: we assign it target clique {p} and empty source clique
-	// unknown property
-	protected void handleDataTriple_US_RS_UO_NO_NP(Triple t, Long sourceCliqueS,
-												   Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
-		// add p to the source clique of t.s; the clique ID changes if it was the empty source clique:
-		long ssc = n2sc.get(t.s);
-		Long newSourceClique = addPropertyToSourceClique(t.p, ssc);
-		n2sc.put(t.s, newSourceClique);
-		long ptc = makeAndAddNewTargetClique(t.p);
-		long repO = getOrCreateSummaryNode(this.getEmptySourceCliqueID(), ptc);
-		rep.put(t.o, repO);
-		n2sc.put(t.o, this.getEmptySourceCliqueID());
-		n2tc.put(t.o, ptc);
-		this.addTriple(rep.get(t.s), t.p, repO);
-	}
-
-	// untyped, represented subject: it has a source clique, which needs to gain p
-	// untyped, represented object: it has a target clique, which needs to gain p
-	// unknown property: it should be bound to these modified cliques
-	protected void handleDataTriple_US_RS_UO_RO_NP(Triple t, Long sourceCliqueS,
-												   Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
-		Long newSourceCliqueS = addPropertyToSourceClique(t.p, sourceCliqueS);
-		n2sc.put(t.s, newSourceCliqueS);
-		Long newTargetCliqueO = addPropertyToTargetClique(t.p, targetCliqueO);
-		n2tc.put(t.o, newTargetCliqueO);
-		// neither the representatives nor the source, target cliques of t.s and t.o change
-		this.addTriple(rep.get(t.s), t.p, rep.get(t.o));
-	}
-
-	protected void helper_UO_NO_RP(Triple t, Long sourceCliqueP, Long targetCliqueP) {
-		// represent t.o as empty source clique + target clique of p
-		Long emptySourceCliqueO = getEmptySourceCliqueID();
-		//Debugger.log("helper_UO_NO_RP To represent " + t.o + ", looking for the node of empty source clique " + emptySourceCliqueO + " and target clique " + targetCliqueP); 
-		Long repO = getOrCreateSummaryNode(emptySourceCliqueO, targetCliqueP);
-		//Debugger.log("helper_UO_NO_RP Found: " + repO); 
-		rep.put(t.o, repO);
-		n2tc.put(t.o, targetCliqueP);
-		n2sc.put(t.o, emptySourceCliqueO);
-	}
-
-	// untyped, represented subject
-	// untyped, unrepresented object
-	// known property
-	protected void handleDataTriple_US_RS_UO_NO_RP(Triple t, Long sourceCliqueS,
-												   Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
-		helper_UO_NO_RP(t, sourceCliqueP, targetCliqueP);
-		// see what we do with t.s:
-		Long newRepS = rep.get(t.s);
-		if (sourceCliqueS != sourceCliqueP) { // the source clique of P was not that of S
-			//System.out.println("Source clique of " + t.s + "=" + sourceCliqueS + " differs from that of " + t.p + " which is " + sourceCliqueP ); 
-			Long fusedCliqueS = fuseCliquesIntoCreatedFirst(sourceCliqueS, sourceCliqueP, SOURCE);
-			//System.out.println("Fused them in into the one created first: " + fusedCliqueS); 
-			newRepS = getOrCreateSummaryNode(fusedCliqueS, targetCliqueS);
-			//System.out.println("This leads the new representative of " + t.s + ": " + newRepS);
-			rep.put(t.s, newRepS);
-			n2tc.put(newRepS, targetCliqueS);
-			n2sc.put(newRepS, fusedCliqueS);
-		}
-		else { // no need to do anything, the source clique of S is already that of p 
-		}
-		// adding triple:
-		this.addTriple(newRepS, t.p, rep.get(t.o));
-	}
-
-	// untyped, unrepresented subject
-	// untyped, represented object
-	// known property
-	protected void handleDataTriple_US_NS_UO_RO_RP(Triple t, Long sourceCliqueS,
-												   Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
-		helper_US_NS_RP(t, sourceCliqueP, targetCliqueP);
-		// see what to do with t.o
-		Long newRepO = rep.get(t.o);
-		if (targetCliqueO != targetCliqueP) {
-			// this call updates n2tc, tc, existing summary edges
-			Long fusedTargetPO = fuseCliquesIntoCreatedFirst(targetCliqueO, targetCliqueP, TARGET);
-			newRepO = getOrCreateSummaryNode(sourceCliqueO, fusedTargetPO);
-			n2tc.put(newRepO, fusedTargetPO);
-			n2sc.put(newRepO, sourceCliqueO);
-			rep.put(t.o, newRepO);
-		}
-		else { // p is already known to be in the target clique of o (o and p have the same tc) 
-			// no need to change the representative of o
-		}
-		// adding triple: 
-		this.addTriple(rep.get(t.s), t.p, newRepO);
-	}
-
-	/**
-	 * Helper method which represents an (untyped) unrepresented subject
-	 * based on its known property p
-	 *
-	 * @param t
-	 * @param sourceCliqueP
-	 * @param targetCliqueP
-	 */
-	protected void helper_US_NS_RP(Triple t, Long sourceCliqueP, Long targetCliqueP) {
-		// represent t.s as empty target clique + source clique of p
-		Long emptyTargetCliqueS = getEmptyTargetCliqueID();
-		Long repS = getOrCreateSummaryNode(sourceCliqueP, emptyTargetCliqueS);
-		rep.put(t.s, repS);
-		n2tc.put(t.s, emptyTargetCliqueS);
-		n2sc.put(t.s, sourceCliqueP);
-	}
-	// untyped, unrepresented subject
-	// untyped, represented object (this has appeared in data triples before)
-	// unknown property
-
-	protected void handleDataTriple_US_NS_UO_RO_NP(Triple t, Long sourceCliqueS,
-												   Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
-		// create p's source clique
-		long psc = makeAndAddNewSourceClique(t.p);
-		// represent s by the source clique of P and the empty target clique:
-		long emptyTargetCliqueID = getEmptyTargetCliqueID();
-		long repS = getOrCreateSummaryNode(psc, emptyTargetCliqueID);
-		rep.put(t.s, repS);
-		// o is already represented but its target clique did not include p (given that p was not known)
-		// we need to add p to this target clique
-		// then adjust t.o's representation
-		Long newTargetCliqueO = addPropertyToTargetClique(t.p, targetCliqueO);
-		n2tc.put(t.o, newTargetCliqueO);
-		this.addTriple(repS, t.p, rep.get(t.o));
-
-	}
-	// untyped, non represented subject
-	// untyped, non represented object
-	// unknown property
-
-	protected void handleDataTriple_US_NS_UO_NO_NP(Triple t, Long sourceCliqueS,
-												   Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
-		long psc = makeAndAddNewSourceClique(t.p);
-		long ptc = makeAndAddNewTargetClique(t.p);
-		long emptyTargetCliqueID = getEmptyTargetCliqueID();
-		long repS = getOrCreateSummaryNode(psc, emptyTargetCliqueID);
-		n2sc.put(t.s, psc);
-		n2tc.put(t.s, emptyTargetCliqueID);
-		rep.put(t.s, repS);
-		long emptySourceCliqueID = getEmptySourceCliqueID();
-		long repO = getOrCreateSummaryNode(emptySourceCliqueID, ptc);
-		n2sc.put(t.o, emptySourceCliqueID);
-		n2tc.put(t.o, ptc);
-		rep.put(t.o, repO);
-		this.addTriple(repS, t.p, repO);
-	}
-
-	// untyped, unrepresented subject
-	// untyped, unrepresented object
-	// known property
-	protected void handleDataTriple_US_NS_UO_NO_RP(Triple t, Long sourceCliqueS,
-												   Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
-		helper_US_NS_RP(t, sourceCliqueP, targetCliqueP);
-		// represent t.o as target clique of p + empty source clique
-		Long emptySourceCliqueO = getEmptySourceCliqueID();
-		Long repO = getOrCreateSummaryNode(emptySourceCliqueO, targetCliqueP);
-		rep.put(t.o, repO);
-		n2tc.put(t.o, targetCliqueP);
-		n2sc.put(t.o, emptySourceCliqueO);
-		// add triple:
-		this.addTriple(rep.get(t.s), t.p, repO);
-	}
-
-	// toughest case: 
-	// untyped, represented object
-	// untyped, represented subject
-	// represented property 
-	protected void handleDataTriple_US_RS_UO_RO_RP(Triple t, Long sourceCliqueS,
-												   Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
-		Long repS = rep.get(t.s);
-		Long repO = rep.get(t.o);
-		Long newSCs = sourceCliqueS;
-		Long newTCo = targetCliqueO;
-		Long newRepS = repS;
-		Long newRepO = repO;
-		boolean sRepChanged = false;
-		boolean oRepChanged = false;
-		if (sourceCliqueS != sourceCliqueP) {
-			sRepChanged = true;
-			newSCs = fuseCliquesIntoCreatedFirst(sourceCliqueS, sourceCliqueP, SOURCE);
-		}
-		if (targetCliqueO != targetCliqueP) {
-			oRepChanged = true;
-			//Debugger.log("Object node " + t.o + " has the target clique:");
-			showClique(tc.get(targetCliqueO));
-			//Debugger.log("while the property " + t.p + " has the target clique: "); 
-			showClique(tc.get(targetCliqueP));
-			//Debugger.log("Fusing them into the one created first"); 
-			newTCo = fuseCliquesIntoCreatedFirst(targetCliqueO, targetCliqueP, TARGET);
-		}
-		if (sRepChanged) {
-			newRepS = getOrCreateSummaryNode(newSCs, targetCliqueS);
-			n2tc.put(newRepS, targetCliqueS);
-			n2sc.put(newRepS, newSCs);
-			rep.put(t.s, newRepS);
-		}
-		if (oRepChanged) {
-			newRepO = getOrCreateSummaryNode(sourceCliqueO, newTCo);
-			n2tc.put(newRepO, newTCo);
-			n2sc.put(newRepO, sourceCliqueO);
-			rep.put(t.o, newRepO);
-		}
-		// adding triple:
-		this.addTriple(newRepS, t.p, newRepO);
-	}
-
-	/**
-	 * Updates sc, n2sc, untypedSummaryNodes, summary (edges)
-	 *
-	 * @param sourceCliqueOld
-	 * @param sourceCliqueNew
-	 */
-	protected void fuseSourceCliques(Long sourceCliqueOld, Long sourceCliqueNew) {
-		Debugger.log("FuseSourceCliques:  " + sourceCliqueOld + " becomes " + sourceCliqueNew);
-		//display();
-		// add properties of target clique of o, to those of the target clique of p
-		ArrayList<Long> realSCNew = this.sc.get(sourceCliqueNew);
-		ArrayList<Long> realSCOld = this.sc.get(sourceCliqueOld);
-
-		if (realSCOld != null)
-			for (Long l: realSCOld)
-				realSCNew.add(l);
-		this.sc.remove(sourceCliqueOld);
-		// update n2sc to inform all the nodes mapped to sourceCliqueO, to map now to sourceCliqueP
-		this.n2sc.replaceValue(sourceCliqueOld, sourceCliqueNew);
-		replaceCliqueInSummary(sourceCliqueOld, sourceCliqueNew);
-
-		this.p2sc.replaceValue(sourceCliqueOld, sourceCliqueNew);
-		Debugger.log("After the fusion: ");
-		//display();
-	}
-
-	/**
-	 * Updates tc, n2tc, p2tc, summary (edges)
-	 *
-	 * @param targetCliqueOld
-	 * @param targetCliqueNew
-	 */
-	protected void fuseTargetCliques(Long targetCliqueOld, Long targetCliqueNew) {
-		Debugger.log("FuseTargetCliques: " + targetCliqueOld + " into " + targetCliqueNew);
-
-		// Do not display here as this requires rep to be fully filled and rep cannot be filled for new nodes before the fusion. So some nodes may be missing.
-		//display();
-		// then make targetCliqueO the same as targetCliqueP (keep smaller)
-		// add properties of target clique of o, to those of the target clique of p
-		ArrayList<Long> realTCNew = this.tc.get(targetCliqueNew);
-		ArrayList<Long> realTCOld = this.tc.get(targetCliqueOld);
-
-		if (realTCOld != null)
-			for (Long l: realTCOld)
-				realTCNew.add(l);
-		this.tc.remove(targetCliqueOld);
-		// update n2tc to inform all the nodes mapped to targetCliqueO, to map now to targetCliqueP
-		this.n2tc.replaceValue(targetCliqueOld, targetCliqueNew);
-		replaceCliqueInSummary(targetCliqueOld, targetCliqueNew);
-		this.p2tc.replaceValue(targetCliqueOld, targetCliqueNew);
-		//Debugger.log("After the fusion: ");
-		//display();
-	}
-
-	/**
-	 * Adds p to the source clique indicated by sourceCliqueID; updates p2sc and sc
-	 *
-	 * @param p
-	 * @param sourceCliqueID
-	 * @return 
-	 */
-	protected Long addPropertyToSourceClique(Long p, Long sourceCliqueID) {
-		if (sourceCliqueID.equals(this.getEmptySourceCliqueID())) {
-			// we cannot add p to the empty source clique because that one
-			// needs to be unique and just represent the empty clique, throughout
-			Long newSourceCliqueID = this.makeAndAddNewSourceClique(p);
-			p2sc.put(p, newSourceCliqueID);
-			return newSourceCliqueID;
-		}
-		else {
-			p2sc.put(p, sourceCliqueID);
-			if (!(sc.get(sourceCliqueID).contains(p)))
-				sc.get(sourceCliqueID).add(p);
-			return sourceCliqueID;
-			//System.out.println("New source clique " + sourceCliqueID);
-			//showClique(sc.get(sourceCliqueID)); 
-		}
-	}
-
-	/**
-	 * Adds p to the target clique indicated by targetCliqueID
-	 *
-	 * @param p
-	 * @param targetCliqueID
-	 * @return 
-	 */
-	protected Long addPropertyToTargetClique(Long p, Long targetCliqueID) {
-		if (targetCliqueID.equals(this.getEmptyTargetCliqueID())) {
-			// existingTC was empty. In this case, we need to create a new
-			// target clique and put just p inside, and return that one.
-			Long newTargetClique = this.makeAndAddNewTargetClique(p);
-			p2tc.put(p, newTargetClique);
-			return newTargetClique;
-		}
-		else {// existingTC was not empty. It suffices to add p to it. 
-			if (!(tc.get(targetCliqueID).contains(p)))
-				tc.get(targetCliqueID).add(p);
-			p2tc.put(p, targetCliqueID);
-			//System.out.println("New target clique " + targetCliqueID);
-			//showClique(tc.get(targetCliqueID)); 
-			return targetCliqueID;
-		}
-	}
-
-	/**
-	 * Replaces a clique ID with another cliqueID in the summary
-	 *
-	 * Modifies untypedSummaryNodes and the summary edges
-	 *
-	 * For simplicity (and in a somehow violent manner), it replaces either a source clique or a target clique
-	 * Thus it is important that oldCliqueID is not allowed to match both a source clique and a target clique,
-	 * because we usually only want to replace one.
-	 *
-	 * @param oldCliqueID
-	 * @param newCliqueID
-	 */
-	protected void replaceCliqueInSummary(Long oldCliqueID, Long newCliqueID) {
-		// replace in rep:
-		// first, replace in second-level hash, if it occurs as a target clique:
-		if (oldCliqueID > newCliqueID)
-			throw new Error("Wrong replacement");
-		Debugger.log("Trying to replace " + oldCliqueID + " with " + newCliqueID + " in summary");
-		for (Long l: this.untypedSummaryNodes.keySet()) {
-			HashMap<Long, Long> tcToNodes = untypedSummaryNodes.get(l);
-			Long nodeOldTC = tcToNodes.get(oldCliqueID);
-			Long nodeNewTC = tcToNodes.get(newCliqueID);
-			// replace old with new; remove entry for old:
-			if ((nodeOldTC != null) && (nodeNewTC != null)) {
-				replaceInSummary(nodeOldTC, nodeNewTC);
-				tcToNodes.remove(oldCliqueID);
+			Long tcn = tc2Nodes.get(ntc);
+			if (tcn == null){
+				msg = "No node found on source clique " + nsc + " for target clique " + ntc + " of data node " + dataNode + " or (" + RDF2SQLEncoding.dictionaryDecode(dataNode) + ") while its representative is " + nodeRep;
+				//LOGGER.debug(msg);
+				throw new IllegalStateException(msg);
 			}
-			// if there was nothing there, nothing to do 
-		}
-		// then, replace in first-level hash: 
-		HashMap<Long, Long> tcToNodesForOldSC = untypedSummaryNodes.get(oldCliqueID);
-		HashMap<Long, Long> tcToNodesForNewSC = untypedSummaryNodes.get(newCliqueID);
-		if (tcToNodesForOldSC != null) {
-			if (tcToNodesForNewSC == null) {
-				tcToNodesForNewSC = new HashMap<>();
-				untypedSummaryNodes.put(newCliqueID, tcToNodesForNewSC);
+			if (!(tcn.equals(nodeRep))){
+				msg = nsc + "=>" + ntc + ": " + tcn + " while the representative of " + dataNode + " is " + nodeRep;
+				//LOGGER.debug(msg);
+				throw new IllegalStateException(msg);
 			}
-			for (Long thisOldTC: tcToNodesForOldSC.keySet()) {
-				Long thisOldNode = tcToNodesForOldSC.get(thisOldTC); // this is not null
-				Long thisNewNode = tcToNodesForNewSC.get(thisOldTC);
-				if (thisNewNode == null)
-					tcToNodesForNewSC.put(thisOldTC, thisOldNode); // no summary node replacement here
-				else
-					replaceInSummary(thisOldNode, thisNewNode); // if there was a summary node on the old and new clique with the same TC, use the new clique node
-			}
-			untypedSummaryNodes.remove(oldCliqueID); // after the loop not to interfere with the cursor
 		}
-		else { // oldSC was not a source clique, nothing left to do
+		Long totalEdgeCount = edgesWithProv.totalEdgeCount(); 
+		if (!totalEdgeCount.equals(dataTriplesSummarizedSoFar)){
+			msg = "In edges we have a total of " + totalEdgeCount + " edges while we have summarized so far " + dataTriplesSummarizedSoFar + " data triples";
+			throw new IllegalStateException(msg);
 		}
 	}
 
-	/**
-	 * Creates a new (untyped) summary node and inserts it into untypedSummaryNodes
-	 *
-	 * @param sourceClique
-	 * @param targetClique
-	 *
-	 * @return
-	 */
-	protected Long getOrCreateSummaryNode(Long sourceClique, Long targetClique) {
-		assert ((sourceClique != null) && (targetClique != null));
-		HashMap<Long, Long> targetCliquesForThisSourceClique = this.untypedSummaryNodes.get(sourceClique);
-		if (targetCliquesForThisSourceClique == null) {
-			targetCliquesForThisSourceClique = new HashMap<>();
-			this.untypedSummaryNodes.put(sourceClique, targetCliquesForThisSourceClique);
+	protected String displayTriplesByObject(){
+		StringBuffer sb = new StringBuffer();
+		for (Long node: triplesByObject.keySet()){
+			sb.append(node).append("<~~");
+			Long2LongSet edgesOfNode = triplesByObject.get(node);
+			sb.append(edgesOfNode.toString()).append(" "); 
 		}
-		Long node = targetCliquesForThisSourceClique.get(targetClique);
-		if (node == null) {
-			//System.out.println("Created " + this.maxSummaryNode + " for source clique " + sourceClique + " and target clique " + targetClique); 
-			node = getNextSummaryNode(); // from the Summary class
-			this.untypedSummaryNodes.get(sourceClique).put(targetClique, node);
-			//System.out.println("Put in untypedSummaryNodes " + sourceClique + "->" + targetClique + "->" + node);
-		}
-		return node;
+		return new String(sb); 
 	}
 
-	protected Long getEmptySourceCliqueID() {
-		Long res;
-		if (this.emptySCCount == Long.MAX_VALUE) { // the empty source clique has not been created yet
-			ArrayList<Long> emptySC = new ArrayList<>();
-			res = minCliqueID; // we invent a new source clique
-			//Debugger.log("ooooo> Initialized the empty source clique at: " + res);
-			this.emptySCCount = minCliqueID;
-			// add this to sc
-			sc.put(minCliqueID, emptySC);
-			minCliqueID--;
+	protected String displayTriplesBySubject(){
+		StringBuffer sb = new StringBuffer();
+		for (Long node: triplesBySubject.keySet()){
+			sb.append(node).append("~~>");
+			Long2LongSet edgesOfNode = triplesBySubject.get(node);
+			sb.append(edgesOfNode.toString()).append(" "); 
 		}
-		else // the empty source clique has already been created, just copy it 
-			res = this.emptySCCount;
-		return res;
+		return new String(sb); 
+	}
+
+	@Override
+	public void display() {
+		LOGGER.debug("=== SUMMARY " + this.getClass().getName() + "\nSource cliques: " + sc.toString());
+		LOGGER.debug("Target cliques: " + tc.toString());
+		LOGGER.debug("Data nodes to source cliques: " + n2sc.toString());
+		LOGGER.debug("Data nodes to target cliques: " + n2tc.toString());
+		LOGGER.debug("Property to source cliques: " + p2sc.toString());
+		LOGGER.debug("Property to target cliques: " + p2tc.toString());
+		LOGGER.debug("Untyped summary nodes: " + untypedSummaryNodes.toString());
+		LOGGER.debug("Representation function: ");
+		LOGGER.debug(showRep());
+		LOGGER.debug("Summary edges: ");
+		edgesWithProv.display();
+		LOGGER.debug("===");
 	}
 }

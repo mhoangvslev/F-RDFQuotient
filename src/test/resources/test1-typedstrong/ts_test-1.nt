@@ -1,5 +1,0 @@
-<http://qs.org/ts2> <http://qstest.org/property#p1> <http://qs.org/ts3> .
-<http://qs.org/ts2> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://qstest.org/class#1> .
-<http://qs.org/ts4> <http://qstest.org/property#p3> <http://qs.org/ts5> .
-<http://qs.org/ts4> <http://qstest.org/property#p1> <http://qs.org/ts3> .
-<http://qs.org/ts6> <http://qstest.org/property#p2> <http://qs.org/ts7> .

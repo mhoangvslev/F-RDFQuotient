@@ -1,11 +1,17 @@
 package fr.inria.cedar.quotientSummary.datastructures;
 
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+
 public class DecodedTriple implements Comparable<DecodedTriple> {
+	private static final Logger LOGGER = Logger.getLogger(DecodedTriple.class.getName());
+
 	final String s;
 	final String p;
 	final String o;
 
 	public DecodedTriple(String s, String p, String o) {
+		LOGGER.setLevel(Level.INFO);
 		this.s = s;
 		this.p = p;
 		this.o = o;

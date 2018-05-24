@@ -1,13 +1,18 @@
 package fr.inria.cedar.quotientSummary.datastructures;
 
+import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.TreeSet;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 public class Long2LongSet {
+	private static final Logger LOGGER = Logger.getLogger(Long2LongSet.class.getName());
 	final HashMap<Long, TreeSet<Long>> map;
 
 	public Long2LongSet() {
+		LOGGER.setLevel(Level.INFO);
 		map = new HashMap<>();
 	}
 
@@ -49,17 +54,27 @@ public class Long2LongSet {
 		}
 	}
 
-	public String display() {
+	@Override
+	public String toString() {
+		//LOGGER.debug("LONG2LONGSET DISPLAY");
 		StringBuffer sb = new StringBuffer();
 		if (!map.keySet().isEmpty()) {
-			sb.append("\n==============: \n");
 			for (Long key: map.keySet()) {
 				sb.append("#").append(key).append("|{");
 				TreeSet<Long> values = map.get(key);
-				for (Long val: values)
-					sb.append(val).append(", ");
-				sb.append("}  (").append(map.size()).append(" entries)");
+				for (Long val: values){
+					String decodedVal = ""; 
+					try{
+						decodedVal = RDF2SQLEncoding.dictionaryDecode(val);
+					}
+					catch(Exception e){
+						// nothing -- this value was not part of the dictionary
+					}
+					sb.append(val).append(decodedVal.equals("")?"":(" (" + decodedVal + ")")).append(", ");
+				}
+				sb.append("} ");
 			}
+			sb.append("(").append(map.size()).append(" entries)");
 		}
 		return new String(sb);
 	}
@@ -68,14 +83,13 @@ public class Long2LongSet {
 		return map.keySet();
 	}
 
-	public void add(long o, long newClassSetID) {
-		TreeSet<Long> setFor = map.get(o);
+	public void add(Long k, Long v) {
+		TreeSet<Long> setFor = map.get(k);
 		if (setFor == null) {
 			setFor = new TreeSet<>();
-			setFor.add(newClassSetID);
+			map.put(k, setFor); 
 		}
-		else
-			if (!setFor.contains(newClassSetID))
-				setFor.add(newClassSetID);
-	}
+		if (!setFor.contains(v))
+			setFor.add(v);
+		}
 }

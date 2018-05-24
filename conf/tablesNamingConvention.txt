@@ -1,0 +1,14 @@
+tmp_encoded_saturated
+tmp_encoded
+tmp_encoded_summarized
+tmp_encoded_summarized_saturated
+dictionary
+
+sav_<timestamp>_encoded
+sav_<timestamp>_encoded_<summaryType>_<summarizationTechnique>_<info>
+sav_<timestamp>_dictionary
+
+<timestamp>: YYYYMMDD_HHMMSSFF
+<summaryType>: w, s, tw, ts
+<summarizationTechnique>: shortcut, classical
+<info>: rep, sum

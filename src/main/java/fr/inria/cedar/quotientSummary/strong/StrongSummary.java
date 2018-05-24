@@ -1,17 +1,26 @@
 package fr.inria.cedar.quotientSummary.strong;
 
-import fr.inria.cedar.commons.miscellaneous.Debugger;
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
 import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 public class StrongSummary extends StrongOrTypedStrongSummary {
-	public StrongSummary() {
+	private static final Logger LOGGER = Logger.getLogger(StrongSummary.class.getName());
+
+	public StrongSummary(String triplesFileName, String triplesTableName, String encodedTriplesTableName, String dictionaryTableName) {
 		super();
+		LOGGER.setLevel(Level.INFO);
+		this.triplesFileName = triplesFileName;
+		this.triplesTableName = triplesTableName;
+		this.encodedTriplesTableName = encodedTriplesTableName;
+		this.dictionaryTableName = dictionaryTableName;
 		this.summaryTablePrefix = STRONG_SUMMARY_PREFIX;
+		this.isTypeFirst = false;
 	}
 
 	/**
@@ -20,112 +29,120 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 	 * @param conn
 	 */
 	public StrongSummary(Connection conn) {
+		try {
+			conn.setAutoCommit(false);
+		}
+		catch (SQLException ex) {
+			LOGGER.error(ex);
+		}
+		LOGGER.setLevel(Level.INFO);
 		this.summaryTablePrefix = STRONG_SUMMARY_PREFIX;
-		Debugger.log("Reading Strong summary from Postgres, setting up special URIs from the dictionary");
-		RDF2SQLEncoding.setUp(conn);
+		LOGGER.info("Reading Strong summary from Postgres, setting up special URIs from the dictionary");
+		RDF2SQLEncoding.setUp(conn, "dictionary");
 		String getSummaryTriples = getSummaryTriplesSQLQuery();
 		try {
 			Statement getTriples = conn.createStatement();
-			// Debugger.log("Created statement");
+			//LOGGER.debug("Created statement");
 			ResultSet rs = getTriples.executeQuery(getSummaryTriples);
-			// Debugger.log("Asking for summary triples")
+			//LOGGER.debug("Asking for summary triples")
 			while (rs.next()) {
 				Long s = rs.getLong(1);
 				Long p = rs.getLong(2);
 				Long o = rs.getLong(3);
-				this.addTriple(s, p, o);
+				edgesWithProv.addTriple(s, p, o);
 			}
 		}
 		catch (SQLException e) {
-			throw new IllegalStateException("Unable to read Strong summary from Postgres " + e.getStackTrace());
+			throw new IllegalStateException("Unable to read Strong summary from Postgres: " + e.toString());
 		}
-		System.out.println("Read Strong summary from Postgres");
+		LOGGER.info("Read Strong summary from Postgres");
 	}
 
 	/**
 	 * Summarizes an RDF graph assuming the data triples are in Postgres
 	 *
 	 * @param conn
-	 * @param args
 	 */
 	@Override
-	public void summarizeFromRDBMS(Connection conn, String[] args) {
-		//Debugger.setFlag(true);
+	public void summarizeFromPostgres(Connection conn) {
 		long start = System.currentTimeMillis();
-		String dataTriplesFileName = args[0];
-		System.out.println(" dataTriplesFileName " + dataTriplesFileName);
+		try {
+			conn.setAutoCommit(false);
+		}
+		catch (SQLException ex) {
+			LOGGER.error(ex);
+		}
 		// this is needed to find the constants associated to special RDF properties
-		RDF2SQLEncoding.setUp(conn);
+		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
 		long typeConstantCode = RDF2SQLEncoding.getTypeCode();
 		if (typeConstantCode != -1) {
 			this.typeTriplesExist = true;
 			avoidCollisionsWhenAssigningSummaryNodes(conn);
 		}
-		triplesSummarizedSoFar = 0;
-		String getUntypedTriplesString = ("select *  from encoded_triples where p <> " + typeConstantCode);
+		String getUntypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p <> " + typeConstantCode);
 		try {
-			conn.setAutoCommit(false);
-			Statement getUntypedTriples = conn.createStatement();
-			getUntypedTriples.setFetchSize(10000);
-			ResultSet rs = getUntypedTriples.executeQuery(getUntypedTriplesString);
-			while (rs.next()) {
-				Triple t = new Triple(rs.getInt(1), rs.getInt(2), rs.getInt(3));
-				if ((t.p == RDF2SQLEncoding.getSubClassCode())
-					|| (t.p == RDF2SQLEncoding.getSubPropertyCode())
-					|| (t.p == RDF2SQLEncoding.getDomainCode())
-					|| (t.p == RDF2SQLEncoding.getRangeCode()))
-					//System.out.println("#### Schema triple " + t.toString());
-					addTriple(t.s, t.p, t.o);
-				else
-					//System.out.println("#### Data triple " + t.toString());
-					handleDataTriple(t);
-				//System.out.println("Summary has become: " + this.toString());
-				triplesSummarizedSoFar++;
-				this.drawSummaryAndGraph(conn, dataTriplesFileName, ("-after-" + 
-				triplesSummarizedSoFar + "-"+ t.s + "-" + t.p + "-" + t.o));
-				//Files.write(Paths.get("output.txt"), (globalTripleCount + ": " + new String(s + " " + p + " " + o + "\n")).getBytes(), StandardOpenOption.APPEND); 
-				//if ((globalTripleCount % 1000 == 0)) {//|| (globalTripleCount > 28800)) {
-				//	System.out.println(globalTripleCount + " triples");
-				//}
-				//System.out.println("Summary now has " + getSummaryEdges().size() + " triples");
+			try (Statement getUntypedTriples = conn.createStatement()) {
+				getUntypedTriples.setFetchSize(10000);
+				try (ResultSet rs = getUntypedTriples.executeQuery(getUntypedTriplesString)) {
+					while (rs.next()) {
+						Triple t = new Triple(rs.getInt(1), rs.getInt(2), rs.getInt(3));
+						if ((t.p == RDF2SQLEncoding.getSubClassCode())
+						|| (t.p == RDF2SQLEncoding.getSubPropertyCode())
+						|| (t.p == RDF2SQLEncoding.getDomainCode())
+						|| (t.p == RDF2SQLEncoding.getRangeCode())) {
+							edgesWithProv.addTriple(t.s, t.p, t.o);
+							storeSpecialNodesRepresentation(t, true);
+						}
+						else
+							handleDataTriple(t);
+						triplesSummarizedSoFar++;
+						dataTriplesSummarizedSoFar++;
+						if (checkConsistency) {
+							consistencyChecks();
+						}
+						//drawSummaryAndGraph(conn, "after-" + triplesSummarizedSoFar + "-" + t.s + "-" + t.p + "-" + t.o);
+					}
+				}
 			}
-			rs.close();
-			getUntypedTriples.close();
 		}
 		catch (SQLException e) {
 			throw new IllegalStateException("Postgres error encountered while summarizing data triples " + e.toString());
 		}
 		dataTriplesSummarizationTime = System.currentTimeMillis() - start;
-		System.out.println("Summarized " + triplesSummarizedSoFar + " data triples in " + dataTriplesSummarizationTime + " ms");
+		LOGGER.info("Summarized " + dataTriplesSummarizedSoFar + " data triples in " + dataTriplesSummarizationTime + " ms");
 
-		String getTypedTriplesString = ("select *  from encoded_triples where p=" + typeConstantCode);
+		start = System.currentTimeMillis();
+		String getTypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p = " + typeConstantCode);
 		try {
-			Statement getTypedTriples = conn.createStatement();
-			getTypedTriples.setFetchSize(1000);
-			ResultSet rs = getTypedTriples.executeQuery(getTypedTriplesString);
-			while (rs.next()) {
-				Triple t = new Triple(rs.getInt(1), rs.getInt(2), rs.getInt(3));
-				//System.out.println("#### Type triple " + t.toString());
-				this.handleTypeTripleAfterData(t);
-				triplesSummarizedSoFar++;
-				this.drawSummaryAndGraph(conn, dataTriplesFileName, ("-after-" + triplesSummarizedSoFar + "-" + t.s + "-" + t.p + "-" + t.o));
-				//System.out.println("Summary now has " + getSummaryEdges().size() + " triples");
-
+			try (Statement getTypedTriples = conn.createStatement()) {
+				getTypedTriples.setFetchSize(1000);
+				try (ResultSet rs = getTypedTriples.executeQuery(getTypedTriplesString)) {
+					while (rs.next()) {
+						Triple t = new Triple(rs.getInt(1), rs.getInt(2), rs.getInt(3));
+						this.handleTypeTripleAfterData(t);
+						triplesSummarizedSoFar++;
+						typeTriplesSummarizedSoFar++;
+						storeSpecialNodesRepresentation(t, false);
+						if (checkConsistency) {
+							consistencyChecks();
+						}
+						//drawSummaryAndGraph(conn, "after-" + triplesSummarizedSoFar + "-" + t.s + "-" + t.p + "-" + t.o);
+					}
+				}
 			}
-			rs.close();
-			getTypedTriples.close();
 		}
 		catch (SQLException e) {
 			throw new IllegalStateException("Postgres error encountered while summarizing type triples: " + e.toString());
 		}
+		typeTriplesSummarizationTime = System.currentTimeMillis() - start;
+		LOGGER.info("Summarized " + typeTriplesSummarizedSoFar + " type triples in " + typeTriplesSummarizationTime + " ms");
 
-		allTriplesSummarizationTime = System.currentTimeMillis() - start;
-		System.out.println("Summarized " + triplesSummarizedSoFar + " triples in " + allTriplesSummarizationTime + " ms");
-		this.display(dataTriplesFileName);
+		allTriplesSummarizationTime = dataTriplesSummarizationTime + typeTriplesSummarizationTime;
+		LOGGER.info("Summarized " + triplesSummarizedSoFar + " overall triples in " + allTriplesSummarizationTime + " ms");
 	}
 
 	public void handleDataTriple(Triple t) {
-		// 8 cases: (US_RS, US_NS) x (UO_RO, UO_NO) x (RP, NP) 
+		// 8 cases: (RS, US) x (RP, UP) x (RO, UO)
 		Long sourceCliqueS = n2sc.get(t.s);
 		Long targetCliqueS = n2tc.get(t.s);
 		Long sourceCliqueO = n2sc.get(t.o);
@@ -134,53 +151,52 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 		Long sourceCliqueP = p2sc.get(t.p);
 		Long targetCliqueP = p2tc.get(t.p);
 
-		Long repO = rep.get(t.o);
 		Long repS = rep.get(t.s);
+		Long repO = rep.get(t.o);
 
-		//TODO comment this out to improve performance when debugging is finished
 		//checkSymmetry(sourceCliqueS, targetCliqueS, sourceCliqueO, targetCliqueO, sourceCliqueP, targetCliqueP); 
 		char caseNumber = decode(repS, repO, sourceCliqueP);
 
-		System.out.println("\nCase " + this.caseName(caseNumber)); 
+		//LOGGER.debug("\n" + t.toString() + " " + RDF2SQLEncoding.decode(t) + " case: " + this.caseName(caseNumber)); 
 		switch (caseNumber) {
-			case US_RS_UO_RO_RP: {
-				handleDataTriple_US_RS_UO_RO_RP(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+			case RS_RP_RO: {
+				handleDataTriple_RS_RP_RO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
 				break;
 			}
-			case US_RS_UO_NO_RP: {
-				handleDataTriple_US_RS_UO_NO_RP(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+			case RS_RP_UO: {
+				handleDataTriple_RS_RP_UO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
 				break;
 			}
-			case US_NS_UO_RO_RP: {
-				handleDataTriple_US_NS_UO_RO_RP(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+			case US_RP_RO: {
+				handleDataTriple_US_RP_RO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
 				break;
 			}
-			case US_NS_UO_NO_RP: {
-				handleDataTriple_US_NS_UO_NO_RP(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+			case US_RP_UO: {
+				handleDataTriple_US_RP_UO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
 				break;
 			}
-			case US_RS_UO_RO_NP: {
-				handleDataTriple_US_RS_UO_RO_NP(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+			case RS_UP_RO: {
+				handleDataTriple_RS_UP_RO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
 				break;
 			}
-			case US_RS_UO_NO_NP: {
-				handleDataTriple_US_RS_UO_NO_NP(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+			case RS_UP_UO: {
+				handleDataTriple_RS_UP_UO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
 				break;
 			}
-			case US_NS_UO_RO_NP: {
-				handleDataTriple_US_NS_UO_RO_NP(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+			case US_UP_RO: {
+				handleDataTriple_US_UP_RO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
 				break;
 			}
-			case US_NS_UO_NO_NP: {
-				handleDataTriple_US_NS_UO_NO_NP(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+			case US_UP_UO: {
+				handleDataTriple_US_UP_UO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
 				break;
 			}
 			default:
 				throw new IllegalStateException("Unknown case " + caseNumber);
 		}
-		//this.display();
+		cacheTriple(t);
+		//display(); 
 	}
-
 
 	/** This implementation should be shared by Weak and Strong
 	 *
@@ -188,23 +204,23 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 	 */
 	@Override
 	protected void handleTypeTripleAfterData(Triple t) {
-		//System.out.println("\nType triple " + t.toString());
+		//LOGGER.debug("\nType triple " + t.toString());
 		Long repS = rep.get(t.s);
 		if (repS != null) {
-			//System.out.println("Source " + t.s + " already represented");
-			addTriple(repS, t.p, t.o);
+			//LOGGER.debug("Source " + t.s + " already represented");
+			edgesWithProv.addTriple(repS, t.p, t.o);
 		}
 		else {
-			//System.out.println("Source " + t.s + " has no data properties");
+			//LOGGER.debug("Source " + t.s + " has no data properties");
 			if (!typeOnlyNodeAlreadySeen) {
-				//System.out.println("Creating representative for type-only node"); 
+				//LOGGER.debug("Creating representative for type-only node"); 
 				this.typeOnlyNodeID = getNextSummaryNode();
 				typeOnlyNodeAlreadySeen = true;
 			}
-			addTriple(typeOnlyNodeID, t.p, t.o);
+			edgesWithProv.addTriple(typeOnlyNodeID, t.p, t.o);
 			rep.put(t.s, typeOnlyNodeID);
+			rep.put(t.o, t.o);
 		}
-		this.numberOfTypeTriplesRead++;
 	}
 
 	private char decode(Long repS, Long repO, Long sourceCliqueP) {
@@ -212,57 +228,24 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 			// US, RS, UO
 			if (repO != null) // RO
 				if (sourceCliqueP != null)
-					return US_RS_UO_RO_RP;
+					return RS_RP_RO;
 				else
-					return US_RS_UO_RO_NP;
+					return RS_UP_RO;
 			else // NO
 				if (sourceCliqueP != null)
-					return US_RS_UO_NO_RP;
+					return RS_RP_UO;
 				else
-					return US_RS_UO_NO_NP;
+					return RS_UP_UO;
 		else // US, NS
 			if (repO != null) // RO
 				if (sourceCliqueP != null) // RP
-					return US_NS_UO_RO_RP;
+					return US_RP_RO;
 				else
-					return US_NS_UO_RO_NP;
+					return US_UP_RO;
 			else // NO
 				if (sourceCliqueP != null) // RP
-					return US_NS_UO_NO_RP;
+					return US_RP_UO;
 				else
-					return US_NS_UO_NO_NP;
+					return US_UP_UO;
 	}
-	
-	/**
-	 * This is used only when drawing the graph using Dot. 
-	 * Different summaries need to traverse their triples in different orders, thus the two cursors which differ between the typed and untyped summaries.
-	 * Returns the first cursor, over the non-type triples
-	 * @param conn
-	 * @return
-	 */
-	protected ResultSet getGraphTriplesCursor1ForDotDrawing(Connection conn, long triplesToDraw) {
-		try{
-			return conn.createStatement().executeQuery("select * from triples where p<>'<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' limit " + triplesToDraw);
-			
-		}
-		catch(SQLException e){
-			throw new IllegalStateException("Could not get a cursor on the graph triples for drawing"); 
-		}
-	}
-	/**
-	 * This is used only when drawing the graph using Dot. 
-	 * Different summaries need to traverse their triples in different orders, thus the two cursors which differ between the typed and untyped summaries.
-	 * Returns the second cursor, over the type triples.
-	 * @param conn
-	 * @return
-	 */
-	protected ResultSet getGraphTriplesCursor2ForDotDrawing(Connection conn, long triplesToDraw) {
-		try{
-			return conn.createStatement().executeQuery("select * from triples where p='<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' limit " + triplesToDraw);
-		}
-		catch(SQLException e){
-			throw new IllegalStateException("Could not get a cursor on the graph triples for drawing"); 
-		}
-	}
-	
 }
