@@ -50,6 +50,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	 * @param conn
 	 */
 	public TypedStrongSummary(Connection conn) {
+		super();
 		try {
 			conn.setAutoCommit(false);
 		}
