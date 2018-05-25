@@ -316,9 +316,23 @@ public class Builder {
 	// Postgres)
 	// TODO decide on the final form this should take
 	public static Summary readSummaryFromPostgres() {
-		getConnection(DEFAULT_CONFIG_FILE); 
 		try{
-			Summary s = new Summary(connectionInUse);
+			Summary s = new Summary(getConnection()); // leave it like this (call getConnection to ensure 
+			// it is opened)
+			return s;
+		}
+		catch(SQLException e){
+			throw new IllegalStateException("Could not read summary " + e.toString());
+		}
+	}
+	
+	// prop allows to override the properties that the Builder may already have, 
+	// in particular to dictate it some connection parameters. 
+	// TODO 
+	public static Summary readSummaryFromPostgres(Properties prop) {
+		try{
+			Summary s = new Summary(getConnection()); // leave it like this (call getConnection to ensure 
+			// it is opened)
 			return s;
 		}
 		catch(SQLException e){
@@ -344,7 +358,14 @@ public class Builder {
 		LOGGER.info("Connection closed");
 	}
 
+	/**
+	 * opens the connexion if not already done
+	 * @return
+	 */
 	public static Connection getConnection() {
+		if (connectionInUse == null){
+			 getConnection(DEFAULT_CONFIG_FILE); 
+		}
 		return connectionInUse;
 	}
 
@@ -370,7 +391,10 @@ public class Builder {
 			LOGGER.info("Connection to Postgres established with URL: " + connectionURL);
 		}
 		catch(SQLException e){
-			throw new IllegalStateException("Could not open connection " + e.toString());
+			throw new IllegalStateException("Could not open connection to " +
+					 properties.getProperty("database.name") + " as user " +
+					 properties.getProperty("database.user") + " with password " +
+					 properties.getProperty("database.password")); 
 		}
 	}
 
@@ -394,5 +418,6 @@ public class Builder {
 
 		LOGGER.info("All partial results tables dropped");
 	}
+	
 
 }
