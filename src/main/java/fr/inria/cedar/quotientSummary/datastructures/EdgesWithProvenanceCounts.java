@@ -86,93 +86,55 @@ public class EdgesWithProvenanceCounts {
 		return countsForSP.get(o);
 	}
 
-	// replaces in summary edges
 	public void replaceNodeInSummaryEdges(Long oldNode, Long newNode) {
-		// replace oldNode wherever it existed as an object:
-		for (long s : edges.keySet()) {
-			HashMap<Long, TreeSet<Long>> triplesOfO = edges.get(s);
-			for (long p : triplesOfO.keySet()) {
-				TreeSet<Long> objectsForSP = triplesOfO.get(p);
-				TreeSet<Long> newObjectsForSP = new TreeSet<>();
-				boolean changed = false;
-				for (long o : objectsForSP) {
-					if (o == oldNode) {
-						if (!newObjectsForSP.contains(newNode)) {
-							newObjectsForSP.add(newNode);
-							setCounter(s, p, newNode, getCounter(s, p, oldNode)); // edge count transferred
-						}
-						else{ // newNode was already there, we need to add the edge count from oldNode to that of newNode
-							setCounter(s, p, newNode, (getCounter(s, p, oldNode) + getCounter(s, p, newNode)));
-						}
-						changed = true;
-					}
-					else{
-						newObjectsForSP.add(o);
-					}
-				}
-				if (changed) {
-					triplesOfO.replace(p, newObjectsForSP); // replace is not a structural modification of the map, thus no concurrent modification exception
-				}
-			}
-		}
-		for (long s : edges.keySet()) {
-			for (long p : edges.get(s).keySet()) {
-				if (edges.get(s).get(p) != null) {
+		// replacing oldNode with newNode in object position
+		for (Long s: edges.keySet()) {
+			for (Long p: edges.get(s).keySet()) {
+				if (edges.get(s).get(p).contains(oldNode)) {
+					Long oldNodeCounter = getCounter(s, p, oldNode);
+					edges.get(s).get(p).remove(oldNode);
 					counts.get(s).get(p).remove(oldNode);
+					if (!edges.get(s).get(p).contains(newNode)) {
+						edges.get(s).get(p).add(newNode);
+						setCounter(s, p, newNode, oldNodeCounter);
+					}
+					else {
+						setCounter(s, p, newNode, oldNodeCounter + getCounter(s, p, newNode));
+					}
 				}
 			}
 		}
-		// above we have replaced old with new wherever it appeared as an object.
-		// now let's also do it ***as a subject:***
 
-		HashMap<Long, TreeSet<Long>> oldNodeIsSubject = edges.get(oldNode);
-		HashMap<Long, HashMap<Long, Long>> countsOnOldSubject = counts.get(oldNode);
-		if (oldNodeIsSubject != null) { // in some edges, oldNode was subject
-			edges.remove(oldNode); // detach this entry from edges (but keep them in oldNodeIsSubject for now)
-
-			HashMap<Long, TreeSet<Long>> newNodeIsSubject = edges.get(newNode);
-			if (newNodeIsSubject == null) { // the new node was not previously a subject
-				//LOGGER.debug("   SUMMARY.REPLACE IN EDGES: Adding on the new node " + newNode + " the triples of old node " + oldNode);
-				edges.put(newNode, oldNodeIsSubject); // we're done
-				counts.put(newNode, countsOnOldSubject);
+		// replacing oldNode with newNode in subject position
+		if (edges.get(oldNode) != null) {
+			HashMap<Long, HashMap<Long, TreeSet<Long>>> newEdges = new HashMap<>();
+			newEdges.put(newNode, new HashMap<>());
+			for (Long p: edges.get(oldNode).keySet()) {
+				newEdges.get(newNode).put(p, edges.get(oldNode).get(p));
 			}
-			else {
-				// there were already edges whose subject was the new node
-				// in this case we need to fuse the two maps so that each edge appears only once
-				// we will do this by copying those oldNodeIsSubject triples
-				// which were not already on the new node, into the properties
-				// of the new node
-				//LOGGER.debug("   SUMMARY.REPLACE IN EDGES: There were edges both on old " + oldNode + " and on new " + newNode);
-				for (Long p : oldNodeIsSubject.keySet()) { // iterate over the properties of the old node
-					TreeSet<Long> oldNodeObjectsForP = oldNodeIsSubject.get(p);
-					TreeSet<Long> newNodeObjectsForP = newNodeIsSubject.get(p);
-					if (newNodeObjectsForP == null) { // the new node did not have this one => initializing
-						//LOGGER.debug("   SUMMARY.REPLACE IN EDGES: " + newNode + " did not have edges labeled " + oldNodeProperty + ", he is taking them from " + oldNode);
-						newNodeObjectsForP = new TreeSet<>();
-						newNodeIsSubject.put(p, newNodeObjectsForP);
+			if (edges.get(newNode) == null) {
+				edges.put(newNode, new HashMap<>());
+				counts.put(newNode, new HashMap<>());
+			}
+			for (Long p: newEdges.get(newNode).keySet()) {
+				for (Long o: newEdges.get(newNode).get(p)) {
+					Long oldNodeCounter = getCounter(oldNode, p, o);
+					if (edges.get(newNode).get(p) == null) {
+						edges.get(newNode).put(p, new TreeSet<>());
+						counts.get(newNode).put(p, new HashMap<>());
 					}
-					// whether the new node did or did not have triples labeled
-					// oldNodeProperty, try to give him the triples labeled
-					// oldNodeProperty of the old node:
-					for (Long objectOfOldNode : oldNodeObjectsForP) {
-						if (!newNodeObjectsForP.contains(objectOfOldNode)) {
-							//LOGGER.debug("   SUMMARY.REPLACE IN EDGES: " +newNode + " takes property " + oldNodeProperty + " with value " + objectOfOldNode + " from " + oldNode);
-							newNodeObjectsForP.add(objectOfOldNode);
-							setCounter(newNode, p, objectOfOldNode, getCounter(oldNode, p, objectOfOldNode)); // transfer edge counts
-						}
-						else {
-							//LOGGER.debug("   SUMMARY.REPLACE IN EDGES: " +newNode + " already had property " + oldNodeProperty + " with value " + objectOfOldNode);
-							setCounter(newNode, p, objectOfOldNode, (getCounter(oldNode, p, objectOfOldNode) + getCounter(newNode, p, objectOfOldNode)));
-						}
+					if (!edges.get(newNode).get(p).contains(o)) {
+						edges.get(newNode).get(p).add(o);
+						setCounter(newNode, p, o, oldNodeCounter);
+					}
+					else {
+						setCounter(newNode, p, o, oldNodeCounter + getCounter(newNode, p, o));
 					}
 				}
 			}
+			edges.remove(oldNode);
 			counts.remove(oldNode);
 		}
-		else {
-			// there was no edge with oldNode as a subject, no subject replacement to do
-		}
-		//LOGGER.debug("   SUMMARY.REPLACE IN EDGES ends");
 	}
 
 	public ArrayList<Triple> getSummaryEdges() {
@@ -190,7 +152,8 @@ public class EdgesWithProvenanceCounts {
 		return res;
 	}
 
-	public void removeTriple(Long s, Long p, Long o){
+	public void removeTriple(Long s, Long p, Long o) {
+		//LOGGER.debug("REMOVING SUMMARY TRIPLE: " + s + " " + p + " " + o);
 		HashMap<Long, TreeSet<Long>> edgesOfS = edges.get(s);
 		if (edgesOfS != null){
 			TreeSet<Long> pEdgesOfS = edgesOfS.get(p);

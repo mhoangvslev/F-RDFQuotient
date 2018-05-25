@@ -50,7 +50,7 @@ public class ReplacementSpecification {
 		if (this.sc.equals(rs2.getSC())){
 			if (this.tc.equals(rs2.getTC())){
 				if (this.oldNode.equals(rs2.getOldNode())){
-					if (this.newNode.equals(rs2.getNewNode())){
+					if (!this.newNode.equals(rs2.getNewNode())){
 						throw new IllegalStateException("Incompatible replacements of " + oldNode); 
 					}
 				}

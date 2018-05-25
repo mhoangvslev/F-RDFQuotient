@@ -362,6 +362,25 @@ public class StrongSummaryTests {
 		}
 	}
 
+	@Test
+	public void summarizeStrongTest13() {
+		String referenceFileName = expectedOutput(13, "noSaturation");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = summarizeUsingStrongSummary(13);
+			if (!testOutput.exists()){
+				fail("Test output not found ");
+			}
+			if (!expectedOutput.exists()){
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary strong 13", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in strong test 13 " + e.toString());
+		}
+	}
+
 	// Saturation and summarization tests with all graphs (saturation has no
 	// impact on the input graph if it doesn't contain the schema however it
 	// may change the order of the triples and it may be useful to check for

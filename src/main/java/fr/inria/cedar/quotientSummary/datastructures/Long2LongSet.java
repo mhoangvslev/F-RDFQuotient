@@ -87,9 +87,10 @@ public class Long2LongSet {
 		TreeSet<Long> setFor = map.get(k);
 		if (setFor == null) {
 			setFor = new TreeSet<>();
-			map.put(k, setFor); 
+			map.put(k, setFor);
 		}
-		if (!setFor.contains(v))
+		if (!setFor.contains(v)) {
 			setFor.add(v);
 		}
+	}
 }
