@@ -385,25 +385,90 @@ public class Builder {
 			throw new IllegalStateException("Could not initialize properties " + e.toString());
 		}
 		Properties connectionProps = new Properties();
-		connectionProps.put("user", properties.getProperty("database.user"));
-		connectionProps.put("password", properties.getProperty("database.password"));
+		connectionProps.put("user", properties.getProperty("database.user").trim());
+		connectionProps.put("password", properties.getProperty("database.password").trim());
 
 		String connectionURL = "jdbc:postgresql://" + properties.getProperty("database.host") + ":" + 
 				properties.getProperty("database.port") + "/" + properties.getProperty("database.name");
 		try{
 			connectionInUse = DriverManager.getConnection(connectionURL, connectionProps);
+			// https://docs.oracle.com/javase/8/docs/api/java/sql/DriverManager.html#getConnection-java.lang.String-java.util.Properties-
+			// states that if connectionURL and connectionProps disagree on the host, port or database name,
+			// the one actually considered is implementation (driver) dependent. 
+			// It is important not to allow the values of the two parameters to diverge. 
 			LOGGER.info("Connection to Postgres established with URL: " + connectionURL);
 		}
 		catch(SQLException e){
 			e.printStackTrace();
-			throw new IllegalStateException("Could not open connection to " + properties.getProperty("database.name") + 
-					" as user " + properties.getProperty("database.user") + 
-					" with password " + properties.getProperty("database.password") + 
-					 "\nCONNECTION URL: " + connectionURL 
-					); 
+			throw new IllegalStateException("Could not open connection to " + connectionURL); 
 		}	
 	}
 
+	// gets a connection with parameters taken from the config file *and then* overriden by the custom properties
+	private static void getConnection(String configFile, Properties customProp){
+		Properties properties = new Properties();
+		try{
+			properties.load(new FileReader(configFile));
+		}
+		catch(Exception e){
+			throw new IllegalStateException("Could not initialize properties " + e.toString());
+		}
+		Properties connectionProps = new Properties();
+		
+		String databaseName = properties.getProperty("database.name").trim();
+		String host = properties.getProperty("database.host").trim();
+		String port = properties.getProperty("database.port").trim();
+		String user = properties.getProperty("database.user").trim();
+		String password = properties.getProperty("database.password").trim();
+		
+		connectionProps.put("user", user);
+		connectionProps.put("password", password);
+
+		String cDatabaseName = customProp.getProperty("database.name").trim();
+		String cHost = customProp.getProperty("database.host").trim();
+		String cPort = customProp.getProperty("database.port").trim();
+		String cUser = customProp.getProperty("database.user").trim();
+		String cPassword = customProp.getProperty("database.password").trim();
+		
+		if (cDatabaseName != null && cDatabaseName.length() > 0){
+			connectionProps.put("database", cDatabaseName);  
+			databaseName = cDatabaseName; 
+		}
+		if (cHost != null && cHost.length() > 0){
+			connectionProps.put("host", cHost); 
+			host = cHost; 
+		}
+		if (cPort != null && cPort.length() > 0){
+			connectionProps.put("port", cPort); 
+			port = cPort; 
+		}
+		if (cUser != null && cUser.length() > 0){
+			connectionProps.put("user", cUser); 
+			user = cUser; 
+		}
+		if (cPassword != null && cPassword.length() > 1){
+			connectionProps.put("password", cPassword); 
+			password = cPassword; 
+		}
+		String connectionURL = "jdbc:postgresql://" + host + ":" + 	port + "/" + databaseName;
+		try{
+			// https://docs.oracle.com/javase/8/docs/api/java/sql/DriverManager.html#getConnection-java.lang.String-java.util.Properties-
+			// states that if connectionURL and connectionProps disagree on the host, port or database name,
+			// the one actually considered is implementation (driver) dependent. 
+			// It is important not to allow the values of the two parameters to diverge. 
+			connectionInUse = DriverManager.getConnection(connectionURL, connectionProps);
+			LOGGER.info("Connection to Postgres established with URL: " + connectionURL  + " and " +  connectionProps.toString());
+		}
+		catch(SQLException e){
+			e.printStackTrace();
+			throw new IllegalStateException("Could not open connection to " + connectionURL + " and " + connectionProps.toString()); 
+		}	
+	}
+	
+	public static void getConnection(Properties customProp){
+		getConnection(DEFAULT_CONFIG_FILE, customProp); 
+	}
+	
 	private static void dropPartialResultsTables() throws IllegalStateException {
 		Statement stmt;
 		try {
