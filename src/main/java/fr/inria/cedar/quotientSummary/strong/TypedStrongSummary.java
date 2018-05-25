@@ -1,5 +1,6 @@
 package fr.inria.cedar.quotientSummary.strong;
 
+import fr.inria.cedar.quotientSummary.datastructures.EdgeTransferSpecification;
 import fr.inria.cedar.quotientSummary.datastructures.Long2Long;
 import fr.inria.cedar.quotientSummary.datastructures.Long2LongSet;
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
@@ -483,9 +484,11 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 			computeAndApplyCliqueReplacements(sourceCliqueS, sourceCliqueP, newSourceCliqueS, SOURCE, nodeReps);
 		}
 
+		EdgeTransferSpecification edgesTransfersSpecification = new EdgeTransferSpecification();
 		if (!replaceForS) {
-			updateEdgesWithDistribution(distributeSummaryEdgesThroughCounts(repS, newRepS, t.s, TARGET), repS, newRepS, TARGET);
+			edgesTransfersSpecification.addAll(EdgeTransferSpecification.determineEdgesToTransfer(rep, triplesBySubject, triplesByObject, t.s, repS, TARGET));
 		}
+		edgesTransfersSpecification.applyTransfers(edgesWithProv, repS, newRepS, repO, newRepO);
 
 		for (ReplacementSpecification reps: nodeReps) {
 			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode());
@@ -542,9 +545,11 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 			computeAndApplyCliqueReplacements(targetCliqueO, targetCliqueP, newTargetCliqueO, TARGET, nodeReps);
 		}
 
+		EdgeTransferSpecification edgesTransfersSpecification = new EdgeTransferSpecification();
 		if (!replaceForO) {
-			updateEdgesWithDistribution(distributeSummaryEdgesThroughCounts(repO, newRepO, t.o, SOURCE), repO, newRepO, SOURCE);
+			edgesTransfersSpecification.addAll(EdgeTransferSpecification.determineEdgesToTransfer(rep, triplesBySubject, triplesByObject, t.o, repO, SOURCE));
 		}
+		edgesTransfersSpecification.applyTransfers(edgesWithProv, repS, newRepS, repO, newRepO);
 
 		for (ReplacementSpecification reps: nodeReps) {
 			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode());
@@ -603,9 +608,11 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 			computeAndApplyCliqueReplacements(sourceCliqueS, sourceCliqueP, newSourceCliqueS, SOURCE, nodeReps);
 		}
 
+		EdgeTransferSpecification edgesTransfersSpecification = new EdgeTransferSpecification();
 		if (!replaceForS) {
-			updateEdgesWithDistribution(distributeSummaryEdgesThroughCounts(repS, newRepS, t.s, TARGET), repS, newRepS, TARGET);
+			edgesTransfersSpecification.addAll(EdgeTransferSpecification.determineEdgesToTransfer(rep, triplesBySubject, triplesByObject, t.s, repS, TARGET));
 		}
+		edgesTransfersSpecification.applyTransfers(edgesWithProv, repS, newRepS, repO, newRepO);
 
 		for (ReplacementSpecification reps: nodeReps) {
 			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode());
@@ -664,9 +671,11 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 			computeAndApplyCliqueReplacements(targetCliqueO, targetCliqueP, newTargetCliqueO, TARGET, nodeReps);
 		}
 
+		EdgeTransferSpecification edgesTransfersSpecification = new EdgeTransferSpecification();
 		if (!replaceForO) {
-			updateEdgesWithDistribution(distributeSummaryEdgesThroughCounts(repO, newRepO, t.o, SOURCE), repO, newRepO, SOURCE);
+			edgesTransfersSpecification.addAll(EdgeTransferSpecification.determineEdgesToTransfer(rep, triplesBySubject, triplesByObject, t.o, repO, SOURCE));
 		}
+		edgesTransfersSpecification.applyTransfers(edgesWithProv, repS, newRepS, repO, newRepO);
 
 		for (ReplacementSpecification reps: nodeReps) {
 			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode());

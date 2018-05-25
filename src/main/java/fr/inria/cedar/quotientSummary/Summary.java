@@ -2,7 +2,6 @@ package fr.inria.cedar.quotientSummary;
 
 import fr.inria.cedar.quotientSummary.datastructures.EdgesWithProvenanceCounts;
 import fr.inria.cedar.quotientSummary.datastructures.Long2Long;
-import fr.inria.cedar.quotientSummary.datastructures.Long2LongSet;
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
 import fr.inria.cedar.quotientSummary.util.DOTAuxiliary;
 import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
@@ -874,7 +873,7 @@ public class Summary {
 				bw.write("\"" + subjectForDot + "\" [style = filled, color=" + sColor + 
 						(dax.isDarkColor(sColor)?", fontcolor=white ":"")+ 
 						"];\n");
-				//	LOGGER.debug("Data-O " + o + " (" + object + ") represented by " + oRep + " colored " + dax.getSummaryNodeColor(oRep));
+				//LOGGER.debug("Data-O " + o + " (" + object + ") represented by " + oRep + " colored " + dax.getSummaryNodeColor(oRep));
 				bw.write("\"" + objectForDot + "\" [style = filled, color=" + oColor + 
 						(dax.isDarkColor(oColor)?", fontcolor=white ":"")+ 
 						"];\n");
@@ -902,7 +901,7 @@ public class Summary {
 			else { // type
 				//LOGGER.debug("TYPE TRIPLE"); 
 				propertyForDot = "rdf:type";
-				//	LOGGER.debug("TYP1 " + s + " (" + subject + ") represented by  " + sRep);
+				//LOGGER.debug("TYP1 " + s + " (" + subject + ") represented by  " + sRep);
 				if (dax == null) {
 					throw new IllegalStateException("Null dax");
 				}
@@ -911,7 +910,7 @@ public class Summary {
 				}
 				bw.write("\"" + subjectForDot + "\" [style = filled, color=" + dax.getSummaryNodeColor(sRep) + "];\n");
 
-				//	LOGGER.debug("TYP2 " + o + " (" + object + ") represented by  " + oRep);
+				//LOGGER.debug("TYP2 " + o + " (" + object + ") represented by  " + oRep);
 				bw.write("\"" + objectForDot + "\" [fontcolor=white, style = filled, color=black];\n");
 			}
 			bw.write("\"" + subjectForDot + "\"" + " -> \"" + objectForDot + "\" [label=\"" + propertyForDot + "\"];\n");
@@ -1048,59 +1047,6 @@ public class Summary {
 			}
 		}
 		return res;  
-	}
-
-	protected void addIncomingEdges(Long node, Long2LongSet newEdges){
-		//LOGGER.debug("SUMMARY ADD INCOMING EDGES INTO " + node);
-		for (Long p: newEdges.keys()){
-			//LOGGER.debug("SUMMARY ADD INCOMING EDGES: incoming property: " + p);
-			for (Long s: newEdges.get(p)){
-				//LOGGER.debug("SUMMARY ADDDING " + s + "--" + p + "-->" + node); 
-				edgesWithProv.addTriple(s, p, node);
-			}
-		}
-	}
-
-	protected void removeIncomingEdges(Long node, Long2LongSet removedEdges){
-		for (Long p: removedEdges.keys()){
-			for (Long s: removedEdges.get(p)){
-				edgesWithProv.removeTriple(s, p, node); 
-			}
-		}
-	}
-
-	protected void addOutgoingEdges(Long node, Long2LongSet newEdges){
-		for (Long p: newEdges.keys()){
-			for (Long o: newEdges.get(p)){
-				edgesWithProv.addTriple(node, p, o);
-			}
-		}
-	}
-
-	protected void removeOutgoingEdges(Long node, Long2LongSet removedEdges){
-		for (Long p: removedEdges.keys()){
-			for (Long o: removedEdges.get(p)){
-				edgesWithProv.removeTriple(node, p, o); 
-			}
-		}
-	}
-
-	protected void decrementIncomingEdges(Long node, Long2LongSet removedEdges){
-		for (Long p: removedEdges.keys()){
-			for (Long s: removedEdges.get(p)){
-				Long counter = edgesWithProv.getCounter(s, p, node);
-				edgesWithProv.setCounter(s, p, node, counter - 1);
-			}
-		}
-	}
-
-	protected void decrementOutgoingEdges(Long node, Long2LongSet newEdges){
-		for (Long p: newEdges.keys()){
-			for (Long o: newEdges.get(p)){
-				Long counter = edgesWithProv.getCounter(node, p, o);
-				edgesWithProv.setCounter(node, p, o, counter - 1);
-			}
-		}
 	}
 
 	public String getEdgesToString(){

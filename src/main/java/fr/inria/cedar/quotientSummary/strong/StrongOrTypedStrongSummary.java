@@ -1,6 +1,7 @@
 package fr.inria.cedar.quotientSummary.strong;
 
 import fr.inria.cedar.quotientSummary.Summary;
+import fr.inria.cedar.quotientSummary.datastructures.EdgeTransferSpecification;
 import fr.inria.cedar.quotientSummary.datastructures.Long2Long;
 import fr.inria.cedar.quotientSummary.datastructures.Long2LongSet;
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
@@ -8,7 +9,6 @@ import fr.inria.cedar.quotientSummary.datastructures.TwoLevelLongMap;
 import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Objects;
 import java.util.TreeSet;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -249,17 +249,14 @@ public class StrongOrTypedStrongSummary extends Summary {
 		// was the only node it represented, and now t.s/t.o has moved away to
 		// another representative). This happens only if t.s/t.o had an empty
 		// source/target clique and has split to another summary representative.
-		if (!replaceForS && !replaceForO) {
-			updateEdgesWithDistributionAndReconciliation(t, repS, newRepS, repO, newRepO);
+		EdgeTransferSpecification edgesTransfersSpecification = new EdgeTransferSpecification();
+		if (!replaceForS) {
+			edgesTransfersSpecification.addAll(EdgeTransferSpecification.determineEdgesToTransfer(rep, triplesBySubject, triplesByObject, t.s, repS, TARGET));
 		}
-		else {
-			if (!replaceForS) {
-				updateEdgesWithDistribution(distributeSummaryEdgesThroughCounts(repS, newRepS, t.s, TARGET), repS, newRepS, TARGET);
-			}
-			if (!replaceForO) {
-				updateEdgesWithDistribution(distributeSummaryEdgesThroughCounts(repO, newRepO, t.o, SOURCE), repO, newRepO, SOURCE);
-			}
+		if (!replaceForO) {
+			edgesTransfersSpecification.addAll(EdgeTransferSpecification.determineEdgesToTransfer(rep, triplesBySubject, triplesByObject, t.o, repO, SOURCE));
 		}
+		edgesTransfersSpecification.applyTransfers(edgesWithProv, repS, newRepS, repO, newRepO);
 
 		// now modify summary edges
 		// apply nodeReplacements in all cases, because it only contains
@@ -353,17 +350,14 @@ public class StrongOrTypedStrongSummary extends Summary {
 			computeAndApplyCliqueReplacements(targetCliqueO, targetCliqueP, newTargetCliqueO, TARGET, nodeReps);
 		}
 
-		if (!replaceForS && !replaceForO) {
-			updateEdgesWithDistributionAndReconciliation(t, repS, newRepS, repO, newRepO);
+		EdgeTransferSpecification edgesTransfersSpecification = new EdgeTransferSpecification();
+		if (!replaceForS) {
+			edgesTransfersSpecification.addAll(EdgeTransferSpecification.determineEdgesToTransfer(rep, triplesBySubject, triplesByObject, t.s, repS, TARGET));
 		}
-		else {
-			if (!replaceForS) {
-				updateEdgesWithDistribution(distributeSummaryEdgesThroughCounts(repS, newRepS, t.s, TARGET), repS, newRepS, TARGET);
-			}
-			if (!replaceForO) {
-				updateEdgesWithDistribution(distributeSummaryEdgesThroughCounts(repO, newRepO, t.o, SOURCE), repO, newRepO, SOURCE);
-			}
+		if (!replaceForO) {
+			edgesTransfersSpecification.addAll(EdgeTransferSpecification.determineEdgesToTransfer(rep, triplesBySubject, triplesByObject, t.o, repO, SOURCE));
 		}
+		edgesTransfersSpecification.applyTransfers(edgesWithProv, repS, newRepS, repO, newRepO);
 
 		for (ReplacementSpecification reps: nodeReps) {
 			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode());
@@ -424,9 +418,11 @@ public class StrongOrTypedStrongSummary extends Summary {
 			computeAndApplyCliqueReplacements(targetCliqueO, targetCliqueP, newTargetCliqueO, TARGET, nodeReps);
 		}
 
+		EdgeTransferSpecification edgesTransfersSpecification = new EdgeTransferSpecification();
 		if (!replaceForO) {
-			updateEdgesWithDistribution(distributeSummaryEdgesThroughCounts(repO, newRepO, t.o, SOURCE), repO, newRepO, SOURCE);
+			edgesTransfersSpecification.addAll(EdgeTransferSpecification.determineEdgesToTransfer(rep, triplesBySubject, triplesByObject, t.o, repO, SOURCE));
 		}
+		edgesTransfersSpecification.applyTransfers(edgesWithProv, repS, newRepS, repO, newRepO);
 
 		for (ReplacementSpecification reps: nodeReps) {
 			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode());
@@ -487,9 +483,11 @@ public class StrongOrTypedStrongSummary extends Summary {
 			computeAndApplyCliqueReplacements(sourceCliqueS, sourceCliqueP, newSourceCliqueS, SOURCE, nodeReps);
 		}
 
+		EdgeTransferSpecification edgesTransfersSpecification = new EdgeTransferSpecification();
 		if (!replaceForS) {
-			updateEdgesWithDistribution(distributeSummaryEdgesThroughCounts(repS, newRepS, t.s, TARGET), repS, newRepS, TARGET);
+			edgesTransfersSpecification.addAll(EdgeTransferSpecification.determineEdgesToTransfer(rep, triplesBySubject, triplesByObject, t.s, repS, TARGET));
 		}
+		edgesTransfersSpecification.applyTransfers(edgesWithProv, repS, newRepS, repO, newRepO);
 
 		for (ReplacementSpecification reps: nodeReps) {
 			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode());
@@ -554,9 +552,11 @@ public class StrongOrTypedStrongSummary extends Summary {
 			computeAndApplyCliqueReplacements(targetCliqueO, targetCliqueP, newTargetCliqueO, TARGET, nodeReps);
 		}
 
+		EdgeTransferSpecification edgesTransfersSpecification = new EdgeTransferSpecification();
 		if (!replaceForO) {
-			updateEdgesWithDistribution(distributeSummaryEdgesThroughCounts(repO, newRepO, t.o, SOURCE), repO, newRepO, SOURCE);
+			edgesTransfersSpecification.addAll(EdgeTransferSpecification.determineEdgesToTransfer(rep, triplesBySubject, triplesByObject, t.o, repO, SOURCE));
 		}
+		edgesTransfersSpecification.applyTransfers(edgesWithProv, repS, newRepS, repO, newRepO);
 
 		for (ReplacementSpecification reps: nodeReps) {
 			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode());
@@ -621,9 +621,11 @@ public class StrongOrTypedStrongSummary extends Summary {
 			computeAndApplyCliqueReplacements(sourceCliqueS, sourceCliqueP, newSourceCliqueS, SOURCE, nodeReps);
 		}
 
+		EdgeTransferSpecification edgesTransfersSpecification = new EdgeTransferSpecification();
 		if (!replaceForS) {
-			updateEdgesWithDistribution(distributeSummaryEdgesThroughCounts(repS, newRepS, t.s, TARGET), repS, newRepS, TARGET);
+			edgesTransfersSpecification.addAll(EdgeTransferSpecification.determineEdgesToTransfer(rep, triplesBySubject, triplesByObject, t.s, repS, TARGET));
 		}
+		edgesTransfersSpecification.applyTransfers(edgesWithProv, repS, newRepS, repO, newRepO);
 
 		for (ReplacementSpecification reps: nodeReps) {
 			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode());
@@ -776,14 +778,12 @@ public class StrongOrTypedStrongSummary extends Summary {
 		else if (param == TARGET){
 			if (!clique1.equals(this.getEmptyTargetCliqueID()) && (!clique1.equals(cliqueNew))){
 				//LOGGER.debug("CLIQUE REPLACE IN UNTYPED, P2, N2 TARGET: we'll replace " + clique1 +  " with " + cliqueNew);
-				//LOGGER.debug("CLIQUE REPLACE IN UNTYPED, P2, N2 TARGET: that is " + 
-				//		this.showCliqueAsString(tc.get(clique1)) + 
-				//		" with " + this.showCliqueAsString(tc.get(clique2))); 
-				toBeReplaced.add(clique1); 
+				//LOGGER.debug("CLIQUE REPLACE IN UNTYPED, P2, N2 TARGET: that is " + this.showCliqueAsString(tc.get(clique1)) + " with " + this.showCliqueAsString(tc.get(clique2))); 
+				toBeReplaced.add(clique1);
 			}
 			if (!clique2.equals(this.getEmptyTargetCliqueID()) && (!clique2.equals(cliqueNew))){
 				//LOGGER.debug("CLIQUE REPLACE IN UNTYPED, P2, N2 TARGET: we'll replace " + clique2 + " with " + cliqueNew);
-				toBeReplaced.add(clique2); 
+				toBeReplaced.add(clique2);
 			}
 		}
 		// apply: 
@@ -850,6 +850,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 			this.p2tc.replaceValue(oldClique, newClique);
 		}
 	}
+
 	protected void replaceCliqueInN2(Long oldClique, Long newClique, char param){
 		if (param == SOURCE){
 			this.n2sc.replaceValue(oldClique, newClique);
@@ -857,147 +858,6 @@ public class StrongOrTypedStrongSummary extends Summary {
 		else if (param == TARGET){
 			this.n2tc.replaceValue(oldClique, newClique);
 		}
-	}
-
-	// returns on oldRep, the edges to remove, 
-	// and on newRep, the edges to create for it
-	protected HashMap<Long, Long2LongSet> distributeSummaryEdgesThroughCounts(long oldRep, long newRep, long dataNode, char param){
-		HashMap<Long, Long2LongSet> res = new HashMap<>();
-		Long2LongSet summEdgesToAddOnNewRep = new Long2LongSet();
-		Long2LongSet summEdgesToRemoveOnOldRep = new Long2LongSet();
-		Long2LongSet decrement = new Long2LongSet();
-		res.put(oldRep, summEdgesToRemoveOnOldRep);
-		res.put(newRep, summEdgesToAddOnNewRep);
-		res.put(-1L, decrement);
-
-		if (param == SOURCE){ // we must distribute edges outgoing from oldRep and newRep, which now represents dataNode
-			//LOGGER.debug("DISTRIBUTING OUTGOING SUMMARY EDGES of summary node " + oldRep + " with the new summary node " + newRep + " due to " + dataNode);
-			// traverse the data edges outgoing node and, for each of them:
-			// - mark the corresponding summary edge as needing to be added to the new summary node; 
-			// - decrease the counter of the corresponding summary edge starting from the old node, and if the counter is 0, mark that edge for removal
-			Long2LongSet dataEdgesFromNode = this.triplesBySubject.get(dataNode); 
-			if (dataEdgesFromNode != null){
-				for (Long p: dataEdgesFromNode.keys()){
-					for (Long o: dataEdgesFromNode.get(p)){
-						// data edge dataNode--p-->o
-						//LOGGER.debug("For " +  dataNode  + "--" + p + "-->" + o + ")");
-						Long repO = rep.get(o); // this supposes that rep(o) has not been updated yet
-						if (repO != null){ // represented by summary edge oldRep--p-->repO
-							summEdgesToAddOnNewRep.add(p, repO); 
-							//LOGGER.debug("Seeking repr. counter  of: oldRep (" + oldRep + ")--" + p + "-->repO(" + repO + ")");
-							//edgesWithProv.display();
-							Long edgeCountLeft = edgesWithProv.getCounter(oldRep, p, repO) - 1; //was: o instead of repO
-							if (edgeCountLeft == 0) {
-								summEdgesToRemoveOnOldRep.add(p, repO);
-							}
-							decrement.add(p, repO);
-						}
-					}
-				}
-			}
-		}
-		else if (param == TARGET){ // we must distribute edges incoming in oldRep and/or newRep, which now represents node
-			//LOGGER.debug("DISTRIBUTING INCOMING SUMMARY EDGES of " + oldRep + " with the new " + newRep + " due to " + node);
-			//LOGGER.debug("DISTRIBUTING INCOMING SUMMARY EDGES: incoming edges are " + displayTriplesByObject());
-
-			Long2LongSet dataEdgesToNode = this.triplesByObject.get(dataNode); 
-			if (dataEdgesToNode != null){
-				//LOGGER.debug("DISTRIBUTING INCOMING SUMMARY EDGES: " + node + " has " + edgesToNode.keys().size() + " distinct incoming properties");
-				for (Long p: dataEdgesToNode.keys()){
-					//LOGGER.debug("DISTRIBUTING INCOMING SUMMARY EDGES: " + node + " has " + p + " incoming edge(s)");  
-					for (Long s: dataEdgesToNode.get(p)){
-						// data edge s--p-->node
-						Long repS = rep.get(s); 
-						//LOGGER.debug("DISTRIBUTING INCOMING SUMMARY EDGES " + node + " had a " + p + " edge from " + s + " and representative of " + s + " is " + repS); 
-						if (repS != null){ // represented by summary edge: repS --p-->oldRep); 
-							summEdgesToAddOnNewRep.add(p, repS); 
-							Long edgeCountLeft = edgesWithProv.getCounter(repS, p, oldRep) - 1; // was: s instead of repS
-							if (edgeCountLeft == 0) {
-								summEdgesToRemoveOnOldRep.add(p, repS); 
-							}
-							decrement.add(p, repS);
-							//LOGGER.debug("DISTRIBUTING INCOMING SUMMARY EDGES adding to new node " + newRep + " a " + p + " edge from " + repS); 
-						}
-					}
-				}
-			}
-		}
-		return res; 
-	}
-
-	// on rep there are edges to remove
-	// on newRep there are edges to add
-	protected void updateEdgesWithDistribution(HashMap<Long, Long2LongSet> edgesToAddAndRemove, Long rep, Long newRep, char param){
-		if (param == SOURCE){
-			addOutgoingEdges(newRep, edgesToAddAndRemove.get(newRep));
-			decrementOutgoingEdges(rep, edgesToAddAndRemove.get(-1L));
-			removeOutgoingEdges(rep, edgesToAddAndRemove.get(rep));
-		}
-		else if (param == TARGET){
-			addIncomingEdges(newRep, edgesToAddAndRemove.get(newRep));
-			decrementIncomingEdges(rep, edgesToAddAndRemove.get(-1L));
-			removeIncomingEdges(rep, edgesToAddAndRemove.get(rep));
-		}
-	}
-
-	protected void updateEdgesWithDistributionAndReconciliation(Triple t, Long repS, Long newRepS, Long repO, Long newRepO) {
-		// GATHER information before
-		HashMap<Long, Long2LongSet> operationsOnSource = distributeSummaryEdgesThroughCounts(repO, newRepO, t.o, SOURCE);
-		HashMap<Long, Long2LongSet> operationsOnTarget = distributeSummaryEdgesThroughCounts(repS, newRepS, t.s, TARGET);
-
-		// APPLY to source
-
-		// decrement edge counts
-		decrementOutgoingEdges(repO, operationsOnSource.get(-1L));
-
-		// remove unecessary edges
-		removeOutgoingEdges(repO, operationsOnSource.get(repO));
-
-		// reconcile new edges
-		HashMap<Long, Long> operationsOnSourceReconciliationOld = new HashMap<>();
-		HashMap<Long, Long> operationsOnSourceReconciliationNew = new HashMap<>();
-		for (Long p: operationsOnSource.get(newRepO).keys()) {
-			for (Long s: operationsOnSource.get(newRepO).get(p)) {
-				if (Objects.equals(s, repS)) {
-					operationsOnSourceReconciliationOld.put(p, s);
-					operationsOnSourceReconciliationNew.put(p, newRepS);
-				}
-			}
-		}
-		for (Long p: operationsOnSourceReconciliationOld.keySet()) {
-			operationsOnSource.get(newRepO).get(p).remove(operationsOnSourceReconciliationOld.get(p));
-			operationsOnSource.get(newRepO).get(p).add(operationsOnSourceReconciliationNew.get(p));
-		}
-
-		// add new edges
-		addOutgoingEdges(newRepO, operationsOnSource.get(newRepO));
-
-
-		// APPLY to target
-
-		// decrement only once
-
-		// remove unecessary edges
-		removeIncomingEdges(repS, operationsOnTarget.get(repS));
-
-		// reconcile new edges
-		HashMap<Long, Long> operationsOnTargetReconciliationOld = new HashMap<>();
-		HashMap<Long, Long> operationsOnTargetReconciliationNew = new HashMap<>();
-		for (Long p: operationsOnTarget.get(newRepS).keys()) {
-			for (Long o: operationsOnTarget.get(newRepS).get(p)) {
-				if (Objects.equals(o, repO)) {
-					operationsOnTargetReconciliationOld.put(p, o);
-					operationsOnTargetReconciliationNew.put(p, newRepO);
-				}
-			}
-		}
-		for (Long p: operationsOnTargetReconciliationOld.keySet()) {
-			operationsOnTarget.get(newRepS).get(p).remove(operationsOnTargetReconciliationOld.get(p));
-			operationsOnTarget.get(newRepS).get(p).add(operationsOnTargetReconciliationNew.get(p));
-		}
-
-		// add new edges
-		addIncomingEdges(newRepS, operationsOnTarget.get(newRepS));
 	}
 
 	protected boolean addingPropertyToSWillCauseASplit(Long repS, Long sourceCliqueS, Long s){
