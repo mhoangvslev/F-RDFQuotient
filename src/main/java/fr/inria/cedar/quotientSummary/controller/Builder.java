@@ -120,6 +120,7 @@ public class Builder {
 				return;
 			case "readSummaryComputedWithoutSaturation":
 				Summary s = readSummaryFromPostgres(); 
+				System.out.println("Builder successfully read summary");
 				return;
 			default:
 				break;
@@ -256,9 +257,11 @@ public class Builder {
 		connectionProps.put("user", properties.getProperty("database.user"));
 		connectionProps.put("password", properties.getProperty("database.password"));
 
-		String connectionURL = "jdbc:postgresql://" + properties.getProperty("database.host") + ":" + properties.getProperty("database.port") + "/" + properties.getProperty("database.name");
+		String connectionURL = "jdbc:postgresql://" + properties.getProperty("database.host") + ":" + 
+		properties.getProperty("database.port") + "/" + properties.getProperty("database.name");
 		Connection conn = DriverManager.getConnection(connectionURL, connectionProps);
-		LOGGER.info("Connection to Postgres established with URL: " + connectionURL);
+		LOGGER.info("Connection to Postgres established with URL: " + connectionURL + " with user " + 
+				properties.getProperty("database.user") + " and password " + properties.getProperty("database.password")); 
 		Preconditions.checkState(conn != null, "No connection for " + connectionURL);
 		return conn;
 	}
@@ -385,17 +388,20 @@ public class Builder {
 		connectionProps.put("user", properties.getProperty("database.user"));
 		connectionProps.put("password", properties.getProperty("database.password"));
 
-		String connectionURL = "jdbc:postgresql://" + properties.getProperty("database.host") + ":" + properties.getProperty("database.port") + "/" + properties.getProperty("database.name");
+		String connectionURL = "jdbc:postgresql://" + properties.getProperty("database.host") + ":" + 
+				properties.getProperty("database.port") + "/" + properties.getProperty("database.name");
 		try{
 			connectionInUse = DriverManager.getConnection(connectionURL, connectionProps);
 			LOGGER.info("Connection to Postgres established with URL: " + connectionURL);
 		}
 		catch(SQLException e){
-			throw new IllegalStateException("Could not open connection to " +
-					 properties.getProperty("database.name") + " as user " +
-					 properties.getProperty("database.user") + " with password " +
-					 properties.getProperty("database.password")); 
-		}
+			e.printStackTrace();
+			throw new IllegalStateException("Could not open connection to " + properties.getProperty("database.name") + 
+					" as user " + properties.getProperty("database.user") + 
+					" with password " + properties.getProperty("database.password") + 
+					 "\nCONNECTION URL: " + connectionURL 
+					); 
+		}	
 	}
 
 	private static void dropPartialResultsTables() throws IllegalStateException {
