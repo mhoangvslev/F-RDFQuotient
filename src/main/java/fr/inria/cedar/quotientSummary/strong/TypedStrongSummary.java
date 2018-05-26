@@ -223,19 +223,19 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 
 	@Override
 	public void display() {
-		LOGGER.debug("TYPED STRONG SUMMARY\nClass set IDs to class sets: " + cs.toString());
-		LOGGER.debug("Nodes to class set IDs: " + n2cs.toString());
-		LOGGER.debug("Source cliques: " + sc.toString());
-		LOGGER.debug("Target cliques: " + tc.toString());
-		LOGGER.debug("Nodes to source cliques: " + n2sc.toString());
-		LOGGER.debug("Nodes to target cliques: " + n2tc.toString());
-		LOGGER.debug("Property to source cliques: " + p2sc.toString());
-		LOGGER.debug("Property to target cliques: " + p2tc.toString());
-		LOGGER.debug("Representation function: ");
-		LOGGER.debug(showRep());
-		LOGGER.debug("Cs to cs ID: ");
-		showClassSets();
-		LOGGER.debug("Summary edges: ");
+		System.out.println("TYPED STRONG SUMMARY\nClass set IDs to class sets: " + cs.toString());
+		System.out.println("Nodes to class set IDs: " + n2cs.toString());
+		System.out.println("Source cliques: " + sc.toString());
+		System.out.println("Target cliques: " + tc.toString());
+		System.out.println("Nodes to source cliques: " + n2sc.toString());
+		System.out.println("Nodes to target cliques: " + n2tc.toString());
+		System.out.println("Property to source cliques: " + p2sc.toString());
+		System.out.println("Property to target cliques: " + p2tc.toString());
+		System.out.println("Representation function: ");
+		System.out.println(showRep());
+		System.out.println("Cs to cs ID: ");
+		displayClassSets();
+		System.out.println("Summary edges: ");
 		edgesWithProv.display();
 	}
 
@@ -248,17 +248,18 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		sb.append("}");
 		return new String(sb);
 	}
-	private void showClassSets() {
+
+	private void displayClassSets() {
 		for (TreeSet<Long> classSets: cs2csID.keySet()){
 			StringBuilder thisCSBuffer = new StringBuilder();
 			thisCSBuffer.append(showLongSet(classSets));
 			thisCSBuffer.append("-->");
 			thisCSBuffer.append(cs2csID.get(classSets));
-			LOGGER.debug(thisCSBuffer.toString());
+			System.out.println(thisCSBuffer.toString());
 		}
 	}
 
-	public void showRepThroughCliques() {
+	public void displayRepThroughCliques() {
 		StringBuffer sb = new StringBuffer();
 		sb.append("n2sc: ");
 		for (Long node: n2sc.getKeys()) {
@@ -267,7 +268,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 			Long thisNodeSC = n2sc.get(node);
 			if (thisNodeSC == null)
 				throw new IllegalStateException("Null source clique");
-			LOGGER.debug("n2sc: " + node + "->" + thisNodeSC);
+			System.out.println("n2sc: " + node + "->" + thisNodeSC);
 			Long thisNodeTC = n2tc.get(node);
 			if (thisNodeTC == null)
 				throw new IllegalStateException("Null target clique for " + node);
@@ -280,7 +281,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 				throw new IllegalStateException("Null summary node");
 			sb.append(node).append("->").append(summaryNode).append(" ");
 		}
-		LOGGER.debug(sb);
+		System.out.println(sb);
 	}
 
 	@Override
@@ -477,10 +478,6 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 			}
 		}
 
-		//for (ReplacementSpecification reps: nodeReps) {
-		//	untypedSummaryNodes.applyTargetedReplacement(reps);
-		//}
-
 		if (replaceForS) {
 			computeAndApplyCliqueReplacements(sourceCliqueS, sourceCliqueP, newSourceCliqueS, SOURCE, nodeReps);
 		}
@@ -537,10 +534,6 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 				nodeReps.add(repsO);
 			}
 		}
-
-		//for (ReplacementSpecification reps: nodeReps) {
-		//	untypedSummaryNodes.applyTargetedReplacement(reps);
-		//}
 
 		if (replaceForO) {
 			computeAndApplyCliqueReplacements(targetCliqueO, targetCliqueP, newTargetCliqueO, TARGET, nodeReps);
@@ -601,10 +594,6 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 			}
 		}
 
-		//for (ReplacementSpecification reps: nodeReps) {
-		//	untypedSummaryNodes.applyTargetedReplacement(reps);
-		//}
-
 		if (replaceForS) {
 			computeAndApplyCliqueReplacements(sourceCliqueS, sourceCliqueP, newSourceCliqueS, SOURCE, nodeReps);
 		}
@@ -663,10 +652,6 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 				nodeReps.add(repsO);
 			}
 		}
-
-		//for (ReplacementSpecification reps: nodeReps) {
-		//	untypedSummaryNodes.applyTargetedReplacement(reps);
-		//}
 
 		if (replaceForO) {
 			computeAndApplyCliqueReplacements(targetCliqueO, targetCliqueP, newTargetCliqueO, TARGET, nodeReps);

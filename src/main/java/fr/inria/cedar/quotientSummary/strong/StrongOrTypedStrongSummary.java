@@ -9,6 +9,7 @@ import fr.inria.cedar.quotientSummary.datastructures.TwoLevelLongMap;
 import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.TreeSet;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -208,25 +209,12 @@ public class StrongOrTypedStrongSummary extends Summary {
 		if (replaceForO) {
 			if (!newRepO.equals(repO)) {
 				ReplacementSpecification repsO = new ReplacementSpecification(sourceCliqueO, newTargetCliqueO, repO, newRepO);
-				repsO.checkForConflicts(nodeReps);
+				if (checkConsistency) {
+					repsO.checkForConflicts(nodeReps);
+				}
 				nodeReps.add(repsO);
 			}
 		}
-
-		// now we replace just the nodes in untyped (not the cliques yet),
-		// because the nodes are at the lowest (value) level
-		// IMPORTANT: If we replace the cliques first, we may be wrongly
-		// overwriting nodes: sc1-->tc1-->n1, sc1-->tc2-->n2, if we need to
-		// replace tc1 with tc2, we will overwrite n2 and lose it!
-		// serious problem!
-		//for (ReplacementSpecification reps: nodeReps) {
-		//	untypedSummaryNodes.applyTargetedReplacement(reps);
-		//}
-		// if repS and/or repO did not need to be replaced (because scs and/or
-		// tco were empty), there is nothing to do at this stage, because
-		// newRepS and resp. newRepO are already well inserted in untyped, on
-		// their respective cliques
-		//LOGGER.debug("RS_RP_RO after node but before clique replacement, untyped is: " + untypedSummaryNodes.toString());
 
 		// now compute and then apply the clique replacements in untyped, where
 		// they were still not applied compute sourceCliqueReplacements and
@@ -256,7 +244,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		if (!replaceForO) {
 			edgesTransfersSpecification.addAll(EdgeTransferSpecification.determineEdgesToTransfer(rep, triplesBySubject, triplesByObject, t.o, repO, SOURCE));
 		}
-		edgesTransfersSpecification.applyTransfers(edgesWithProv, repS, newRepS, repO, newRepO);
+		edgesTransfersSpecification.applyTransfers(edgesWithProv, !replaceForS ? repS : null, !replaceForS ? newRepS : null, !replaceForO ? repO : null, !replaceForO ? newRepO : null);
 
 		// now modify summary edges
 		// apply nodeReplacements in all cases, because it only contains
@@ -334,14 +322,12 @@ public class StrongOrTypedStrongSummary extends Summary {
 		if (replaceForO) {
 			if (!newRepO.equals(repO)) {
 				ReplacementSpecification repsO = new ReplacementSpecification(sourceCliqueO, newTargetCliqueO, repO, newRepO);
-				repsO.checkForConflicts(nodeReps);
+				if (checkConsistency) {
+					repsO.checkForConflicts(nodeReps);
+				}
 				nodeReps.add(repsO);
 			}
 		}
-
-		//for (ReplacementSpecification reps: nodeReps) {
-		//	untypedSummaryNodes.applyTargetedReplacement(reps);
-		//}
 
 		if (replaceForS) {
 			computeAndApplyCliqueReplacements(sourceCliqueS, sourceCliqueP, newSourceCliqueS, SOURCE, nodeReps);
@@ -357,7 +343,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		if (!replaceForO) {
 			edgesTransfersSpecification.addAll(EdgeTransferSpecification.determineEdgesToTransfer(rep, triplesBySubject, triplesByObject, t.o, repO, SOURCE));
 		}
-		edgesTransfersSpecification.applyTransfers(edgesWithProv, repS, newRepS, repO, newRepO);
+		edgesTransfersSpecification.applyTransfers(edgesWithProv, !replaceForS ? repS : null, !replaceForS ? newRepS : null, !replaceForO ? repO : null, !replaceForO ? newRepO : null);
 
 		for (ReplacementSpecification reps: nodeReps) {
 			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode());
@@ -410,10 +396,6 @@ public class StrongOrTypedStrongSummary extends Summary {
 			}
 		}
 
-		//for (ReplacementSpecification reps: nodeReps) {
-		//	untypedSummaryNodes.applyTargetedReplacement(reps);
-		//}
-
 		if (replaceForO) {
 			computeAndApplyCliqueReplacements(targetCliqueO, targetCliqueP, newTargetCliqueO, TARGET, nodeReps);
 		}
@@ -422,7 +404,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		if (!replaceForO) {
 			edgesTransfersSpecification.addAll(EdgeTransferSpecification.determineEdgesToTransfer(rep, triplesBySubject, triplesByObject, t.o, repO, SOURCE));
 		}
-		edgesTransfersSpecification.applyTransfers(edgesWithProv, repS, newRepS, repO, newRepO);
+		edgesTransfersSpecification.applyTransfers(edgesWithProv, null, null, repO, newRepO);
 
 		for (ReplacementSpecification reps: nodeReps) {
 			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode());
@@ -475,10 +457,6 @@ public class StrongOrTypedStrongSummary extends Summary {
 			}
 		}
 
-		//for (ReplacementSpecification reps: nodeReps) {
-		//	untypedSummaryNodes.applyTargetedReplacement(reps);
-		//}
-
 		if (replaceForS) {
 			computeAndApplyCliqueReplacements(sourceCliqueS, sourceCliqueP, newSourceCliqueS, SOURCE, nodeReps);
 		}
@@ -487,7 +465,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		if (!replaceForS) {
 			edgesTransfersSpecification.addAll(EdgeTransferSpecification.determineEdgesToTransfer(rep, triplesBySubject, triplesByObject, t.s, repS, TARGET));
 		}
-		edgesTransfersSpecification.applyTransfers(edgesWithProv, repS, newRepS, repO, newRepO);
+		edgesTransfersSpecification.applyTransfers(edgesWithProv, repS, newRepS, null, null);
 
 		for (ReplacementSpecification reps: nodeReps) {
 			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode());
@@ -544,10 +522,6 @@ public class StrongOrTypedStrongSummary extends Summary {
 			}
 		}
 
-		//for (ReplacementSpecification reps: nodeReps) {
-		//	untypedSummaryNodes.applyTargetedReplacement(reps);
-		//}
-
 		if (replaceForO) {
 			computeAndApplyCliqueReplacements(targetCliqueO, targetCliqueP, newTargetCliqueO, TARGET, nodeReps);
 		}
@@ -556,7 +530,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		if (!replaceForO) {
 			edgesTransfersSpecification.addAll(EdgeTransferSpecification.determineEdgesToTransfer(rep, triplesBySubject, triplesByObject, t.o, repO, SOURCE));
 		}
-		edgesTransfersSpecification.applyTransfers(edgesWithProv, repS, newRepS, repO, newRepO);
+		edgesTransfersSpecification.applyTransfers(edgesWithProv, null, null, repO, newRepO);
 
 		for (ReplacementSpecification reps: nodeReps) {
 			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode());
@@ -613,10 +587,6 @@ public class StrongOrTypedStrongSummary extends Summary {
 			}
 		}
 
-		//for (ReplacementSpecification reps: nodeReps) {
-		//	untypedSummaryNodes.applyTargetedReplacement(reps);
-		//}
-
 		if (replaceForS) {
 			computeAndApplyCliqueReplacements(sourceCliqueS, sourceCliqueP, newSourceCliqueS, SOURCE, nodeReps);
 		}
@@ -625,7 +595,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		if (!replaceForS) {
 			edgesTransfersSpecification.addAll(EdgeTransferSpecification.determineEdgesToTransfer(rep, triplesBySubject, triplesByObject, t.s, repS, TARGET));
 		}
-		edgesTransfersSpecification.applyTransfers(edgesWithProv, repS, newRepS, repO, newRepO);
+		edgesTransfersSpecification.applyTransfers(edgesWithProv, repS, newRepS, null, null);
 
 		for (ReplacementSpecification reps: nodeReps) {
 			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode());
@@ -787,7 +757,13 @@ public class StrongOrTypedStrongSummary extends Summary {
 			}
 		}
 		// apply: 
-		for (Long oldClique: toBeReplaced){
+		for (Long oldClique: toBeReplaced) {
+			// now we replace just the nodes in untyped (not the cliques yet),
+			// because the nodes are at the lowest (value) level
+			// IMPORTANT: If we replace the cliques first, we may be wrongly
+			// overwriting nodes: sc1-->tc1-->n1, sc1-->tc2-->n2, if we need to
+			// replace tc1 with tc2, we will overwrite n2 and lose it!
+			// serious problem!
 			replaceCliqueInUntyped(oldClique, cliqueNew, param, nodeReps);
 			replaceCliqueInP2(oldClique, cliqueNew, param);
 			replaceCliqueInN2(oldClique, cliqueNew, param);
@@ -820,62 +796,73 @@ public class StrongOrTypedStrongSummary extends Summary {
 
 	// modifies only untyped
 	protected void replaceCliqueInUntyped(Long oldClique, Long newClique, char param, ArrayList<ReplacementSpecification> nodeReps){
-		if (oldClique.equals(newClique)){
+		if (oldClique.equals(newClique)) {
 			return; 
 		}
-		if (param == TARGET){ // we find all occurrences of the old cliques (in the 2nd level), remove them and replace with the new clique
-			// if this leads to overwriting a node in a different way, throw an error
-			HashMap<Long, Long> replacements = untypedSummaryNodes.replaceAt2ndLevel(oldClique, newClique);
-			// source and target cliques don't matter any more, don't check for conflicts in replacements
-			for (Long repl: replacements.keySet()) {
-				ReplacementSpecification reps = new ReplacementSpecification(0L, 0L, repl, replacements.get(repl));
+		if (param == TARGET) { // we find all occurrences of the old cliques (in the 2nd level), remove them and replace with the new clique
+			HashSet<Triple> replacements = untypedSummaryNodes.replaceAt2ndLevel(oldClique, newClique);
+			for (Triple t: replacements) {
+				Long sourceClique = t.s;
+				Long targetClique = newClique;
+				Long oldNode = t.p;
+				Long newNode = t.o;
+				ReplacementSpecification reps = new ReplacementSpecification(sourceClique, targetClique, oldNode, newNode);
+				if (checkConsistency) {
+					reps.checkForConflicts(nodeReps);
+				}
 				nodeReps.add(reps);
 			}
 		}
-		else if (param == SOURCE){
-			HashMap<Long, Long> replacements = untypedSummaryNodes.replaceAt1stLevel(oldClique, newClique);
-			// source and target cliques don't matter any more, don't check for conflicts in replacements
-			for (Long repl: replacements.keySet()) {
-				ReplacementSpecification reps = new ReplacementSpecification(0L, 0L, repl, replacements.get(repl));
+		else if (param == SOURCE) {
+			HashSet<Triple> replacements = untypedSummaryNodes.replaceAt1stLevel(oldClique, newClique);
+			for (Triple t: replacements) {
+				Long sourceClique = newClique;
+				Long targetClique = t.s;
+				Long oldNode = t.p;
+				Long newNode = t.o;
+				ReplacementSpecification reps = new ReplacementSpecification(sourceClique, targetClique, oldNode, newNode);
+				if (checkConsistency) {
+					reps.checkForConflicts(nodeReps);
+				}
 				nodeReps.add(reps);
 			}
 		}
 	}
 
-	protected void replaceCliqueInP2(Long oldClique, Long newClique, char param){
-		if (param == SOURCE){
+	protected void replaceCliqueInP2(Long oldClique, Long newClique, char param) {
+		if (param == SOURCE) {
 			this.p2sc.replaceValue(oldClique, newClique);
 		}
-		else if (param == TARGET){
+		else if (param == TARGET) {
 			this.p2tc.replaceValue(oldClique, newClique);
 		}
 	}
 
-	protected void replaceCliqueInN2(Long oldClique, Long newClique, char param){
-		if (param == SOURCE){
+	protected void replaceCliqueInN2(Long oldClique, Long newClique, char param) {
+		if (param == SOURCE) {
 			this.n2sc.replaceValue(oldClique, newClique);
 		}
-		else if (param == TARGET){
+		else if (param == TARGET) {
 			this.n2tc.replaceValue(oldClique, newClique);
 		}
 	}
 
-	protected boolean addingPropertyToSWillCauseASplit(Long repS, Long sourceCliqueS, Long s){
-		if (sourceCliqueS.equals(this.getEmptySourceCliqueID())){ // due to the current triple, newSCS for sure is not empty.
-			TreeSet<Long> inverseRep = rep.getInverse(repS); 
-			if (inverseRep.size()  > 1){ // several nodes shared this representative: they all had empty sourceCliqueID
+	protected boolean addingPropertyToSWillCauseASplit(Long repS, Long sourceCliqueS, Long s) {
+		if (sourceCliqueS.equals(this.getEmptySourceCliqueID())) { // due to the current triple, newSCS for sure is not empty.
+			TreeSet<Long> inverseRep = rep.getInverse(repS);
+			if (inverseRep.size() > 1) { // several nodes shared this representative: they all had empty sourceCliqueID
 				// and is is the only one for which this situation changes. Thus, we will split.
-				return true; 
+				return true;
 			}
-			if (inverseRep.size() == 1){ // there was only one node with this representative, and empty sourceClique.
-				for (Long l: inverseRep){
-					if (l.equals(s)){ // but it is exactly 
-						return true; 
+			if (inverseRep.size() == 1) { // there was only one node with this representative, and empty sourceClique.
+				for (Long l: inverseRep) {
+					if (l.equals(s)) { // but it is exactly 
+						return true;
 					}
 				}
 			}
 		}
-		return false; 
+		return false;
 	}
 
 	/**
@@ -887,11 +874,11 @@ public class StrongOrTypedStrongSummary extends Summary {
 	 * @return
 	 */
 	protected Long getOrCreateSummaryNode(Long sourceClique, Long targetClique) {
-		Long node = untypedSummaryNodes.getIfExists(sourceClique, targetClique); 
-		if (node != null){
-			return node; 
+		Long node = untypedSummaryNodes.getIfExists(sourceClique, targetClique);
+		if (node != null) {
+			return node;
 		}
-		else{
+		else {
 			node = getNextSummaryNode(); // from the Summary class; 
 			untypedSummaryNodes.add(sourceClique, targetClique, node);
 			return node;
@@ -900,16 +887,16 @@ public class StrongOrTypedStrongSummary extends Summary {
 
 	protected Long getEmptySourceCliqueID() {
 		Long res;
-		if (this.emptySCCount == Long.MAX_VALUE) { // the empty source clique has not been created yet
+		if (emptySCCount == Long.MAX_VALUE) { // the empty source clique has not been created yet
 			TreeSet<Long> emptySC = new TreeSet<>();
 			res = minCliqueID; // we invent a new source clique
-			this.emptySCCount = minCliqueID;
+			emptySCCount = minCliqueID;
 			// add this to sc
 			sc.put(minCliqueID, emptySC);
 			minCliqueID--;
 		}
 		else // the empty source clique has already been created, just copy it 
-			res = this.emptySCCount;
+			res = emptySCCount;
 		return res;
 	}
 
@@ -953,78 +940,103 @@ public class StrongOrTypedStrongSummary extends Summary {
 
 	protected Long getEmptyTargetCliqueID() {
 		Long res;
-		if (this.emptyTCCount == Long.MAX_VALUE) { // the empty source clique has not been created yet
+		if (emptyTCCount == Long.MAX_VALUE) { // the empty source clique has not been created yet
 			TreeSet<Long> emptyTC = new TreeSet<>();
 			res = minCliqueID; // we invent a new source clique
 			//LOGGER.debug("ooooo> Initialized the empty target clique at: " + res);
-			this.emptyTCCount = minCliqueID;
+			emptyTCCount = minCliqueID;
 			// add this to tc
 			tc.put(minCliqueID, emptyTC);
 			minCliqueID--;
 		}
 		else // the empty source clique has already been created, just copy it 
-			res = this.emptyTCCount;
+			res = emptyTCCount;
 		return res;
 	}
 
-	protected void cacheTriple(Triple t){
+	protected void cacheTriple(Triple t) {
 		// cache it by the subject:
 		Long2LongSet edgesOfS = this.triplesBySubject.get(t.s);
-		if (edgesOfS == null){
+		if (edgesOfS == null) {
 			edgesOfS = new Long2LongSet();
-			this.triplesBySubject.put(t.s, edgesOfS);
+			triplesBySubject.put(t.s, edgesOfS);
 		}
 		edgesOfS.add(t.p, t.o);
-		//LOGGER.debug("CACHED BY SUBJECT " + t.s + " on " + t.p + ": " + t.o + " resulting in " + displayTriplesBySubject());
+		//LOGGER.debug("CACHED BY SUBJECT " + t.s + " on " + t.p + ": " + t.o + " resulting in " + showTriplesBySubject());
 		// cache it by the object:
 		Long2LongSet edgesOfO = this.triplesByObject.get(t.o);
-		if (edgesOfO == null){
+		if (edgesOfO == null) {
 			edgesOfO = new Long2LongSet();
-			this.triplesByObject.put(t.o, edgesOfO);
+			triplesByObject.put(t.o, edgesOfO);
 		}
 		edgesOfO.add(t.p, t.s);
-		//LOGGER.debug("CACHED BY OBJECT " + t.o + " on " + t.p + ": " + t.s + " resulting in " + displayTriplesByObject());
-		//displayTriplesByObject();
+		//LOGGER.debug("CACHED BY OBJECT " + t.o + " on " + t.p + ": " + t.s + " resulting in " + showTriplesByObject());
 	}
 
 	protected void consistencyChecks(){
-		String msg;
+		String msg = "After " + dataTriplesSummarizedSoFar + " data triples: ";
 		for (Long dataNode: n2sc.getKeys()){
 			//LOGGER.debug("Checking from data node: " + dataNode);
 			Long nodeRep = rep.get(dataNode);
-			if (nodeRep == null){
-				msg = "Unrepresented data node " + dataNode;
+			if (nodeRep == null) {
+				msg += "Unrepresented data node " + dataNode;
 				//LOGGER.debug(msg);
 				throw new IllegalStateException(msg);
 			}
 			Long nsc = n2sc.get(dataNode);
 			Long ntc = n2tc.get(dataNode);
 			HashMap<Long, Long> tc2Nodes = untypedSummaryNodes.get(nsc);
-			if (tc2Nodes == null){
-				msg = "untypedSummaryNodes has no (target clique, node) pairs on source clique " + nsc + " of node " + dataNode + "(" + RDF2SQLEncoding.dictionaryDecode(dataNode) + ")"; 
+			if (tc2Nodes == null) {
+				msg += "untypedSummaryNodes has no (target clique, node) pairs on source clique " + nsc + " of node " + dataNode + "(" + RDF2SQLEncoding.dictionaryDecode(dataNode) + ")"; 
 				//LOGGER.debug(msg);
 				throw new IllegalStateException(msg);
 			}
 			Long tcn = tc2Nodes.get(ntc);
-			if (tcn == null){
-				msg = "No node found on source clique " + nsc + " for target clique " + ntc + " of data node " + dataNode + " or (" + RDF2SQLEncoding.dictionaryDecode(dataNode) + ") while its representative is " + nodeRep;
+			if (tcn == null) {
+				msg += "No node found on source clique " + nsc + " for target clique " + ntc + " of data node " + dataNode + " or (" + RDF2SQLEncoding.dictionaryDecode(dataNode) + ") while its representative is " + nodeRep;
 				//LOGGER.debug(msg);
 				throw new IllegalStateException(msg);
 			}
-			if (!(tcn.equals(nodeRep))){
-				msg = nsc + "=>" + ntc + ": " + tcn + " while the representative of " + dataNode + " is " + nodeRep;
+			if (!(tcn.equals(nodeRep))) {
+				msg += nsc + "=>" + ntc + ": " + tcn + " while the representative of " + dataNode + " is " + nodeRep;
 				//LOGGER.debug(msg);
 				throw new IllegalStateException(msg);
 			}
 		}
 		Long totalEdgeCount = edgesWithProv.totalEdgeCount(); 
 		if (!totalEdgeCount.equals(triplesSummarizedSoFar)){
-			msg = "In edges we have a total of " + totalEdgeCount + " edges while we have summarized so far " + triplesSummarizedSoFar + " data triples";
+			msg = "In edges we have a total of " + totalEdgeCount + " edges while we have summarized so far " + triplesSummarizedSoFar + " triples";
 			throw new IllegalStateException(msg);
+		}
+
+		for (Long s: edgesWithProv.keySet()) {
+			for (Long p: edgesWithProv.get(s).keySet()) {
+				if (edgesWithProv.get(s).get(p).size() < 1) {
+					msg += "In edges we have an empty set for s = " + s + " and p = " + p;
+					throw new IllegalStateException(msg);
+				}
+				else if (edgesWithProv.getCounter(s, p, edgesWithProv.get(s).get(p).first()) == null) {
+					msg += "In edges counts we have a missing counter for s = " + s + " and p = " + p;
+					throw new IllegalStateException(msg);
+				}
+			}
+		}
+
+		for (Long s: triplesBySubject.keySet()) {
+			for (Long p: triplesBySubject.get(s).keys()) {
+				for (Long o: triplesBySubject.get(s).get(p)) {
+					Long repS = rep.get(s);
+					Long repO = rep.get(o);
+					if (edgesWithProv.get(repS) == null || edgesWithProv.get(repS).get(p) == null || !edgesWithProv.get(repS).get(p).contains(repO)) {
+						msg += "We don't have a summary edge representing data triple " + s + " " + p + " " + o;
+						throw new IllegalStateException(msg);
+					}
+				}
+			}
 		}
 	}
 
-	protected String displayTriplesByObject(){
+	protected String showTriplesByObject(){
 		StringBuffer sb = new StringBuffer();
 		for (Long node: triplesByObject.keySet()){
 			sb.append(node).append("<~~");
@@ -1034,7 +1046,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		return new String(sb); 
 	}
 
-	protected String displayTriplesBySubject(){
+	protected String showTriplesBySubject(){
 		StringBuffer sb = new StringBuffer();
 		for (Long node: triplesBySubject.keySet()){
 			sb.append(node).append("~~>");
@@ -1046,17 +1058,17 @@ public class StrongOrTypedStrongSummary extends Summary {
 
 	@Override
 	public void display() {
-		LOGGER.debug("=== SUMMARY " + this.getClass().getName() + "\nSource cliques: " + sc.toString());
-		LOGGER.debug("Target cliques: " + tc.toString());
-		LOGGER.debug("Data nodes to source cliques: " + n2sc.toString());
-		LOGGER.debug("Data nodes to target cliques: " + n2tc.toString());
-		LOGGER.debug("Property to source cliques: " + p2sc.toString());
-		LOGGER.debug("Property to target cliques: " + p2tc.toString());
-		LOGGER.debug("Untyped summary nodes: " + untypedSummaryNodes.toString());
-		LOGGER.debug("Representation function: ");
-		LOGGER.debug(showRep());
-		LOGGER.debug("Summary edges: ");
+		System.out.println("=== SUMMARY " + this.getClass().getName() + "\nSource cliques: " + sc.toString());
+		System.out.println("Target cliques: " + tc.toString());
+		System.out.println("Data nodes to source cliques: " + n2sc.toString());
+		System.out.println("Data nodes to target cliques: " + n2tc.toString());
+		System.out.println("Property to source cliques: " + p2sc.toString());
+		System.out.println("Property to target cliques: " + p2tc.toString());
+		System.out.println("Untyped summary nodes: " + untypedSummaryNodes.toString());
+		System.out.println("Representation function: ");
+		System.out.println(showRep());
+		System.out.println("Summary edges: ");
 		edgesWithProv.display();
-		LOGGER.debug("===");
+		System.out.println("===");
 	}
 }

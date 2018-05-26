@@ -56,7 +56,7 @@ public class EdgesWithProvenanceCounts {
 		}
 		else{
 			Long count = countsForThisSubjectAndProperty.get(t.o);
-			countsForThisSubjectAndProperty.put(t.o, (count+1));
+			countsForThisSubjectAndProperty.put(t.o, (count + 1L));
 		}
 	}
 
@@ -83,7 +83,7 @@ public class EdgesWithProvenanceCounts {
 		if (countsForSP == null){
 			return 0L;
 		}
-		return countsForSP.get(o);
+		return countsForSP.get(o) != null ? countsForSP.get(o) : 0L;
 	}
 
 	public void replaceNodeInSummaryEdges(Long oldNode, Long newNode) {
@@ -154,12 +154,22 @@ public class EdgesWithProvenanceCounts {
 
 	public void removeTriple(Long s, Long p, Long o) {
 		//LOGGER.debug("REMOVING SUMMARY TRIPLE: " + s + " " + p + " " + o);
-		HashMap<Long, TreeSet<Long>> edgesOfS = edges.get(s);
-		if (edgesOfS != null){
-			TreeSet<Long> pEdgesOfS = edgesOfS.get(p);
-			if (pEdgesOfS != null){
-				pEdgesOfS.remove(o);
-				counts.get(s).get(p).remove(o);
+		if (edges.get(s) == null || edges.get(s).get(p) == null || !edges.get(s).get(p).contains(o)) {
+			throw new IllegalStateException("Triple " + s + " " + p + " " + o + " does not exist in edges");
+		}
+		if (counts.get(s) == null || counts.get(s).get(p) == null || counts.get(s).get(p).get(o) == null) {
+			throw new IllegalStateException("Triple " + s + " " + p + " " + o + " does not exist in edges counts");
+		}
+
+		edges.get(s).get(p).remove(o);
+		counts.get(s).get(p).remove(o);
+
+		if (edges.get(s).get(p).isEmpty()) {
+			edges.get(s).remove(p);
+			counts.get(s).remove(p);
+			if (edges.get(s).keySet().isEmpty()) {
+				edges.remove(s);
+				counts.remove(s);
 			}
 		}
 	}
@@ -169,7 +179,7 @@ public class EdgesWithProvenanceCounts {
 	}
 
 	public Long totalEdgeCount(){
-		long res = 0;
+		Long res = 0L;
 		for (Long s: counts.keySet()){
 			HashMap<Long, HashMap<Long, Long>> maps = counts.get(s);
 			for (Long p: maps.keySet()){

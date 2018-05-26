@@ -50,41 +50,6 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 	}
 
 	/**
-	 * This must be used to read a TW summary from Postgres.
-	 *
-	 * @param conn
-	 */
-	public TypedWeakSummary(Connection conn) {
-		super();
-		try {
-			conn.setAutoCommit(false);
-		}
-		catch (SQLException ex) {
-			LOGGER.error(ex);
-		}
-		this.summaryTablePrefix = TYPED_WEAK_SUMMARY_PREFIX;
-		LOGGER.info("Reading TypedWeak summary from Postgres, setting up special URIs from the dictionary");
-		RDF2SQLEncoding.setUp(conn, "dictionary");
-		String getSummaryTriples = getSummaryTriplesSQLQuery();
-		try {
-			Statement getTriples = conn.createStatement();
-			//LOGGER.debug("Created statement");
-			ResultSet rs = getTriples.executeQuery(getSummaryTriples);
-			//LOGGER.debug("Asking for summary triples")
-			while (rs.next()) {
-				Long s = rs.getLong(1);
-				Long p = rs.getLong(2);
-				Long o = rs.getLong(3);
-				edgesWithProv.addTriple(s, p, o);
-			}
-		}
-		catch (SQLException e) {
-			throw new IllegalStateException("Unable to read TypedWeak summary from Postgres: " + e.toString());
-		}
-		LOGGER.info("Read TypedWeak summary from Postgres");
-	}
-
-	/**
 	 * Summarizes an RDF graph assuming the data triples are in Postgres
 	 *
 	 * @param conn

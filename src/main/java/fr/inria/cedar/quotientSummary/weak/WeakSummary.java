@@ -27,43 +27,6 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 	}
 
 	/**
-	 * This must be used to read a W summary from Postgres.
-	 * TODO make sure that any call to a summarization method made on a summary read from Postgres
-	 * handles that error appropriately (explaining that this object does no longer do such things)
-	 * @param conn
-	 */
-	public WeakSummary(Connection conn) {
-		super();
-		try {
-			conn.setAutoCommit(false);
-		}
-		catch (SQLException ex) {
-			LOGGER.error(ex);
-		}
-		this.summaryTablePrefix = WEAK_SUMMARY_PREFIX;
-		LOGGER.info("Reading Weak summary from Postgres, setting up special URIs from the dictionary");
-		RDF2SQLEncoding.setUp(conn, "dictionary");
-		String getSummaryTriples = getSummaryTriplesSQLQuery();
-		try {
-			Statement getTriples = conn.createStatement();
-			//LOGGER.debug("Created statement");
-			ResultSet rs = getTriples.executeQuery(getSummaryTriples);
-			//LOGGER.debug("Asking for summary triples")
-			while (rs.next()) {
-				Long s = rs.getLong(1);
-				Long p = rs.getLong(2);
-				Long o = rs.getLong(3);
-				edgesWithProv.addTriple(s, p, o);
-			}
-		}
-		catch (SQLException e) {
-			throw new IllegalStateException("Unable to read Weak summary from Postgres " + getSummaryTriples
-											+ " " + e.toString());
-		}
-		LOGGER.info("Read Weak summary from Postgres");
-	}
-
-	/**
 	 * Summarizes an RDF graph assuming the data triples are in Postgres
 	 *
 	 * @param conn
@@ -240,19 +203,21 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 	protected void consistencyChecks() {
 		for (Long s: edgesWithProv.keySet()) {
 			HashMap<Long, TreeSet<Long>> triplesOfThisSubject = edgesWithProv.get(s);
-			if (triplesOfThisSubject == null)
-				throw new IllegalStateException("No triples whose subject is " + s);
 			for (Long p: triplesOfThisSubject.keySet()) {
 				TreeSet<Long> objectsOfThisSandP = triplesOfThisSubject.get(p);
-				if ((objectsOfThisSandP.size() > 1) && RDF2SQLEncoding.isDataProperty(p))
-					throw new IllegalStateException("Subject " + s + " has more than one edge with label " + p);
-				for (Long o: objectsOfThisSandP) {
-					if (!this.ps.get(p).equals(s))
-						throw new IllegalStateException("Source of " + p + " is not " + s + " but " + this.ps.get(p));
-					if (pt.get(p) == null)
-						throw new IllegalStateException("No target for " + p);
-					if (!this.pt.get(p).equals(o))
-						throw new IllegalStateException("Target of " + p + " is not " + o + " but " + this.pt.get(p));
+				if (RDF2SQLEncoding.isDataProperty(p)) {
+					if (objectsOfThisSandP.size() > 1)
+						throw new IllegalStateException("Subject " + s + " has more than one edge with label " + p);
+					for (Long o: objectsOfThisSandP) {
+						if (ps.get(p) == null)
+							throw new IllegalStateException("No source for " + p);
+						if (!ps.get(p).equals(s))
+							throw new IllegalStateException("Source of " + p + " is not " + s + " but " + ps.get(p));
+						if (pt.get(p) == null)
+							throw new IllegalStateException("No target for " + p);
+						if (!pt.get(p).equals(o))
+							throw new IllegalStateException("Target of " + p + " is not " + o + " but " + pt.get(p));
+					}
 				}
 			}
 		}

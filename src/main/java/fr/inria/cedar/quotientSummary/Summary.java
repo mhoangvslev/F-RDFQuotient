@@ -107,7 +107,6 @@ public class Summary {
 	public Summary(Connection conn) throws SQLException {
 		this.edgesWithProv = new EdgesWithProvenanceCounts();
 		this.rep = new Long2Long();
-		
 		try {
 			conn.setAutoCommit(false);
 		}
@@ -434,7 +433,7 @@ public class Summary {
 		}
 
 		this.dictionaryTableName = newDictionaryTableName;
-		
+
 		// saving the table names in Postgres: 
 		try {
 			stmt.executeUpdate("create table saved_summary_table_names(role varchar, name varchar);");
@@ -744,7 +743,7 @@ public class Summary {
 		}
 	}
 	protected String dotSuffixOfStringsAndURIs(String s){
-		int suffixLength = (new Integer(properties.	getProperty("maxNodeLabelLength"))).intValue(); 
+		int suffixLength = new Integer(properties.getProperty("maxNodeLabelLength"));
 		if (s.length() <= suffixLength){
 			return s; 
 		}
@@ -964,10 +963,10 @@ public class Summary {
 	}
 
 	public void display() {
-		LOGGER.debug("SUMMARY " + this.getClass().getName());
+		System.out.println("SUMMARY " + this.getClass().getName());
 		edgesWithProv.display();
-		LOGGER.debug("REPRESENTATION: " + rep.toString()); 
-		LOGGER.debug("=======");
+		System.out.println("REPRESENTATION: " + rep.toString()); 
+		System.out.println("=======");
 	}
 
 	public void writeEncodedSummaryToDotFile(String dotFile) {
@@ -1036,8 +1035,8 @@ public class Summary {
 		return stats;
 	}
 
-	protected void showClique(TreeSet<Long> clique) {
-		LOGGER.debug(showCliqueAsString(clique));
+	protected void displayClique(TreeSet<Long> clique) {
+		System.out.println(showCliqueAsString(clique));
 	}
 
 	protected String showCliqueAsString(TreeSet<Long> clique) {
@@ -1058,7 +1057,7 @@ public class Summary {
 		for (Long s: edgesWithProv.keySet()){
 			for (Long p: edgesWithProv.get(s).keySet()){
 				// if there is an edge s--p-->o
-				if (edgesWithProv.get(s).get(p).equals(o)) {
+				if (edgesWithProv.get(s).get(p).contains(o)) {
 					TreeSet<Long> onP = res.get(p);
 					if (onP == null){ // the first edge labeled p which goes into o 
 						onP = new TreeSet<>();

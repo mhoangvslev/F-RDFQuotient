@@ -15,7 +15,7 @@ public class EdgeTransferSpecification {
 	private HashMap<Long, HashMap<Long, HashMap<Long, Pair<Long, Character>>>> edgesToTransfer;
 
 	public EdgeTransferSpecification() {
-		LOGGER.setLevel(Level.DEBUG);
+		LOGGER.setLevel(Level.INFO);
 		edgesToTransfer = new HashMap<>();
 	}
 
@@ -123,8 +123,6 @@ public class EdgeTransferSpecification {
 					Long counter = edgesToTransfer.get(s).get(p).get(o).getKey();
 					Character param = edgesToTransfer.get(s).get(p).get(o).getValue();
 					Long summaryEdgeCounter = edgesWithProv.getCounter(s, p, o);
-					if (summaryEdgeCounter == null)
-						LOGGER.debug("BREAK HERE");
 					if (counter > summaryEdgeCounter) {
 						throw new IllegalStateException("The value which is subtracted cannot be greater then summary counter for this edge");
 					}
