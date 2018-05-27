@@ -119,7 +119,6 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 		Long repS = rep.get(t.s);
 		Long repO = rep.get(t.o);
 
-		//checkSymmetry(sourceCliqueS, targetCliqueS, sourceCliqueO, targetCliqueO, sourceCliqueP, targetCliqueP); 
 		char caseNumber = decode(repS, repO, sourceCliqueP);
 
 		//LOGGER.debug("\n" + t.toString() + " " + RDF2SQLEncoding.decode(t) + " case: " + this.caseName(caseNumber)); 

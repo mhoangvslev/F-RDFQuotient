@@ -46,41 +46,6 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	}
 
 	/**
-	 * This must be used to read a TRS summary from Postgres.
-	 *
-	 * @param conn
-	 */
-	public TypedStrongSummary(Connection conn) {
-		super();
-		try {
-			conn.setAutoCommit(false);
-		}
-		catch (SQLException ex) {
-			LOGGER.error(ex);
-		}
-		this.summaryTablePrefix = TYPED_STRONG_SUMMARY_PREFIX;
-		LOGGER.info("Reading TypedStrong summary from Postgres, setting up special URIs from the dictionary");
-		RDF2SQLEncoding.setUp(conn, "dictionary");
-		String getSummaryTriples = getSummaryTriplesSQLQuery();
-		try {
-			Statement getTriples = conn.createStatement();
-			//LOGGER.debug("Created statement");
-			ResultSet rs = getTriples.executeQuery(getSummaryTriples);
-			//LOGGER.debug("Asking for summary triples")
-			while (rs.next()) {
-				Long s = rs.getLong(1);
-				Long p = rs.getLong(2);
-				Long o = rs.getLong(3);
-				edgesWithProv.addTriple(s, p, o);
-			}
-		}
-		catch (SQLException e) {
-			throw new IllegalStateException("Unable to read Typed Strong summary from Postgres: " + e.toString());
-		}
-		LOGGER.info("Read Typed Strong summary from Postgres");
-	}
-
-	/**
 	 * Summarizes an RDF graph assuming the data triples are in Postgres
 	 *
 	 * @param conn
@@ -111,9 +76,6 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 						this.handleTypeTripleBeforeData(t);
 						triplesSummarizedSoFar++;
 						typeTriplesSummarizedSoFar++;
-						if (checkConsistency) {
-							consistencyChecks();
-						}
 						storeSpecialNodesRepresentation(t, false);
 					}
 				}
@@ -127,6 +89,9 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 
 		start = System.currentTimeMillis();
 		this.postHandleTypeTriples();
+		if (checkConsistency) {
+			consistencyChecks();
+		}
 		typeTriplesSummarizationTime = System.currentTimeMillis() - start;
 		LOGGER.info("Summarized " + typeTriplesSummarizedSoFar + " type triples in " + typeTriplesSummarizationTime + " ms");
 
@@ -290,7 +255,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 
 		TreeSet<Long> classSetOfThisNode = n2c.get(t.s); 
 		if (classSetOfThisNode == null){ // this is the first time we encounter the node: create a class set with exactly this type
-			Long newClassSetID = this.getNextSummaryNode(); 
+			Long newClassSetID = this.getNextSummaryNode();
 			classSetOfThisNode = new TreeSet<>();
 			classSetOfThisNode.add(t.o); 
 			n2c.put(t.s, classSetOfThisNode);
@@ -359,7 +324,6 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		Long repO = rep.get(t.o);
 		Long repS = rep.get(t.s);
 
-		//checkSymmetry(sourceCliqueS, targetCliqueS, sourceCliqueO, targetCliqueO, sourceCliqueP, targetCliqueP); 
 		char caseNumber = decode(classSetS, repS, classSetO, repO, sourceCliqueP);
 
 		//LOGGER.debug("Case " + this.caseName(caseNumber));

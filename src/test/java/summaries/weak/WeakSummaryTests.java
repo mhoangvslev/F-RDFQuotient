@@ -140,10 +140,10 @@ public class WeakSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingWeakSummary(1);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary weak 1", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -159,10 +159,10 @@ public class WeakSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingWeakSummary(2);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary weak 2", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -178,10 +178,10 @@ public class WeakSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingWeakSummary(3);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary weak 3", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -197,10 +197,10 @@ public class WeakSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingWeakSummary(4);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary weak 4", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -216,10 +216,10 @@ public class WeakSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingWeakSummary(5);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary weak 5", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -235,10 +235,10 @@ public class WeakSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingWeakSummary(6);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary weak 6", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -253,11 +253,11 @@ public class WeakSummaryTests {
 		String referenceFileName = expectedOutput(7, "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarizeUsingWeakSummary(7); 
-			if (!testOutput.exists()){
+			File testOutput = summarizeUsingWeakSummary(7);
+			if (!testOutput.exists()) {
 				fail("Test output not found");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary weak 7", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -272,11 +272,11 @@ public class WeakSummaryTests {
 		String referenceFileName = expectedOutput(8, "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarizeUsingWeakSummary(8); 
-			if (!testOutput.exists()){
+			File testOutput = summarizeUsingWeakSummary(8);
+			if (!testOutput.exists()) {
 				fail("Test output not found");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary weak 8", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -291,11 +291,11 @@ public class WeakSummaryTests {
 		String referenceFileName = expectedOutput(9, "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarizeUsingWeakSummary(9); 
-			if (!testOutput.exists()){
+			File testOutput = summarizeUsingWeakSummary(9);
+			if (!testOutput.exists()) {
 				fail("Test output not found");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary weak 9", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -311,10 +311,10 @@ public class WeakSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingWeakSummary(10);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary weak 10", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -330,10 +330,10 @@ public class WeakSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingWeakSummary(11);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary weak 11", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -349,16 +349,54 @@ public class WeakSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingWeakSummary(12);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary weak 12", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
 			throw new IllegalStateException("Unable to open .nt files in weak test 12 " + e.toString());
+		}
+	}
+
+	@Test
+	public void summarizeWeakTest13() {
+		String referenceFileName = expectedOutput(13, "noSaturation");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = summarizeUsingWeakSummary(13);
+			if (!testOutput.exists()) {
+				fail("Test output not found ");
+			}
+			if (!expectedOutput.exists()) {
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary weak 13", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in weak test 13 " + e.toString());
+		}
+	}
+
+	@Test
+	public void summarizeWeakTest14() {
+		String referenceFileName = expectedOutput(14, "noSaturation");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = summarizeUsingWeakSummary(14);
+			if (!testOutput.exists()) {
+				fail("Test output not found ");
+			}
+			if (!expectedOutput.exists()) {
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary weak 14", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in weak test 14 " + e.toString());
 		}
 	}
 
@@ -372,10 +410,10 @@ public class WeakSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = saturateAndSummarizeUsingWeakSummary(1);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary weak 1", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -391,10 +429,10 @@ public class WeakSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = saturateAndSummarizeUsingWeakSummary(2);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary weak 2", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -410,10 +448,10 @@ public class WeakSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = saturateAndSummarizeUsingWeakSummary(3);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary weak 3", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -429,10 +467,10 @@ public class WeakSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = saturateAndSummarizeUsingWeakSummary(4);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary weak 4", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -448,10 +486,10 @@ public class WeakSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = saturateAndSummarizeUsingWeakSummary(5);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary weak 5", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -467,10 +505,10 @@ public class WeakSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = saturateAndSummarizeUsingWeakSummary(6);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary weak 6", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -485,11 +523,11 @@ public class WeakSummaryTests {
 		String referenceFileName = expectedOutput(7, "classical");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = saturateAndSummarizeUsingWeakSummary(7); 
-			if (!testOutput.exists()){
+			File testOutput = saturateAndSummarizeUsingWeakSummary(7);
+			if (!testOutput.exists()) {
 				fail("Test output not found");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary weak 7", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -504,11 +542,11 @@ public class WeakSummaryTests {
 		String referenceFileName = expectedOutput(8, "classical");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = saturateAndSummarizeUsingWeakSummary(8); 
-			if (!testOutput.exists()){
+			File testOutput = saturateAndSummarizeUsingWeakSummary(8);
+			if (!testOutput.exists()) {
 				fail("Test output not found");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary weak 8", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -523,11 +561,11 @@ public class WeakSummaryTests {
 		String referenceFileName = expectedOutput(9, "classical");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = saturateAndSummarizeUsingWeakSummary(9); 
-			if (!testOutput.exists()){
+			File testOutput = saturateAndSummarizeUsingWeakSummary(9);
+			if (!testOutput.exists()) {
 				fail("Test output not found");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary weak 9", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -542,11 +580,11 @@ public class WeakSummaryTests {
 		String referenceFileName = expectedOutput(10, "classical");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = saturateAndSummarizeUsingWeakSummary(10); 
-			if (!testOutput.exists()){
+			File testOutput = saturateAndSummarizeUsingWeakSummary(10);
+			if (!testOutput.exists()) {
 				fail("Test output not found");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary weak 10", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -561,11 +599,11 @@ public class WeakSummaryTests {
 		String referenceFileName = expectedOutput(11, "classical");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = saturateAndSummarizeUsingWeakSummary(11); 
-			if (!testOutput.exists()){
+			File testOutput = saturateAndSummarizeUsingWeakSummary(11);
+			if (!testOutput.exists()) {
 				fail("Test output not found");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary weak 11", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -580,17 +618,55 @@ public class WeakSummaryTests {
 		String referenceFileName = expectedOutput(12, "classical");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = saturateAndSummarizeUsingWeakSummary(12); 
-			if (!testOutput.exists()){
+			File testOutput = saturateAndSummarizeUsingWeakSummary(12);
+			if (!testOutput.exists()) {
 				fail("Test output not found");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary weak 12", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
 			throw new IllegalStateException("Unable to open .nt files in weak test 12 " + e.toString());
+		}
+	}
+
+	@Test
+	public void saturateAndSummarizeWeakTest13() {
+		String referenceFileName = expectedOutput(13, "classical");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = saturateAndSummarizeUsingWeakSummary(13);
+			if (!testOutput.exists()) {
+				fail("Test output not found");
+			}
+			if (!expectedOutput.exists()) {
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary weak 13", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in weak test 13 " + e.toString());
+		}
+	}
+
+	@Test
+	public void saturateAndSummarizeWeakTest14() {
+		String referenceFileName = expectedOutput(14, "classical");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = saturateAndSummarizeUsingWeakSummary(14);
+			if (!testOutput.exists()) {
+				fail("Test output not found");
+			}
+			if (!expectedOutput.exists()) {
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary weak 14", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in weak test 14 " + e.toString());
 		}
 	}
 
@@ -601,10 +677,10 @@ public class WeakSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeThroughShortcutUsingWeakSummary(6);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary weak 6", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -619,11 +695,11 @@ public class WeakSummaryTests {
 		String referenceFileName = expectedOutput(12, "shortcut");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarizeThroughShortcutUsingWeakSummary(12); 
-			if (!testOutput.exists()){
+			File testOutput = summarizeThroughShortcutUsingWeakSummary(12);
+			if (!testOutput.exists()) {
 				fail("Test output not found");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary weak 12", FileUtils.contentEquals(testOutput, expectedOutput));

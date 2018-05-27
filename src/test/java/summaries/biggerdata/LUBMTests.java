@@ -10,6 +10,7 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class LUBMTests {
@@ -19,7 +20,7 @@ public class LUBMTests {
 		LOGGER.setLevel(Level.INFO);
 		String[] metaArgs = new String[3];
 		System.out.println("################################################################################");
-		switch(summarizationTechnique) {
+		switch (summarizationTechnique) {
 			case "noSaturation":
 				metaArgs[0] = "loadAndSummarize";
 				metaArgs[1] = "saveSummaryComputedWithoutSaturation";
@@ -87,10 +88,10 @@ public class LUBMTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarize(1, "weak", "w", "noSaturation", Boolean.TRUE);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary LUBM test 1", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -102,14 +103,14 @@ public class LUBMTests {
 
 	@Test
 	public void LUBMTest2() {
-		String referenceFileName = expectedOutput(1, "w", "classical");
+		String referenceFileName = expectedOutput(1, "tw", "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(1, "weak", "w", "classical", Boolean.TRUE);
-			if (!testOutput.exists()){
+			File testOutput = summarize(1, "typedweak", "tw", "noSaturation", Boolean.TRUE);
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary LUBM test 2", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -121,14 +122,14 @@ public class LUBMTests {
 
 	@Test
 	public void LUBMTest3() {
-		String referenceFileName = expectedOutput(1, "w", "shortcut");
+		String referenceFileName = expectedOutput(1, "s", "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(1, "weak", "w", "shortcut", Boolean.TRUE);
-			if (!testOutput.exists()){
+			File testOutput = summarize(1, "strong", "s", "noSaturation", Boolean.TRUE);
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary LUBM test 3", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -140,14 +141,14 @@ public class LUBMTests {
 
 	@Test
 	public void LUBMTest4() {
-		String referenceFileName = expectedOutput(1, "tw", "noSaturation");
+		String referenceFileName = expectedOutput(1, "ts", "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(1, "typedweak", "tw", "noSaturation", Boolean.TRUE);
-			if (!testOutput.exists()){
+			File testOutput = summarize(1, "typedstrong", "ts", "noSaturation", Boolean.TRUE);
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary LUBM test 4", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -157,16 +158,17 @@ public class LUBMTests {
 		}
 	}
 
+	@Ignore
 	@Test
 	public void LUBMTest5() {
-		String referenceFileName = expectedOutput(1, "tw", "classical");
+		String referenceFileName = expectedOutput(10, "w", "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(1, "typedweak", "tw", "classical", Boolean.TRUE);
-			if (!testOutput.exists()){
+			File testOutput = summarize(10, "weak", "w", "noSaturation", Boolean.TRUE);
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary LUBM test 5", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -176,16 +178,17 @@ public class LUBMTests {
 		}
 	}
 
+	@Ignore
 	@Test
 	public void LUBMTest6() {
-		String referenceFileName = expectedOutput(1, "s", "noSaturation");
+		String referenceFileName = expectedOutput(10, "tw", "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(1, "strong", "s", "noSaturation", Boolean.TRUE);
-			if (!testOutput.exists()){
+			File testOutput = summarize(10, "typedweak", "tw", "noSaturation", Boolean.TRUE);
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary LUBM test 6", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -195,16 +198,17 @@ public class LUBMTests {
 		}
 	}
 
+	@Ignore
 	@Test
 	public void LUBMTest7() {
-		String referenceFileName = expectedOutput(1, "s", "classical");
+		String referenceFileName = expectedOutput(10, "s", "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(1, "strong", "s", "classical", Boolean.TRUE);
-			if (!testOutput.exists()){
+			File testOutput = summarize(10, "strong", "s", "noSaturation", Boolean.TRUE);
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary LUBM test 7", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -214,16 +218,17 @@ public class LUBMTests {
 		}
 	}
 
+	@Ignore
 	@Test
 	public void LUBMTest8() {
-		String referenceFileName = expectedOutput(1, "s", "shortcut");
+		String referenceFileName = expectedOutput(10, "ts", "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(1, "strong", "s", "shortcut", Boolean.TRUE);
-			if (!testOutput.exists()){
+			File testOutput = summarize(10, "typedstrong", "ts", "noSaturation", Boolean.TRUE);
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary LUBM test 8", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -233,16 +238,17 @@ public class LUBMTests {
 		}
 	}
 
+@Ignore
 	@Test
 	public void LUBMTest9() {
-		String referenceFileName = expectedOutput(1, "ts", "noSaturation");
+		String referenceFileName = expectedOutput(100, "w", "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(1, "typedstrong", "ts", "noSaturation", Boolean.TRUE);
-			if (!testOutput.exists()){
+			File testOutput = summarize(100, "weak", "w", "noSaturation", Boolean.TRUE);
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary LUBM test 9", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -252,22 +258,63 @@ public class LUBMTests {
 		}
 	}
 
+	@Ignore
 	@Test
 	public void LUBMTest10() {
-		String referenceFileName = expectedOutput(1, "ts", "classical");
+		String referenceFileName = expectedOutput(100, "tw", "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(1, "typedstrong", "ts", "classical", Boolean.TRUE);
-			if (!testOutput.exists()){
+			File testOutput = summarize(100, "typedweak", "tw", "noSaturation", Boolean.TRUE);
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary LUBM test 10", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
 			fail("Unable to open .nt files in LUBM test 10 " + e.toString());
+		}
+	}
+
+	@Ignore
+	@Test
+	public void LUBMTest11() {
+		String referenceFileName = expectedOutput(100, "s", "noSaturation");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = summarize(100, "strong", "s", "noSaturation", Boolean.TRUE);
+			if (!testOutput.exists()) {
+				fail("Test output not found ");
+			}
+			if (!expectedOutput.exists()) {
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary LUBM test 11", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			fail("Unable to open .nt files in LUBM test 11 " + e.toString());
+		}
+	}
+
+	@Ignore
+	@Test
+	public void LUBMTest12() {
+		String referenceFileName = expectedOutput(100, "ts", "noSaturation");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = summarize(100, "typedstrong", "ts", "noSaturation", Boolean.TRUE);
+			if (!testOutput.exists()) {
+				fail("Test output not found ");
+			}
+			if (!expectedOutput.exists()) {
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary LUBM test 12", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			fail("Unable to open .nt files in LUBM test 12 " + e.toString());
 		}
 	}
 }

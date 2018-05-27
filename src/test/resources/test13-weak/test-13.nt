@@ -1,0 +1,5 @@
+<http://qstest.org/node1> <http://qstest.org/a> <http://qstest.org/node2> .
+<http://qstest.org/node1> <http://qstest.org/b> <http://qstest.org/node2> .
+<http://qstest.org/node3> <http://qstest.org/a> <http://qstest.org/node4> .
+<http://qstest.org/node3> <http://qstest.org/b> <http://qstest.org/node4> .
+<http://qstest.org/node2> <http://qstest.org/c> <http://qstest.org/node1> .

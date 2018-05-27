@@ -974,7 +974,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 	}
 
 	protected void consistencyChecks(){
-		String msg = "After " + dataTriplesSummarizedSoFar + " data triples: ";
+		String msg = "After " + triplesSummarizedSoFar + " triples: ";
 		for (Long dataNode: n2sc.getKeys()){
 			//LOGGER.debug("Checking from data node: " + dataNode);
 			Long nodeRep = rep.get(dataNode);
