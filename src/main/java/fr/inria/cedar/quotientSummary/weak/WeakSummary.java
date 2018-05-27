@@ -33,6 +33,8 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 	 */
 	@Override
 	public void summarizeFromPostgres(Connection conn) {
+		long avoidCollisionsTimeStart;
+		long avoidCollisionsTime = 0;
 		long start = System.currentTimeMillis();
 		try {
 			conn.setAutoCommit(false);
@@ -45,7 +47,9 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 		long typeConstantCode = RDF2SQLEncoding.getTypeCode();
 		if (typeConstantCode != -1) {
 			this.typeTriplesExist = true;
+			avoidCollisionsTimeStart = System.currentTimeMillis();
 			avoidCollisionsWhenAssigningSummaryNodes(conn);
+			avoidCollisionsTime += System.currentTimeMillis() - avoidCollisionsTimeStart;
 		}
 		String getUntypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p <> " + typeConstantCode);
 		try {
@@ -76,7 +80,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 		catch (SQLException e) {
 			throw new IllegalStateException("Postgres error encountered while summarizing data triples " + e.toString());
 		}
-		dataTriplesSummarizationTime = System.currentTimeMillis() - start;
+		dataTriplesSummarizationTime = System.currentTimeMillis() - start - avoidCollisionsTime;
 		LOGGER.info("Summarized " + dataTriplesSummarizedSoFar + " data triples in " + dataTriplesSummarizationTime + " ms");
 
 		start = System.currentTimeMillis();

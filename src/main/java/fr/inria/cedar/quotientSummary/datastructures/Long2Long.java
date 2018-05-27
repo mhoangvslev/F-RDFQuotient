@@ -134,13 +134,18 @@ public class Long2Long {
 		return map.keySet();
 	}
 
-	public long countDistinctValues() {
-		TreeSet<Long> values = new TreeSet<>();
+	public long numberOfKeys() {
+		return (long) map.keySet().size();
+	}
+
+	public long numberOfDistinctValues() {
+		/*TreeSet<Long> values = new TreeSet<>();
 		for (Long key: map.keySet()) {
 			Long val = map.get(key);
 			if (!values.contains(val))
 				values.add(val);
 		}
-		return values.size();
+		return values.size();*/
+		return (long) inverse.keySet().size();
 	}
 }

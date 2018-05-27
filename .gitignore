@@ -3,6 +3,7 @@
 /.project
 /target/
 /.settings/
+*.csv
 *.png
 *.dot
 src/test/resources/test*/*_noSaturation.nt

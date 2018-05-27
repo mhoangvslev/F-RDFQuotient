@@ -9,15 +9,19 @@ import fr.inria.cedar.quotientSummary.strong.StrongSummary;
 import fr.inria.cedar.quotientSummary.strong.TypedStrongSummary;
 import fr.inria.cedar.quotientSummary.weak.TypedWeakSummary;
 import fr.inria.cedar.quotientSummary.weak.WeakSummary;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
 import org.apache.log4j.Level;
@@ -346,12 +350,32 @@ public class Builder {
 		summaryInUse.saveSummaryInPostgres(connectionInUse, partialResult, summarizationTechnique);
 	}
 
-	private static void exportSummary(String summarizationTechnique, Boolean draw, String[] files) {
+	private static void exportSummary(String summarizationTechnique, Boolean draw, String[] files) throws FileNotFoundException {
 		LOGGER.info("Exporting summary to disk");
+
 		summaryInUse.writeDecodedSummaryToNTFile(connectionInUse, summarizationTechnique);
 		if (draw)
 			summaryInUse.drawSummaryAndGraph(connectionInUse, summarizationTechnique);
-		LOGGER.info("Statistics: " + summaryInUse.getRunStatistics().toString());
+
+		int lastDotPosition = Math.max(0, files[0].lastIndexOf("."));
+		String csvFileName = files[0].substring(0, lastDotPosition) + "_" + summaryInUse.getSummaryURIPrefix() + "_" + summarizationTechnique + "-statistics.csv";
+		try (PrintWriter pw = new PrintWriter(new File(csvFileName))) {
+			HashMap<String, Long> statistics = summaryInUse.getRunStatistics();
+			StringBuilder sb = new StringBuilder();
+			ArrayList<String> keys = new ArrayList<>();
+			keys.addAll(statistics.keySet());
+			Collections.sort(keys);
+			for (String key: keys) {
+				sb.append(key).append(',');
+			}
+			sb.append('\n');
+			for (String key: keys) {
+				sb.append(statistics.get(key)).append(',');
+			}
+			sb.append('\n');
+			pw.write(sb.toString());
+		}
+		LOGGER.info("Statistics saved in " + csvFileName);
 		LOGGER.info("Summary exported to disk");
 	}
 

@@ -164,7 +164,6 @@ public class RDF2SQLEncoding {
 				throw new IllegalStateException("No value for code " + URL);
 		}
 		catch (SQLException e) {
-			e.printStackTrace();
 			throw new IllegalStateException("Not able to decode ");
 		}
 	}

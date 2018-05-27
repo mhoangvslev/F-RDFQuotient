@@ -1032,6 +1032,9 @@ public class Summary {
 		stats.put("inputGraphSize", triplesSummarizedSoFar);
 		stats.put("outputGraphSize", new Long(edgesWithProv.getSummaryEdges().size()));
 
+		stats.put("inputGraphNumberOfNodes", rep.numberOfKeys());
+		stats.put("outputGraphNumberOfNodes", rep.numberOfDistinctValues());
+
 		return stats;
 	}
 

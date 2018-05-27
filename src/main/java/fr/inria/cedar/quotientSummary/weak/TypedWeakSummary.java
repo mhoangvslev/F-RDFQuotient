@@ -56,6 +56,8 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 	 */
 	@Override
 	public void summarizeFromPostgres(Connection conn) {
+		long avoidCollisionsTimeStart;
+		long avoidCollisionsTime = 0;
 		long start = System.currentTimeMillis();
 		try {
 			conn.setAutoCommit(false);
@@ -68,7 +70,9 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		long typeConstantCode = RDF2SQLEncoding.getTypeCode();
 		if (typeConstantCode != -1) {
 			this.typeTriplesExist = true;
+			avoidCollisionsTimeStart = System.currentTimeMillis();
 			avoidCollisionsWhenAssigningSummaryNodes(conn);
+			avoidCollisionsTime += System.currentTimeMillis() - avoidCollisionsTimeStart;
 		}
 		String getTypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p = " + typeConstantCode);
 		try {
@@ -91,7 +95,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		catch (SQLException e) {
 			throw new IllegalStateException("Postgres error encountered while summarizing type triples: " + e.toString());
 		}
-		classSetCreationTime = System.currentTimeMillis() - start;
+		classSetCreationTime = System.currentTimeMillis() - start - avoidCollisionsTime;
 		LOGGER.info("Class sets created in " + classSetCreationTime + " ms");
 
 		start = System.currentTimeMillis();
