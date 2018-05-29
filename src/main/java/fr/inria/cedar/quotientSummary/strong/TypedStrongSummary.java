@@ -1,6 +1,5 @@
 package fr.inria.cedar.quotientSummary.strong;
 
-import fr.inria.cedar.quotientSummary.datastructures.EdgeTransferSpecification;
 import fr.inria.cedar.quotientSummary.datastructures.Long2Long;
 import fr.inria.cedar.quotientSummary.datastructures.Long2LongSet;
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
@@ -9,7 +8,6 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.TreeSet;
 import org.apache.log4j.Level;
@@ -23,6 +21,18 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	Long2Long n2cs; // for each node, its class set ID. This is also the rep function for typed nodes
 	Long2LongSet n2c; // for each node, the set of types we know so far for this node
 	HashMap<TreeSet<Long>, Long> cs2csID; // for each set of types known so far, the ID of that set
+
+	protected final static char TRS_RP_RO = 21;
+	protected final static char TRS_RP_UO = 22;
+
+	protected final static char TRS_UP_RO = 25;
+	protected final static char TRS_UP_UO = 26;
+
+	protected final static char RS_RP_TRO = 28;
+	protected final static char RS_UP_TRO = 29;
+
+	protected final static char US_UP_TRO = 31;
+	protected final static char US_RP_TRO = 32;
 
 	public TypedStrongSummary(String triplesFileName, String triplesTableName, String encodedTriplesTableName, String dictionaryTableName) {
 		super();
@@ -65,7 +75,6 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
 		long typeConstantCode = RDF2SQLEncoding.getTypeCode();
 		if (typeConstantCode != -1) {
-			this.typeTriplesExist = true;
 			avoidCollisionsTimeStart = System.currentTimeMillis();
 			avoidCollisionsWhenAssigningSummaryNodes(conn);
 			avoidCollisionsTime += System.currentTimeMillis() - avoidCollisionsTimeStart;
@@ -78,9 +87,9 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 					while (rs.next()) {
 						Triple t = new Triple(rs.getInt(1), rs.getInt(2), rs.getInt(3));
 						this.handleTypeTripleBeforeData(t);
+						rep.put(t.o, t.o);
 						triplesSummarizedSoFar++;
 						typeTriplesSummarizedSoFar++;
-						storeSpecialNodesRepresentation(t, false);
 					}
 				}
 			}
@@ -92,7 +101,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		LOGGER.info("Class sets created in " + classSetCreationTime + " ms");
 
 		start = System.currentTimeMillis();
-		this.postHandleTypeTriples();
+		this.representTypeTriples();
 		if (checkConsistency) {
 			consistencyChecks();
 		}
@@ -100,6 +109,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		LOGGER.info("Summarized " + typeTriplesSummarizedSoFar + " type triples in " + typeTriplesSummarizationTime + " ms");
 
 		start = System.currentTimeMillis();
+		collectSchemaNodes(conn);
 		// now all the non-type triples
 		String getUntypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p <> " + typeConstantCode);
 		try {
@@ -113,7 +123,8 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 						|| (t.p == RDF2SQLEncoding.getDomainCode())
 						|| (t.p == RDF2SQLEncoding.getRangeCode())) {
 							edgesWithProv.addTriple(t.s, t.p, t.o);
-							storeSpecialNodesRepresentation(t, true);
+							rep.put(t.s, t.s);
+							rep.put(t.o, t.o);
 						}
 						else
 							handleDataTriple(t);
@@ -135,77 +146,321 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 
 		allTriplesSummarizationTime = classSetCreationTime + typeTriplesSummarizationTime + dataTriplesSummarizationTime;
 		LOGGER.info("Summarized " + triplesSummarizedSoFar + " triples overall in " + allTriplesSummarizationTime + " ms");
-		//this.writeToFileAndDraw(dataTriplesFileName);
-	}
-
-	private char decode(Long classSetS, Long repS, Long classSetO, Long repO, Long sourceCliqueP) {
-		if (classSetS != null) // TRS (also represented)
-			if (classSetO != null) // TRO (also represented)
-				return TRS_TRO;
-			else // UO
-				if (repO != null) // RO
-					if (sourceCliqueP != null) // RP
-						return TRS_RP_RO;
-					else // NP
-						return TRS_UP_RO;
-				else // NO
-					if (sourceCliqueP != null) // RP
-						return TRS_RP_UO;
-					else
-						return TRS_UP_UO;
-		else // US
-			if (repS != null) // US, RS
-				if (classSetO != null) // TRO (also represented)
-					if (sourceCliqueP != null)
-						return RS_RP_TRO;
-					else
-						return RS_UP_TRO;
-				else // US, RS, UO
-					if (repO != null) // RO
-						if (sourceCliqueP != null)
-							return RS_RP_RO;
-						else
-							return RS_UP_RO;
-					else // NO
-						if (sourceCliqueP != null)
-							return RS_RP_UO;
-						else
-							return RS_UP_UO;
-			else // US, NS
-				if (classSetO != null) // TRO, also represented
-					if (sourceCliqueP != null)
-						return US_RP_TRO;
-					else
-						return US_UP_TRO;
-				else // UO
-					if (repO != null) // RO
-						if (sourceCliqueP != null) // RP
-							return US_RP_RO;
-						else
-							return US_UP_RO;
-					else // NO
-						if (sourceCliqueP != null) // RP
-							return US_RP_UO;
-						else
-							return US_UP_UO;
 	}
 
 	@Override
-	public void display() {
-		System.out.println("TYPED STRONG SUMMARY\nClass set IDs to class sets: " + cs.toString());
-		System.out.println("Nodes to class set IDs: " + n2cs.toString());
-		System.out.println("Source cliques: " + sc.toString());
-		System.out.println("Target cliques: " + tc.toString());
-		System.out.println("Nodes to source cliques: " + n2sc.toString());
-		System.out.println("Nodes to target cliques: " + n2tc.toString());
-		System.out.println("Property to source cliques: " + p2sc.toString());
-		System.out.println("Property to target cliques: " + p2tc.toString());
-		System.out.println("Representation function: ");
-		System.out.println(showRep());
-		System.out.println("Cs to cs ID: ");
-		displayClassSets();
-		System.out.println("Summary edges: ");
-		edgesWithProv.display();
+	public void handleTypeTripleBeforeData(Triple t) {
+		//LOGGER.debug("@@@ Type triple: " + t.toString()); 
+
+		TreeSet<Long> classSetOfThisNode = n2c.get(t.s); 
+		if (classSetOfThisNode == null){ // this is the first time we encounter the node: create a class set with exactly this type
+			Long newClassSetID = this.getNextSummaryNode();
+			classSetOfThisNode = new TreeSet<>();
+			classSetOfThisNode.add(t.o); 
+			n2c.put(t.s, classSetOfThisNode);
+			cs.put(newClassSetID, classSetOfThisNode);
+			cs2csID.put(classSetOfThisNode, newClassSetID);
+			n2cs.put(t.s, newClassSetID);
+		}
+		else{ // we already had some types for t.s
+			if (classSetOfThisNode.contains(t.o)){
+				// do nothing
+			}
+			else {
+				TreeSet<Long> newClassSetOfThisNode = new TreeSet<>();
+				newClassSetOfThisNode.addAll(classSetOfThisNode);
+				newClassSetOfThisNode.add(t.o); 
+
+				Long newClassSetID = cs2csID.get(newClassSetOfThisNode);
+				if (newClassSetID == null){
+					// this class set was not already known. We create it.
+					newClassSetID = this.getNextSummaryNode();
+					cs.put(newClassSetID, newClassSetOfThisNode); // installs the new class set
+					cs2csID.put(newClassSetOfThisNode, newClassSetID); // installs the new class set
+				}
+				// whether or not newClassSetID was known:
+				n2cs.put(t.s, newClassSetID); // erases/replaces previously known class set ID
+				n2c.put(t.s, newClassSetOfThisNode); // erases/replaces previously known class set
+			}
+		}
+		//display(); 
+	}
+	
+	/**
+	 * This method adds the type triples in the summary, based on the structures previously filled in while traversing those triples.
+	 * It is called only once and will output all the type triples of the summary.
+	 */
+	public void representTypeTriples() {
+		//LOGGER.debug("POST HANDLE TYPE TRIPLES");
+		for (Long node: this.n2cs.getKeys()){
+			Long thisClassSetID = this.n2cs.get(node);
+			TreeSet<Long> thisClassSet = this.cs.get(thisClassSetID);
+			for (Long thisClass: thisClassSet){
+				edgesWithProv.addTriple(thisClassSetID, RDF2SQLEncoding.getTypeCode(), thisClass);
+				rep.put(node, thisClassSetID);
+			}
+		}
+	}
+
+	@Override
+	protected void handleTypeTripleAfterData(Triple t) {
+		throw new IllegalStateException("This method does not belong to " + this.getClass().getName());
+	}
+
+	protected char identifyTripleSummarizationCase(boolean sRepresented, boolean sTyped, boolean sSchemaNode, boolean pRepresented, boolean oRepresented, boolean oTyped, boolean oSchemaNode) {
+		if((sTyped || sSchemaNode) && (oTyped || oSchemaNode)) {
+			return SELF_SELF;
+		}
+		if (sTyped) {
+			if (pRepresented) {
+				if (oRepresented) {
+					return TRS_RP_RO;
+				}
+				else {
+					return TRS_RP_UO;
+				}
+			}
+			else {
+				if (oRepresented) {
+					return TRS_UP_RO;
+				}
+				else {
+					return TRS_UP_UO;
+				}
+			}
+		}
+		else if (sSchemaNode) {
+			if (pRepresented) {
+				if (oRepresented) {
+					return SN_RP_RO;
+				}
+				else {
+					return SN_RP_UO;
+				}
+			}
+			else {
+				if (oRepresented) {
+					return SN_UP_RO;
+				}
+				else {
+					return SN_UP_UO;
+				}
+			}
+		}
+		else if (sRepresented) {
+			if (pRepresented) {
+				if (oTyped) {
+					return RS_RP_TRO;
+				}
+				else if (oSchemaNode) {
+					return RS_RP_SN;
+				}
+				else if (oRepresented) {
+					return RS_RP_RO;
+				}
+				else {
+					return RS_RP_UO;
+				}
+			}
+			else {
+				if (oTyped) {
+					return RS_UP_TRO;
+				}
+				else if (oSchemaNode) {
+					return RS_UP_SN;
+				}
+				else if (oRepresented) {
+					return RS_UP_RO;
+				}
+				else {
+					return RS_UP_UO;
+				}
+			}
+		}
+		else {
+			if (pRepresented) {
+				if (oTyped) {
+					return US_RP_TRO;
+				}
+				else if (oSchemaNode) {
+					return US_RP_SN;
+				}
+				else if (oRepresented) {
+					return US_RP_RO;
+				}
+				else {
+					return US_RP_UO;
+				}
+			}
+			else {
+				if (oTyped) {
+					return US_UP_TRO;
+				}
+				else if (oSchemaNode) {
+					return US_UP_SN;
+				}
+				else if (oRepresented) {
+					return US_UP_RO;
+				}
+				else {
+					return US_UP_UO;
+				}
+			}
+		}
+	}
+
+	public void handleDataTriple(Triple t) {
+		// 18 cases: (TRS, RS, US) x (RP, UP) x (TRO, RO, UO) also multiplied by: which cliques are empty and their consequences on fusion
+		Long classSetS = n2cs.get(t.s);
+		Long classSetO = n2cs.get(t.o);
+
+		Long sourceCliqueS = n2sc.get(t.s);
+		Long targetCliqueS = n2tc.get(t.s);
+		Long sourceCliqueO = n2sc.get(t.o);
+		Long targetCliqueO = n2tc.get(t.o);
+
+		Long sourceCliqueP = p2sc.get(t.p);
+		Long targetCliqueP = p2tc.get(t.p);
+
+		Long repO = rep.get(t.o);
+		Long repS = rep.get(t.s);
+		
+		boolean pRepresented = (sourceCliqueP != null);
+		boolean sRepresented = (repS != null);
+		boolean sTyped = (classSetS != null);
+		boolean sSchemaNode = sn.contains(t.s);
+		boolean oRepresented = (repO != null);
+		boolean oTyped = (classSetO != null);
+		boolean oSchemaNode = sn.contains(t.o);
+
+		char caseNumber = identifyTripleSummarizationCase(sRepresented, sSchemaNode, sTyped, pRepresented, oRepresented, oTyped, oSchemaNode);
+		//LOGGER.debug("Case " + this.showCaseName(caseNumber));
+		switch (caseNumber) {
+			case SELF_SELF:
+				handleDataTriple_SELF_SELF(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				break;
+			case SN_RP_RO:
+			case TRS_RP_RO:
+				handleDataTriple_TRS_RP_RO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				break;
+			case SN_RP_UO:
+			case TRS_RP_UO:
+				handleDataTriple_TRS_RP_UO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				break;
+			case RS_RP_SN:
+			case RS_RP_TRO:
+				handleDataTriple_RS_RP_TRO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				break;
+			case RS_RP_RO:
+				handleDataTriple_RS_RP_RO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				break;
+			case RS_RP_UO:
+				handleDataTriple_RS_RP_UO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				break;
+			case US_RP_SN:
+			case US_RP_TRO:
+				handleDataTriple_US_RP_TRO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				break;
+			case US_RP_RO:
+				handleDataTriple_US_RP_RO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				break;
+			case US_RP_UO:
+				handleDataTriple_US_RP_UO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				break;
+			case SN_UP_RO:
+			case TRS_UP_RO:
+				handleDataTriple_TRS_UP_RO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				break;
+			case SN_UP_UO:
+			case TRS_UP_UO:
+				handleDataTriple_TRS_UP_UO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				break;
+			case RS_UP_SN:
+			case RS_UP_TRO:
+				handleDataTriple_RS_UP_TRO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				break;
+			case RS_UP_RO:
+				handleDataTriple_RS_UP_RO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				break;
+			case RS_UP_UO:
+				handleDataTriple_RS_UP_UO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				break;
+			case US_UP_SN:
+			case US_UP_TRO:
+				handleDataTriple_US_UP_TRO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				break;
+			case US_UP_RO:
+				handleDataTriple_US_UP_RO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				break;
+			case US_UP_UO:
+				handleDataTriple_US_UP_UO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				break;
+			default:
+				throw new IllegalStateException("Unknown case;");
+		}
+		cacheTriple(t);
+	}
+
+	// -->
+	// Debug methods
+	// -->
+
+	@Override
+	protected String showCaseName(char caseNumber) { 
+		switch (caseNumber) {
+			case SELF_SELF:
+				return "SELF_SELF";
+			case SN_RP_RO:
+				return "SN_RP_RO";
+			case SN_RP_UO:
+				return "SN_RP_UO";
+			case SN_UP_RO:
+				return "SN_UP_RO";
+			case SN_UP_UO:
+				return "SN_UP_UO";
+			case RS_RP_SN:
+				return "RS_RP_SN";
+			case RS_RP_RO:
+				return "RS_RP_RO";
+			case RS_RP_UO:
+				return "RS_RP_UO";
+			case RS_UP_SN:
+				return "RS_UP_SN";
+			case RS_UP_RO:
+				return "RS_UP_RO";
+			case RS_UP_UO:
+				return "RS_UP_UO";
+			case US_RP_SN:
+				return "US_RP_SN";
+			case US_RP_RO:
+				return "US_RP_RO";
+			case US_RP_UO:
+				return "US_RP_UO";
+			case US_UP_SN:
+				return "US_UP_SN";
+			case US_UP_RO:
+				return "US_UP_RO";
+			case US_UP_UO:
+				return "US_UP_UO";
+			case TRS_RP_RO:
+				return "TRS_RP_RO";
+			case TRS_RP_UO:
+				return "TRS_RP_UO";
+			case TRS_UP_RO:
+				return "TRS_UP_RO";
+			case TRS_UP_UO:
+				return "TRS_UP_UO";
+			case RS_RP_TRO:
+				return "RS_RP_TRO";
+			case RS_UP_TRO:
+				return "RS_UP_TRO";
+			case US_UP_TRO:
+				return "US_UP_TRO";
+			case US_RP_TRO:
+				return "US_RP_TRO";
+			default:
+				throw new IllegalStateException("Unrecognized case " + caseNumber);
+		}
 	}
 
 	private String showLongSet(TreeSet<Long> s){
@@ -254,480 +509,21 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	}
 
 	@Override
-	public void handleTypeTripleBeforeData(Triple t) {
-		//LOGGER.debug("@@@ Type triple: " + t.toString()); 
-
-		TreeSet<Long> classSetOfThisNode = n2c.get(t.s); 
-		if (classSetOfThisNode == null){ // this is the first time we encounter the node: create a class set with exactly this type
-			Long newClassSetID = this.getNextSummaryNode();
-			classSetOfThisNode = new TreeSet<>();
-			classSetOfThisNode.add(t.o); 
-			n2c.put(t.s, classSetOfThisNode);
-			cs.put(newClassSetID, classSetOfThisNode);
-			cs2csID.put(classSetOfThisNode, newClassSetID);
-			n2cs.put(t.s, newClassSetID);
-		}
-		else{ // we already had some types for t.s
-			if (classSetOfThisNode.contains(t.o)){
-				// do nothing
-			}
-			else {
-				TreeSet<Long> newClassSetOfThisNode = new TreeSet<>();
-				newClassSetOfThisNode.addAll(classSetOfThisNode);
-				newClassSetOfThisNode.add(t.o); 
-
-				Long newClassSetID = cs2csID.get(newClassSetOfThisNode);
-				if (newClassSetID == null){
-					// this class set was not already known. We create it.
-					newClassSetID = this.getNextSummaryNode();
-					cs.put(newClassSetID, newClassSetOfThisNode); // installs the new class set
-					cs2csID.put(newClassSetOfThisNode, newClassSetID); // installs the new class set
-				}
-				// whether or not newClassSetID was known:
-				n2cs.put(t.s, newClassSetID); // erases/replaces previously known class set ID
-				n2c.put(t.s, newClassSetOfThisNode); // erases/replaces previously known class set
-			}
-		}
-		//display(); 
+	public void display() {
+		System.out.println("TYPED STRONG SUMMARY\nClass set IDs to class sets: " + cs.toString());
+		System.out.println("Nodes to class set IDs: " + n2cs.toString());
+		System.out.println("Source cliques: " + sc.toString());
+		System.out.println("Target cliques: " + tc.toString());
+		System.out.println("Nodes to source cliques: " + n2sc.toString());
+		System.out.println("Nodes to target cliques: " + n2tc.toString());
+		System.out.println("Property to source cliques: " + p2sc.toString());
+		System.out.println("Property to target cliques: " + p2tc.toString());
+		System.out.println("Representation function: ");
+		System.out.println(showRep());
+		System.out.println("Cs to cs ID: ");
+		displayClassSets();
+		System.out.println("Summary edges: ");
+		edgesWithProv.display();
 	}
 
-	/**
-	 * This method adds the type triples in the summary, based on the structures previously filled in while traversing those triples.
-	 * It is called only once and will output all the type triples of the summary.
-	 */
-	public void postHandleTypeTriples() {
-		//LOGGER.debug("POST HANDLE TYPE TRIPLES");
-		for (Long node: this.n2cs.getKeys()){
-			Long thisClassSetID = this.n2cs.get(node);
-			TreeSet<Long> thisClassSet = this.cs.get(thisClassSetID);
-			for (Long thisClass: thisClassSet){
-				edgesWithProv.addTriple(thisClassSetID, RDF2SQLEncoding.getTypeCode(), thisClass);
-				rep.put(node, thisClassSetID);
-			}
-		}
-	}
-
-	@Override
-	protected void handleTypeTripleAfterData(Triple t) {
-		throw new IllegalStateException("This method does not belong to " + this.getClass().getName());
-	}
-
-	public void handleDataTriple(Triple t) {
-		// 18 cases: (TRS, RS, US) x (RP, UP) x (TRO, RO, UO) also multiplied by: which cliques are empty and their consequences on fusion
-		Long classSetS = n2cs.get(t.s);
-		Long classSetO = n2cs.get(t.o);
-
-		Long sourceCliqueS = n2sc.get(t.s);
-		Long targetCliqueS = n2tc.get(t.s);
-		Long sourceCliqueO = n2sc.get(t.o);
-		Long targetCliqueO = n2tc.get(t.o);
-
-		Long sourceCliqueP = p2sc.get(t.p);
-		Long targetCliqueP = p2tc.get(t.p);
-
-		Long repO = rep.get(t.o);
-		Long repS = rep.get(t.s);
-
-		char caseNumber = decode(classSetS, repS, classSetO, repO, sourceCliqueP);
-
-		//LOGGER.debug("Case " + this.caseName(caseNumber));
-		switch (caseNumber) {
-			case TRS_TRO: {
-				handleDataTriple_TRS_TRO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
-				break;
-			}
-			case TRS_RP_RO: {
-				handleDataTriple_TRS_RP_RO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
-				break;
-			}
-			case TRS_RP_UO: {
-				handleDataTriple_TRS_RP_UO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
-				break;
-			}
-			case RS_RP_TRO: {
-				handleDataTriple_RS_RP_TRO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
-				break;
-			}
-			case RS_RP_RO: {
-				handleDataTriple_RS_RP_RO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
-				break;
-			}
-			case RS_RP_UO: {
-				handleDataTriple_RS_RP_UO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
-				break;
-			}
-			case US_RP_TRO: {
-				handleDataTriple_US_RP_TRO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
-				break;
-			}
-			case US_RP_RO: {
-				handleDataTriple_US_RP_RO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
-				break;
-			}
-			case US_RP_UO: {
-				handleDataTriple_US_RP_UO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
-				break;
-			}
-			case TRS_UP_RO: {
-				handleDataTriple_TRS_UP_RO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
-				break;
-			}
-			case TRS_UP_UO: {
-				handleDataTriple_TRS_UP_UO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
-				break;
-			}
-			case RS_UP_TRO: {
-				handleDataTriple_RS_UP_TRO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
-				break;
-			}
-			case RS_UP_RO: {
-				handleDataTriple_RS_UP_RO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
-				break;
-			}
-			case RS_UP_UO: {
-				handleDataTriple_RS_UP_UO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
-				break;
-			}
-			case US_UP_TRO: {
-				handleDataTriple_US_UP_TRO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
-				break;
-			}
-			case US_UP_RO: {
-				handleDataTriple_US_UP_RO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
-				break;
-			}
-			case US_UP_UO: {
-				handleDataTriple_US_UP_UO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
-				break;
-			}
-			default:
-				throw new IllegalStateException("Unknown case;");
-		}
-		cacheTriple(t);
-		//this.writeToFileAndDraw();
-	}
-
-	protected void handleDataTriple_TRS_TRO(Triple t, Long sourceCliqueS, Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
-		Long repS = rep.get(t.s);
-		Long repO = rep.get(t.o);
-
-		edgesWithProv.addTriple(repS, t.p, repO);
-	}
-
-	// untyped, represented subject
-	// represented property
-	// typed, represented object
-	protected void handleDataTriple_RS_RP_TRO(Triple t, Long sourceCliqueS, Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
-		Long newSourceCliqueS = cliqueFusionResult(sourceCliqueS, sourceCliqueP, SOURCE);
-
-		Long repS = rep.get(t.s);
-		Long repO = rep.get(t.o);
-
-		Long newRepS = getOrCreateSummaryNode(newSourceCliqueS, targetCliqueS);
-		Long newRepO = repO;
-
-		boolean replaceForS = true;
-		if (sourceCliqueS.equals(getEmptySourceCliqueID())) {
-			if (rep.getInverse(repS).size() > 1) {
-				replaceForS = false;
-			}
-		}
-
-		if (replaceForS) {
-			fuseCliqueInto(sourceCliqueS, newSourceCliqueS, SOURCE);
-			fuseCliqueInto(sourceCliqueP, newSourceCliqueS, SOURCE);
-		}
-
-		ArrayList<ReplacementSpecification> nodeReps = new ArrayList<>();
-		if (replaceForS) {
-			if (!newRepS.equals(repS)) {
-				ReplacementSpecification repsS = new ReplacementSpecification(newSourceCliqueS, targetCliqueS, repS, newRepS);
-				nodeReps.add(repsS);
-			}
-		}
-
-		if (replaceForS) {
-			computeAndApplyCliqueReplacements(sourceCliqueS, sourceCliqueP, newSourceCliqueS, SOURCE, nodeReps);
-		}
-
-		EdgeTransferSpecification edgesTransfersSpecification = new EdgeTransferSpecification();
-		if (!replaceForS) {
-			edgesTransfersSpecification.addAll(EdgeTransferSpecification.determineEdgesToTransfer(rep, triplesBySubject, triplesByObject, t.s, repS, TARGET));
-		}
-		edgesTransfersSpecification.applyTransfers(edgesWithProv, repS, newRepS, repO, newRepO);
-
-		for (ReplacementSpecification reps: nodeReps) {
-			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode());
-		}
-		for (ReplacementSpecification reps: nodeReps) {
-			rep.replaceValue(reps.getOldNode(), reps.getNewNode());
-		}
-
-		rep.put(t.s, newRepS);
-
-		n2sc.put(t.s, newSourceCliqueS);
-
-		edgesWithProv.addTriple(newRepS, t.p, newRepO);
-	}
-
-	// typed, represented subject
-	// represented property
-	// untyped, represented object
-	// we need to unify the target clique of O with the target clique of P
-	protected void handleDataTriple_TRS_RP_RO(Triple t, Long sourceCliqueS, Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
-		Long newTargetCliqueO = cliqueFusionResult(targetCliqueO, targetCliqueP, TARGET);
-
-		Long repS = rep.get(t.s);
-		Long repO = rep.get(t.o);
-
-		Long newRepS = repS;
-		Long newRepO = getOrCreateSummaryNode(sourceCliqueO, newTargetCliqueO);
-
-		boolean replaceForO = true;
-		if (targetCliqueO.equals(getEmptyTargetCliqueID())) {
-			if (rep.getInverse(repO).size() > 1) {
-				replaceForO = false;
-			}
-		}
-
-		if (replaceForO) {
-			fuseCliqueInto(targetCliqueO, newTargetCliqueO, TARGET);
-			fuseCliqueInto(targetCliqueP, newTargetCliqueO, TARGET);
-		}
-
-		ArrayList<ReplacementSpecification> nodeReps = new ArrayList<>();
-		if (replaceForO) {
-			if (!newRepO.equals(repO)) {
-				ReplacementSpecification repsO = new ReplacementSpecification(sourceCliqueO, newTargetCliqueO, repO, newRepO);
-				nodeReps.add(repsO);
-			}
-		}
-
-		if (replaceForO) {
-			computeAndApplyCliqueReplacements(targetCliqueO, targetCliqueP, newTargetCliqueO, TARGET, nodeReps);
-		}
-
-		EdgeTransferSpecification edgesTransfersSpecification = new EdgeTransferSpecification();
-		if (!replaceForO) {
-			edgesTransfersSpecification.addAll(EdgeTransferSpecification.determineEdgesToTransfer(rep, triplesBySubject, triplesByObject, t.o, repO, SOURCE));
-		}
-		edgesTransfersSpecification.applyTransfers(edgesWithProv, repS, newRepS, repO, newRepO);
-
-		for (ReplacementSpecification reps: nodeReps) {
-			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode());
-		}
-		for (ReplacementSpecification reps: nodeReps) {
-			rep.replaceValue(reps.getOldNode(), reps.getNewNode());
-		}
-
-		rep.put(t.o, newRepO);
-
-		n2tc.put(t.o, newTargetCliqueO);
-
-		edgesWithProv.addTriple(newRepS, t.p, newRepO);
-	}
-
-	// untyped, represented subject: it has a source clique, which needs to gain p
-	// unknown property
-	// typed, represented object which won't change
-	protected void handleDataTriple_RS_UP_TRO(Triple t, Long sourceCliqueS, Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
-		sourceCliqueP = makeAndAddNewSourceClique(t.p);
-		targetCliqueP = makeAndAddNewTargetClique(t.p);
-
-		Long newSourceCliqueS = cliqueFusionResult(sourceCliqueS, sourceCliqueP, SOURCE);
-
-		Long repS = rep.get(t.s);
-		Long repO = rep.get(t.o);
-
-		Long newRepS = getOrCreateSummaryNode(newSourceCliqueS, targetCliqueS);
-		Long newRepO = repO;
-
-		boolean replaceForS = true;
-		if (sourceCliqueS.equals(getEmptySourceCliqueID())) {
-			if (rep.getInverse(repS).size() > 1) {
-				replaceForS = false;
-			}
-		}
-
-		if (replaceForS) {
-			fuseCliqueInto(sourceCliqueS, newSourceCliqueS, SOURCE);
-			fuseCliqueInto(sourceCliqueP, newSourceCliqueS, SOURCE);
-		}
-
-		ArrayList<ReplacementSpecification> nodeReps = new ArrayList<>();
-		if (replaceForS) {
-			if (!newRepS.equals(repS)) {
-				ReplacementSpecification repsS = new ReplacementSpecification(newSourceCliqueS, targetCliqueS, repS, newRepS);
-				nodeReps.add(repsS);
-			}
-		}
-
-		if (replaceForS) {
-			computeAndApplyCliqueReplacements(sourceCliqueS, sourceCliqueP, newSourceCliqueS, SOURCE, nodeReps);
-		}
-
-		EdgeTransferSpecification edgesTransfersSpecification = new EdgeTransferSpecification();
-		if (!replaceForS) {
-			edgesTransfersSpecification.addAll(EdgeTransferSpecification.determineEdgesToTransfer(rep, triplesBySubject, triplesByObject, t.s, repS, TARGET));
-		}
-		edgesTransfersSpecification.applyTransfers(edgesWithProv, repS, newRepS, repO, newRepO);
-
-		for (ReplacementSpecification reps: nodeReps) {
-			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode());
-		}
-		for (ReplacementSpecification reps: nodeReps) {
-			rep.replaceValue(reps.getOldNode(), reps.getNewNode());
-		}
-
-		rep.put(t.s, newRepS);
-
-		n2sc.put(t.s, newSourceCliqueS);
-
-		edgesWithProv.addTriple(newRepS, t.p, newRepO);
-	}
-
-	// typed, represented subject won't change
-	// unknown property
-	// untyped, represented object, with a target clique which needs to change as p was unknown
-	protected void handleDataTriple_TRS_UP_RO(Triple t, Long sourceCliqueS, Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
-		sourceCliqueP = makeAndAddNewSourceClique(t.p);
-		targetCliqueP = makeAndAddNewTargetClique(t.p);
-
-		Long newTargetCliqueO = cliqueFusionResult(targetCliqueO, targetCliqueP, TARGET);
-
-		Long repS = rep.get(t.s);
-		Long repO = rep.get(t.o);
-
-		Long newRepS = repS;
-		Long newRepO = getOrCreateSummaryNode(sourceCliqueO, newTargetCliqueO);
-
-		boolean replaceForO = true;
-		if (targetCliqueO.equals(getEmptyTargetCliqueID())) {
-			if (rep.getInverse(repO).size() > 1) {
-				replaceForO = false;
-			}
-		}
-
-		if (replaceForO) {
-			fuseCliqueInto(targetCliqueO, newTargetCliqueO, TARGET);
-			fuseCliqueInto(targetCliqueP, newTargetCliqueO, TARGET);
-		}
-
-		ArrayList<ReplacementSpecification> nodeReps = new ArrayList<>();
-		if (replaceForO) {
-			if (!newRepO.equals(repO)) {
-				ReplacementSpecification repsO = new ReplacementSpecification(sourceCliqueO, newTargetCliqueO, repO, newRepO);
-				nodeReps.add(repsO);
-			}
-		}
-
-		if (replaceForO) {
-			computeAndApplyCliqueReplacements(targetCliqueO, targetCliqueP, newTargetCliqueO, TARGET, nodeReps);
-		}
-
-		EdgeTransferSpecification edgesTransfersSpecification = new EdgeTransferSpecification();
-		if (!replaceForO) {
-			edgesTransfersSpecification.addAll(EdgeTransferSpecification.determineEdgesToTransfer(rep, triplesBySubject, triplesByObject, t.o, repO, SOURCE));
-		}
-		edgesTransfersSpecification.applyTransfers(edgesWithProv, repS, newRepS, repO, newRepO);
-
-		for (ReplacementSpecification reps: nodeReps) {
-			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode());
-		}
-		for (ReplacementSpecification reps: nodeReps) {
-			rep.replaceValue(reps.getOldNode(), reps.getNewNode());
-		}
-
-		rep.put(t.o, newRepO);
-
-		n2tc.put(t.o, newTargetCliqueO);
-
-		edgesWithProv.addTriple(newRepS, t.p, newRepO);
-	}
-
-	// untyped, unrepresented subject
-	// known property
-	// typed, represented object
-	protected void handleDataTriple_US_RP_TRO(Triple t, Long sourceCliqueS, Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
-		Long newSourceCliqueS = sourceCliqueP;
-
-		Long repS = getOrCreateSummaryNode(newSourceCliqueS, getEmptyTargetCliqueID());
-		Long repO = rep.get(t.o);
-
-		Long newRepS = repS;
-		Long newRepO = repO;
-
-		rep.put(t.s, newRepS);
-
-		n2sc.put(t.s, newSourceCliqueS);
-		n2tc.put(t.s, getEmptyTargetCliqueID());
-
-		edgesWithProv.addTriple(newRepS, t.p, newRepO);
-	}
-
-	// typed, represented subject
-	// known property
-	// untyped, unrepresented object
-	protected void handleDataTriple_TRS_RP_UO(Triple t, Long sourceCliqueS, Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
-		Long newTargetCliqueO = targetCliqueP;
-
-		Long repS = rep.get(t.s);
-		Long repO = getOrCreateSummaryNode(getEmptySourceCliqueID(), newTargetCliqueO);
-
-		Long newRepS = repS;
-		Long newRepO = repO;
-
-		rep.put(t.o, newRepO);
-
-		n2tc.put(t.o, newTargetCliqueO);
-		n2sc.put(t.o, getEmptySourceCliqueID());
-
-		edgesWithProv.addTriple(newRepS, t.p, newRepO);
-	}
-
-	// untyped, unrepresented subject
-	// unknown property
-	// typed (thus represented) object
-	protected void handleDataTriple_US_UP_TRO(Triple t, Long sourceCliqueS, Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
-		sourceCliqueP = makeAndAddNewSourceClique(t.p);
-		targetCliqueP = makeAndAddNewTargetClique(t.p);
-
-		Long newSourceCliqueS = sourceCliqueP;
-
-		Long repS = getOrCreateSummaryNode(newSourceCliqueS, getEmptyTargetCliqueID());
-		Long repO = rep.get(t.o);
-
-		Long newRepS = repS;
-		Long newRepO = repO;
-
-		rep.put(t.s, newRepS);
-
-		n2sc.put(t.s, newSourceCliqueS);
-		n2tc.put(t.s, getEmptyTargetCliqueID());
-
-		edgesWithProv.addTriple(newRepS, t.p, newRepO);
-	}
-
-	// typed, represented subject which won't change
-	// unknown property: both its cliques need to be created
-	// untyped, unrepresented object
-	protected void handleDataTriple_TRS_UP_UO(Triple t, Long sourceCliqueS, Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
-		sourceCliqueP = makeAndAddNewSourceClique(t.p);
-		targetCliqueP = makeAndAddNewTargetClique(t.p);
-
-		Long newTargetCliqueO = targetCliqueP;
-
-		Long repS = rep.get(t.s);
-		Long repO = getOrCreateSummaryNode(getEmptySourceCliqueID(), newTargetCliqueO);
-
-		Long newRepS = repS;
-		Long newRepO = repO;
-
-		rep.put(t.o, newRepO);
-
-		n2tc.put(t.o, newTargetCliqueO);
-		n2sc.put(t.o, getEmptySourceCliqueID());
-
-		edgesWithProv.addTriple(newRepS, t.p, newRepO);
-	}
 }

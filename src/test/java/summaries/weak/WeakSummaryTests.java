@@ -23,9 +23,9 @@ public class WeakSummaryTests {
 
 		String inputFileName = "src/test/resources/test" + i + "-weak/test-" + i + ".nt";
 		String outputFileName = "src/test/resources/test" + i + "-weak/test-" + i + "_w_noSaturation.nt";
-		String[] argConfig = { "setCustomConfig", "", System.getProperty("user.dir") + "/conf/customConf.properties"};
+		//String[] argConfig = { "setCustomConfig", "", System.getProperty("user.dir") + "/conf/customConf.properties"};
 		try {
-			Builder.main(argConfig);
+			//Builder.main(argConfig);
 			String[] argsSum = {"loadAndSummarize", "weak", inputFileName};
 			try {
 				Builder.main(argsSum);
@@ -54,9 +54,9 @@ public class WeakSummaryTests {
 		catch (SQLException e) {
 			throw new IllegalStateException("SQL error while summarizing " + e.toString());
 		} 
-		catch (UnsupportedDatabaseEngineException e) {
-			throw new IllegalStateException("Cannot load custom config file!");
-		}
+		//catch (UnsupportedDatabaseEngineException e) {
+		//	throw new IllegalStateException("Cannot load custom config file!");
+		//}
 	}
 
 	public File saturateAndSummarizeUsingWeakSummary(int i) {
@@ -66,9 +66,9 @@ public class WeakSummaryTests {
 
 		String inputFileName = "src/test/resources/test" + i + "-weak/test-" + i + ".nt";
 		String outputFileName = "src/test/resources/test" + i + "-weak/test-" + i + "_w_classical.nt";
-		String[] argConfig = { "setCustomConfig", "", System.getProperty("user.dir") + "/conf/customConf.properties"};
+		//String[] argConfig = { "setCustomConfig", "", System.getProperty("user.dir") + "/conf/customConf.properties"};
 		try {
-			Builder.main(argConfig);
+			//Builder.main(argConfig);
 			String[] argsSum = {"loadWithSaturationAndSummarize", "weak", inputFileName};
 			try {
 				Builder.main(argsSum);
@@ -96,9 +96,10 @@ public class WeakSummaryTests {
 		}
 		catch (SQLException e) {
 			throw new IllegalStateException("SQL error while summarizing " + e.toString());
-		} catch (UnsupportedDatabaseEngineException e) {
-			throw new IllegalStateException("Cannot load custom config file!");
 		}
+		//catch (UnsupportedDatabaseEngineException e) {
+		//	throw new IllegalStateException("Cannot load custom config file!");
+		//}
 	}
 
 	public File summarizeThroughShortcutUsingWeakSummary(int i) {

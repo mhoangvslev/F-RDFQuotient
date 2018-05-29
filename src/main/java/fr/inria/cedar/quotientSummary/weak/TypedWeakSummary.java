@@ -4,7 +4,6 @@ import fr.inria.cedar.quotientSummary.datastructures.Long2Long;
 import fr.inria.cedar.quotientSummary.datastructures.Long2LongSet;
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
 import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
-import fr.inria.cedar.quotientSummary.util.Substitutions;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -23,16 +22,17 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 	Long2LongSet n2c; // for each data node, the set of types we know so far for this node
 	HashMap<TreeSet<Long>, Long> cs2csID; // for each set of types known so far, the ID of that set
 
-	protected final static char TRS_RP_TRO = 9;
-	protected final static char TRS_RP_RO = 10;
-	protected final static char TRS_RP_UO = 11;
-	protected final static char TRS_UP_TRO = 12; 
-	protected final static char TRS_UP_RO = 13; 
-	protected final static char TRS_UP_UO = 14; 
-	protected final static char RS_RP_TRO = 15;
-	protected final static char RS_UP_TRO = 16; 
-	protected final static char US_UP_TRO = 17; 
-	protected final static char US_RP_TRO = 18; 
+	protected final static char TRS_RP_RO = 21;
+	protected final static char TRS_RP_UO = 22;
+
+	protected final static char TRS_UP_RO = 25;
+	protected final static char TRS_UP_UO = 26;
+
+	protected final static char RS_RP_TRO = 28;
+	protected final static char RS_UP_TRO = 29;
+
+	protected final static char US_RP_TRO = 31;
+	protected final static char US_UP_TRO = 32;
 
 	public TypedWeakSummary(String triplesFileName, String triplesTableName, String encodedTriplesTableName, String dictionaryTableName) {
 		super();
@@ -69,7 +69,6 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
 		long typeConstantCode = RDF2SQLEncoding.getTypeCode();
 		if (typeConstantCode != -1) {
-			this.typeTriplesExist = true;
 			avoidCollisionsTimeStart = System.currentTimeMillis();
 			avoidCollisionsWhenAssigningSummaryNodes(conn);
 			avoidCollisionsTime += System.currentTimeMillis() - avoidCollisionsTimeStart;
@@ -82,7 +81,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 					while (rs.next()) {
 						Triple t = new Triple(rs.getInt(1), rs.getInt(2), rs.getInt(3));
 						this.handleTypeTripleBeforeData(t);
-						storeSpecialNodesRepresentation(t, false);
+						rep.put(t.o, t.o);
 						triplesSummarizedSoFar++;
 						typeTriplesSummarizedSoFar++;
 						if (checkConsistency) {
@@ -98,12 +97,14 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		classSetCreationTime = System.currentTimeMillis() - start - avoidCollisionsTime;
 		LOGGER.info("Class sets created in " + classSetCreationTime + " ms");
 
+
 		start = System.currentTimeMillis();
 		this.representTypeTriples();
 		typeTriplesSummarizationTime = System.currentTimeMillis() - start;
 		LOGGER.info("Summarized " + typeTriplesSummarizedSoFar + " type triples in " + typeTriplesSummarizationTime + " ms");
 
 		start = System.currentTimeMillis();
+		collectSchemaNodes(conn);
 		// now all the non-type triples
 		String getUntypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p <> " + typeConstantCode);
 		try {
@@ -117,7 +118,8 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 						|| (t.p == RDF2SQLEncoding.getDomainCode())
 						|| (t.p == RDF2SQLEncoding.getRangeCode())) {
 							edgesWithProv.addTriple(t.s, t.p, t.o);
-							storeSpecialNodesRepresentation(t, true);
+							rep.put(t.s, t.s);
+							rep.put(t.o, t.o);
 						}
 						else
 							handleDataTriple(t);
@@ -139,364 +141,6 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 
 		allTriplesSummarizationTime = classSetCreationTime + typeTriplesSummarizationTime + dataTriplesSummarizationTime;
 		LOGGER.info("Summarized " + triplesSummarizedSoFar + " triples overall in " + allTriplesSummarizationTime + " ms");
-	}
-
-	protected void handleDataTriple(Triple t) {
-		//LOGGER.debug("### Data triple: " + t.toString());
-		Long repS = rep.get(t.s);
-		Long repO = rep.get(t.o);
-		Long pSource = ps.get(t.p);
-		Long pTarget = pt.get(t.p);
-		// Properties appearing in triples where one node is typed and the other is not,
-		// may have a source but lack a target, or the opposite.
-		// Thus, is "represented" a property having a source OR a target. It doesn't have to have both.
-		// If a property only occurs between typed nodes, it is considered non represented.
-		boolean pRepresented = ((pSource != null) || (pTarget != null)); 
-		boolean sRepresented = (repS != null);
-		boolean sTyped = ((n2cs.get(t.s) != null));
-		boolean oRepresented = (repO != null);
-		boolean oTyped = ((n2cs.get(t.o) != null));
-
-		char caseNumber = identifyTripleSummarizationCase(sRepresented, sTyped, pRepresented, oRepresented, oTyped);
-//		LOGGER.debug("\nCase: " + this.caseName(caseNumber) + " " + t.toString() + " " + 
-//				RDF2SQLEncoding.dictionaryDecode(t.s) + " " + 
-//				RDF2SQLEncoding.dictionaryDecode(t.p) + " " +
-//				RDF2SQLEncoding.dictionaryDecode(t.o));
-		switch (caseNumber) {
-		// six cases for TRS
-		case TRS_UP_TRO:
-			handleDataTriple_TRS_UP_TRO(t, repS, repO, pSource, pTarget);
-			break;
-		case TRS_UP_RO:
-			handleDataTriple_TRS_UP_RO(t, repS, repO, pSource, pTarget);
-			break;
-		case TRS_UP_UO:
-			handleDataTriple_TRS_UP_UO(t, repS, repO, pSource, pTarget);
-			break;
-		case TRS_RP_TRO:
-			handleDataTriple_TRS_RP_TRO(t, repS, repO, pSource, pTarget);
-			break;
-		case TRS_RP_UO:
-			handleDataTriple_TRS_RP_UO(t, repS, repO, pSource, pTarget);
-			break;
-		case TRS_RP_RO:
-			handleDataTriple_TRS_RP_RO(t, repS, repO, pSource, pTarget);
-			break;
-		// six cases for RS: 
-		case RS_UP_UO:
-			handleDataTriple_RS_UP_UO(t);
-			break;
-		case RS_UP_RO:
-			handleDataTriple_RS_UP_RO(t);
-			break;
-		case RS_UP_TRO:
-			handleDataTriple_RS_UP_TRO(t, repS, repO, pSource, pTarget);
-			break;
-		case RS_RP_UO:
-			handleDataTriple_RS_RP_UO(t);
-			break;
-		case RS_RP_RO:
-			handleDataTriple_RS_RP_RO(t);
-			break;
-		case RS_RP_TRO:
-			handleDataTriple_RS_RP_TRO(t, repS, repO, pSource, pTarget);
-			break;
-		// six cases for US:  
-		case US_UP_UO: 
-			handleDataTriple_US_UP_UO(t);
-			break;
-		case US_UP_RO:
-			handleDataTriple_US_UP_RO(t);
-			break;
-		case US_UP_TRO:
-			handleDataTriple_US_UP_TRO(t, repS, repO, pSource, pTarget);
-			break;
-		case US_RP_UO: 
-			handleDataTriple_US_RP_UO(t);
-			break;
-		case US_RP_RO:
-			handleDataTriple_US_RP_RO(t);
-			break;
-		case US_RP_TRO:
-			handleDataTriple_US_RP_TRO(t, repS, repO, pSource, pTarget);
-			break;
-		default:
-			throw new IllegalStateException("This case should not be encountered here");
-		}
-
-		//LOGGER.debug("After processing triple " + t.toString() + ", we have:\n" + this.toString()); 
-		//safetyCheck(); 
-	}
-
-	/**
-	 * In this case we need to: represent the subject by the property source if it exists, otherwise, create a new node and also register it as the source of p; 
-	 * add a p edge between this and the typed object, if not already there
-	 */
-	private void handleDataTriple_US_RP_TRO(Triple t, Long repS, Long repO, Long sourceP, Long targetP) {
-		Long addedTripleSource = sourceP; 
-		Long addedTripleTarget = repO;
-
-		if (sourceP == null){
-			addedTripleSource = this.getNextSummaryNode();
-		}
-		rep.put(t.s, addedTripleSource);
-		ps.put(t.p, addedTripleSource);
-
-		edgesWithProv.addTriple(addedTripleSource, t.p, addedTripleTarget); 
-	}
-
-	/**
-	 * In this case we need to represent o by the target of p, and add the edge from repS to that node.
-	 * The source of p (if it exists) is not affected.
-	 * The target of p, if it did not exist, may become the representative of o
-	 */
-	private void handleDataTriple_TRS_RP_UO(Triple t, Long repS, Long repO, Long sourceP, Long targetP) {
-		Long addedTripleSource = repS;
-		Long addedTripleTarget = targetP;
-
-		if (targetP == null) {
-			addedTripleTarget = this.getNextSummaryNode();
-		}
-		rep.put(t.o, addedTripleTarget);
-		pt.put(t.p, addedTripleTarget);
-
-		edgesWithProv.addTriple(addedTripleSource, t.p, addedTripleTarget);
-	}
-
-	/**
-	 * In this case we need to: create the source of p; we don't create a target for it.
-	 * We represent s by the source of p, and add an edge from that to repO. SEEN (5)
-	 */
-	private void handleDataTriple_US_UP_TRO(Triple t, Long repS, Long repO, Long sourceP, Long targetP) {
-		sourceP = this.getNextSummaryNode();
-		ps.put(t.p, sourceP);
-		rep.put(t.s, sourceP);
-		edgesWithProv.addTriple(sourceP, t.p, repO);
-	}
-
-	/**
-	 * In this case we need to create the target of p and represent o by it.
-	 * We do not create a source of p.  SEEN (6)
-	 */
-	private void handleDataTriple_TRS_UP_UO(Triple t, Long repS, Long repO, Long sourceP, Long targetP) {
-		targetP = this.getNextSummaryNode();
-		pt.put(t.p, targetP);
-		rep.put(t.o, targetP);
-		edgesWithProv.addTriple(repS, t.p, targetP);
-	}
-
-	/**
-	 * In this case we may have to fuse things between repS and the source of P
-	 * RepO remains unchanged.  SEEN (1)
-	 */
-	private void handleDataTriple_RS_RP_TRO(Triple t, Long repS, Long repO, Long sourceP, Long targetP) {
-		Long addedTripleSource = repS;
-		Long addedTripleTarget = repO;
-
-		if (sourceP != null){
-			Substitutions subs = new Substitutions(sourceP, repS);
-			//LOGGER.debug("Substitutions: " + subs.toString());
-
-			// update added triple source, if needed
-			Long possibleNewAddedTripleSource = subs.get(addedTripleSource);
-			if (possibleNewAddedTripleSource != null)
-				addedTripleSource = possibleNewAddedTripleSource;
-
-			// apply replacements, if any
-			applySubstitutions(subs);
-			// try to add the resulting triple
-		}
-		else{
-			addedTripleSource = sourceP; 
-		}
-		ps.put(t.p, addedTripleSource); 
-		edgesWithProv.addTriple(addedTripleSource, t.p, addedTripleTarget);
-	}
-
-	/**
-	 * In this case we need to possibly fuse the target of p with repO.
-	 * The source of p (if it exists)  remains unchanged. SEEN (2)
-	 */
-	private void handleDataTriple_TRS_RP_RO(Triple t, Long repS, Long repO, Long sourceP, Long targetP) {
-		Long addedTripleSource = repS;
-		Long addedTripleTarget = repO;
-
-		if (targetP != null){
-			Substitutions subs = new Substitutions(targetP, repO);
-			//LOGGER.debug("Substitutions: " + subs.toString());
-
-			// update added triple  target, if needed
-			Long possibleNewAddedTripleTarget = subs.get(addedTripleTarget);
-			if (possibleNewAddedTripleTarget != null)
-				addedTripleTarget = possibleNewAddedTripleTarget;
-			// apply replacements, if any
-			applySubstitutions(subs);
-			// try to add the resulting triple
-		}
-		else{
-			addedTripleTarget = targetP; 
-		}
-		pt.put(t.p, addedTripleTarget);
-		edgesWithProv.addTriple(addedTripleSource, t.p, addedTripleTarget);
-	}
-
-	/**
-	 * In this case we need to: use repS as the source of P; we don't know a target for p.
-	 * We add the edge. SEEN (7)
-	 */
-	private void handleDataTriple_RS_UP_TRO(Triple t, Long repS, Long repO, Long pSource, Long pTarget) {
-		ps.put(t.p, repS);
-		edgesWithProv.addTriple(repS, t.p, repO);
-	}
-	/**
-	 * In this case we need to use repO as the target of p, and do nothing about p's source.
-	 * SEEN (8)
-	 */
-	private void handleDataTriple_TRS_UP_RO(Triple t, Long repS, Long repO, Long pSource, Long pTarget) {
-		pt.put(t.p, repO);
-		edgesWithProv.addTriple(repS, t.p, repO);
-	}
-
-	/**
-	 * In this case we need to add a p triple (if not already there) between repS and repO. 
-	 * The source of p (if it exists) is not affected.
-	 * The target of p (if it exists) is not affected. 
-	 * SEEN (9) 
-	 */
-	private void handleDataTriple_TRS_RP_TRO(Triple t, Long repS, Long repO, Long pSource, Long pTarget) {
-		edgesWithProv.addTriple(repS, t.p, repO);
-	}
-
-	/**
-	 * In this case we just add the triple; we do not modify its source nor its target
-	 * SEEN (10)
-	 */
-	private void handleDataTriple_TRS_UP_TRO(Triple t, Long repS, Long repO, Long pSource, Long pTarget) {
-		edgesWithProv.addTriple(repS, t.p, repO);
-	}
-
-	String caseName(char c) { 
-		switch (c) {
-		case TRS_UP_TRO: 
-			return "TRS_UP_TRO"; 
-		case TRS_UP_RO:
-			return "TRS_UP_RO"; 
-		case TRS_UP_UO:
-			return "TRS_UP_UO"; 
-		case TRS_RP_TRO:
-			return "TRS_RP_TRO"; 
-		case TRS_RP_UO:
-			return "TRS_RP_UO"; 
-		case TRS_RP_RO:
-			return "TRS_RP_RO"; 
-		case RS_UP_UO:
-			return "RS_UP_UO"; 
-		case RS_UP_RO:
-			return "RS_UP_RO"; 
-		case RS_UP_TRO:
-			return "RS_UP_TRO"; 
-		case RS_RP_UO:
-			return "RS_RP_UO"; 
-		case RS_RP_RO:
-			return "RS_RP_RO"; 
-		case RS_RP_TRO: 
-			return "RS_RP_TRO";  
-		case US_UP_UO: 
-			return "US_UP_UO";
-		case US_UP_RO:
-			return "US_UP_RO";
-		case US_UP_TRO:
-			return "US_UP_TRO";
-		case US_RP_UO:
-			return "US_RP_UO";
-		case US_RP_RO:
-			return "US_RP_RO";
-		}
-		throw new IllegalStateException("Unrecognized case " + c);
-	}
-
-	protected char identifyTripleSummarizationCase(boolean sRepresented, boolean sTyped,
-			boolean pRepresented, boolean oRepresented, boolean oTyped) {
-		if (sRepresented){
-			if (sTyped) {// in this case, the edge will not change the source of p, but it may change its target
-				if (pRepresented){
-					if (oRepresented){
-						if (oTyped){
-							return TRS_RP_TRO; 
-						}
-						return TRS_RP_RO; 
-					}
-					else{ // o unrepresented => o untyped
-						return TRS_RP_UO; 
-					}
-				}
-				else{ // s represented, typed, p unrepresented 
-					if (oRepresented){
-						if (oTyped){
-							return TRS_UP_TRO; 
-						}
-						else{ // o unrepresented => untyped
-							return TRS_UP_RO; 
-						}
-					}
-					else{ // s represented, typed, p unrepresented, o unrepresented => untyped
-						return TRS_UP_UO; 
-					}
-				}
-			}
-			else{ // s represented, untyped
-				if (pRepresented){
-					if (oRepresented){
-						if (oTyped){
-							return RS_RP_TRO; 
-						}
-						return RS_RP_RO; 
-					}
-					else{ // o unrepresented => o untyped
-						return RS_RP_UO; 
-					}
-				}
-				else{ // s represented, typed, p unrepresented 
-					if (oRepresented){
-						if (oTyped){
-							return RS_UP_TRO; 
-						}
-						else{ // o unrepresented => untyped
-							return RS_UP_RO; 
-						}
-					}
-					else{ // s represented, typed, p unrepresented, o unrepresented => untyped
-						return RS_UP_UO; 
-					}
-				}
-			}
-		}
-		else{ // s unrepresented => untyped
-			if (pRepresented){
-				if (oRepresented){
-					if (oTyped){
-						return US_RP_TRO; 
-					}
-					return US_RP_RO; 
-				}
-				else{ // o unrepresented => o untyped
-					return US_RP_UO; 
-				}
-			}
-			else{ // s represented, typed, p unrepresented 
-				if (oRepresented){
-					if (oTyped){
-						return US_UP_TRO; 
-					}
-					else{ // o unrepresented => untyped
-						return US_UP_RO; 
-					}
-				}
-				else{ // s represented, typed, p unrepresented, o unrepresented => untyped
-					return US_UP_UO; 
-				}
-			}
-		}
 	}
 
 	@Override
@@ -557,6 +201,209 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 	}
 
 	@Override
+	protected void handleTypeTripleAfterData(Triple t) {
+		throw new IllegalStateException("This method does not belong to " + this.getClass().getName());
+	}
+
+	protected char identifyTripleSummarizationCase(boolean sRepresented, boolean sTyped, boolean sSchemaNode, boolean pRepresented, boolean oRepresented, boolean oTyped, boolean oSchemaNode) {
+		if((sTyped || sSchemaNode) && (oTyped || oSchemaNode)) {
+			return SELF_SELF;
+		}
+		if (sTyped) {
+			if (pRepresented) {
+				if (oRepresented) {
+					return TRS_RP_RO;
+				}
+				else {
+					return TRS_RP_UO;
+				}
+			}
+			else {
+				if (oRepresented) {
+					return TRS_UP_RO;
+				}
+				else {
+					return TRS_UP_UO;
+				}
+			}
+		}
+		else if (sSchemaNode) {
+			if (pRepresented) {
+				if (oRepresented) {
+					return SN_RP_RO;
+				}
+				else {
+					return SN_RP_UO;
+				}
+			}
+			else {
+				if (oRepresented) {
+					return SN_UP_RO;
+				}
+				else {
+					return SN_UP_UO;
+				}
+			}
+		}
+		else if (sRepresented) {
+			if (pRepresented) {
+				if (oTyped) {
+					return RS_RP_TRO;
+				}
+				else if (oSchemaNode) {
+					return RS_RP_SN;
+				}
+				else if (oRepresented) {
+					return RS_RP_RO;
+				}
+				else {
+					return RS_RP_UO;
+				}
+			}
+			else {
+				if (oTyped) {
+					return RS_UP_TRO;
+				}
+				else if (oSchemaNode) {
+					return RS_UP_SN;
+				}
+				else if (oRepresented) {
+					return RS_UP_RO;
+				}
+				else {
+					return RS_UP_UO;
+				}
+			}
+		}
+		else {
+			if (pRepresented) {
+				if (oTyped) {
+					return US_RP_TRO;
+				}
+				else if (oSchemaNode) {
+					return US_RP_SN;
+				}
+				else if (oRepresented) {
+					return US_RP_RO;
+				}
+				else {
+					return US_RP_UO;
+				}
+			}
+			else {
+				if (oTyped) {
+					return US_UP_TRO;
+				}
+				else if (oSchemaNode) {
+					return US_UP_SN;
+				}
+				else if (oRepresented) {
+					return US_UP_RO;
+				}
+				else {
+					return US_UP_UO;
+				}
+			}
+		}
+	}
+
+	protected void handleDataTriple(Triple t) {
+		//LOGGER.debug("### Data triple: " + t.toString());
+		Long repS = rep.get(t.s);
+		Long repO = rep.get(t.o);
+		Long pSource = ps.get(t.p);
+		Long pTarget = pt.get(t.p);
+
+		// Properties appearing in triples where one node is typed and the other is not,
+		// may have a source but lack a target, or the opposite.
+		// Thus, is "represented" a property having a source OR a target. It doesn't have to have both.
+		// If a property only occurs between typed nodes, it is considered non represented.
+		boolean pRepresented = ((pSource != null) || (pTarget != null)); 
+		boolean sRepresented = (repS != null);
+		boolean sTyped = (n2cs.get(t.s) != null);
+		boolean sSchemaNode = sn.contains(t.s);
+		boolean oRepresented = (repO != null);
+		boolean oTyped = (n2cs.get(t.o) != null);
+		boolean oSchemaNode = sn.contains(t.o);
+
+		char caseNumber = identifyTripleSummarizationCase(sRepresented, sSchemaNode, sTyped, pRepresented, oRepresented, oTyped, oSchemaNode);
+//		LOGGER.debug("\nCase: " + this.showCaseName(caseNumber) + " " + t.toString() + " " + 
+//			RDF2SQLEncoding.dictionaryDecode(t.s) + " " + 
+//			RDF2SQLEncoding.dictionaryDecode(t.p) + " " +
+//			RDF2SQLEncoding.dictionaryDecode(t.o));
+		switch (caseNumber) {
+			case SELF_SELF:
+				handleDataTriple_SELF_SELF(t);
+				break;
+			case SN_RP_RO:
+			case TRS_RP_RO:
+				handleDataTriple_TRS_RP_RO(t, repS, repO, pSource, pTarget);
+				break;
+			case SN_RP_UO:
+			case TRS_RP_UO:
+				handleDataTriple_TRS_RP_UO(t, repS, repO, pSource, pTarget);
+				break;
+			case SN_UP_RO:
+			case TRS_UP_RO:
+				handleDataTriple_TRS_UP_RO(t, repS, repO, pSource, pTarget);
+				break;
+			case SN_UP_UO:
+			case TRS_UP_UO:
+				handleDataTriple_TRS_UP_UO(t, repS, repO, pSource, pTarget);
+				break;
+			case RS_RP_SN:
+			case RS_RP_TRO:
+				handleDataTriple_RS_RP_TRO(t, repS, repO, pSource, pTarget);
+				break;
+			case RS_RP_RO:
+				handleDataTriple_RS_RP_RO(t);
+				break;
+			case RS_RP_UO:
+				handleDataTriple_RS_RP_UO(t);
+				break;
+			case RS_UP_SN:
+			case RS_UP_TRO:
+				handleDataTriple_RS_UP_TRO(t, repS, repO, pSource, pTarget);
+				break;
+			case RS_UP_RO:
+				handleDataTriple_RS_UP_RO(t);
+				break;
+			case RS_UP_UO:
+				handleDataTriple_RS_UP_UO(t);
+				break;
+			case US_RP_SN:
+			case US_RP_TRO:
+				handleDataTriple_US_RP_TRO(t, repS, repO, pSource, pTarget);
+				break;
+			case US_RP_RO:
+				handleDataTriple_US_RP_RO(t);
+				break;
+			case US_RP_UO:
+				handleDataTriple_US_RP_UO(t);
+				break;
+			case US_UP_SN:
+			case US_UP_TRO:
+				handleDataTriple_US_UP_TRO(t, repS, repO, pSource, pTarget);
+				break;
+			case US_UP_RO:
+				handleDataTriple_US_UP_RO(t);
+				break;
+			case US_UP_UO:
+				handleDataTriple_US_UP_UO(t);
+				break;
+			default:
+				throw new IllegalStateException("This case should not be encountered here");
+		}
+
+		//LOGGER.debug("After processing triple " + t.toString() + ", we have:\n" + this.toString()); 
+		//safetyCheck(); 
+	}
+
+	// -->
+	// Debug methods
+	// -->
+
+	@Override
 	protected void consistencyChecks() {
 		for (Long s: edgesWithProv.keySet()) { // s is a summary node 
 			HashMap<Long, TreeSet<Long>> triplesOfThisSubject = edgesWithProv.get(s);
@@ -597,6 +444,64 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 					}
 				}
 			}
+		}
+	}
+
+	@Override
+	protected String showCaseName(char caseNumber) { 
+		switch (caseNumber) {
+			case SELF_SELF:
+				return "SELF_SELF";
+			case SN_RP_RO:
+				return "SN_RP_RO";
+			case SN_RP_UO:
+				return "SN_RP_UO";
+			case SN_UP_RO:
+				return "SN_UP_RO";
+			case SN_UP_UO:
+				return "SN_UP_UO";
+			case RS_RP_SN:
+				return "RS_RP_SN";
+			case RS_RP_RO:
+				return "RS_RP_RO";
+			case RS_RP_UO:
+				return "RS_RP_UO";
+			case RS_UP_SN:
+				return "RS_UP_SN";
+			case RS_UP_RO:
+				return "RS_UP_RO";
+			case RS_UP_UO:
+				return "RS_UP_UO";
+			case US_RP_SN:
+				return "US_RP_SN";
+			case US_RP_RO:
+				return "US_RP_RO";
+			case US_RP_UO:
+				return "US_RP_UO";
+			case US_UP_SN:
+				return "US_UP_SN";
+			case US_UP_RO:
+				return "US_UP_RO";
+			case US_UP_UO:
+				return "US_UP_UO";
+			case TRS_RP_RO:
+				return "TRS_RP_RO";
+			case TRS_RP_UO:
+				return "TRS_RP_UO";
+			case TRS_UP_RO:
+				return "TRS_UP_RO";
+			case TRS_UP_UO:
+				return "TRS_UP_UO";
+			case RS_RP_TRO:
+				return "RS_RP_TRO";
+			case RS_UP_TRO:
+				return "RS_UP_TRO";
+			case US_RP_TRO:
+				return "US_RP_TRO";
+			case US_UP_TRO:
+				return "US_UP_TRO";
+			default:
+				throw new IllegalStateException("Unrecognized case " + caseNumber);
 		}
 	}
 }

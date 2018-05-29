@@ -33,6 +33,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 		long avoidCollisionsTimeStart;
 		long avoidCollisionsTime = 0;
 		long start = System.currentTimeMillis();
+		collectSchemaNodes(conn);
 		try {
 			conn.setAutoCommit(false);
 		}
@@ -43,7 +44,6 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
 		long typeConstantCode = RDF2SQLEncoding.getTypeCode();
 		if (typeConstantCode != -1) {
-			this.typeTriplesExist = true;
 			avoidCollisionsTimeStart = System.currentTimeMillis();
 			avoidCollisionsWhenAssigningSummaryNodes(conn);
 			avoidCollisionsTime += System.currentTimeMillis() - avoidCollisionsTimeStart;
@@ -60,11 +60,14 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 						|| (t.p == RDF2SQLEncoding.getDomainCode())
 						|| (t.p == RDF2SQLEncoding.getRangeCode())) {
 							edgesWithProv.addTriple(t.s, t.p, t.o);
-							storeSpecialNodesRepresentation(t, true);
+							rep.put(t.s, t.s);
+							rep.put(t.o, t.o);
 						}
 						else
 							handleDataTriple(t);
 						triplesSummarizedSoFar++;
+						if(triplesSummarizedSoFar == 7)
+							LOGGER.debug("STOP");
 						dataTriplesSummarizedSoFar++;
 						if (checkConsistency) {
 							consistencyChecks();
@@ -90,8 +93,10 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 						Triple t = new Triple(rs.getInt(1), rs.getInt(2), rs.getInt(3));
 						this.handleTypeTripleAfterData(t);
 						triplesSummarizedSoFar++;
+						if(triplesSummarizedSoFar == 7)
+							LOGGER.debug("STOP");
 						typeTriplesSummarizedSoFar++;
-						storeSpecialNodesRepresentation(t, false);
+						rep.put(t.o, t.o);
 						if (checkConsistency) {
 							consistencyChecks();
 						}
@@ -110,6 +115,78 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 		LOGGER.info("Summarized " + triplesSummarizedSoFar + " overall triples in " + allTriplesSummarizationTime + " ms");
 	}
 
+	protected char identifyTripleSummarizationCase(boolean sRepresented, boolean sSchemaNode, boolean pRepresented, boolean oRepresented, boolean oSchemaNode) {
+		if (sSchemaNode) {
+			if (oSchemaNode) {
+				return SELF_SELF;
+			}
+			if (pRepresented) {
+				if (oRepresented) {
+					return SN_RP_RO;
+				}
+				else {
+					return SN_RP_UO;
+				}
+			}
+			else {
+				if (oRepresented) {
+					return SN_UP_RO;
+				}
+				else {
+					return SN_UP_UO;
+				}
+			}
+		}
+		else if (sRepresented) {
+			if (pRepresented) {
+				if (oSchemaNode) {
+					return RS_RP_SN;
+				}
+				else if (oRepresented) {
+					return RS_RP_RO;
+				}
+				else {
+					return RS_RP_UO;
+				}
+			}
+			else {
+				if (oSchemaNode) {
+					return RS_UP_SN;
+				}
+				else if (oRepresented) {
+					return RS_UP_RO;
+				}
+				else {
+					return RS_UP_UO;
+				}
+			}
+		}
+		else {
+			if (pRepresented) {
+				if (oSchemaNode) {
+					return US_RP_SN;
+				}
+				else if (oRepresented) {
+					return US_RP_RO;
+				}
+				else {
+					return US_RP_UO;
+				}
+			}
+			else {
+				if (oSchemaNode) {
+					return US_UP_SN;
+				}
+				else if (oRepresented) {
+					return US_UP_RO;
+				}
+				else {
+					return US_UP_UO;
+				}
+			}
+		}
+	}
+
 	public void handleDataTriple(Triple t) {
 		// 8 cases: (RS, US) x (RP, UP) x (RO, UO)
 		Long sourceCliqueS = n2sc.get(t.s);
@@ -123,44 +200,68 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 		Long repS = rep.get(t.s);
 		Long repO = rep.get(t.o);
 
-		char caseNumber = decode(repS, repO, sourceCliqueP);
+		boolean pRepresented = (sourceCliqueP != null);
+		boolean sRepresented = (repS != null);
+		boolean sSchemaNode = sn.contains(t.s);
+		boolean oRepresented = (repO != null);
+		boolean oSchemaNode = sn.contains(t.o);
 
-		//LOGGER.debug("\n" + t.toString() + " " + RDF2SQLEncoding.decode(t) + " case: " + this.caseName(caseNumber)); 
+		char caseNumber = identifyTripleSummarizationCase(sRepresented, sSchemaNode, pRepresented, oRepresented, oSchemaNode);
+		//LOGGER.debug("\n" + t.toString() + " " + RDF2SQLEncoding.decode(t) + " case: " + showCaseName(caseNumber));
 		switch (caseNumber) {
-			case RS_RP_RO: {
+			case SELF_SELF:
+				handleDataTriple_SELF_SELF(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				break;
+			case SN_RP_RO:
+				handleDataTriple_TRS_RP_RO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				break;
+			case SN_RP_UO:
+				handleDataTriple_TRS_RP_UO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				break;
+			case RS_RP_SN:
+				handleDataTriple_RS_RP_TRO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				break;
+			case RS_RP_RO:
 				handleDataTriple_RS_RP_RO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
 				break;
-			}
-			case RS_RP_UO: {
+			case RS_RP_UO:
 				handleDataTriple_RS_RP_UO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
 				break;
-			}
-			case US_RP_RO: {
+			case US_RP_SN:
+				handleDataTriple_US_RP_TRO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				break;
+			case US_RP_RO:
 				handleDataTriple_US_RP_RO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
 				break;
-			}
-			case US_RP_UO: {
+			case US_RP_UO:
 				handleDataTriple_US_RP_UO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
 				break;
-			}
-			case RS_UP_RO: {
+			case SN_UP_RO:
+				handleDataTriple_TRS_UP_RO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				break;
+			case SN_UP_UO:
+				handleDataTriple_TRS_UP_UO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				break;
+			case RS_UP_SN:
+				handleDataTriple_RS_UP_TRO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				break;
+			case RS_UP_RO:
 				handleDataTriple_RS_UP_RO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
 				break;
-			}
-			case RS_UP_UO: {
+			case RS_UP_UO:
 				handleDataTriple_RS_UP_UO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
 				break;
-			}
-			case US_UP_RO: {
+			case US_UP_SN:
+				handleDataTriple_US_UP_TRO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				break;
+			case US_UP_RO:
 				handleDataTriple_US_UP_RO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
 				break;
-			}
-			case US_UP_UO: {
+			case US_UP_UO:
 				handleDataTriple_US_UP_UO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
 				break;
-			}
 			default:
-				throw new IllegalStateException("Unknown case " + caseNumber);
+				throw new IllegalStateException("Unknown case;");
 		}
 		cacheTriple(t);
 		//display(); 
@@ -191,29 +292,49 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 		}
 	}
 
-	private char decode(Long repS, Long repO, Long sourceCliqueP) {
-		if (repS != null) // US, RS
-			// US, RS, UO
-			if (repO != null) // RO
-				if (sourceCliqueP != null)
-					return RS_RP_RO;
-				else
-					return RS_UP_RO;
-			else // NO
-				if (sourceCliqueP != null)
-					return RS_RP_UO;
-				else
-					return RS_UP_UO;
-		else // US, NS
-			if (repO != null) // RO
-				if (sourceCliqueP != null) // RP
-					return US_RP_RO;
-				else
-					return US_UP_RO;
-			else // NO
-				if (sourceCliqueP != null) // RP
-					return US_RP_UO;
-				else
-					return US_UP_UO;
+	// -->
+	// Debug methods
+	// -->
+
+	@Override
+	protected String showCaseName(char caseNumber) { 
+		switch (caseNumber) {
+			case SELF_SELF:
+				return "SELF_SELF";
+			case SN_RP_RO:
+				return "SN_RP_RO";
+			case SN_RP_UO:
+				return "SN_RP_UO";
+			case SN_UP_RO:
+				return "SN_UP_RO";
+			case SN_UP_UO:
+				return "SN_UP_UO";
+			case RS_RP_SN:
+				return "RS_RP_SN";
+			case RS_RP_RO:
+				return "RS_RP_RO";
+			case RS_RP_UO:
+				return "RS_RP_UO";
+			case RS_UP_SN:
+				return "RS_UP_SN";
+			case RS_UP_RO:
+				return "RS_UP_RO";
+			case RS_UP_UO:
+				return "RS_UP_UO";
+			case US_RP_SN:
+				return "US_RP_SN";
+			case US_RP_RO:
+				return "US_RP_RO";
+			case US_RP_UO:
+				return "US_RP_UO";
+			case US_UP_SN:
+				return "US_UP_SN";
+			case US_UP_RO:
+				return "US_UP_RO";
+			case US_UP_UO:
+				return "US_UP_UO";
+			default:
+				throw new IllegalStateException("Unrecognized case " + caseNumber);
+		}
 	}
 }
