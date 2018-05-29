@@ -192,8 +192,8 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 		Long repO = rep.get(t.o);
 		Long pSource = ps.get(t.p);
 		Long pTarget = pt.get(t.p);
-		if ((pSource == null && pTarget != null) || (pSource != null && pTarget == null))
-			throw new IllegalStateException("Source represented and target not represented, or the opposite");
+		//if ((pSource == null && pTarget != null) || (pSource != null && pTarget == null))
+		//	throw new IllegalStateException("Source represented and target not represented, or the opposite");
 
 		boolean pRepresented = (pSource != null);
 		boolean sRepresented = (repS != null);
