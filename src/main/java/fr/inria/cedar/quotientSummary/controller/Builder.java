@@ -40,6 +40,9 @@ public class Builder {
 	private static Connection connectionInUse;
 	private static Summary summaryInUse;
 
+	// custom Property config, set to null by default
+	private static String customPropFile = "";
+	
 	public Builder() {
 	}
 
@@ -125,6 +128,9 @@ public class Builder {
 			case "readSummaryComputedWithoutSaturation":
 				Summary s = readSummaryFromPostgres(); 
 				return;
+			case "setCustomConfig":
+				if (filesToLoad.length != 0) customPropFile = filesToLoad[0];
+				return;
 			default:
 				break;
 		}
@@ -163,6 +169,7 @@ public class Builder {
 		System.out.println("args[0]=exportSummaryComputedUsingShortcut: saves summary summary computed using only saturation to the disk in nt, dot and png formats");
 		System.out.println("args[0]=dropPartialResultsTables: drops partial results tables in Postgres");
 		System.out.println("args[0]=closeConnection: closes connection to Postgres");
+		System.out.println("args[0]=setCustomConfig: set the custom config filename");
 	}
 
 	/**
@@ -230,10 +237,17 @@ public class Builder {
 		Properties properties = new Properties();
 		properties.load(new FileReader(configFile));
 		//LOGGER.debug(properties.toString());
+		
 		triplesTableName = properties.getProperty("database.triples_table_name");
 		dictionaryTableName = properties.getProperty("database.dictionary_table_name");
 		encodedTableName = properties.getProperty("database.encoded_triples_table_name");
 		encodedSaturatedTableName = properties.getProperty("database.encoded_saturated_triples_table_name");
+		
+		// if there are custom configs sent by a file
+		if (!customPropFile.equals("")) {
+			configFile = customPropFile;
+		}
+		
 		Parameters settings = new Parameters();
 		settings.setPropertiesFileName(configFile);
 
@@ -255,8 +269,14 @@ public class Builder {
 			throw ex;
 		}
 		LOGGER.info("Graph loaded to Postgres");
-
+		
 		Properties connectionProps = new Properties();
+		
+		// if there are custom configs sent by a file
+		if (!customPropFile.equals("")) {
+			properties.load(new FileReader(customPropFile));
+		}
+		
 		connectionProps.put("user", properties.getProperty("database.user"));
 		connectionProps.put("password", properties.getProperty("database.password"));
 
@@ -266,6 +286,7 @@ public class Builder {
 		LOGGER.info("Connection to Postgres established with URL: " + connectionURL + " with user " + 
 				properties.getProperty("database.user") + " and password " + properties.getProperty("database.password")); 
 		Preconditions.checkState(conn != null, "No connection for " + connectionURL);
+		
 		return conn;
 	}
 
@@ -382,6 +403,7 @@ public class Builder {
 	private static void closeConnection() throws SQLException {
 		connectionInUse.close();
 		connectionInUse = null;
+		customPropFile = ""; // reset the path to the config file
 		LOGGER.info("Connection closed");
 	}
 

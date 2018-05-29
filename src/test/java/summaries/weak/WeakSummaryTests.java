@@ -23,7 +23,9 @@ public class WeakSummaryTests {
 
 		String inputFileName = "src/test/resources/test" + i + "-weak/test-" + i + ".nt";
 		String outputFileName = "src/test/resources/test" + i + "-weak/test-" + i + "_w_noSaturation.nt";
+		String[] argConfig = { "setCustomConfig", "", System.getProperty("user.dir") + "/conf/customConf.properties"};
 		try {
+			Builder.main(argConfig);
 			String[] argsSum = {"loadAndSummarize", "weak", inputFileName};
 			try {
 				Builder.main(argsSum);
@@ -51,6 +53,9 @@ public class WeakSummaryTests {
 		}
 		catch (SQLException e) {
 			throw new IllegalStateException("SQL error while summarizing " + e.toString());
+		} 
+		catch (UnsupportedDatabaseEngineException e) {
+			throw new IllegalStateException("Cannot load custom config file!");
 		}
 	}
 
@@ -61,7 +66,9 @@ public class WeakSummaryTests {
 
 		String inputFileName = "src/test/resources/test" + i + "-weak/test-" + i + ".nt";
 		String outputFileName = "src/test/resources/test" + i + "-weak/test-" + i + "_w_classical.nt";
+		String[] argConfig = { "setCustomConfig", "", System.getProperty("user.dir") + "/conf/customConf.properties"};
 		try {
+			Builder.main(argConfig);
 			String[] argsSum = {"loadWithSaturationAndSummarize", "weak", inputFileName};
 			try {
 				Builder.main(argsSum);
@@ -89,6 +96,8 @@ public class WeakSummaryTests {
 		}
 		catch (SQLException e) {
 			throw new IllegalStateException("SQL error while summarizing " + e.toString());
+		} catch (UnsupportedDatabaseEngineException e) {
+			throw new IllegalStateException("Cannot load custom config file!");
 		}
 	}
 
@@ -706,6 +715,27 @@ public class WeakSummaryTests {
 		}
 		catch (IOException e) {
 			throw new IllegalStateException("Unable to open .nt files in weak test 12 " + e.toString());
+		}
+	}
+	
+	/**
+	 * Test with custom config file
+	 */
+	@Test public void summarizeWeakTestCustom() {
+		String referenceFileName = expectedOutput(2, "classical");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = saturateAndSummarizeUsingWeakSummary(2);
+			if (!testOutput.exists()) {
+				fail("Test output not found ");
+			}
+			if (!expectedOutput.exists()) {
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary weak 2", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in weak test 2 " + e.toString());
 		}
 	}
 }
