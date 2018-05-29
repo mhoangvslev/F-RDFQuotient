@@ -45,15 +45,16 @@ public class LUBMTests {
 		}
 		System.out.println("################################################################################");
 
-		String inputFileName = "src/test/resources/LUBM-" + i + "M/LUBM-" + i + "M.nt";
-		String outputFileName = "src/test/resources/LUBM-" + i + "M/LUBM-" + i + "M_" + summaryTypeShort + "_" + summarizationTechnique + ".nt";
+		String inputFileName = "/data/datasets/lubm/lubm" + i + "m.nt";
+		String outputFileNameBase = "src/test/resources/LUBM-" + i + "M/LUBM-" + i + "M";
+		String outputFileName = outputFileNameBase + "_" + summaryTypeShort + "_" + summarizationTechnique + ".nt";
 		try {
 			String[] argsSum = {metaArgs[0], summaryTypeLong, inputFileName};
 			try {
 				Builder.main(argsSum);
 				String[] argsSave = {metaArgs[1]};
 				Builder.main(argsSave);
-				String[] argsExport = {metaArgs[2], draw ? "draw" : "do_not_draw", inputFileName};
+				String[] argsExport = {metaArgs[2], draw ? "draw" : "do_not_draw", outputFileNameBase + ".nt"};
 				Builder.main(argsExport);
 			}
 			catch (UnsupportedDatabaseEngineException ex) {
@@ -87,7 +88,7 @@ public class LUBMTests {
 		String referenceFileName = expectedOutput(1, "w", "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(1, "weak", "w", "noSaturation", Boolean.TRUE);
+			File testOutput = summarize(1, "weak", "w", "noSaturation", Boolean.FALSE);
 			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
@@ -106,7 +107,7 @@ public class LUBMTests {
 		String referenceFileName = expectedOutput(1, "tw", "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(1, "typedweak", "tw", "noSaturation", Boolean.TRUE);
+			File testOutput = summarize(1, "typedweak", "tw", "noSaturation", Boolean.FALSE);
 			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
@@ -125,7 +126,7 @@ public class LUBMTests {
 		String referenceFileName = expectedOutput(1, "s", "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(1, "strong", "s", "noSaturation", Boolean.TRUE);
+			File testOutput = summarize(1, "strong", "s", "noSaturation", Boolean.FALSE);
 			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
@@ -144,7 +145,7 @@ public class LUBMTests {
 		String referenceFileName = expectedOutput(1, "ts", "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(1, "typedstrong", "ts", "noSaturation", Boolean.TRUE);
+			File testOutput = summarize(1, "typedstrong", "ts", "noSaturation", Boolean.FALSE);
 			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
@@ -158,13 +159,12 @@ public class LUBMTests {
 		}
 	}
 
-	@Ignore
 	@Test
 	public void LUBMTest5() {
 		String referenceFileName = expectedOutput(10, "w", "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(10, "weak", "w", "noSaturation", Boolean.TRUE);
+			File testOutput = summarize(10, "weak", "w", "noSaturation", Boolean.FALSE);
 			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
@@ -178,13 +178,12 @@ public class LUBMTests {
 		}
 	}
 
-	@Ignore
 	@Test
 	public void LUBMTest6() {
 		String referenceFileName = expectedOutput(10, "tw", "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(10, "typedweak", "tw", "noSaturation", Boolean.TRUE);
+			File testOutput = summarize(10, "typedweak", "tw", "noSaturation", Boolean.FALSE);
 			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
@@ -198,13 +197,12 @@ public class LUBMTests {
 		}
 	}
 
-	@Ignore
 	@Test
 	public void LUBMTest7() {
 		String referenceFileName = expectedOutput(10, "s", "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(10, "strong", "s", "noSaturation", Boolean.TRUE);
+			File testOutput = summarize(10, "strong", "s", "noSaturation", Boolean.FALSE);
 			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
@@ -218,13 +216,12 @@ public class LUBMTests {
 		}
 	}
 
-	@Ignore
 	@Test
 	public void LUBMTest8() {
 		String referenceFileName = expectedOutput(10, "ts", "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(10, "typedstrong", "ts", "noSaturation", Boolean.TRUE);
+			File testOutput = summarize(10, "typedstrong", "ts", "noSaturation", Boolean.FALSE);
 			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
@@ -238,13 +235,12 @@ public class LUBMTests {
 		}
 	}
 
-@Ignore
 	@Test
 	public void LUBMTest9() {
 		String referenceFileName = expectedOutput(100, "w", "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(100, "weak", "w", "noSaturation", Boolean.TRUE);
+			File testOutput = summarize(100, "weak", "w", "noSaturation", Boolean.FALSE);
 			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
@@ -258,13 +254,12 @@ public class LUBMTests {
 		}
 	}
 
-	@Ignore
 	@Test
 	public void LUBMTest10() {
 		String referenceFileName = expectedOutput(100, "tw", "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(100, "typedweak", "tw", "noSaturation", Boolean.TRUE);
+			File testOutput = summarize(100, "typedweak", "tw", "noSaturation", Boolean.FALSE);
 			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
@@ -278,13 +273,12 @@ public class LUBMTests {
 		}
 	}
 
-	@Ignore
 	@Test
 	public void LUBMTest11() {
 		String referenceFileName = expectedOutput(100, "s", "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(100, "strong", "s", "noSaturation", Boolean.TRUE);
+			File testOutput = summarize(100, "strong", "s", "noSaturation", Boolean.FALSE);
 			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
@@ -298,13 +292,12 @@ public class LUBMTests {
 		}
 	}
 
-	@Ignore
 	@Test
 	public void LUBMTest12() {
 		String referenceFileName = expectedOutput(100, "ts", "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(100, "typedstrong", "ts", "noSaturation", Boolean.TRUE);
+			File testOutput = summarize(100, "typedstrong", "ts", "noSaturation", Boolean.FALSE);
 			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}

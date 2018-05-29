@@ -45,15 +45,16 @@ public class BSBMTests {
 		}
 		System.out.println("################################################################################");
 
-		String inputFileName = "src/test/resources/BSBM-" + i + "M/BSBM-" + i + "M.nt";
-		String outputFileName = "src/test/resources/BSBM-" + i + "M/BSBM-" + i + "M_" + summaryTypeShort + "_" + summarizationTechnique + ".nt";
+		String inputFileName = "/data/datasets/bsbm/bsbm" + i + "m.nt";
+		String outputFileNameBase = "src/test/resources/BSBM-" + i + "M/BSBM-" + i + "M";
+		String outputFileName = outputFileNameBase + "_" + summaryTypeShort + "_" + summarizationTechnique + ".nt";
 		try {
 			String[] argsSum = {metaArgs[0], summaryTypeLong, inputFileName};
 			try {
 				Builder.main(argsSum);
 				String[] argsSave = {metaArgs[1]};
 				Builder.main(argsSave);
-				String[] argsExport = {metaArgs[2], draw ? "draw" : "do_not_draw", inputFileName};
+				String[] argsExport = {metaArgs[2], draw ? "draw" : "do_not_draw", outputFileNameBase + ".nt"};
 				Builder.main(argsExport);
 			}
 			catch (UnsupportedDatabaseEngineException ex) {
@@ -82,13 +83,12 @@ public class BSBMTests {
 		return "src/test/resources/BSBM-" + i + "M/BSBM-" + i + "M_" + summaryTypeShort + "_" + summarizationTechnique + "-reference.nt";
 	}
 
-	@Ignore
 	@Test
 	public void BSBMTest1() {
 		String referenceFileName = expectedOutput(1, "w", "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(1, "weak", "w", "noSaturation", Boolean.TRUE);
+			File testOutput = summarize(1, "weak", "w", "noSaturation", Boolean.FALSE);
 			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
@@ -102,13 +102,12 @@ public class BSBMTests {
 		}
 	}
 
-	@Ignore
 	@Test
 	public void BSBMTest2() {
 		String referenceFileName = expectedOutput(1, "w", "classical");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(1, "weak", "w", "classical", Boolean.TRUE);
+			File testOutput = summarize(1, "weak", "w", "classical", Boolean.FALSE);
 			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
@@ -122,13 +121,12 @@ public class BSBMTests {
 		}
 	}
 
-	@Ignore
 	@Test
 	public void BSBMTest3() {
 		String referenceFileName = expectedOutput(1, "w", "shortcut");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(1, "weak", "w", "shortcut", Boolean.TRUE);
+			File testOutput = summarize(1, "weak", "w", "shortcut", Boolean.FALSE);
 			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
@@ -142,13 +140,12 @@ public class BSBMTests {
 		}
 	}
 
-	@Ignore
 	@Test
 	public void BSBMTest4() {
 		String referenceFileName = expectedOutput(1, "tw", "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(1, "typedweak", "tw", "noSaturation", Boolean.TRUE);
+			File testOutput = summarize(1, "typedweak", "tw", "noSaturation", Boolean.FALSE);
 			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
@@ -162,13 +159,12 @@ public class BSBMTests {
 		}
 	}
 
-	@Ignore
 	@Test
 	public void BSBMTest5() {
 		String referenceFileName = expectedOutput(1, "tw", "classical");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(1, "typedweak", "tw", "classical", Boolean.TRUE);
+			File testOutput = summarize(1, "typedweak", "tw", "classical", Boolean.FALSE);
 			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
@@ -182,13 +178,12 @@ public class BSBMTests {
 		}
 	}
 
-	@Ignore
 	@Test
 	public void BSBMTest6() {
 		String referenceFileName = expectedOutput(1, "s", "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(1, "strong", "s", "noSaturation", Boolean.TRUE);
+			File testOutput = summarize(1, "strong", "s", "noSaturation", Boolean.FALSE);
 			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
@@ -202,13 +197,12 @@ public class BSBMTests {
 		}
 	}
 
-	@Ignore
 	@Test
 	public void BSBMTest7() {
 		String referenceFileName = expectedOutput(1, "s", "classical");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(1, "strong", "s", "classical", Boolean.TRUE);
+			File testOutput = summarize(1, "strong", "s", "classical", Boolean.FALSE);
 			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
@@ -222,13 +216,12 @@ public class BSBMTests {
 		}
 	}
 
-	@Ignore
 	@Test
 	public void BSBMTest8() {
 		String referenceFileName = expectedOutput(1, "s", "shortcut");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(1, "strong", "s", "shortcut", Boolean.TRUE);
+			File testOutput = summarize(1, "strong", "s", "shortcut", Boolean.FALSE);
 			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
@@ -242,13 +235,12 @@ public class BSBMTests {
 		}
 	}
 
-	@Ignore
 	@Test
 	public void BSBMTest9() {
 		String referenceFileName = expectedOutput(1, "ts", "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(1, "typedstrong", "ts", "noSaturation", Boolean.TRUE);
+			File testOutput = summarize(1, "typedstrong", "ts", "noSaturation", Boolean.FALSE);
 			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
@@ -262,13 +254,12 @@ public class BSBMTests {
 		}
 	}
 
-	@Ignore
 	@Test
 	public void BSBMTest10() {
 		String referenceFileName = expectedOutput(1, "ts", "classical");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(1, "typedstrong", "ts", "classical", Boolean.TRUE);
+			File testOutput = summarize(1, "typedstrong", "ts", "classical", Boolean.FALSE);
 			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
@@ -282,13 +273,12 @@ public class BSBMTests {
 		}
 	}
 
-	@Ignore
 	@Test
 	public void BSBMTest11() {
 		String referenceFileName = expectedOutput(10, "w", "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(10, "weak", "w", "noSaturation", Boolean.TRUE);
+			File testOutput = summarize(10, "weak", "w", "noSaturation", Boolean.FALSE);
 			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
@@ -302,13 +292,12 @@ public class BSBMTests {
 		}
 	}
 
-	@Ignore
 	@Test
 	public void BSBMTest12() {
 		String referenceFileName = expectedOutput(10, "w", "classical");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(10, "weak", "w", "classical", Boolean.TRUE);
+			File testOutput = summarize(10, "weak", "w", "classical", Boolean.FALSE);
 			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
@@ -322,13 +311,12 @@ public class BSBMTests {
 		}
 	}
 
-	@Ignore
 	@Test
 	public void BSBMTest13() {
 		String referenceFileName = expectedOutput(10, "w", "shortcut");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(10, "weak", "w", "shortcut", Boolean.TRUE);
+			File testOutput = summarize(10, "weak", "w", "shortcut", Boolean.FALSE);
 			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
@@ -342,13 +330,12 @@ public class BSBMTests {
 		}
 	}
 
-	@Ignore
 	@Test
 	public void BSBMTest14() {
 		String referenceFileName = expectedOutput(10, "tw", "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(10, "typedweak", "tw", "noSaturation", Boolean.TRUE);
+			File testOutput = summarize(10, "typedweak", "tw", "noSaturation", Boolean.FALSE);
 			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
@@ -362,13 +349,12 @@ public class BSBMTests {
 		}
 	}
 
-	@Ignore
 	@Test
 	public void BSBMTest15() {
 		String referenceFileName = expectedOutput(10, "tw", "classical");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(10, "typedweak", "tw", "classical", Boolean.TRUE);
+			File testOutput = summarize(10, "typedweak", "tw", "classical", Boolean.FALSE);
 			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
@@ -382,13 +368,12 @@ public class BSBMTests {
 		}
 	}
 
-	@Ignore
 	@Test
 	public void BSBMTest16() {
 		String referenceFileName = expectedOutput(10, "s", "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(10, "strong", "s", "noSaturation", Boolean.TRUE);
+			File testOutput = summarize(10, "strong", "s", "noSaturation", Boolean.FALSE);
 			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
@@ -402,13 +387,12 @@ public class BSBMTests {
 		}
 	}
 
-	@Ignore
 	@Test
 	public void BSBMTest17() {
 		String referenceFileName = expectedOutput(10, "s", "classical");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(10, "strong", "s", "classical", Boolean.TRUE);
+			File testOutput = summarize(10, "strong", "s", "classical", Boolean.FALSE);
 			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
@@ -422,13 +406,12 @@ public class BSBMTests {
 		}
 	}
 
-	@Ignore
 	@Test
 	public void BSBMTest18() {
 		String referenceFileName = expectedOutput(10, "s", "shortcut");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(10, "strong", "s", "shortcut", Boolean.TRUE);
+			File testOutput = summarize(10, "strong", "s", "shortcut", Boolean.FALSE);
 			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
@@ -442,13 +425,12 @@ public class BSBMTests {
 		}
 	}
 
-	@Ignore
 	@Test
 	public void BSBMTest19() {
 		String referenceFileName = expectedOutput(10, "ts", "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(10, "typedstrong", "ts", "noSaturation", Boolean.TRUE);
+			File testOutput = summarize(10, "typedstrong", "ts", "noSaturation", Boolean.FALSE);
 			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
@@ -462,13 +444,12 @@ public class BSBMTests {
 		}
 	}
 
-	@Ignore
 	@Test
 	public void BSBMTest20() {
 		String referenceFileName = expectedOutput(10, "ts", "classical");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(10, "typedstrong", "ts", "classical", Boolean.TRUE);
+			File testOutput = summarize(10, "typedstrong", "ts", "classical", Boolean.FALSE);
 			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
@@ -482,13 +463,12 @@ public class BSBMTests {
 		}
 	}
 
-	@Ignore
 	@Test
 	public void BSBMTest21() {
 		String referenceFileName = expectedOutput(100, "w", "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(100, "weak", "w", "noSaturation", Boolean.TRUE);
+			File testOutput = summarize(100, "weak", "w", "noSaturation", Boolean.FALSE);
 			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
@@ -502,13 +482,12 @@ public class BSBMTests {
 		}
 	}
 
-	@Ignore
 	@Test
 	public void BSBMTest22() {
 		String referenceFileName = expectedOutput(100, "w", "classical");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(100, "weak", "w", "classical", Boolean.TRUE);
+			File testOutput = summarize(100, "weak", "w", "classical", Boolean.FALSE);
 			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
@@ -522,13 +501,12 @@ public class BSBMTests {
 		}
 	}
 
-	@Ignore
 	@Test
 	public void BSBMTest23() {
 		String referenceFileName = expectedOutput(100, "w", "shortcut");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(100, "weak", "w", "shortcut", Boolean.TRUE);
+			File testOutput = summarize(100, "weak", "w", "shortcut", Boolean.FALSE);
 			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
@@ -542,13 +520,12 @@ public class BSBMTests {
 		}
 	}
 
-	@Ignore
 	@Test
 	public void BSBMTest24() {
 		String referenceFileName = expectedOutput(100, "tw", "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(100, "typedweak", "tw", "noSaturation", Boolean.TRUE);
+			File testOutput = summarize(100, "typedweak", "tw", "noSaturation", Boolean.FALSE);
 			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
@@ -562,13 +539,12 @@ public class BSBMTests {
 		}
 	}
 
-	@Ignore
 	@Test
 	public void BSBMTest25() {
 		String referenceFileName = expectedOutput(100, "tw", "classical");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(100, "typedweak", "tw", "classical", Boolean.TRUE);
+			File testOutput = summarize(100, "typedweak", "tw", "classical", Boolean.FALSE);
 			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
@@ -582,13 +558,12 @@ public class BSBMTests {
 		}
 	}
 
-	@Ignore
 	@Test
 	public void BSBMTest26() {
 		String referenceFileName = expectedOutput(100, "s", "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(100, "strong", "s", "noSaturation", Boolean.TRUE);
+			File testOutput = summarize(100, "strong", "s", "noSaturation", Boolean.FALSE);
 			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
@@ -602,13 +577,12 @@ public class BSBMTests {
 		}
 	}
 
-	@Ignore
 	@Test
 	public void BSBMTest27() {
 		String referenceFileName = expectedOutput(100, "s", "classical");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(100, "strong", "s", "classical", Boolean.TRUE);
+			File testOutput = summarize(100, "strong", "s", "classical", Boolean.FALSE);
 			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
@@ -622,13 +596,12 @@ public class BSBMTests {
 		}
 	}
 
-	@Ignore
 	@Test
 	public void BSBMTest28() {
 		String referenceFileName = expectedOutput(100, "s", "shortcut");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(100, "strong", "s", "shortcut", Boolean.TRUE);
+			File testOutput = summarize(100, "strong", "s", "shortcut", Boolean.FALSE);
 			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
@@ -642,13 +615,12 @@ public class BSBMTests {
 		}
 	}
 
-	@Ignore
 	@Test
 	public void BSBMTest29() {
 		String referenceFileName = expectedOutput(100, "ts", "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(100, "typedstrong", "ts", "noSaturation", Boolean.TRUE);
+			File testOutput = summarize(100, "typedstrong", "ts", "noSaturation", Boolean.FALSE);
 			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
@@ -662,13 +634,12 @@ public class BSBMTests {
 		}
 	}
 
-	@Ignore
 	@Test
 	public void BSBMTest30() {
 		String referenceFileName = expectedOutput(100, "ts", "classical");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarize(100, "typedstrong", "ts", "classical", Boolean.TRUE);
+			File testOutput = summarize(100, "typedstrong", "ts", "classical", Boolean.FALSE);
 			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
