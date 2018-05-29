@@ -33,6 +33,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 	 */
 	@Override
 	public void summarizeFromPostgres(Connection conn) {
+		collectSchemaNodes(conn);
 		long avoidCollisionsTimeStart;
 		long avoidCollisionsTime = 0;
 		long start = System.currentTimeMillis();
@@ -46,7 +47,6 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
 		long typeConstantCode = RDF2SQLEncoding.getTypeCode();
 		if (typeConstantCode != -1) {
-			this.typeTriplesExist = true;
 			avoidCollisionsTimeStart = System.currentTimeMillis();
 			avoidCollisionsWhenAssigningSummaryNodes(conn);
 			avoidCollisionsTime += System.currentTimeMillis() - avoidCollisionsTimeStart;
@@ -63,7 +63,8 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 						|| (t.p == RDF2SQLEncoding.getDomainCode())
 						|| (t.p == RDF2SQLEncoding.getRangeCode())) {
 							edgesWithProv.addTriple(t.s, t.p, t.o);
-							storeSpecialNodesRepresentation(t, true);
+							rep.put(t.s, t.s);
+							rep.put(t.o, t.o);
 						}
 						else
 							handleDataTriple(t);
@@ -94,7 +95,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 						this.handleTypeTripleAfterData(t);
 						triplesSummarizedSoFar++;
 						typeTriplesSummarizedSoFar++;
-						storeSpecialNodesRepresentation(t, false);
+						rep.put(t.o, t.o);
 						if (checkConsistency) {
 							consistencyChecks();
 						}
@@ -113,6 +114,78 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 		LOGGER.info("Summarized " + triplesSummarizedSoFar + " triples overall in " + allTriplesSummarizationTime + " ms");
 	}
 
+	protected char identifyTripleSummarizationCase(boolean sRepresented, boolean sSchemaNode, boolean pRepresented, boolean oRepresented, boolean oSchemaNode) {
+		if (sSchemaNode) {
+			if (oSchemaNode) {
+				return SELF_SELF;
+			}
+			if (pRepresented) {
+				if (oRepresented) {
+					return SN_RP_RO;
+				}
+				else {
+					return SN_RP_UO;
+				}
+			}
+			else {
+				if (oRepresented) {
+					return SN_UP_RO;
+				}
+				else {
+					return SN_UP_UO;
+				}
+			}
+		}
+		else if (sRepresented) {
+			if (pRepresented) {
+				if (oSchemaNode) {
+					return RS_RP_SN;
+				}
+				else if (oRepresented) {
+					return RS_RP_RO;
+				}
+				else {
+					return RS_RP_UO;
+				}
+			}
+			else {
+				if (oSchemaNode) {
+					return RS_UP_SN;
+				}
+				else if (oRepresented) {
+					return RS_UP_RO;
+				}
+				else {
+					return RS_UP_UO;
+				}
+			}
+		}
+		else {
+			if (pRepresented) {
+				if (oSchemaNode) {
+					return US_RP_SN;
+				}
+				else if (oRepresented) {
+					return US_RP_RO;
+				}
+				else {
+					return US_RP_UO;
+				}
+			}
+			else {
+				if (oSchemaNode) {
+					return US_UP_SN;
+				}
+				else if (oRepresented) {
+					return US_UP_RO;
+				}
+				else {
+					return US_UP_UO;
+				}
+			}
+		}
+	}
+
 	protected void handleDataTriple(Triple t) {
 		//LOGGER.debug("\n### Read data triple: " + t.toString());
 		Long repS = rep.get(t.s);
@@ -121,66 +194,71 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 		Long pTarget = pt.get(t.p);
 		if ((pSource == null && pTarget != null) || (pSource != null && pTarget == null))
 			throw new IllegalStateException("Source represented and target not represented, or the opposite");
+
 		boolean pRepresented = (pSource != null);
 		boolean sRepresented = (repS != null);
+		boolean sSchemaNode = sn.contains(t.s);
 		boolean oRepresented = (repO != null);
+		boolean oSchemaNode = sn.contains(t.o);
 
-		char caseNumber = identifyTripleSummarizationCase(sRepresented, pRepresented, oRepresented);
-		//LOGGER.debug(showCaseNumber(caseNumber));
+		char caseNumber = identifyTripleSummarizationCase(sRepresented, sSchemaNode, pRepresented, oRepresented, oSchemaNode);
+		//LOGGER.debug(showCaseName(caseNumber));
 		switch (caseNumber) {
-			case US_UP_UO:
-				handleDataTriple_US_UP_UO(t);
+			case SELF_SELF:
+				handleDataTriple_SELF_SELF(t);
 				break;
-			case US_UP_RO:
-				handleDataTriple_US_UP_RO(t);
+			case SN_RP_RO:
+				handleDataTriple_TRS_RP_RO(t, repS, repO, pSource, pTarget);
 				break;
-			case US_RP_UO:
-				handleDataTriple_US_RP_UO(t);
+			case SN_RP_UO:
+				handleDataTriple_TRS_RP_UO(t, repS, repO, pSource, pTarget);
 				break;
-			case US_RP_RO:
-				handleDataTriple_US_RP_RO(t);
+			case SN_UP_RO:
+				handleDataTriple_TRS_UP_RO(t, repS, repO, pSource, pTarget);
 				break;
-			case RS_UP_UO:
-				handleDataTriple_RS_UP_UO(t);
+			case SN_UP_UO:
+				handleDataTriple_TRS_UP_UO(t, repS, repO, pSource, pTarget);
 				break;
-			case RS_UP_RO:
-				handleDataTriple_RS_UP_RO(t);
-				break;
-			case RS_RP_UO:
-				handleDataTriple_RS_RP_UO(t);
+			case RS_RP_SN:
+				handleDataTriple_RS_RP_TRO(t, repS, repO, pSource, pTarget);
 				break;
 			case RS_RP_RO:
 				handleDataTriple_RS_RP_RO(t);
 				break;
+			case RS_RP_UO:
+				handleDataTriple_RS_RP_UO(t);
+				break;
+			case RS_UP_SN:
+				handleDataTriple_RS_UP_TRO(t, repS, repO, pSource, pTarget);
+				break;
+			case RS_UP_RO:
+				handleDataTriple_RS_UP_RO(t);
+				break;
+			case RS_UP_UO:
+				handleDataTriple_RS_UP_UO(t);
+				break;
+			case US_RP_SN:
+				handleDataTriple_US_RP_TRO(t, repS, repO, pSource, pTarget);
+				break;
+			case US_RP_RO:
+				handleDataTriple_US_RP_RO(t);
+				break;
+			case US_RP_UO:
+				handleDataTriple_US_RP_UO(t);
+				break;
+			case US_UP_SN:
+				handleDataTriple_US_UP_TRO(t, repS, repO, pSource, pTarget);
+				break;
+			case US_UP_RO:
+				handleDataTriple_US_UP_RO(t);
+				break;
+			case US_UP_UO:
+				handleDataTriple_US_UP_UO(t);
+				break;
 			default:
 				throw new IllegalStateException("This case should not be encountered here");
 		}
-
 		//LOGGER.debug("After processing triple " + t.toString() + ", we have:\n" + this.toString());
-		//safetyCheck();
-	}
-
-	private String showCaseNumber(char caseNumber) {
-		switch (caseNumber) {
-			case US_UP_UO:
-				return "US_UP_UO";
-			case US_UP_RO:
-				return "US_UP_RO";
-			case US_RP_UO:
-				return "US_RP_UO";
-			case US_RP_RO:
-				return "US_RP_RO";
-			case RS_UP_UO:
-				return "RS_UP_UO";
-			case RS_UP_RO:
-				return "RS_UP_RO";
-			case RS_RP_UO:
-				return "RS_RP_UO";
-			case RS_RP_RO:
-				return "RS_RP_RO";
-			default:
-				throw new IllegalStateException("Unrecognized case " + caseNumber);
-		}
 	}
 
 	/** This implementation should be shared by Weak and Strong
@@ -203,6 +281,10 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 		}
 	}
 
+	// -->
+	// Debug methods
+	// -->
+
 	@Override
 	protected void consistencyChecks() {
 		for (Long s: edgesWithProv.keySet()) {
@@ -224,6 +306,48 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 					}
 				}
 			}
+		}
+	}
+
+	@Override
+	protected String showCaseName(char caseNumber) { 
+		switch (caseNumber) {
+			case SELF_SELF:
+				return "SELF_SELF";
+			case SN_RP_RO:
+				return "SN_RP_RO";
+			case SN_RP_UO:
+				return "SN_RP_UO";
+			case SN_UP_RO:
+				return "SN_UP_RO";
+			case SN_UP_UO:
+				return "SN_UP_UO";
+			case RS_RP_SN:
+				return "RS_RP_SN";
+			case RS_RP_RO:
+				return "RS_RP_RO";
+			case RS_RP_UO:
+				return "RS_RP_UO";
+			case RS_UP_SN:
+				return "RS_UP_SN";
+			case RS_UP_RO:
+				return "RS_UP_RO";
+			case RS_UP_UO:
+				return "RS_UP_UO";
+			case US_RP_SN:
+				return "US_RP_SN";
+			case US_RP_RO:
+				return "US_RP_RO";
+			case US_RP_UO:
+				return "US_RP_UO";
+			case US_UP_SN:
+				return "US_UP_SN";
+			case US_UP_RO:
+				return "US_UP_RO";
+			case US_UP_UO:
+				return "US_UP_UO";
+			default:
+				throw new IllegalStateException("Unrecognized case " + caseNumber);
 		}
 	}
 }

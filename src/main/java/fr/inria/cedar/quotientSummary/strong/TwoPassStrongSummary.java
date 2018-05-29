@@ -30,6 +30,7 @@ public class TwoPassStrongSummary extends StrongOrTypedStrongSummary {
 	 */
 	@Override
 	public void summarizeFromPostgres(Connection conn) {
+		collectSchemaNodes(conn);
 		long avoidCollisionsTimeStart;
 		long avoidCollisionsTime = 0;
 		long start = System.currentTimeMillis();
@@ -43,7 +44,6 @@ public class TwoPassStrongSummary extends StrongOrTypedStrongSummary {
 		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
 		long typeConstantCode = RDF2SQLEncoding.getTypeCode();
 		if (typeConstantCode != -1) {
-			this.typeTriplesExist = true;
 			avoidCollisionsTimeStart = System.currentTimeMillis();
 			avoidCollisionsWhenAssigningSummaryNodes(conn);
 			avoidCollisionsTime += System.currentTimeMillis() - avoidCollisionsTimeStart;

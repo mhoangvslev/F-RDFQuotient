@@ -20,6 +20,7 @@ import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
@@ -30,9 +31,8 @@ public class Summary {
 	private static final Logger LOGGER = Logger.getLogger(Summary.class.getName());
 	protected static final SimpleDateFormat SD_FORMAT = new SimpleDateFormat("yyyyMMdd_HHmmssSSS");
 
-	protected Long2Long rep; // representative function for untyped nodes
-	protected Long2Long repRDFURIs; // representative function for all nodes
-	protected boolean typeTriplesExist = false;
+	protected Long2Long rep; // representation function
+	protected HashSet<Long> sn; // schema nodes
 	// data, schema and type triples:
 	//   for each subject
 	//     for each property
@@ -88,7 +88,7 @@ public class Summary {
 	public Summary() {
 		LOGGER.setLevel(Level.INFO);
 		rep = new Long2Long();
-		repRDFURIs = new Long2Long();
+		sn = new HashSet<>();
 		edgesWithProv = new EdgesWithProvenanceCounts();
 		summaryNodeStatistics = new HashMap<>();
 		summaryEdgeStatistics = new HashMap<>();
@@ -239,6 +239,54 @@ public class Summary {
 		return -1; 
 	}
 
+	protected void collectSchemaNodes(Connection conn) {
+		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
+		long subClassCode = RDF2SQLEncoding.getSubClassCode();
+		long subPropertyCode = RDF2SQLEncoding.getSubPropertyCode();
+		long domainCode = RDF2SQLEncoding.getDomainCode();
+		long rangeCode = RDF2SQLEncoding.getRangeCode();
+
+		String getTriplesString = "select distinct s from " + encodedTriplesTableName
+			+ " where p = " + subClassCode
+			+ " or p = " + subPropertyCode + ";";
+		try {
+			try (Statement getTriples = conn.createStatement()) {
+				getTriples.setFetchSize(10000);
+				try (ResultSet rs = getTriples.executeQuery(getTriplesString)) {
+					while (rs.next()) {
+						long s = rs.getInt(1);
+						sn.add(s);
+						rep.put(s, s);
+					}
+				}
+			}
+		}
+		catch (SQLException e) {
+			throw new IllegalStateException("Postgres error encountered while collecting schema nodes " + e.toString());
+		}
+
+		getTriplesString = "select distinct o from " + encodedTriplesTableName
+			+ " where p = " + subClassCode
+			+ " or p = " + subPropertyCode
+			+ " or p = " + domainCode
+			+ " or p = " + rangeCode + ";";
+		try {
+			try (Statement getTriples = conn.createStatement()) {
+				getTriples.setFetchSize(10000);
+				try (ResultSet rs = getTriples.executeQuery(getTriplesString)) {
+					while (rs.next()) {
+						long o = rs.getInt(1);
+						sn.add(o);
+						rep.put(o, o);
+					}
+				}
+			}
+		}
+		catch (SQLException e) {
+			throw new IllegalStateException("Postgres error encountered while collecting schema nodes " + e.toString());
+		}
+	}
+
 	protected String showRep() {
 		StringBuilder sb = new StringBuilder();
 		for (Long node : this.rep.getKeys()) {
@@ -262,12 +310,6 @@ public class Summary {
 	 */
 	protected void jumpSummaryNodeCount(long n) {
 		this.maxSummaryNode += n;
-	}
-
-	protected void storeSpecialNodesRepresentation(Triple triple, Boolean type) {
-		if (type == true)
-			repRDFURIs.put(triple.s, triple.s);
-		repRDFURIs.put(triple.o, triple.o);
 	}
 
 	protected void gatherStatistics() {
@@ -373,18 +415,6 @@ public class Summary {
 				// if (!hasIndex(conn, "encoded_rep"))
 				//	stmt.executeUpdate("create index indRepS on encoded_rep(graphNode);");
 				// This gives some erros in the JDBC driver, perhaps it is not implemented properly.
-
-				// now insert all the special rep entries:
-				insertIntoRep = "insert into " + newSummaryTableNameRep + " values(?, ?);";
-				try (PreparedStatement insertInRep = conn.prepareStatement(insertIntoRep)) {
-					Set<Long> origNodes = repRDFURIs.getKeys();
-					for (Long origNode : origNodes) {
-						Long sumNode = repRDFURIs.get(origNode);
-						insertInRep.setLong(1, origNode);
-						insertInRep.setLong(2, sumNode);
-						insertInRep.executeUpdate();
-					}
-				}
 				conn.commit();
 				representationFunctionSavingTime = System.currentTimeMillis() - start;
 				LOGGER.info("Representation function saved in " + representationFunctionSavingTime + " ms");

@@ -39,6 +39,7 @@ public class Builder {
 	private static String encodedSaturatedTableName;
 	private static Connection connectionInUse;
 	private static Summary summaryInUse;
+	private static long saturationTime;
 
 	public Builder() {
 	}
@@ -152,6 +153,7 @@ public class Builder {
 		System.out.println("args[0]=loadWithSaturation: opens connection and loads the graph in Postgres and saturates it");
 		System.out.println("args[0]=summarizeUnsaturated: summarizes the unsaturated graph from Postgres");
 		System.out.println("args[0]=summarizeSaturated: summarizes the saturated graph from Postgres");
+		System.out.println("args[0]=loadAndSummarize: loads the graph in Postgres, and summarizes it");
 		System.out.println("args[0]=loadWithSaturationAndSummarize: loads the graph in Postgres, saturates it, and summarizes it");
 		System.out.println("args[0]=loadAndSummarizeUsingShortcut: loads the graph in Postgres, summarizes it, saturates it, and summarizes again (shortcut)");
 		//System.out.println("args[0]=summarizeEncodedFile: build the summary out of integer-encoded triples in a file");
@@ -256,15 +258,17 @@ public class Builder {
 		}
 		LOGGER.info("Graph loaded to Postgres");
 
+		saturationTime = (saturate) ? DataLoading.timeExecutionPerProcess.get("RDFGraphSaturator") : 0L;
+
 		Properties connectionProps = new Properties();
 		connectionProps.put("user", properties.getProperty("database.user"));
 		connectionProps.put("password", properties.getProperty("database.password"));
 
 		String connectionURL = "jdbc:postgresql://" + properties.getProperty("database.host") + ":" + 
-		properties.getProperty("database.port") + "/" + properties.getProperty("database.name");
+			properties.getProperty("database.port") + "/" + properties.getProperty("database.name");
 		Connection conn = DriverManager.getConnection(connectionURL, connectionProps);
 		LOGGER.info("Connection to Postgres established with URL: " + connectionURL + " with user " + 
-				properties.getProperty("database.user") + " and password " + properties.getProperty("database.password")); 
+			properties.getProperty("database.user") + " and password " + properties.getProperty("database.password")); 
 		Preconditions.checkState(conn != null, "No connection for " + connectionURL);
 		return conn;
 	}
@@ -368,10 +372,12 @@ public class Builder {
 			for (String key: keys) {
 				sb.append(key).append(',');
 			}
+			sb.append("saturationTime");
 			sb.append('\n');
 			for (String key: keys) {
 				sb.append(statistics.get(key)).append(',');
 			}
+			sb.append(saturationTime);
 			sb.append('\n');
 			pw.write(sb.toString());
 		}
