@@ -30,10 +30,10 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 	 */
 	@Override
 	public void summarizeFromPostgres(Connection conn) {
-		collectSchemaNodes(conn);
 		long avoidCollisionsTimeStart;
 		long avoidCollisionsTime = 0;
 		long start = System.currentTimeMillis();
+		collectSchemaNodes(conn);
 		try {
 			conn.setAutoCommit(false);
 		}

@@ -33,10 +33,10 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 	 */
 	@Override
 	public void summarizeFromPostgres(Connection conn) {
-		collectSchemaNodes(conn);
 		long avoidCollisionsTimeStart;
 		long avoidCollisionsTime = 0;
 		long start = System.currentTimeMillis();
+		collectSchemaNodes(conn);
 		try {
 			conn.setAutoCommit(false);
 		}

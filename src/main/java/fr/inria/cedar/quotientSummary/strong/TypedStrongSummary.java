@@ -100,8 +100,6 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		classSetCreationTime = System.currentTimeMillis() - start - avoidCollisionsTime;
 		LOGGER.info("Class sets created in " + classSetCreationTime + " ms");
 
-		collectSchemaNodes(conn);
-
 		start = System.currentTimeMillis();
 		this.representTypeTriples();
 		if (checkConsistency) {
@@ -111,6 +109,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		LOGGER.info("Summarized " + typeTriplesSummarizedSoFar + " type triples in " + typeTriplesSummarizationTime + " ms");
 
 		start = System.currentTimeMillis();
+		collectSchemaNodes(conn);
 		// now all the non-type triples
 		String getUntypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p <> " + typeConstantCode);
 		try {

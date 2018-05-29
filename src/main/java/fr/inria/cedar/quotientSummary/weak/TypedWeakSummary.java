@@ -97,7 +97,6 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		classSetCreationTime = System.currentTimeMillis() - start - avoidCollisionsTime;
 		LOGGER.info("Class sets created in " + classSetCreationTime + " ms");
 
-		collectSchemaNodes(conn);
 
 		start = System.currentTimeMillis();
 		this.representTypeTriples();
@@ -105,6 +104,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		LOGGER.info("Summarized " + typeTriplesSummarizedSoFar + " type triples in " + typeTriplesSummarizationTime + " ms");
 
 		start = System.currentTimeMillis();
+		collectSchemaNodes(conn);
 		// now all the non-type triples
 		String getUntypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p <> " + typeConstantCode);
 		try {
