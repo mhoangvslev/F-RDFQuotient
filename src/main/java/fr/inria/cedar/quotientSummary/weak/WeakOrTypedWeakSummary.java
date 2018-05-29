@@ -287,19 +287,17 @@ public class WeakOrTypedWeakSummary extends Summary {
 
 	@Override
 	public void display() {
-		LOGGER.debug("SUMMARY " + this.getClass().getName());
+		System.out.println("SUMMARY " + this.getClass().getName());
 		edgesWithProv.display();
-		LOGGER.debug("REPRESENTATION: " + rep.toString()); 
-		LOGGER.debug("PROPERTY SOURCES: ");
+		System.out.println("REPRESENTATION: " + rep.toString()); 
+		System.out.println("PROPERTY SOURCES: ");
 		for (Long p: ps.keySet()){
-			LOGGER.debug(p + " (" + RDF2SQLEncoding.dictionaryDecode(p)
-			+ ") => " + ps.get(p)); 
+			System.out.println(p + " (" + RDF2SQLEncoding.dictionaryDecode(p) + ") => " + ps.get(p));
 		}
-		LOGGER.debug("PROPERTY TARGETS: ");
+		System.out.println("PROPERTY TARGETS: ");
 		for (Long p: pt.keySet()){
-			LOGGER.debug(p + " (" + RDF2SQLEncoding.dictionaryDecode(p)
-			+ ") => " + pt.get(p)); 
+			System.out.println(p + " (" + RDF2SQLEncoding.dictionaryDecode(p) + ") => " + pt.get(p));
 		}
-		LOGGER.debug("=======");
+		System.out.println("=======");
 	}
 }

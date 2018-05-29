@@ -101,15 +101,15 @@ public class TypedStrongSummaryTests {
 	public void summarizeTypedStrongTest1() {
 		String referenceFileName = expectedOutput(1, "noSaturation");
 		File expectedOutput = new File(referenceFileName);
-		if (!expectedOutput.exists()){
+		if (!expectedOutput.exists()) {
 			fail("Expected output not found " + referenceFileName);
 		}
 		try {
 			File testOutput = summarizeUsingTypedStrongSummary(1);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary typedstrong 1", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -125,10 +125,10 @@ public class TypedStrongSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingTypedStrongSummary(2);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary typedstrong 2", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -144,10 +144,10 @@ public class TypedStrongSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingTypedStrongSummary(3);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary typedstrong 3", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -163,10 +163,10 @@ public class TypedStrongSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingTypedStrongSummary(4);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary typedstrong 4", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -182,10 +182,10 @@ public class TypedStrongSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingTypedStrongSummary(5);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary typedstrong 5", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -201,10 +201,10 @@ public class TypedStrongSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingTypedStrongSummary(6);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary typedstrong 6", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -219,11 +219,11 @@ public class TypedStrongSummaryTests {
 		String referenceFileName = expectedOutput(7, "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarizeUsingTypedStrongSummary(7); 
-			if (!testOutput.exists()){
+			File testOutput = summarizeUsingTypedStrongSummary(7);
+			if (!testOutput.exists()) {
 				fail("Test output not found");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary typedstrong 7", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -238,11 +238,11 @@ public class TypedStrongSummaryTests {
 		String referenceFileName = expectedOutput(11, "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarizeUsingTypedStrongSummary(11); 
-			if (!testOutput.exists()){
+			File testOutput = summarizeUsingTypedStrongSummary(11);
+			if (!testOutput.exists()) {
 				fail("Test output not found");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary typedstrong 11", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -257,17 +257,36 @@ public class TypedStrongSummaryTests {
 		String referenceFileName = expectedOutput(12, "noSaturation");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = summarizeUsingTypedStrongSummary(12); 
-			if (!testOutput.exists()){
+			File testOutput = summarizeUsingTypedStrongSummary(12);
+			if (!testOutput.exists()) {
 				fail("Test output not found");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary typedstrong 12", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
 			throw new IllegalStateException("Unable to open .nt files in typedstrong test 12 " + e.toString());
+		}
+	}
+
+	@Test
+	public void summarizeTypedStrongTest14() {
+		String referenceFileName = expectedOutput(14, "noSaturation");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = summarizeUsingTypedStrongSummary(14);
+			if (!testOutput.exists()) {
+				fail("Test output not found");
+			}
+			if (!expectedOutput.exists()) {
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary typedstrong 14", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in typedstrong test 14 " + e.toString());
 		}
 	}
 
@@ -281,10 +300,10 @@ public class TypedStrongSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = saturateAndSummarizeUsingTypedStrongSummary(1);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary typedstrong 1", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -300,10 +319,10 @@ public class TypedStrongSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = saturateAndSummarizeUsingTypedStrongSummary(2);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary typedstrong 2", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -319,10 +338,10 @@ public class TypedStrongSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = saturateAndSummarizeUsingTypedStrongSummary(3);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary typedstrong 3", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -338,10 +357,10 @@ public class TypedStrongSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = saturateAndSummarizeUsingTypedStrongSummary(4);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary typedstrong 4", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -357,10 +376,10 @@ public class TypedStrongSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = saturateAndSummarizeUsingTypedStrongSummary(5);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary typedstrong 5", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -376,10 +395,10 @@ public class TypedStrongSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = saturateAndSummarizeUsingTypedStrongSummary(6);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary typedstrong 6", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -394,11 +413,11 @@ public class TypedStrongSummaryTests {
 		String referenceFileName = expectedOutput(7, "classical");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = saturateAndSummarizeUsingTypedStrongSummary(7); 
-			if (!testOutput.exists()){
+			File testOutput = saturateAndSummarizeUsingTypedStrongSummary(7);
+			if (!testOutput.exists()) {
 				fail("Test output not found");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary typedstrong 7", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -413,11 +432,11 @@ public class TypedStrongSummaryTests {
 		String referenceFileName = expectedOutput(11, "classical");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = saturateAndSummarizeUsingTypedStrongSummary(11); 
-			if (!testOutput.exists()){
+			File testOutput = saturateAndSummarizeUsingTypedStrongSummary(11);
+			if (!testOutput.exists()) {
 				fail("Test output not found");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary typedstrong 11", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -432,17 +451,36 @@ public class TypedStrongSummaryTests {
 		String referenceFileName = expectedOutput(12, "classical");
 		File expectedOutput = new File(referenceFileName);
 		try {
-			File testOutput = saturateAndSummarizeUsingTypedStrongSummary(12); 
-			if (!testOutput.exists()){
+			File testOutput = saturateAndSummarizeUsingTypedStrongSummary(12);
+			if (!testOutput.exists()) {
 				fail("Test output not found");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary typedstrong 12", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
 			throw new IllegalStateException("Unable to open .nt files in typedstrong test 12 " + e.toString());
+		}
+	}
+
+	@Test
+	public void saturateAndSummarizeTypedStrongTest14() {
+		String referenceFileName = expectedOutput(14, "classical");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = saturateAndSummarizeUsingTypedStrongSummary(14);
+			if (!testOutput.exists()) {
+				fail("Test output not found");
+			}
+			if (!expectedOutput.exists()) {
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary typedstrong 14", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in typedstrong test 14 " + e.toString());
 		}
 	}
 }

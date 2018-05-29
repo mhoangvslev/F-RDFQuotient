@@ -103,10 +103,10 @@ public class TypedWeakSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingTypedWeakSummary(1);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary typedweak 1", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -122,10 +122,10 @@ public class TypedWeakSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingTypedWeakSummary(2);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary typedweak 2", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -141,10 +141,10 @@ public class TypedWeakSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingTypedWeakSummary(3);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary typedweak 3", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -160,10 +160,10 @@ public class TypedWeakSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingTypedWeakSummary(4);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary typedweak 4", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -179,10 +179,10 @@ public class TypedWeakSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingTypedWeakSummary(5);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary typedweak 5", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -198,10 +198,10 @@ public class TypedWeakSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingTypedWeakSummary(6);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary typedweak 6", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -217,10 +217,10 @@ public class TypedWeakSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingTypedWeakSummary(7);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary typedweak 7", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -236,10 +236,10 @@ public class TypedWeakSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingTypedWeakSummary(11);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary typedweak 11", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -255,16 +255,35 @@ public class TypedWeakSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingTypedWeakSummary(12);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary typedweak 12", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
 			throw new IllegalStateException("Unable to open .nt files in typedweak test 12 " + e.toString());
+		}
+	}
+
+	@Test
+	public void summarizeTypedWeakTest14() {
+		String referenceFileName = expectedOutput(14, "noSaturation");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = summarizeUsingTypedWeakSummary(14);
+			if (!testOutput.exists()) {
+				fail("Test output not found");
+			}
+			if (!expectedOutput.exists()) {
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary typedweak 14", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in typedweak test 14 " + e.toString());
 		}
 	}
 
@@ -278,10 +297,10 @@ public class TypedWeakSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = saturateAndSummarizeUsingTypedWeakSummary(1);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary typedweak 1", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -297,10 +316,10 @@ public class TypedWeakSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = saturateAndSummarizeUsingTypedWeakSummary(2);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary typedweak 2", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -316,10 +335,10 @@ public class TypedWeakSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = saturateAndSummarizeUsingTypedWeakSummary(3);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary typedweak 3", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -335,10 +354,10 @@ public class TypedWeakSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = saturateAndSummarizeUsingTypedWeakSummary(4);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary typedweak 4", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -354,10 +373,10 @@ public class TypedWeakSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = saturateAndSummarizeUsingTypedWeakSummary(5);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary typedweak 5", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -373,10 +392,10 @@ public class TypedWeakSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = saturateAndSummarizeUsingTypedWeakSummary(6);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary typedweak 6", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -392,10 +411,10 @@ public class TypedWeakSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = saturateAndSummarizeUsingTypedWeakSummary(7);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary typedweak 7", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -411,10 +430,10 @@ public class TypedWeakSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = saturateAndSummarizeUsingTypedWeakSummary(11);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary typedweak 11", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -430,16 +449,35 @@ public class TypedWeakSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = saturateAndSummarizeUsingTypedWeakSummary(12);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary typedweak 12", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
 			throw new IllegalStateException("Unable to open .nt files in typedweak test 12 " + e.toString());
+		}
+	}
+
+	@Test
+	public void saturateAndSummarizeTypedWeakTest14() {
+		String referenceFileName = expectedOutput(14, "classical");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = saturateAndSummarizeUsingTypedWeakSummary(14);
+			if (!testOutput.exists()) {
+				fail("Test output not found");
+			}
+			if (!expectedOutput.exists()) {
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary typedweak 14", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in typedweak test 14 " + e.toString());
 		}
 	}
 }

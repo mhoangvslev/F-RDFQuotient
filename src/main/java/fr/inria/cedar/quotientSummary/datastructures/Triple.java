@@ -30,11 +30,17 @@ public class Triple {
 	}
 
 	public void display() {
-		LOGGER.debug(toString());
+		System.out.println(toString());
 	}
 
 	@Override
 	public boolean equals(Object other) {
+		if (other == null)
+			return false;
+		if (other == this)
+			return true;
+		if (!(other instanceof Triple))
+			return false;
 		Triple t2 = ((Triple) other);
 		return (s == t2.s) && (p == t2.p) && (o == t2.o);
 	}

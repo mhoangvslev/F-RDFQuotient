@@ -140,10 +140,10 @@ public class StrongSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingStrongSummary(1);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary strong 1", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -159,10 +159,10 @@ public class StrongSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingStrongSummary(2);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary strong 2", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -178,10 +178,10 @@ public class StrongSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingStrongSummary(3);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary strong 3", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -197,10 +197,10 @@ public class StrongSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingStrongSummary(4);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary strong 4", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -216,10 +216,10 @@ public class StrongSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingStrongSummary(5);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary strong 5", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -235,10 +235,10 @@ public class StrongSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingStrongSummary(6);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary strong 6", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -254,10 +254,10 @@ public class StrongSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingStrongSummary(7);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary strong 7", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -273,10 +273,10 @@ public class StrongSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingStrongSummary(8);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary strong 8", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -292,10 +292,10 @@ public class StrongSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingStrongSummary(9);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary strong 9", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -311,10 +311,10 @@ public class StrongSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingStrongSummary(10);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary strong 10", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -330,10 +330,10 @@ public class StrongSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingStrongSummary(11);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary strong 11", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -349,16 +349,54 @@ public class StrongSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingStrongSummary(12);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary strong 12", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
 			throw new IllegalStateException("Unable to open .nt files in strong test 12 " + e.toString());
+		}
+	}
+
+	@Test
+	public void summarizeStrongTest13() {
+		String referenceFileName = expectedOutput(13, "noSaturation");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = summarizeUsingStrongSummary(13);
+			if (!testOutput.exists()) {
+				fail("Test output not found ");
+			}
+			if (!expectedOutput.exists()) {
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary strong 13", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in strong test 13 " + e.toString());
+		}
+	}
+
+	@Test
+	public void summarizeStrongTest14() {
+		String referenceFileName = expectedOutput(14, "noSaturation");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = summarizeUsingStrongSummary(14);
+			if (!testOutput.exists()) {
+				fail("Test output not found ");
+			}
+			if (!expectedOutput.exists()) {
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary strong 14", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in strong test 14 " + e.toString());
 		}
 	}
 
@@ -372,10 +410,10 @@ public class StrongSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = saturateAndSummarizeUsingStrongSummary(1);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary strong 1", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -391,10 +429,10 @@ public class StrongSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = saturateAndSummarizeUsingStrongSummary(2);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary strong 2", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -410,10 +448,10 @@ public class StrongSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = saturateAndSummarizeUsingStrongSummary(3);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary strong 3", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -429,10 +467,10 @@ public class StrongSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = saturateAndSummarizeUsingStrongSummary(4);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary strong 4", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -448,10 +486,10 @@ public class StrongSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = saturateAndSummarizeUsingStrongSummary(5);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary strong 5", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -467,10 +505,10 @@ public class StrongSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = saturateAndSummarizeUsingStrongSummary(6);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary strong 6", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -486,10 +524,10 @@ public class StrongSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = saturateAndSummarizeUsingStrongSummary(7);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary strong 7", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -505,10 +543,10 @@ public class StrongSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = saturateAndSummarizeUsingStrongSummary(8);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary strong 8", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -524,10 +562,10 @@ public class StrongSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = saturateAndSummarizeUsingStrongSummary(9);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary strong 9", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -543,10 +581,10 @@ public class StrongSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = saturateAndSummarizeUsingStrongSummary(10);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary strong 10", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -562,10 +600,10 @@ public class StrongSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = saturateAndSummarizeUsingStrongSummary(11);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary strong 11", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -581,16 +619,54 @@ public class StrongSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = saturateAndSummarizeUsingStrongSummary(12);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary strong 12", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
 			throw new IllegalStateException("Unable to open .nt files in strong test 12 " + e.toString());
+		}
+	}
+
+	@Test
+	public void saturateAndSummarizeStrongTest13() {
+		String referenceFileName = expectedOutput(13, "classical");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = saturateAndSummarizeUsingStrongSummary(13);
+			if (!testOutput.exists()) {
+				fail("Test output not found ");
+			}
+			if (!expectedOutput.exists()) {
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary strong 13", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in strong test 13 " + e.toString());
+		}
+	}
+
+	@Test
+	public void saturateAndSummarizeStrongTest14() {
+		String referenceFileName = expectedOutput(14, "classical");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = saturateAndSummarizeUsingStrongSummary(14);
+			if (!testOutput.exists()) {
+				fail("Test output not found ");
+			}
+			if (!expectedOutput.exists()) {
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary strong 14", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in strong test 14 " + e.toString());
 		}
 	}
 
@@ -601,10 +677,10 @@ public class StrongSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeThroughShortcutUsingStrongSummary(6);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary strong 6", FileUtils.contentEquals(testOutput, expectedOutput));
@@ -620,10 +696,10 @@ public class StrongSummaryTests {
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeThroughShortcutUsingStrongSummary(12);
-			if (!testOutput.exists()){
+			if (!testOutput.exists()) {
 				fail("Test output not found ");
 			}
-			if (!expectedOutput.exists()){
+			if (!expectedOutput.exists()) {
 				fail("Expected output not found " + referenceFileName);
 			}
 			assertTrue("Different summary strong 12", FileUtils.contentEquals(testOutput, expectedOutput));

@@ -9,15 +9,19 @@ import fr.inria.cedar.quotientSummary.strong.StrongSummary;
 import fr.inria.cedar.quotientSummary.strong.TypedStrongSummary;
 import fr.inria.cedar.quotientSummary.weak.TypedWeakSummary;
 import fr.inria.cedar.quotientSummary.weak.WeakSummary;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
 import org.apache.log4j.Level;
@@ -120,7 +124,6 @@ public class Builder {
 				return;
 			case "readSummaryComputedWithoutSaturation":
 				Summary s = readSummaryFromPostgres(); 
-				System.out.println("Builder successfully read summary");
 				return;
 			default:
 				break;
@@ -319,26 +322,26 @@ public class Builder {
 	// Postgres)
 	// TODO decide on the final form this should take
 	public static Summary readSummaryFromPostgres() {
-		try{
-			Summary s = new Summary(getConnection()); // leave it like this (call getConnection to ensure 
-			// it is opened)
+		try {
+			Summary s = new Summary(getConnection()); // leave it like this (call getConnection to ensure it is opened)
+			LOGGER.info("Summary read from Postgres");
 			return s;
 		}
-		catch(SQLException e){
+		catch(SQLException e) {
 			throw new IllegalStateException("Could not read summary " + e.toString());
 		}
 	}
-	
+
 	// prop allows to override the properties that the Builder may already have, 
 	// in particular to dictate it some connection parameters. 
 	// TODO 
 	public static Summary readSummaryFromPostgres(Properties prop) {
-		try{
-			Summary s = new Summary(getConnection()); // leave it like this (call getConnection to ensure 
-			// it is opened)
+		try {
+			Summary s = new Summary(getConnection()); // leave it like this (call getConnection to ensure it is opened)
+			LOGGER.info("Summary read from Postgres");
 			return s;
 		}
-		catch(SQLException e){
+		catch(SQLException e) {
 			throw new IllegalStateException("Could not read summary " + e.toString());
 		}
 	}
@@ -347,17 +350,38 @@ public class Builder {
 		summaryInUse.saveSummaryInPostgres(connectionInUse, partialResult, summarizationTechnique);
 	}
 
-	private static void exportSummary(String summarizationTechnique, Boolean draw, String[] files) {
+	private static void exportSummary(String summarizationTechnique, Boolean draw, String[] files) throws FileNotFoundException {
 		LOGGER.info("Exporting summary to disk");
+
 		summaryInUse.writeDecodedSummaryToNTFile(connectionInUse, summarizationTechnique);
 		if (draw)
 			summaryInUse.drawSummaryAndGraph(connectionInUse, summarizationTechnique);
-		LOGGER.info("Statistics: " + summaryInUse.getRunStatistics().toString());
+
+		int lastDotPosition = Math.max(0, files[0].lastIndexOf("."));
+		String csvFileName = files[0].substring(0, lastDotPosition) + "_" + summaryInUse.getSummaryURIPrefix() + "_" + summarizationTechnique + "-statistics.csv";
+		try (PrintWriter pw = new PrintWriter(new File(csvFileName))) {
+			HashMap<String, Long> statistics = summaryInUse.getRunStatistics();
+			StringBuilder sb = new StringBuilder();
+			ArrayList<String> keys = new ArrayList<>();
+			keys.addAll(statistics.keySet());
+			Collections.sort(keys);
+			for (String key: keys) {
+				sb.append(key).append(',');
+			}
+			sb.append('\n');
+			for (String key: keys) {
+				sb.append(statistics.get(key)).append(',');
+			}
+			sb.append('\n');
+			pw.write(sb.toString());
+		}
+		LOGGER.info("Statistics saved in " + csvFileName);
 		LOGGER.info("Summary exported to disk");
 	}
 
 	private static void closeConnection() throws SQLException {
 		connectionInUse.close();
+		connectionInUse = null;
 		LOGGER.info("Connection closed");
 	}
 
@@ -376,12 +400,12 @@ public class Builder {
 	// based on the properties specified in configfile
 	// call it with different config files to control which set of
 	// properties to use 
-	private static void getConnection(String configFile){
+	private static void getConnection(String configFile) {
 		Properties properties = new Properties();
-		try{
+		try {
 			properties.load(new FileReader(configFile));
 		}
-		catch(Exception e){
+		catch(IOException e) {
 			throw new IllegalStateException("Could not initialize properties " + e.toString());
 		}
 		Properties connectionProps = new Properties();
@@ -390,7 +414,7 @@ public class Builder {
 
 		String connectionURL = "jdbc:postgresql://" + properties.getProperty("database.host") + ":" + 
 				properties.getProperty("database.port") + "/" + properties.getProperty("database.name");
-		try{
+		try {
 			connectionInUse = DriverManager.getConnection(connectionURL, connectionProps);
 			// https://docs.oracle.com/javase/8/docs/api/java/sql/DriverManager.html#getConnection-java.lang.String-java.util.Properties-
 			// states that if connectionURL and connectionProps disagree on the host, port or database name,
@@ -398,29 +422,28 @@ public class Builder {
 			// It is important not to allow the values of the two parameters to diverge. 
 			LOGGER.info("Connection to Postgres established with URL: " + connectionURL);
 		}
-		catch(SQLException e){
-			e.printStackTrace();
+		catch(SQLException e) {
 			throw new IllegalStateException("Could not open connection to " + connectionURL); 
-		}	
+		}
 	}
 
 	// gets a connection with parameters taken from the config file *and then* overriden by the custom properties
 	private static void getConnection(String configFile, Properties customProp){
 		Properties properties = new Properties();
-		try{
+		try {
 			properties.load(new FileReader(configFile));
 		}
-		catch(Exception e){
+		catch(IOException e) {
 			throw new IllegalStateException("Could not initialize properties " + e.toString());
 		}
 		Properties connectionProps = new Properties();
-		
+
 		String databaseName = properties.getProperty("database.name").trim();
 		String host = properties.getProperty("database.host").trim();
 		String port = properties.getProperty("database.port").trim();
 		String user = properties.getProperty("database.user").trim();
 		String password = properties.getProperty("database.password").trim();
-		
+
 		connectionProps.put("user", user);
 		connectionProps.put("password", password);
 
@@ -429,29 +452,29 @@ public class Builder {
 		String cPort = customProp.getProperty("database.port").trim();
 		String cUser = customProp.getProperty("database.user").trim();
 		String cPassword = customProp.getProperty("database.password").trim();
-		
-		if (cDatabaseName != null && cDatabaseName.length() > 0){
+
+		if (cDatabaseName != null && cDatabaseName.length() > 0) {
 			connectionProps.put("database", cDatabaseName);  
 			databaseName = cDatabaseName; 
 		}
-		if (cHost != null && cHost.length() > 0){
+		if (cHost != null && cHost.length() > 0) {
 			connectionProps.put("host", cHost); 
 			host = cHost; 
 		}
-		if (cPort != null && cPort.length() > 0){
+		if (cPort != null && cPort.length() > 0) {
 			connectionProps.put("port", cPort); 
 			port = cPort; 
 		}
-		if (cUser != null && cUser.length() > 0){
+		if (cUser != null && cUser.length() > 0) {
 			connectionProps.put("user", cUser); 
 			user = cUser; 
 		}
-		if (cPassword != null && cPassword.length() > 1){
+		if (cPassword != null && cPassword.length() > 1) {
 			connectionProps.put("password", cPassword); 
 			password = cPassword; 
 		}
 		String connectionURL = "jdbc:postgresql://" + host + ":" + 	port + "/" + databaseName;
-		try{
+		try {
 			// https://docs.oracle.com/javase/8/docs/api/java/sql/DriverManager.html#getConnection-java.lang.String-java.util.Properties-
 			// states that if connectionURL and connectionProps disagree on the host, port or database name,
 			// the one actually considered is implementation (driver) dependent. 
@@ -459,16 +482,15 @@ public class Builder {
 			connectionInUse = DriverManager.getConnection(connectionURL, connectionProps);
 			LOGGER.info("Connection to Postgres established with URL: " + connectionURL  + " and " +  connectionProps.toString());
 		}
-		catch(SQLException e){
-			e.printStackTrace();
+		catch(SQLException e) {
 			throw new IllegalStateException("Could not open connection to " + connectionURL + " and " + connectionProps.toString()); 
-		}	
+		}
 	}
-	
+
 	public static void getConnection(Properties customProp){
 		getConnection(DEFAULT_CONFIG_FILE, customProp); 
 	}
-	
+
 	private static void dropPartialResultsTables() throws IllegalStateException {
 		Statement stmt;
 		try {
@@ -489,6 +511,4 @@ public class Builder {
 
 		LOGGER.info("All partial results tables dropped");
 	}
-	
-
 }

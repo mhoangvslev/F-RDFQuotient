@@ -1,0 +1,3 @@
+<http://qs.org/w0> <http://qstest.org/b> <http://qs.org/w1> .
+<http://qs.org/w0> <http://qstest.org/a> <http://qs.org/w1> .
+<http://qs.org/w1> <http://qstest.org/c> <http://qs.org/w0> .

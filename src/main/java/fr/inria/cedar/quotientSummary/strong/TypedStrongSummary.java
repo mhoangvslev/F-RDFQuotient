@@ -1,5 +1,6 @@
 package fr.inria.cedar.quotientSummary.strong;
 
+import fr.inria.cedar.quotientSummary.datastructures.EdgeTransferSpecification;
 import fr.inria.cedar.quotientSummary.datastructures.Long2Long;
 import fr.inria.cedar.quotientSummary.datastructures.Long2LongSet;
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
@@ -45,47 +46,14 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	}
 
 	/**
-	 * This must be used to read a TRS summary from Postgres.
-	 *
-	 * @param conn
-	 */
-	public TypedStrongSummary(Connection conn) {
-		super();
-		try {
-			conn.setAutoCommit(false);
-		}
-		catch (SQLException ex) {
-			LOGGER.error(ex);
-		}
-		this.summaryTablePrefix = TYPED_STRONG_SUMMARY_PREFIX;
-		LOGGER.info("Reading TypedStrong summary from Postgres, setting up special URIs from the dictionary");
-		RDF2SQLEncoding.setUp(conn, "dictionary");
-		String getSummaryTriples = getSummaryTriplesSQLQuery();
-		try {
-			Statement getTriples = conn.createStatement();
-			//LOGGER.debug("Created statement");
-			ResultSet rs = getTriples.executeQuery(getSummaryTriples);
-			//LOGGER.debug("Asking for summary triples")
-			while (rs.next()) {
-				Long s = rs.getLong(1);
-				Long p = rs.getLong(2);
-				Long o = rs.getLong(3);
-				edgesWithProv.addTriple(s, p, o);
-			}
-		}
-		catch (SQLException e) {
-			throw new IllegalStateException("Unable to read Typed Strong summary from Postgres: " + e.toString());
-		}
-		LOGGER.info("Read Typed Strong summary from Postgres");
-	}
-
-	/**
 	 * Summarizes an RDF graph assuming the data triples are in Postgres
 	 *
 	 * @param conn
 	 */
 	@Override
 	public void summarizeFromPostgres(Connection conn) {
+		long avoidCollisionsTimeStart;
+		long avoidCollisionsTime = 0;
 		long start = System.currentTimeMillis();
 		try {
 			conn.setAutoCommit(false);
@@ -98,7 +66,9 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		long typeConstantCode = RDF2SQLEncoding.getTypeCode();
 		if (typeConstantCode != -1) {
 			this.typeTriplesExist = true;
+			avoidCollisionsTimeStart = System.currentTimeMillis();
 			avoidCollisionsWhenAssigningSummaryNodes(conn);
+			avoidCollisionsTime += System.currentTimeMillis() - avoidCollisionsTimeStart;
 		}
 		String getTypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p = " + typeConstantCode);
 		try {
@@ -110,9 +80,6 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 						this.handleTypeTripleBeforeData(t);
 						triplesSummarizedSoFar++;
 						typeTriplesSummarizedSoFar++;
-						if (checkConsistency) {
-							consistencyChecks();
-						}
 						storeSpecialNodesRepresentation(t, false);
 					}
 				}
@@ -121,11 +88,14 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		catch (SQLException e) {
 			throw new IllegalStateException("Postgres error encountered while summarizing type triples: " + e.toString());
 		}
-		classSetCreationTime = System.currentTimeMillis() - start;
+		classSetCreationTime = System.currentTimeMillis() - start - avoidCollisionsTime;
 		LOGGER.info("Class sets created in " + classSetCreationTime + " ms");
 
 		start = System.currentTimeMillis();
 		this.postHandleTypeTriples();
+		if (checkConsistency) {
+			consistencyChecks();
+		}
 		typeTriplesSummarizationTime = System.currentTimeMillis() - start;
 		LOGGER.info("Summarized " + typeTriplesSummarizedSoFar + " type triples in " + typeTriplesSummarizationTime + " ms");
 
@@ -222,19 +192,19 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 
 	@Override
 	public void display() {
-		LOGGER.debug("TYPED STRONG SUMMARY\nClass set IDs to class sets: " + cs.toString());
-		LOGGER.debug("Nodes to class set IDs: " + n2cs.toString());
-		LOGGER.debug("Source cliques: " + sc.toString());
-		LOGGER.debug("Target cliques: " + tc.toString());
-		LOGGER.debug("Nodes to source cliques: " + n2sc.toString());
-		LOGGER.debug("Nodes to target cliques: " + n2tc.toString());
-		LOGGER.debug("Property to source cliques: " + p2sc.toString());
-		LOGGER.debug("Property to target cliques: " + p2tc.toString());
-		LOGGER.debug("Representation function: ");
-		LOGGER.debug(showRep());
-		LOGGER.debug("Cs to cs ID: ");
-		showClassSets();
-		LOGGER.debug("Summary edges: ");
+		System.out.println("TYPED STRONG SUMMARY\nClass set IDs to class sets: " + cs.toString());
+		System.out.println("Nodes to class set IDs: " + n2cs.toString());
+		System.out.println("Source cliques: " + sc.toString());
+		System.out.println("Target cliques: " + tc.toString());
+		System.out.println("Nodes to source cliques: " + n2sc.toString());
+		System.out.println("Nodes to target cliques: " + n2tc.toString());
+		System.out.println("Property to source cliques: " + p2sc.toString());
+		System.out.println("Property to target cliques: " + p2tc.toString());
+		System.out.println("Representation function: ");
+		System.out.println(showRep());
+		System.out.println("Cs to cs ID: ");
+		displayClassSets();
+		System.out.println("Summary edges: ");
 		edgesWithProv.display();
 	}
 
@@ -247,17 +217,18 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		sb.append("}");
 		return new String(sb);
 	}
-	private void showClassSets() {
+
+	private void displayClassSets() {
 		for (TreeSet<Long> classSets: cs2csID.keySet()){
 			StringBuilder thisCSBuffer = new StringBuilder();
 			thisCSBuffer.append(showLongSet(classSets));
 			thisCSBuffer.append("-->");
 			thisCSBuffer.append(cs2csID.get(classSets));
-			LOGGER.debug(thisCSBuffer.toString());
+			System.out.println(thisCSBuffer.toString());
 		}
 	}
 
-	public void showRepThroughCliques() {
+	public void displayRepThroughCliques() {
 		StringBuffer sb = new StringBuffer();
 		sb.append("n2sc: ");
 		for (Long node: n2sc.getKeys()) {
@@ -266,7 +237,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 			Long thisNodeSC = n2sc.get(node);
 			if (thisNodeSC == null)
 				throw new IllegalStateException("Null source clique");
-			LOGGER.debug("n2sc: " + node + "->" + thisNodeSC);
+			System.out.println("n2sc: " + node + "->" + thisNodeSC);
 			Long thisNodeTC = n2tc.get(node);
 			if (thisNodeTC == null)
 				throw new IllegalStateException("Null target clique for " + node);
@@ -279,7 +250,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 				throw new IllegalStateException("Null summary node");
 			sb.append(node).append("->").append(summaryNode).append(" ");
 		}
-		LOGGER.debug(sb);
+		System.out.println(sb);
 	}
 
 	@Override
@@ -288,7 +259,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 
 		TreeSet<Long> classSetOfThisNode = n2c.get(t.s); 
 		if (classSetOfThisNode == null){ // this is the first time we encounter the node: create a class set with exactly this type
-			Long newClassSetID = this.getNextSummaryNode(); 
+			Long newClassSetID = this.getNextSummaryNode();
 			classSetOfThisNode = new TreeSet<>();
 			classSetOfThisNode.add(t.o); 
 			n2c.put(t.s, classSetOfThisNode);
@@ -357,7 +328,6 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		Long repO = rep.get(t.o);
 		Long repS = rep.get(t.s);
 
-		//checkSymmetry(sourceCliqueS, targetCliqueS, sourceCliqueO, targetCliqueO, sourceCliqueP, targetCliqueP); 
 		char caseNumber = decode(classSetS, repS, classSetO, repO, sourceCliqueP);
 
 		//LOGGER.debug("Case " + this.caseName(caseNumber));
@@ -476,17 +446,15 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 			}
 		}
 
-		//for (ReplacementSpecification reps: nodeReps) {
-		//	untypedSummaryNodes.applyTargetedReplacement(reps);
-		//}
-
 		if (replaceForS) {
 			computeAndApplyCliqueReplacements(sourceCliqueS, sourceCliqueP, newSourceCliqueS, SOURCE, nodeReps);
 		}
 
+		EdgeTransferSpecification edgesTransfersSpecification = new EdgeTransferSpecification();
 		if (!replaceForS) {
-			updateEdgesWithDistribution(distributeSummaryEdgesThroughCounts(repS, newRepS, t.s, TARGET), repS, newRepS, TARGET);
+			edgesTransfersSpecification.addAll(EdgeTransferSpecification.determineEdgesToTransfer(rep, triplesBySubject, triplesByObject, t.s, repS, TARGET));
 		}
+		edgesTransfersSpecification.applyTransfers(edgesWithProv, repS, newRepS, repO, newRepO);
 
 		for (ReplacementSpecification reps: nodeReps) {
 			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode());
@@ -535,17 +503,15 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 			}
 		}
 
-		//for (ReplacementSpecification reps: nodeReps) {
-		//	untypedSummaryNodes.applyTargetedReplacement(reps);
-		//}
-
 		if (replaceForO) {
 			computeAndApplyCliqueReplacements(targetCliqueO, targetCliqueP, newTargetCliqueO, TARGET, nodeReps);
 		}
 
+		EdgeTransferSpecification edgesTransfersSpecification = new EdgeTransferSpecification();
 		if (!replaceForO) {
-			updateEdgesWithDistribution(distributeSummaryEdgesThroughCounts(repO, newRepO, t.o, SOURCE), repO, newRepO, SOURCE);
+			edgesTransfersSpecification.addAll(EdgeTransferSpecification.determineEdgesToTransfer(rep, triplesBySubject, triplesByObject, t.o, repO, SOURCE));
 		}
+		edgesTransfersSpecification.applyTransfers(edgesWithProv, repS, newRepS, repO, newRepO);
 
 		for (ReplacementSpecification reps: nodeReps) {
 			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode());
@@ -596,17 +562,15 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 			}
 		}
 
-		//for (ReplacementSpecification reps: nodeReps) {
-		//	untypedSummaryNodes.applyTargetedReplacement(reps);
-		//}
-
 		if (replaceForS) {
 			computeAndApplyCliqueReplacements(sourceCliqueS, sourceCliqueP, newSourceCliqueS, SOURCE, nodeReps);
 		}
 
+		EdgeTransferSpecification edgesTransfersSpecification = new EdgeTransferSpecification();
 		if (!replaceForS) {
-			updateEdgesWithDistribution(distributeSummaryEdgesThroughCounts(repS, newRepS, t.s, TARGET), repS, newRepS, TARGET);
+			edgesTransfersSpecification.addAll(EdgeTransferSpecification.determineEdgesToTransfer(rep, triplesBySubject, triplesByObject, t.s, repS, TARGET));
 		}
+		edgesTransfersSpecification.applyTransfers(edgesWithProv, repS, newRepS, repO, newRepO);
 
 		for (ReplacementSpecification reps: nodeReps) {
 			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode());
@@ -657,17 +621,15 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 			}
 		}
 
-		//for (ReplacementSpecification reps: nodeReps) {
-		//	untypedSummaryNodes.applyTargetedReplacement(reps);
-		//}
-
 		if (replaceForO) {
 			computeAndApplyCliqueReplacements(targetCliqueO, targetCliqueP, newTargetCliqueO, TARGET, nodeReps);
 		}
 
+		EdgeTransferSpecification edgesTransfersSpecification = new EdgeTransferSpecification();
 		if (!replaceForO) {
-			updateEdgesWithDistribution(distributeSummaryEdgesThroughCounts(repO, newRepO, t.o, SOURCE), repO, newRepO, SOURCE);
+			edgesTransfersSpecification.addAll(EdgeTransferSpecification.determineEdgesToTransfer(rep, triplesBySubject, triplesByObject, t.o, repO, SOURCE));
 		}
+		edgesTransfersSpecification.applyTransfers(edgesWithProv, repS, newRepS, repO, newRepO);
 
 		for (ReplacementSpecification reps: nodeReps) {
 			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode());

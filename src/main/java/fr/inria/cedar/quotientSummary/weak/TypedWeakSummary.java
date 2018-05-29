@@ -50,47 +50,14 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 	}
 
 	/**
-	 * This must be used to read a TW summary from Postgres.
-	 *
-	 * @param conn
-	 */
-	public TypedWeakSummary(Connection conn) {
-		super();
-		try {
-			conn.setAutoCommit(false);
-		}
-		catch (SQLException ex) {
-			LOGGER.error(ex);
-		}
-		this.summaryTablePrefix = TYPED_WEAK_SUMMARY_PREFIX;
-		LOGGER.info("Reading TypedWeak summary from Postgres, setting up special URIs from the dictionary");
-		RDF2SQLEncoding.setUp(conn, "dictionary");
-		String getSummaryTriples = getSummaryTriplesSQLQuery();
-		try {
-			Statement getTriples = conn.createStatement();
-			//LOGGER.debug("Created statement");
-			ResultSet rs = getTriples.executeQuery(getSummaryTriples);
-			//LOGGER.debug("Asking for summary triples")
-			while (rs.next()) {
-				Long s = rs.getLong(1);
-				Long p = rs.getLong(2);
-				Long o = rs.getLong(3);
-				edgesWithProv.addTriple(s, p, o);
-			}
-		}
-		catch (SQLException e) {
-			throw new IllegalStateException("Unable to read TypedWeak summary from Postgres: " + e.toString());
-		}
-		LOGGER.info("Read TypedWeak summary from Postgres");
-	}
-
-	/**
 	 * Summarizes an RDF graph assuming the data triples are in Postgres
 	 *
 	 * @param conn
 	 */
 	@Override
 	public void summarizeFromPostgres(Connection conn) {
+		long avoidCollisionsTimeStart;
+		long avoidCollisionsTime = 0;
 		long start = System.currentTimeMillis();
 		try {
 			conn.setAutoCommit(false);
@@ -103,7 +70,9 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		long typeConstantCode = RDF2SQLEncoding.getTypeCode();
 		if (typeConstantCode != -1) {
 			this.typeTriplesExist = true;
+			avoidCollisionsTimeStart = System.currentTimeMillis();
 			avoidCollisionsWhenAssigningSummaryNodes(conn);
+			avoidCollisionsTime += System.currentTimeMillis() - avoidCollisionsTimeStart;
 		}
 		String getTypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p = " + typeConstantCode);
 		try {
@@ -126,7 +95,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		catch (SQLException e) {
 			throw new IllegalStateException("Postgres error encountered while summarizing type triples: " + e.toString());
 		}
-		classSetCreationTime = System.currentTimeMillis() - start;
+		classSetCreationTime = System.currentTimeMillis() - start - avoidCollisionsTime;
 		LOGGER.info("Class sets created in " + classSetCreationTime + " ms");
 
 		start = System.currentTimeMillis();
@@ -188,8 +157,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		boolean oRepresented = (repO != null);
 		boolean oTyped = ((n2cs.get(t.o) != null));
 
-		char caseNumber = identifyTripleSummarizationCase(sRepresented, sTyped,
-				pRepresented, oRepresented, oTyped);
+		char caseNumber = identifyTripleSummarizationCase(sRepresented, sTyped, pRepresented, oRepresented, oTyped);
 //		LOGGER.debug("\nCase: " + this.caseName(caseNumber) + " " + t.toString() + " " + 
 //				RDF2SQLEncoding.dictionaryDecode(t.s) + " " + 
 //				RDF2SQLEncoding.dictionaryDecode(t.p) + " " +
@@ -268,16 +236,12 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		Long addedTripleSource = sourceP; 
 		Long addedTripleTarget = repO;
 
-		if (sourceP != null){
-			rep.put(t.s, addedTripleSource);
+		if (sourceP == null){
+			addedTripleSource = this.getNextSummaryNode();
 		}
-		else{
-			sourceP = this.getNextSummaryNode();
-			rep.put(t.s, sourceP);
-			ps.put(t.p, sourceP); 
-		}
+		rep.put(t.s, addedTripleSource);
+		ps.put(t.p, addedTripleSource);
 
-		addedTripleSource = sourceP; 
 		edgesWithProv.addTriple(addedTripleSource, t.p, addedTripleTarget); 
 	}
 
@@ -290,16 +254,12 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		Long addedTripleSource = repS;
 		Long addedTripleTarget = targetP;
 
-		if (targetP != null) {
-			rep.put(t.o, addedTripleTarget);
+		if (targetP == null) {
+			addedTripleTarget = this.getNextSummaryNode();
 		}
-		else {
-			targetP = this.getNextSummaryNode();
-			rep.put(t.o, targetP);
-			pt.put(t.p, targetP);  
-		}
+		rep.put(t.o, addedTripleTarget);
+		pt.put(t.p, addedTripleTarget);
 
-		addedTripleTarget = targetP;
 		edgesWithProv.addTriple(addedTripleSource, t.p, addedTripleTarget);
 	}
 
@@ -322,7 +282,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		targetP = this.getNextSummaryNode();
 		pt.put(t.p, targetP);
 		rep.put(t.o, targetP);
-		edgesWithProv.addTriple(repS, t.p,targetP);
+		edgesWithProv.addTriple(repS, t.p, targetP);
 	}
 
 	/**
@@ -348,8 +308,8 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		}
 		else{
 			addedTripleSource = sourceP; 
-			ps.put(t.p, sourceP); 
 		}
+		ps.put(t.p, addedTripleSource); 
 		edgesWithProv.addTriple(addedTripleSource, t.p, addedTripleTarget);
 	}
 
@@ -375,8 +335,8 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		}
 		else{
 			addedTripleTarget = targetP; 
-			pt.put(t.p, targetP); 
 		}
+		pt.put(t.p, addedTripleTarget);
 		edgesWithProv.addTriple(addedTripleSource, t.p, addedTripleTarget);
 	}
 
@@ -602,37 +562,36 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 			HashMap<Long, TreeSet<Long>> triplesOfThisSubject = edgesWithProv.get(s);
 			if (triplesOfThisSubject == null)
 				throw new IllegalStateException("No triples whose subject is " + s);
-			for (Long p: triplesOfThisSubject.keySet()) {
-				TreeSet<Long> objectsOfThisSandP = triplesOfThisSubject.get(p);
-				if ((objectsOfThisSandP.size() > 1) && RDF2SQLEncoding.isDataProperty(p)
-						&& (n2cs.get(s) == null)) // only check for untyped nodes 
-					throw new IllegalStateException("Subject " + s + " has more than one edge with label " + p);
-				for (Long o: objectsOfThisSandP) {
-					if (RDF2SQLEncoding.isDataProperty(p)){
-						Long sp = ps.get(p); 
-						if (sp == null){
-							if (n2cs.get(s) == null){
-								throw new IllegalStateException("Null source for property " + p + " (" +
-										RDF2SQLEncoding.dictionaryDecode(p) + ") of untyped node " + s + 
-										 " (" +	RDF2SQLEncoding.dictionaryDecode(s) + ")"); 
-							}
-						}
-						else{
-							if (!sp.equals(s)){
-								throw new IllegalStateException("Source of " + p + " is not " + s + " but " + sp);
-							}
-						}
-						Long tp = pt.get(p); 
-						if (tp == null){
-							if (n2cs.get(o) == null){
-								throw new IllegalStateException("Null target for property " + p + " (" +
-										RDF2SQLEncoding.dictionaryDecode(p) + ") incoming untyped node " + o + 
-										 " (" +	RDF2SQLEncoding.dictionaryDecode(o) + ")"); 
-							}
-						}
-						else{
-							if (!tp.equals(o)){
-								throw new IllegalStateException("Target of " + p + " is not " + o + " but " + tp);
+			if (n2cs.getInverse(s) == null) { // untyped s
+				for (Long p: triplesOfThisSubject.keySet()) {
+					TreeSet<Long> objectsOfThisSandP = triplesOfThisSubject.get(p);
+					if (RDF2SQLEncoding.isDataProperty(p)) {
+						if (objectsOfThisSandP.size() > 1)
+							throw new IllegalStateException("Subject " + s + " has more than one edge with label " + p);
+						for (Long o: objectsOfThisSandP) {
+							if (n2cs.getInverse(o) == null) { // untyped o
+								Long sp = ps.get(p); 
+								if (sp == null){
+									throw new IllegalStateException("Null source for property " + p + " (" +
+												RDF2SQLEncoding.dictionaryDecode(p) + ") of untyped node " + s + 
+												 " (" +	RDF2SQLEncoding.dictionaryDecode(s) + ")");
+								}
+								else{
+									if (!sp.equals(s)){
+										throw new IllegalStateException("Source of " + p + " is not " + s + " but " + sp);
+									}
+								}
+								Long tp = pt.get(p); 
+								if (tp == null){
+									throw new IllegalStateException("Null target for property " + p + " (" +
+												RDF2SQLEncoding.dictionaryDecode(p) + ") incoming untyped node " + o + 
+												 " (" +	RDF2SQLEncoding.dictionaryDecode(o) + ")");
+								}
+								else{
+									if (!tp.equals(o)){
+										throw new IllegalStateException("Target of " + p + " is not " + o + " but " + tp);
+									}
+								}
 							}
 						}
 					}

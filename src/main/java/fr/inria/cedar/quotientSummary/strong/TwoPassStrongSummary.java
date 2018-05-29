@@ -24,47 +24,14 @@ public class TwoPassStrongSummary extends StrongOrTypedStrongSummary {
 	}
 
 	/**
-	 * This must be used to read a S summary from Postgres.
-	 *
-	 * @param conn
-	 */
-	public TwoPassStrongSummary(Connection conn) {
-		super();
-		try {
-			conn.setAutoCommit(false);
-		}
-		catch (SQLException ex) {
-			LOGGER.error(ex);
-		}
-		this.summaryTablePrefix = TWO_PASS_STRONG_SUMMARY_PREFIX; 
-		LOGGER.info("Reading Two-pass Strong summary from Postgres, setting up special URIs from the dictionary");
-		RDF2SQLEncoding.setUp(conn, "dictionary");
-		String getSummaryTriples = getSummaryTriplesSQLQuery();
-		try {
-			Statement getTriples = conn.createStatement();
-			//LOGGER.debug("Created statement");
-			ResultSet rs = getTriples.executeQuery(getSummaryTriples);
-			//LOGGER.debug("Asking for summary triples")
-			while (rs.next()) {
-				Long s = rs.getLong(1);
-				Long p = rs.getLong(2);
-				Long o = rs.getLong(3);
-				edgesWithProv.addTriple(s, p, o);
-			}
-		}
-		catch (SQLException e) {
-			throw new IllegalStateException("Unable to read Two-Pass Strong summary from Postgres: " + e.toString());
-		}
-		LOGGER.info("Read Two-Pass Strong summary from Postgres");
-	}
-
-	/**
 	 * Summarizes an RDF graph assuming the data triples are in Postgres
 	 *
 	 * @param conn
 	 */
 	@Override
 	public void summarizeFromPostgres(Connection conn) {
+		long avoidCollisionsTimeStart;
+		long avoidCollisionsTime = 0;
 		long start = System.currentTimeMillis();
 		try {
 			conn.setAutoCommit(false);
@@ -77,7 +44,9 @@ public class TwoPassStrongSummary extends StrongOrTypedStrongSummary {
 		long typeConstantCode = RDF2SQLEncoding.getTypeCode();
 		if (typeConstantCode != -1) {
 			this.typeTriplesExist = true;
+			avoidCollisionsTimeStart = System.currentTimeMillis();
 			avoidCollisionsWhenAssigningSummaryNodes(conn);
+			avoidCollisionsTime += System.currentTimeMillis() - avoidCollisionsTimeStart;
 		}
 		String getUntypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p <> " + typeConstantCode); 
 		try {
@@ -97,7 +66,7 @@ public class TwoPassStrongSummary extends StrongOrTypedStrongSummary {
 		catch (SQLException e) {
 			throw new IllegalStateException("Postgres error encountered while summarizing data triples " + e.toString());
 		}
-		dataTriplesSummarizationTime = System.currentTimeMillis() - start;
+		dataTriplesSummarizationTime = System.currentTimeMillis() - start - avoidCollisionsTime;
 		LOGGER.info("Summarized " + dataTriplesSummarizedSoFar + " data triples in " + dataTriplesSummarizationTime + " ms");
 
 		// TODO: second pass here
