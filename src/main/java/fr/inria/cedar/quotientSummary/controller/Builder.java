@@ -7,6 +7,7 @@ import fr.inria.cedar.ontosql.rdfdb.dataloading.Parameters;
 import fr.inria.cedar.quotientSummary.Summary;
 import fr.inria.cedar.quotientSummary.bisim.OneBisimSummary;
 import fr.inria.cedar.quotientSummary.strong.StrongSummary;
+import fr.inria.cedar.quotientSummary.strong.TwoPassStrongSummary;
 import fr.inria.cedar.quotientSummary.strong.TypedStrongSummary;
 import fr.inria.cedar.quotientSummary.weak.TypedWeakSummary;
 import fr.inria.cedar.quotientSummary.weak.WeakSummary;
@@ -145,6 +146,8 @@ public class Builder {
 				return "w_";
 			case "strong":
 				return "s_";
+			case "2pstrong":
+				return "2ps_";
 			case "typedweak":
 				return "tw_";
 			case "typedstrong":
@@ -321,6 +324,8 @@ public class Builder {
 				return new WeakSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 			case "strong":
 				return new StrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
+			case "2pstrong":
+				return new TwoPassStrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 			case "typedweak":
 				return new TypedWeakSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 			case "typedstrong":

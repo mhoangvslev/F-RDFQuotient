@@ -288,4 +288,67 @@ public class BSBMTests {
 		String testOutput = summarize(30, 100, "typedstrong", "ts", "noSaturation", Boolean.FALSE);
 		assertTrue("Different summary BSBM test 30", testOutput.equals(expectedOutput));
 	}
+
+	@Test
+	public void BSBMTest31() {
+		String expectedOutput = expectedOutput(1, "2ps", "noSaturation");
+		String testOutput = summarize(31, 1, "2pstrong", "2ps", "noSaturation", Boolean.FALSE);
+		assertTrue("Different summary BSBM test 31", testOutput.equals(expectedOutput));
+	}
+
+	@Test
+	public void BSBMTest32() {
+		String expectedOutput = expectedOutput(1, "2ps", "classical");
+		String testOutput = summarize(32, 1, "2pstrong", "2ps", "classical", Boolean.FALSE);
+		assertTrue("Different summary BSBM test 32", testOutput.equals(expectedOutput));
+	}
+
+	@Test
+	public void BSBMTest33() {
+		String expectedOutput = expectedOutput(1, "2ps", "shortcut");
+		String testOutput = summarize(33, 1, "2pstrong", "2ps", "shortcut", Boolean.FALSE);
+		assertTrue("Different summary BSBM test 33", testOutput.equals(expectedOutput));
+	}
+
+	@Test
+	public void BSBMTest34() {
+		String expectedOutput = expectedOutput(10, "2ps", "noSaturation");
+		String testOutput = summarize(34, 10, "2pstrong", "2ps", "noSaturation", Boolean.FALSE);
+		assertTrue("Different summary BSBM test 34", testOutput.equals(expectedOutput));
+	}
+
+	@Test
+	public void BSBMTest35() {
+		String expectedOutput = expectedOutput(10, "2ps", "classical");
+		String testOutput = summarize(35, 10, "2pstrong", "2ps", "classical", Boolean.FALSE);
+		assertTrue("Different summary BSBM test 35", testOutput.equals(expectedOutput));
+	}
+
+	@Test
+	public void BSBMTest36() {
+		String expectedOutput = expectedOutput(10, "2ps", "shortcut");
+		String testOutput = summarize(36, 10, "2pstrong", "2ps", "shortcut", Boolean.FALSE);
+		assertTrue("Different summary BSBM test 36", testOutput.equals(expectedOutput));
+	}
+
+	@Test
+	public void BSBMTest37() {
+		String expectedOutput = expectedOutput(100, "2ps", "noSaturation");
+		String testOutput = summarize(37, 100, "2pstrong", "2ps", "noSaturation", Boolean.FALSE);
+		assertTrue("Different summary BSBM test 37", testOutput.equals(expectedOutput));
+	}
+
+	@Test
+	public void BSBMTest38() {
+		String expectedOutput = expectedOutput(100, "2ps", "classical");
+		String testOutput = summarize(38, 100, "2pstrong", "2ps", "classical", Boolean.FALSE);
+		assertTrue("Different summary BSBM test 38", testOutput.equals(expectedOutput));
+	}
+
+	@Test
+	public void BSBMTest39() {
+		String expectedOutput = expectedOutput(100, "2ps", "shortcut");
+		String testOutput = summarize(39, 100, "2pstrong", "2ps", "shortcut", Boolean.FALSE);
+		assertTrue("Different summary BSBM test 39", testOutput.equals(expectedOutput));
+	}
 }

@@ -1,0 +1,5 @@
+<http://qs.org/2ps0> <http://qstest.org/b> <http://qs.org/2ps1> .
+<http://qs.org/2ps0> <http://qstest.org/a> <http://qs.org/2ps1> .
+<http://qs.org/2ps1> <http://qstest.org/c> <http://qs.org/2ps0> .
+<http://qs.org/2ps2> <http://qstest.org/b> <http://qs.org/2ps3> .
+<http://qs.org/2ps2> <http://qstest.org/a> <http://qs.org/2ps3> .
