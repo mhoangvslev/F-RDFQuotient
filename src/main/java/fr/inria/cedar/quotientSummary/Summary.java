@@ -62,7 +62,8 @@ public class Summary {
 	protected static String TYPED_WEAK_SUMMARY_PREFIX = "tw_";
 	protected static String TYPED_STRONG_SUMMARY_PREFIX = "ts_";
 	protected static String TWO_PASS_STRONG_SUMMARY_PREFIX = "s2_";
-	protected static String TWO_PASS_TYPED_STRONG_SUMMARY_PREFIX = "ts2_";
+	protected static String TWO_PASS_TYPED_STRONG_SUMMARY_PREFIX = "ts2_"; 
+	protected static String ONEFB_SUMMARY_PREFIX = "1fb_"; 
 
 	protected String triplesFileName = "";
 	protected String triplesTableName = "";

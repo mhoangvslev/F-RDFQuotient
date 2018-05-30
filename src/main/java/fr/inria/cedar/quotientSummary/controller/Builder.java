@@ -5,6 +5,7 @@ import fr.inria.cedar.ontosql.db.UnsupportedDatabaseEngineException;
 import fr.inria.cedar.ontosql.rdfdb.dataloading.DataLoading;
 import fr.inria.cedar.ontosql.rdfdb.dataloading.Parameters;
 import fr.inria.cedar.quotientSummary.Summary;
+import fr.inria.cedar.quotientSummary.bisim.OneBisimSummary;
 import fr.inria.cedar.quotientSummary.strong.StrongSummary;
 import fr.inria.cedar.quotientSummary.strong.TypedStrongSummary;
 import fr.inria.cedar.quotientSummary.weak.TypedWeakSummary;
@@ -148,6 +149,8 @@ public class Builder {
 				return "tw_";
 			case "typedstrong":
 				return "ts_";
+			case "onefb":
+				return "1fb_"; 
 		}
 		return null;
 	}
@@ -322,6 +325,8 @@ public class Builder {
 				return new TypedWeakSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 			case "typedstrong":
 				return new TypedStrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
+			case "onefb":
+				return new OneBisimSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName); 
 		}
 		return null;
 	}
