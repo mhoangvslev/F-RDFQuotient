@@ -6,11 +6,15 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.TreeSet;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 public class TwoPassStrongSummary extends StrongOrTypedStrongSummary {
 	private static final Logger LOGGER = Logger.getLogger(TwoPassStrongSummary.class.getName());
+	//protected HashMap<Long, HashMap<Long, TreeSet<Long>>> edges;
 
 	public TwoPassStrongSummary(String triplesFileName, String triplesTableName, String encodedTriplesTableName, String dictionaryTableName) {
 		super();
@@ -21,7 +25,18 @@ public class TwoPassStrongSummary extends StrongOrTypedStrongSummary {
 		this.dictionaryTableName = dictionaryTableName;
 		this.summaryTablePrefix = TWO_PASS_STRONG_SUMMARY_PREFIX;
 		this.isTypeFirst = false;
+		//this.edges = new HashMap<>();
 	}
+
+	/*private void addSummaryEdge(Long s, Long p, Long o) {
+		if (edges.get(s) == null) {
+			edges.put(s, new HashMap<>());
+		}
+		if (edges.get(s).get(p) == null) {
+			edges.get(s).put(p, new TreeSet<>());
+		}
+		edges.get(s).get(p).add(o);
+	}*/
 
 	/**
 	 * Summarizes an RDF graph assuming the data triples are in Postgres
@@ -30,10 +45,11 @@ public class TwoPassStrongSummary extends StrongOrTypedStrongSummary {
 	 */
 	@Override
 	public void summarizeFromPostgres(Connection conn) {
-		collectSchemaNodes(conn);
+		// first pass
 		long avoidCollisionsTimeStart;
 		long avoidCollisionsTime = 0;
 		long start = System.currentTimeMillis();
+		collectSchemaNodes(conn);
 		try {
 			conn.setAutoCommit(false);
 		}
@@ -48,17 +64,25 @@ public class TwoPassStrongSummary extends StrongOrTypedStrongSummary {
 			avoidCollisionsWhenAssigningSummaryNodes(conn);
 			avoidCollisionsTime += System.currentTimeMillis() - avoidCollisionsTimeStart;
 		}
-		String getUntypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p <> " + typeConstantCode); 
+		String getUntypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p <> " + typeConstantCode);
 		try {
 			try (Statement getUntypedTriples = conn.createStatement()) {
 				getUntypedTriples.setFetchSize(10000);
 				try (ResultSet rs = getUntypedTriples.executeQuery(getUntypedTriplesString)) {
 					while (rs.next()) {
 						Triple t = new Triple(rs.getInt(1), rs.getInt(2), rs.getInt(3));
-						updateCliquesOutOf(t);
-						triplesSummarizedSoFar++;
-						dataTriplesSummarizedSoFar++;
-						//this.drawSummaryAndGraph(conn, "after-" + triplesSummarizedSoFar + "-" + t.s + "-" + t.p + "-" + t.o);
+						if ((t.p == RDF2SQLEncoding.getSubClassCode())
+						|| (t.p == RDF2SQLEncoding.getSubPropertyCode())
+						|| (t.p == RDF2SQLEncoding.getDomainCode())
+						|| (t.p == RDF2SQLEncoding.getRangeCode())) {
+							//addSummaryEdge(t.s, t.p, t.o);
+							edgesWithProv.addTriple(t.s, t.p, t.o);
+							rep.put(t.s, t.s);
+							rep.put(t.o, t.o);
+						}
+						else {
+							handleDataTriple2P(t);
+						}
 					}
 				}
 			}
@@ -66,10 +90,57 @@ public class TwoPassStrongSummary extends StrongOrTypedStrongSummary {
 		catch (SQLException e) {
 			throw new IllegalStateException("Postgres error encountered while summarizing data triples " + e.toString());
 		}
+
+		// second pass
+		getUntypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p <> " + typeConstantCode);
+		try {
+			try (Statement getUntypedTriples = conn.createStatement()) {
+				getUntypedTriples.setFetchSize(10000);
+				try (ResultSet rs = getUntypedTriples.executeQuery(getUntypedTriplesString)) {
+					while (rs.next()) {
+						Triple t = new Triple(rs.getInt(1), rs.getInt(2), rs.getInt(3));
+						if ((t.p != RDF2SQLEncoding.getSubClassCode())
+						&& (t.p != RDF2SQLEncoding.getSubPropertyCode())
+						&& (t.p != RDF2SQLEncoding.getDomainCode())
+						&& (t.p != RDF2SQLEncoding.getRangeCode())) {
+							Long sourceCliqueS;
+							Long targetCliqueS;
+							Long sourceCliqueO;
+							Long targetCliqueO;
+							if (sn.contains(t.s)) {
+								rep.put(t.s, t.s);
+							}
+							else {
+								sourceCliqueS = n2sc.get(t.s) != null ? n2sc.get(t.s) : getEmptySourceCliqueID();
+								targetCliqueS = n2tc.get(t.s) != null ? n2tc.get(t.s) : getEmptyTargetCliqueID();
+								rep.put(t.s, getOrCreateSummaryNode(sourceCliqueS, targetCliqueS));
+							}
+							if (sn.contains(t.o)) {
+								rep.put(t.o, t.o);
+							}
+							else {
+								sourceCliqueO = n2sc.get(t.o) != null ? n2sc.get(t.o) : getEmptySourceCliqueID();
+								targetCliqueO = n2tc.get(t.o) != null ? n2tc.get(t.o) : getEmptyTargetCliqueID();
+								rep.put(t.o, getOrCreateSummaryNode(sourceCliqueO, targetCliqueO));
+							}
+							edgesWithProv.addTriple(rep.get(t.s), t.p, rep.get(t.o));
+						}
+						triplesSummarizedSoFar++;
+						dataTriplesSummarizedSoFar++;
+						if (checkConsistency) {
+							consistencyChecks();
+						}
+						//drawSummaryAndGraph(conn, "after-" + triplesSummarizedSoFar + "-" + t.s + "-" + t.p + "-" + t.o);
+					}
+				}
+			}
+		}
+		catch (SQLException e) {
+			throw new IllegalStateException("Postgres error encountered while summarizing data triples " + e.toString());
+		}
+
 		dataTriplesSummarizationTime = System.currentTimeMillis() - start - avoidCollisionsTime;
 		LOGGER.info("Summarized " + dataTriplesSummarizedSoFar + " data triples in " + dataTriplesSummarizationTime + " ms");
-
-		// TODO: second pass here
 
 		start = System.currentTimeMillis();
 		String getTypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p = " + typeConstantCode);
@@ -82,7 +153,10 @@ public class TwoPassStrongSummary extends StrongOrTypedStrongSummary {
 						this.handleTypeTripleAfterData(t);
 						triplesSummarizedSoFar++;
 						typeTriplesSummarizedSoFar++;
-						//this.drawSummaryAndGraph(conn, "after-" + triplesSummarizedSoFar + "-" + t.s + "-" + t.p + "-" + t.o);
+						if (checkConsistency) {
+							consistencyChecks();
+						}
+						//drawSummaryAndGraph(conn, "after-" + triplesSummarizedSoFar + "-" + t.s + "-" + t.p + "-" + t.o);
 					}
 				}
 			}
@@ -97,7 +171,134 @@ public class TwoPassStrongSummary extends StrongOrTypedStrongSummary {
 		LOGGER.info("Summarized " + triplesSummarizedSoFar + " overall triples in " + allTriplesSummarizationTime + " ms");
 	}
 
-	private void updateCliquesOutOf(Triple t) {
+	public void handleDataTriple2P(Triple t) {
+		Long sourceCliqueS = n2sc.get(t.s);
+		//Long targetCliqueS = n2tc.get(t.s);
+		//Long sourceCliqueO = n2sc.get(t.o);
+		Long targetCliqueO = n2tc.get(t.o);
+
+		Long sourceCliqueP = p2sc.get(t.p);
+		Long targetCliqueP = p2tc.get(t.p);
+
+		boolean sSchemaNode = sn.contains(t.s);
+		boolean oSchemaNode = sn.contains(t.o);
+
+		Long newSourceClique;
+		Long newTargetClique;
+		if (!sSchemaNode) {
+			if (sourceCliqueP == null && sourceCliqueS == null) {
+				sourceCliqueP = makeAndAddNewSourceClique(t.p);
+				p2sc.put(t.p, sourceCliqueP);
+				n2sc.put(t.s, sourceCliqueP);
+			}
+			else if (sourceCliqueP != null && sourceCliqueS == null) {
+				n2sc.put(t.s, sourceCliqueP);
+			}
+			else if (sourceCliqueP == null && sourceCliqueS != null) {
+				sourceCliqueP = makeAndAddNewSourceClique(t.p);
+				newSourceClique = cliqueFusionResult(sourceCliqueP, sourceCliqueS, SOURCE);
+				fuseCliqueInto(sourceCliqueS, newSourceClique, SOURCE);
+				fuseCliqueInto(sourceCliqueP, newSourceClique, SOURCE);
+				computeAndApplyCliqueReplacements(sourceCliqueS, sourceCliqueP, newSourceClique, SOURCE);
+				p2sc.put(t.p, newSourceClique);
+				n2sc.put(t.s, newSourceClique);
+			}
+			else { // both not-null
+				newSourceClique = cliqueFusionResult(sourceCliqueP, sourceCliqueS, SOURCE);
+				fuseCliqueInto(sourceCliqueS, newSourceClique, SOURCE);
+				fuseCliqueInto(sourceCliqueP, newSourceClique, SOURCE);
+				computeAndApplyCliqueReplacements(sourceCliqueS, sourceCliqueP, newSourceClique, SOURCE);
+				p2sc.put(t.p, newSourceClique);
+				n2sc.put(t.s, newSourceClique);
+			}
+		}
+		if (!oSchemaNode) {
+			if (targetCliqueP == null && targetCliqueO == null) {
+				targetCliqueP = makeAndAddNewTargetClique(t.p);
+				p2tc.put(t.p, targetCliqueP);
+				n2tc.put(t.o, targetCliqueP);
+			}
+			else if (targetCliqueP != null && targetCliqueO == null) {
+				n2tc.put(t.o, targetCliqueP);
+			}
+			else if (targetCliqueP == null && targetCliqueO != null) {
+				targetCliqueP = makeAndAddNewTargetClique(t.p);
+				newTargetClique = cliqueFusionResult(targetCliqueP, targetCliqueO, TARGET);
+				fuseCliqueInto(targetCliqueO, newTargetClique, TARGET);
+				fuseCliqueInto(targetCliqueP, newTargetClique, TARGET);
+				computeAndApplyCliqueReplacements(targetCliqueO, targetCliqueP, newTargetClique, TARGET);
+				p2tc.put(t.p, newTargetClique);
+				n2tc.put(t.o, newTargetClique);
+			}
+			else { // both not-null
+				newTargetClique = cliqueFusionResult(targetCliqueP, targetCliqueO, TARGET);
+				fuseCliqueInto(targetCliqueO, newTargetClique, TARGET);
+				fuseCliqueInto(targetCliqueP, newTargetClique, TARGET);
+				computeAndApplyCliqueReplacements(targetCliqueO, targetCliqueP, newTargetClique, TARGET);
+				p2tc.put(t.p, newTargetClique);
+				n2tc.put(t.o, newTargetClique);
+			}
+		}
+	}
+
+	/** This implementation should be shared by Weak and Strong
+	 *
+	 * @param t
+	 */
+	@Override
+	protected void handleTypeTripleAfterData(Triple t) {
+		//LOGGER.debug("\nType triple " + t.toString());
+		Long repS = rep.get(t.s);
+		if (repS != null) {
+			//LOGGER.debug("Source " + t.s + " already represented");
+			//addSummaryEdge(repS, t.p, t.o);
+			edgesWithProv.addTriple(repS, t.p, t.o);
+		}
+		else {
+			//LOGGER.debug("Source " + t.s + " has no data properties");
+			if (!typeOnlyNodeAlreadySeen) {
+				//LOGGER.debug("Creating representative for type-only node"); 
+				this.typeOnlyNodeID = getNextSummaryNode();
+				typeOnlyNodeAlreadySeen = true;
+			}
+			//addSummaryEdge(typeOnlyNodeID, t.p, t.o);
+			edgesWithProv.addTriple(typeOnlyNodeID, t.p, t.o);
+			rep.put(t.s, typeOnlyNodeID);
+		}
+		rep.put(t.o, t.o);
+	}
+
+	protected void computeAndApplyCliqueReplacements(Long clique1, Long clique2, Long cliqueNew, char param) {
+		TreeSet<Long> toBeReplaced = new TreeSet<>();
+		if (param == SOURCE){
+			if (!clique1.equals(this.getEmptySourceCliqueID()) && (!clique1.equals(cliqueNew))){
+				//LOGGER.debug("CLIQUE REPLACE IN UNTYPED, P2, N2 SOURCE: we'll replace " + clique1 + " with " + cliqueNew);
+				toBeReplaced.add(clique1); 
+			}
+			if (!clique2.equals(this.getEmptySourceCliqueID()) && (!clique2.equals(cliqueNew))){
+				//LOGGER.debug("CLIQUE REPLACE IN UNTYPED, P2, N2 SOURCE: we'll replace " + clique2 + " with " + cliqueNew);
+				toBeReplaced.add(clique2); 
+			}
+		}
+		else if (param == TARGET){
+			if (!clique1.equals(this.getEmptyTargetCliqueID()) && (!clique1.equals(cliqueNew))){
+				//LOGGER.debug("CLIQUE REPLACE IN UNTYPED, P2, N2 TARGET: we'll replace " + clique1 +  " with " + cliqueNew);
+				//LOGGER.debug("CLIQUE REPLACE IN UNTYPED, P2, N2 TARGET: that is " + this.showCliqueAsString(tc.get(clique1)) + " with " + this.showCliqueAsString(tc.get(clique2))); 
+				toBeReplaced.add(clique1);
+			}
+			if (!clique2.equals(this.getEmptyTargetCliqueID()) && (!clique2.equals(cliqueNew))){
+				//LOGGER.debug("CLIQUE REPLACE IN UNTYPED, P2, N2 TARGET: we'll replace " + clique2 + " with " + cliqueNew);
+				toBeReplaced.add(clique2);
+			}
+		}
+		// apply: 
+		for (Long oldClique: toBeReplaced) {
+			replaceCliqueInP2(oldClique, cliqueNew, param);
+			replaceCliqueInN2(oldClique, cliqueNew, param);
+		}
+	}
+
+	/*private void updateCliquesOutOf(Triple t) {
 		updateSourceCliques(t);
 		updateTargetCliques(t);
 	}
@@ -169,5 +370,5 @@ public class TwoPassStrongSummary extends StrongOrTypedStrongSummary {
 			Long emptyTC = this.getEmptyTargetCliqueID();
 			n2tc.put(t.o, emptyTC); 
 		}
-	}
+	}*/
 }
