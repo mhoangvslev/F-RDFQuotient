@@ -9,6 +9,7 @@ import fr.inria.cedar.quotientSummary.bisim.OneBisimSummary;
 import fr.inria.cedar.quotientSummary.strong.StrongSummary;
 import fr.inria.cedar.quotientSummary.strong.TwoPassStrongSummary;
 import fr.inria.cedar.quotientSummary.strong.TypedStrongSummary;
+import fr.inria.cedar.quotientSummary.weak.TwoPassWeakSummary;
 import fr.inria.cedar.quotientSummary.weak.TypedWeakSummary;
 import fr.inria.cedar.quotientSummary.weak.WeakSummary;
 import java.io.File;
@@ -144,6 +145,8 @@ public class Builder {
 		switch(summarizationTechnique) {
 			case "weak":
 				return "w_";
+			case "2pweak":
+				return "2pw_";
 			case "strong":
 				return "s_";
 			case "2pstrong":
@@ -322,6 +325,8 @@ public class Builder {
 		switch (lowerCaseSummaryType) {
 			case "weak":
 				return new WeakSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
+			case "2pweak":
+				return new TwoPassWeakSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 			case "strong":
 				return new StrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 			case "2pstrong":
