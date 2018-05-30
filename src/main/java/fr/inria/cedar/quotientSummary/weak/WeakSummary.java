@@ -95,7 +95,6 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 						this.handleTypeTripleAfterData(t);
 						triplesSummarizedSoFar++;
 						typeTriplesSummarizedSoFar++;
-						rep.put(t.o, t.o);
 						if (checkConsistency) {
 							consistencyChecks();
 						}
@@ -277,8 +276,8 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 			}
 			edgesWithProv.addTriple(typeOnlyNodeID, t.p, t.o);
 			rep.put(t.s, typeOnlyNodeID);
-			rep.put(t.o, t.o);
 		}
+		rep.put(t.o, t.o);
 	}
 
 	// -->

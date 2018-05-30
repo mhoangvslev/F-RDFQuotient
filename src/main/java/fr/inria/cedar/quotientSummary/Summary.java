@@ -90,8 +90,8 @@ public class Summary {
 		rep = new Long2Long();
 		sn = new HashSet<>();
 		edgesWithProv = new EdgesWithProvenanceCounts();
-		summaryNodeStatistics = new HashMap<>();
-		summaryEdgeStatistics = new HashMap<>();
+		//summaryNodeStatistics = new HashMap<>();
+		//summaryEdgeStatistics = new HashMap<>();
 		typeOnlyNodeAlreadySeen = false;
 		properties = new Properties();
 		try {

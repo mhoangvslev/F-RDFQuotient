@@ -78,7 +78,7 @@ public class WeakOrTypedWeakSummary extends Summary {
 	// -->
 	// Common handlers
 	// -->
-	
+
 	protected void handleDataTriple_RS_RP_RO(Triple t) {
 		// everything has been represented. In this case we must:
 		// - fuse the subject of p with the representative of s (keep the smallest)

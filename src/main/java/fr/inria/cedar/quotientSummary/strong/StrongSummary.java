@@ -66,8 +66,6 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 						else
 							handleDataTriple(t);
 						triplesSummarizedSoFar++;
-						if(triplesSummarizedSoFar == 7)
-							LOGGER.debug("STOP");
 						dataTriplesSummarizedSoFar++;
 						if (checkConsistency) {
 							consistencyChecks();
@@ -93,10 +91,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 						Triple t = new Triple(rs.getInt(1), rs.getInt(2), rs.getInt(3));
 						this.handleTypeTripleAfterData(t);
 						triplesSummarizedSoFar++;
-						if(triplesSummarizedSoFar == 7)
-							LOGGER.debug("STOP");
 						typeTriplesSummarizedSoFar++;
-						rep.put(t.o, t.o);
 						if (checkConsistency) {
 							consistencyChecks();
 						}
@@ -288,8 +283,8 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 			}
 			edgesWithProv.addTriple(typeOnlyNodeID, t.p, t.o);
 			rep.put(t.s, typeOnlyNodeID);
-			rep.put(t.o, t.o);
 		}
+		rep.put(t.o, t.o);
 	}
 
 	// -->

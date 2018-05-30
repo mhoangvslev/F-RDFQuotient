@@ -185,7 +185,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		}
 		//display(); 
 	}
-	
+
 	/**
 	 * This method adds the type triples in the summary, based on the structures previously filled in while traversing those triples.
 	 * It is called only once and will output all the type triples of the summary.
@@ -324,7 +324,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 
 		Long repO = rep.get(t.o);
 		Long repS = rep.get(t.s);
-		
+
 		boolean pRepresented = (sourceCliqueP != null);
 		boolean sRepresented = (repS != null);
 		boolean sTyped = (classSetS != null);

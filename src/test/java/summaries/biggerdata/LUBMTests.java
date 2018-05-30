@@ -76,7 +76,7 @@ public class LUBMTests {
 	}
 
 	private String expectedOutput(int i, String summaryTypeShort, String summarizationTechnique) {
-		return "src/test/resources/LUBM-" + i + "M/LUBM-" + i + "M_" + summaryTypeShort + "_" + summarizationTechnique + "-reference.nt";
+		return "src/test/resources/LUBM-" + i + "M/LUBM-" + i + "M_" + summaryTypeShort + "_" + summarizationTechnique + ".nt";
 	}
 
 	@Test

@@ -78,7 +78,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		triplesBySubject = new HashMap<>();
 		triplesByObject = new HashMap<>();
 	}
-	
+
 	// -->
 	// Common handlers
 	// -->
@@ -572,11 +572,6 @@ public class StrongOrTypedStrongSummary extends Summary {
 	// of P and the empty target clique and the object should be represented
 	// based on the empty source clique and the target source clique of P
 	protected void handleDataTriple_US_RP_UO(Triple t, Long sourceCliqueS, Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
-		if (p2sc.getInverse(sourceCliqueP).size() > 1 && p2tc.getInverse(targetCliqueP).size() > 1) {
-			sourceCliqueP = makeAndAddNewSourceClique(t.p);
-			targetCliqueP = makeAndAddNewTargetClique(t.p);
-		}
-
 		Long newSourceCliqueS = sourceCliqueP;
 		Long newTargetCliqueO = targetCliqueP;
 

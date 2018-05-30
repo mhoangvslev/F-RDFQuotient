@@ -76,7 +76,7 @@ public class BSBMTests {
 	}
 
 	private String expectedOutput(int i, String summaryTypeShort, String summarizationTechnique) {
-		return "src/test/resources/BSBM-" + i + "M/BSBM-" + i + "M_" + summaryTypeShort + "_" + summarizationTechnique + "-reference.nt";
+		return "src/test/resources/BSBM-" + i + "M/BSBM-" + i + "M_" + summaryTypeShort + "_" + summarizationTechnique + ".nt";
 	}
 
 	@Test

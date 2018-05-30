@@ -718,7 +718,7 @@ public class WeakSummaryTests {
 			throw new IllegalStateException("Unable to open .nt files in weak test 12 " + e.toString());
 		}
 	}
-	
+
 	/**
 	 * Test with custom config file
 	 */
