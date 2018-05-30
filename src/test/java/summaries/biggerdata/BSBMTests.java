@@ -358,4 +358,11 @@ public class BSBMTests {
 		String testOutput = summarize(40, 1, "onefb", "1fb", "noSaturation", Boolean.FALSE);
 		assertTrue("Different summary BSBM test 40", testOutput.equals(expectedOutput));
 	}
+
+	@Test
+	public void BSBMTest41() {
+		String expectedOutput = expectedOutput(10, "1fb", "noSaturation");
+		String testOutput = summarize(41, 10, "onefb", "1fb", "noSaturation", Boolean.FALSE);
+		assertTrue("Different summary BSBM test 41", testOutput.equals(expectedOutput));
+	}
 }

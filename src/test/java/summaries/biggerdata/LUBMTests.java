@@ -190,4 +190,11 @@ public class LUBMTests {
 		String testOutput = summarize(16, 1, "onefb", "1fb", "noSaturation", Boolean.FALSE);
 		assertTrue("Different summary LUBM test 16", testOutput.equals(expectedOutput));
 	}
+
+	@Test
+	public void LUBMTest17() {
+		String expectedOutput = expectedOutput(10, "1fb", "noSaturation");
+		String testOutput = summarize(17, 10, "onefb", "1fb", "noSaturation", Boolean.FALSE);
+		assertTrue("Different summary LUBM test 17", testOutput.equals(expectedOutput));
+	}
 }
