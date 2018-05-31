@@ -8,8 +8,11 @@ import fr.inria.cedar.quotientSummary.Summary;
 import fr.inria.cedar.quotientSummary.bisim.OneBisimSummary;
 import fr.inria.cedar.quotientSummary.strong.StrongSummary;
 import fr.inria.cedar.quotientSummary.strong.TwoPassStrongSummary;
+import fr.inria.cedar.quotientSummary.strong.TwoPassTypedStrongSummary;
 import fr.inria.cedar.quotientSummary.strong.TypedStrongSummary;
+import fr.inria.cedar.quotientSummary.weak.TwoPassTypedWeakSummary;
 import fr.inria.cedar.quotientSummary.weak.TwoPassWeakSummary;
+import fr.inria.cedar.quotientSummary.weak.TwoPassWeakSummaryWithUnionFind;
 import fr.inria.cedar.quotientSummary.weak.TypedWeakSummary;
 import fr.inria.cedar.quotientSummary.weak.WeakSummary;
 import java.io.File;
@@ -147,14 +150,20 @@ public class Builder {
 				return "w_";
 			case "2pweak":
 				return "2pw_";
+			case "2pweakunionfind":
+				return "2pwuf_";
 			case "strong":
 				return "s_";
 			case "2pstrong":
 				return "2ps_";
 			case "typedweak":
 				return "tw_";
+			case "2ptypedweak":
+				return "2ptw_";
 			case "typedstrong":
 				return "ts_";
+			case "2ptypedstrong":
+				return "2pts_";
 			case "onefb":
 				return "1fb_"; 
 		}
@@ -327,14 +336,20 @@ public class Builder {
 				return new WeakSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 			case "2pweak":
 				return new TwoPassWeakSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
+			case "2pweakunionfind":
+				return new TwoPassWeakSummaryWithUnionFind(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 			case "strong":
 				return new StrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 			case "2pstrong":
 				return new TwoPassStrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 			case "typedweak":
 				return new TypedWeakSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
+			case "2ptypedweak":
+				return new TwoPassTypedWeakSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 			case "typedstrong":
 				return new TypedStrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
+			case "2ptypedstrong":
+				return new TwoPassTypedStrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 			case "onefb":
 				return new OneBisimSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName); 
 		}

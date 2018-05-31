@@ -218,4 +218,67 @@ public class LUBMTests {
 		String testOutput = summarize(20, 100, "2pweak", "2pw", "noSaturation", Boolean.FALSE);
 		assertTrue("Different summary LUBM test 20", testOutput.equals(expectedOutput));
 	}
+
+	@Test
+	public void LUBMTest21() {
+		String expectedOutput = expectedOutput(1, "2ptw", "noSaturation");
+		String testOutput = summarize(21, 1, "2ptypedweak", "2ptw", "noSaturation", Boolean.FALSE);
+		assertTrue("Different summary LUBM test 21", testOutput.equals(expectedOutput));
+	}
+
+	@Test
+	public void LUBMTest22() {
+		String expectedOutput = expectedOutput(10, "2ptw", "noSaturation");
+		String testOutput = summarize(22, 10, "2ptypedweak", "2ptw", "noSaturation", Boolean.FALSE);
+		assertTrue("Different summary LUBM test 22", testOutput.equals(expectedOutput));
+	}
+
+	@Test
+	public void LUBMTest23() {
+		String expectedOutput = expectedOutput(100, "2ptw", "noSaturation");
+		String testOutput = summarize(23, 100, "2ptypedweak", "2ptw", "noSaturation", Boolean.FALSE);
+		assertTrue("Different summary LUBM test 23", testOutput.equals(expectedOutput));
+	}
+
+	@Test
+	public void LUBMTest24() {
+		String expectedOutput = expectedOutput(1, "2pts", "noSaturation");
+		String testOutput = summarize(24, 1, "2ptypedstrong", "2pts", "noSaturation", Boolean.FALSE);
+		assertTrue("Different summary LUBM test 24", testOutput.equals(expectedOutput));
+	}
+
+	@Test
+	public void LUBMTest25() {
+		String expectedOutput = expectedOutput(10, "2pts", "noSaturation");
+		String testOutput = summarize(25, 10, "2ptypedstrong", "2pts", "noSaturation", Boolean.FALSE);
+		assertTrue("Different summary LUBM test 25", testOutput.equals(expectedOutput));
+	}
+
+	@Test
+	public void LUBMTest26() {
+		String expectedOutput = expectedOutput(100, "2pts", "noSaturation");
+		String testOutput = summarize(26, 100, "2ptypedstrong", "2pts", "noSaturation", Boolean.FALSE);
+		assertTrue("Different summary LUBM test 26", testOutput.equals(expectedOutput));
+	}
+
+	@Test
+	public void LUBMTest27() {
+		String expectedOutput = expectedOutput(1, "2pwuf", "noSaturation");
+		String testOutput = summarize(27, 1, "2pweakunionfind", "2pwuf", "noSaturation", Boolean.FALSE);
+		assertTrue("Different summary LUBM test 27", testOutput.equals(expectedOutput));
+	}
+
+	@Test
+	public void LUBMTest28() {
+		String expectedOutput = expectedOutput(10, "2pwuf", "noSaturation");
+		String testOutput = summarize(28, 10, "2pweakunionfind", "2pwuf", "noSaturation", Boolean.FALSE);
+		assertTrue("Different summary LUBM test 28", testOutput.equals(expectedOutput));
+	}
+
+	@Test
+	public void LUBMTest29() {
+		String expectedOutput = expectedOutput(100, "2pwuf", "noSaturation");
+		String testOutput = summarize(29, 100, "2pweakunionfind", "2pwuf", "noSaturation", Boolean.FALSE);
+		assertTrue("Different summary LUBM test 29", testOutput.equals(expectedOutput));
+	}
 }
