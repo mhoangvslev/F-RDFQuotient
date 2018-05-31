@@ -2,7 +2,6 @@ package fr.inria.cedar.quotientSummary.datastructures;
 
 import java.util.HashMap;
 import java.util.Objects;
-import javafx.util.Pair;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
@@ -12,7 +11,7 @@ public class EdgeTransferSpecification {
 	private static final char SOURCE = 0;
 	private static final char TARGET = 1;
 
-	private HashMap<Long, HashMap<Long, HashMap<Long, Pair<Long, Character>>>> edgesToTransfer;
+	private HashMap<Long, HashMap<Long, HashMap<Long, Long>>> edgesToTransfer;
 
 	public EdgeTransferSpecification() {
 		LOGGER.setLevel(Level.INFO);
@@ -20,7 +19,7 @@ public class EdgeTransferSpecification {
 	}
 
 	// Examines the data node in order to determine which edges in the summary are going to be transferred
-	public static HashMap<Long, HashMap<Long, HashMap<Long, Pair<Long, Character>>>> determineEdgesToTransfer(
+	public static HashMap<Long, HashMap<Long, HashMap<Long, Long>>> determineEdgesToTransfer(
 		Long2Long rep,
 		HashMap<Long, Long2LongSet> triplesBySubject,
 		HashMap<Long, Long2LongSet> triplesByObject,
@@ -30,7 +29,7 @@ public class EdgeTransferSpecification {
 	) {
 		// CAUTION: uses old rep
 
-		HashMap<Long, HashMap<Long, HashMap<Long, Pair<Long, Character>>>> edgesToTransfer = new HashMap<>();
+		HashMap<Long, HashMap<Long, HashMap<Long, Long>>> edgesToTransfer = new HashMap<>();
 
 		if (param == SOURCE) { // distribute the edges outgoing from dataNode
 			if (triplesBySubject.get(dataNode) != null) {
@@ -45,10 +44,10 @@ public class EdgeTransferSpecification {
 								edgesToTransfer.get(summaryNode).put(p, new HashMap<>());
 							}
 							if (edgesToTransfer.get(summaryNode).get(p).get(repO) == null) {
-								edgesToTransfer.get(summaryNode).get(p).put(repO, new Pair(1L, SOURCE));
+								edgesToTransfer.get(summaryNode).get(p).put(repO, 1L);
 							}
 							else {
-								edgesToTransfer.get(summaryNode).get(p).put(repO, new Pair(edgesToTransfer.get(summaryNode).get(p).get(repO).getKey() + 1L, SOURCE));
+								edgesToTransfer.get(summaryNode).get(p).put(repO, edgesToTransfer.get(summaryNode).get(p).get(repO) + 1L);
 							}
 						}
 					}
@@ -68,10 +67,10 @@ public class EdgeTransferSpecification {
 								edgesToTransfer.get(repS).put(p, new HashMap<>());
 							}
 							if (edgesToTransfer.get(repS).get(p).get(summaryNode) == null) {
-								edgesToTransfer.get(repS).get(p).put(summaryNode, new Pair(1L, TARGET));
+								edgesToTransfer.get(repS).get(p).put(summaryNode, 1L);
 							}
 							else {
-								edgesToTransfer.get(repS).get(p).put(summaryNode, new Pair(edgesToTransfer.get(repS).get(p).get(summaryNode).getKey() + 1L, TARGET));
+								edgesToTransfer.get(repS).get(p).put(summaryNode, edgesToTransfer.get(repS).get(p).get(summaryNode) + 1L);
 							}
 						}
 					}
@@ -82,7 +81,7 @@ public class EdgeTransferSpecification {
 		return edgesToTransfer;
 	}
 
-	public void addAll(HashMap<Long, HashMap<Long, HashMap<Long, Pair<Long, Character>>>> edgesToTransferToAdd) {
+	public void addAll(HashMap<Long, HashMap<Long, HashMap<Long, Long>>> edgesToTransferToAdd) {
 		if (edgesToTransfer.isEmpty()) {
 			edgesToTransfer = edgesToTransferToAdd;
 		}
@@ -90,8 +89,7 @@ public class EdgeTransferSpecification {
 			for (Long s: edgesToTransferToAdd.keySet()) {
 				for (Long p: edgesToTransferToAdd.get(s).keySet()) {
 					for (Long o: edgesToTransferToAdd.get(s).get(p).keySet()) {
-						Long counter = edgesToTransferToAdd.get(s).get(p).get(o).getKey();
-						Character param = edgesToTransferToAdd.get(s).get(p).get(o).getValue();
+						Long counter = edgesToTransferToAdd.get(s).get(p).get(o);
 						if (edgesToTransfer.get(s) == null) {
 							edgesToTransfer.put(s, new HashMap<>());
 						}
@@ -99,11 +97,11 @@ public class EdgeTransferSpecification {
 							edgesToTransfer.get(s).put(p, new HashMap<>());
 						}
 						if (edgesToTransfer.get(s).get(p).get(o) == null) {
-							edgesToTransfer.get(s).get(p).put(o, new Pair(counter, param));
+							edgesToTransfer.get(s).get(p).put(o, counter);
 						}
 						else {
 							// reconcile
-							if (!Objects.equals(edgesToTransfer.get(s).get(p).get(o).getKey(), counter)) {
+							if (!Objects.equals(edgesToTransfer.get(s).get(p).get(o), counter)) {
 								throw new IllegalStateException("Impossible case, counters cannot differ");
 							}
 							//else {
@@ -120,8 +118,7 @@ public class EdgeTransferSpecification {
 		for (Long s: edgesToTransfer.keySet()) {
 			for (Long p: edgesToTransfer.get(s).keySet()) {
 				for (Long o: edgesToTransfer.get(s).get(p).keySet()) {
-					Long counter = edgesToTransfer.get(s).get(p).get(o).getKey();
-					Character param = edgesToTransfer.get(s).get(p).get(o).getValue();
+					Long counter = edgesToTransfer.get(s).get(p).get(o);
 					Long summaryEdgeCounter = edgesWithProv.getCounter(s, p, o);
 					if (counter > summaryEdgeCounter) {
 						throw new IllegalStateException("The value which is subtracted cannot be greater then summary counter for this edge");

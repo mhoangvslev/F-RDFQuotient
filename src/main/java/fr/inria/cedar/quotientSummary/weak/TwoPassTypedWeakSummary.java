@@ -148,14 +148,28 @@ public class TwoPassTypedWeakSummary extends WeakOrTypedWeakSummary {
 						&& (t.p != RDF2SQLEncoding.getRangeCode())) {
 							Long repS = ps.get(t.p);
 							Long repO = pt.get(t.p);
-							if (sn.contains(t.s)) {
-								repS = t.s;
+							Long classSetS = n2cs.get(t.s);
+							Long classSetO = n2cs.get(t.o);
+							boolean sTyped = (classSetS != null);
+							boolean oTyped = (classSetO != null);
+							if (!sTyped) {
+								if (sn.contains(t.s)) {
+									repS = t.s;
+								}
+								rep.put(t.s, repS);
 							}
-							if (sn.contains(t.o)) {
-								repO = t.o;
+							else {
+								repS = rep.get(t.s);
 							}
-							rep.put(t.s, repS);
-							rep.put(t.o, repO);
+							if (!oTyped) {
+								if (sn.contains(t.o)) {
+									repO = t.o;
+								}
+								rep.put(t.o, repO);
+							}
+							else {
+								repO = rep.get(t.o);
+							}
 							edgesWithProv.addTriple(repS, t.p, repO);
 						}
 						triplesSummarizedSoFar++;
@@ -250,13 +264,18 @@ public class TwoPassTypedWeakSummary extends WeakOrTypedWeakSummary {
 	}
 
 	public void handleDataTriple2P(Triple t) {
-		if (!sn.contains(t.s)) {
+		Long classSetS = n2cs.get(t.s);
+		Long classSetO = n2cs.get(t.o);
+		boolean sTyped = (classSetS != null);
+		boolean oTyped = (classSetO != null);
+
+		if (!sn.contains(t.s) && !sTyped) {
 			if (n2o.get(t.s) == null) {
 				n2o.put(t.s, new TreeSet<>());
 			}
 			n2o.get(t.s).add(t.p);
 		}
-		if (!sn.contains(t.o)) {
+		if (!sn.contains(t.o) && !oTyped) {
 			if (n2i.get(t.o) == null) {
 				n2i.put(t.o, new TreeSet<>());
 			}

@@ -33,6 +33,10 @@ public class TwoPassTypedStrongSummary extends StrongOrTypedStrongSummary {
 		this.summaryTablePrefix = TWO_PASS_TYPED_STRONG_SUMMARY_PREFIX;
 		this.isTypeFirst = true;
 		//this.edges = new HashMap<>();
+		cs = new Long2LongSet();
+		n2sc = new Long2Long();
+		rep = new Long2Long();
+		n2cs = new Long2Long();
 		n2c = new Long2LongSet();
 		cs2csID = new HashMap<>();
 		minCliqueID = -1;
@@ -151,21 +155,29 @@ public class TwoPassTypedStrongSummary extends StrongOrTypedStrongSummary {
 							Long targetCliqueS;
 							Long sourceCliqueO;
 							Long targetCliqueO;
-							if (sn.contains(t.s)) {
-								rep.put(t.s, t.s);
+							Long classSetS = n2cs.get(t.s);
+							Long classSetO = n2cs.get(t.o);
+							boolean sTyped = (classSetS != null);
+							boolean oTyped = (classSetO != null);
+							if (!sTyped) {
+								if (sn.contains(t.s)) {
+									rep.put(t.s, t.s);
+								}
+								else {
+									sourceCliqueS = n2sc.get(t.s) != null ? n2sc.get(t.s) : getEmptySourceCliqueID();
+									targetCliqueS = n2tc.get(t.s) != null ? n2tc.get(t.s) : getEmptyTargetCliqueID();
+									rep.put(t.s, getOrCreateSummaryNode(sourceCliqueS, targetCliqueS));
+								}
 							}
-							else {
-								sourceCliqueS = n2sc.get(t.s) != null ? n2sc.get(t.s) : getEmptySourceCliqueID();
-								targetCliqueS = n2tc.get(t.s) != null ? n2tc.get(t.s) : getEmptyTargetCliqueID();
-								rep.put(t.s, getOrCreateSummaryNode(sourceCliqueS, targetCliqueS));
-							}
-							if (sn.contains(t.o)) {
-								rep.put(t.o, t.o);
-							}
-							else {
-								sourceCliqueO = n2sc.get(t.o) != null ? n2sc.get(t.o) : getEmptySourceCliqueID();
-								targetCliqueO = n2tc.get(t.o) != null ? n2tc.get(t.o) : getEmptyTargetCliqueID();
-								rep.put(t.o, getOrCreateSummaryNode(sourceCliqueO, targetCliqueO));
+							if(!oTyped) {
+								if (sn.contains(t.o)) {
+									rep.put(t.o, t.o);
+								}
+								else {
+									sourceCliqueO = n2sc.get(t.o) != null ? n2sc.get(t.o) : getEmptySourceCliqueID();
+									targetCliqueO = n2tc.get(t.o) != null ? n2tc.get(t.o) : getEmptyTargetCliqueID();
+									rep.put(t.o, getOrCreateSummaryNode(sourceCliqueO, targetCliqueO));
+								}
 							}
 							edgesWithProv.addTriple(rep.get(t.s), t.p, rep.get(t.o));
 						}
@@ -250,6 +262,11 @@ public class TwoPassTypedStrongSummary extends StrongOrTypedStrongSummary {
 	}
 
 	public void handleDataTriple2P(Triple t) {
+		Long classSetS = n2cs.get(t.s);
+		Long classSetO = n2cs.get(t.o);
+		boolean sTyped = (classSetS != null);
+		boolean oTyped = (classSetO != null);
+
 		Long sourceCliqueS = n2sc.get(t.s);
 		//Long targetCliqueS = n2tc.get(t.s);
 		//Long sourceCliqueO = n2sc.get(t.o);
@@ -263,7 +280,7 @@ public class TwoPassTypedStrongSummary extends StrongOrTypedStrongSummary {
 
 		Long newSourceClique;
 		Long newTargetClique;
-		if (!sSchemaNode) {
+		if (!sSchemaNode && !sTyped) {
 			if (sourceCliqueP == null && sourceCliqueS == null) {
 				sourceCliqueP = makeAndAddNewSourceClique(t.p);
 				p2sc.put(t.p, sourceCliqueP);
@@ -290,7 +307,7 @@ public class TwoPassTypedStrongSummary extends StrongOrTypedStrongSummary {
 				n2sc.put(t.s, newSourceClique);
 			}
 		}
-		if (!oSchemaNode) {
+		if (!oSchemaNode && !oTyped) {
 			if (targetCliqueP == null && targetCliqueO == null) {
 				targetCliqueP = makeAndAddNewTargetClique(t.p);
 				p2tc.put(t.p, targetCliqueP);
