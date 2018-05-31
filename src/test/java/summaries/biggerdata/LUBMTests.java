@@ -197,4 +197,25 @@ public class LUBMTests {
 		String testOutput = summarize(17, 10, "onefb", "1fb", "noSaturation", Boolean.FALSE);
 		assertTrue("Different summary LUBM test 17", testOutput.equals(expectedOutput));
 	}
+
+	@Test
+	public void LUBMTest18() {
+		String expectedOutput = expectedOutput(1, "2pw", "noSaturation");
+		String testOutput = summarize(18, 1, "2pweak", "2pw", "noSaturation", Boolean.FALSE);
+		assertTrue("Different summary LUBM test 18", testOutput.equals(expectedOutput));
+	}
+
+	@Test
+	public void LUBMTest19() {
+		String expectedOutput = expectedOutput(10, "2pw", "noSaturation");
+		String testOutput = summarize(19, 10, "2pweak", "2pw", "noSaturation", Boolean.FALSE);
+		assertTrue("Different summary LUBM test 19", testOutput.equals(expectedOutput));
+	}
+
+	@Test
+	public void LUBMTest20() {
+		String expectedOutput = expectedOutput(100, "2pw", "noSaturation");
+		String testOutput = summarize(20, 100, "2pweak", "2pw", "noSaturation", Boolean.FALSE);
+		assertTrue("Different summary LUBM test 20", testOutput.equals(expectedOutput));
+	}
 }
