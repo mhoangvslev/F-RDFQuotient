@@ -1,6 +1,0 @@
-<http://qs.org/tw11> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://qstest.org/class1> . 
-<http://qs.org/tw11> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://qstest.org/class3> . 
-<http://qs.org/tw13> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://qstest.org/class1> . 
-<http://qs.org/tw13> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://qstest.org/class2> . 
-<http://qs.org/tw13> <http://qstest.org/prop1> <http://qs.org/tw14> . 
-<http://qs.org/tw14> <http://qstest.org/prop2> <http://qs.org/tw11> . 

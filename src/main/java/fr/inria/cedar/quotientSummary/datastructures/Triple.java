@@ -1,40 +1,48 @@
 package fr.inria.cedar.quotientSummary.datastructures;
 
 import java.util.Objects;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 /**
  * Represents an integer-encoded triple
- * 
+ *
  * @author ioanamanolescu
  *
  */
 public class Triple {
-	public final long s; 
-	public final long p; 
+	private static final Logger LOGGER = Logger.getLogger(Triple.class.getName());
+
+	public final long s;
+	public final long p;
 	public final long o;
-	
-	public Triple(long s, long p, long o){
-		this.s = s; 
+
+	public Triple(long s, long p, long o) {
+		LOGGER.setLevel(Level.INFO);
+		this.s = s;
 		this.o = o;
 		this.p = p;
 	}
 
 	@Override
-	public String toString(){
-		return ("<" + s + " " + p + " " + o + ">"); 
+	public String toString() {
+		return ("<" + s + " " + p + " " + o + ">");
 	}
 
 	public void display() {
-		System.out.println(toString()); 
+		System.out.println(toString());
 	}
-	
+
 	@Override
-	public boolean equals(Object other){
-		Triple t2 = ((Triple)other);
-		if (s == t2.s && p == t2.p && this.o == t2.o){
-			return true; 
-		}
-		return false; 
+	public boolean equals(Object other) {
+		if (other == null)
+			return false;
+		if (other == this)
+			return true;
+		if (!(other instanceof Triple))
+			return false;
+		Triple t2 = ((Triple) other);
+		return (s == t2.s) && (p == t2.p) && (o == t2.o);
 	}
 
 	@Override
