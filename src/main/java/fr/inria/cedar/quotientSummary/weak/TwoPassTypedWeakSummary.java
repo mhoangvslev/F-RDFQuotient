@@ -199,13 +199,16 @@ public class TwoPassTypedWeakSummary extends WeakOrTypedWeakSummary {
 
 		TreeSet<Long> classSetOfThisNode = n2c.get(t.s); 
 		if (classSetOfThisNode == null){ // this is the first time we encounter the node: create a class set with exactly this type
-			Long newClassSetID = this.getNextSummaryNode(); 
 			classSetOfThisNode = new TreeSet<>();
 			classSetOfThisNode.add(t.o); 
+			Long thisNodeClassSetID = cs2csID.get(classSetOfThisNode);
+			if (thisNodeClassSetID == null){
+				thisNodeClassSetID = this.getNextSummaryNode();
+				cs.put(thisNodeClassSetID, classSetOfThisNode);
+				cs2csID.put(classSetOfThisNode, thisNodeClassSetID);
+			}
 			n2c.put(t.s, classSetOfThisNode);
-			cs.put(newClassSetID, classSetOfThisNode);
-			cs2csID.put(classSetOfThisNode, newClassSetID);
-			n2cs.put(t.s, newClassSetID);
+			n2cs.put(t.s, thisNodeClassSetID);
 		}
 		else{ // we already had some types for t.s
 			if (classSetOfThisNode.contains(t.o)){
@@ -231,7 +234,6 @@ public class TwoPassTypedWeakSummary extends WeakOrTypedWeakSummary {
 				n2c.put(t.s, newClassSetOfThisNode); // erases/replaces previously known class set
 			}
 		}
-		//display(); 
 	}
 
 	/**

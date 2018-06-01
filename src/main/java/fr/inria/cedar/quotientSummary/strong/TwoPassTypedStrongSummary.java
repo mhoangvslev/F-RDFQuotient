@@ -208,19 +208,25 @@ public class TwoPassTypedStrongSummary extends StrongOrTypedStrongSummary {
 
 		TreeSet<Long> classSetOfThisNode = n2c.get(t.s); 
 		if (classSetOfThisNode == null){ // this is the first time we encounter the node: create a class set with exactly this type
-			Long newClassSetID = this.getNextSummaryNode();
 			classSetOfThisNode = new TreeSet<>();
 			classSetOfThisNode.add(t.o); 
+			Long thisNodeClassSetID = cs2csID.get(classSetOfThisNode);
+			if (thisNodeClassSetID == null){
+				thisNodeClassSetID = this.getNextSummaryNode();
+				cs.put(thisNodeClassSetID, classSetOfThisNode);
+				cs2csID.put(classSetOfThisNode, thisNodeClassSetID);
+			}
 			n2c.put(t.s, classSetOfThisNode);
-			cs.put(newClassSetID, classSetOfThisNode);
-			cs2csID.put(classSetOfThisNode, newClassSetID);
-			n2cs.put(t.s, newClassSetID);
+			n2cs.put(t.s, thisNodeClassSetID);
 		}
 		else{ // we already had some types for t.s
 			if (classSetOfThisNode.contains(t.o)){
 				// do nothing
 			}
 			else {
+				// n is moving from classSetOfThisNode to newClassSetOfThisNode.
+				// TODO Check if classSetOfThisNode is deserted and if yes, maybe remove it.
+				// (We can also keep it there to reuse it later...)
 				TreeSet<Long> newClassSetOfThisNode = new TreeSet<>();
 				newClassSetOfThisNode.addAll(classSetOfThisNode);
 				newClassSetOfThisNode.add(t.o); 
@@ -237,7 +243,6 @@ public class TwoPassTypedStrongSummary extends StrongOrTypedStrongSummary {
 				n2c.put(t.s, newClassSetOfThisNode); // erases/replaces previously known class set
 			}
 		}
-		//display(); 
 	}
 
 	/**
