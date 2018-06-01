@@ -144,12 +144,13 @@ public class BuilderCmd {
 			encodedTriplesTableName = properties.getProperty("database.encoded_triples_table_name");
 			encodedSaturatedTriplesTableName = properties.getProperty("database.encoded_saturated_triples_table_name");
 
-			File customProperties = new File("conf/custom.properties");
+			String customPropertiesFileName = "conf/custom.properties";
+			File customProperties = new File(customPropertiesFileName);
 	        OutputStream out = new FileOutputStream(customProperties);
 	        properties.store(out, "Custom properties file");
 
 			settings = new Parameters();
-			settings.setPropertiesFileName(customProperties.getName());
+			settings.setPropertiesFileName(customPropertiesFileName);
 		}
 		catch (FileNotFoundException ex) {
 			LOGGER.error(ex);
