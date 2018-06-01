@@ -155,7 +155,7 @@ public class OneBisimSummary extends Summary{
 	}
 
 	private void representDataNodes() {
-		// all nodes with outgoing edges:
+		// all nodes with outgoing edges and possibly incoming edges:
 		for (Long n: n2op.keySet()){
 			TreeSet<Long> nop = n2op.get(n);
 			TreeSet<Long> nip = n2ip.get(n);
@@ -166,22 +166,48 @@ public class OneBisimSummary extends Summary{
 			//LOGGER.info("REPRESENTED NODE (1) " + RDF2SQLEncoding.dictionaryDecode(n) + " BY " + sn); 
 			rep.put(n, sn);
 		}
-		// all nodes with incoming edges: 
+		// all nodes with incoming but not outgoing edges (those with both are covered above): 
 		for (Long n: n2ip.keySet()){
-			TreeSet<Long> nop = n2op.get(n);
-			TreeSet<Long> nip = n2ip.get(n);
-			Long sn = getSummaryNode(nop, nip);
-			if (sn == null){
-				sn = createSummaryNode(nop, nip);
+			if (n2op.get(n) == null){
+				TreeSet<Long> nop = n2op.get(n);
+				TreeSet<Long> nip = n2ip.get(n);
+				Long sn = getSummaryNode(nop, nip);
+				if (sn == null){
+					sn = createSummaryNode(nop, nip);
+				}
+				//LOGGER.info("REPRESENTED NODE (2) " + RDF2SQLEncoding.dictionaryDecode(n) + " BY " + sn); 
+				rep.put(n, sn);
 			}
-			//LOGGER.info("REPRESENTED NODE (2) " + RDF2SQLEncoding.dictionaryDecode(n) + " BY " + sn); 
-			rep.put(n, sn);
 		}
 	}
 
+	// creates the last data node representatives (those not already represented above)
+	// and represents all data triples
 	private void representDataTriple(Triple t) {
 		//LOGGER.info("REPRESENTING DATA TRIPLE " + RDF2SQLEncoding.decode(t).toString()); 
-		this.edgesWithProv.addTriple(rep.get(t.s), t.p, rep.get(t.o));
+		Long sRep = rep.get(t.s);
+		if (sRep == null){
+			TreeSet<Long> sop = n2op.get(t.s);
+			TreeSet<Long> sip = n2ip.get(t.s);
+			// probably both are null. We know rep doesn't exist, so we create it: 
+			sRep = getSummaryNode(sop, sip);
+			if (sRep == null){
+				sRep = createSummaryNode(sop, sip);
+			}
+			rep.put(t.s, sRep); 
+		}
+		Long oRep = rep.get(t.o);
+		if (oRep == null){
+			TreeSet<Long> oop = n2op.get(t.s);
+			TreeSet<Long> oip = n2ip.get(t.s);
+			// probably both are null.  We know rep doesn't exist, so we create it: 
+			oRep = getSummaryNode(oop, oip);
+			if (oRep == null){
+				oRep = createSummaryNode(oop, oip);
+			}
+			rep.put(t.o, oRep); 
+		}
+		this.edgesWithProv.addTriple(sRep, t.p, oRep);
 	}
 	
 	private Long createSummaryNode(TreeSet<Long> nop, TreeSet<Long> nip) {
