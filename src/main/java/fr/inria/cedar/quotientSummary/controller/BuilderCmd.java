@@ -72,8 +72,9 @@ public class BuilderCmd {
 
 		switch(args[0]) {
 			case "load":
-				if (args.length != 4) {
+				if (args.length != 3) {
 					displayUsageInfo();
+					return;
 				}
 				setUpConfiguration(args[1]);
 				getConnection();
@@ -86,6 +87,7 @@ public class BuilderCmd {
 			case "summarize":
 				if (args.length != 7) {
 					displayUsageInfo();
+					return;
 				}
 				setUpConfiguration(args[1]);
 				getConnection();
