@@ -16,8 +16,10 @@ import fr.inria.cedar.quotientSummary.weak.TypedWeakSummary;
 import fr.inria.cedar.quotientSummary.weak.WeakSummary;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -143,8 +145,8 @@ public class BuilderCmd {
 			encodedSaturatedTriplesTableName = properties.getProperty("database.encoded_saturated_triples_table_name");
 
 			File customProperties = new File("conf/custom.properties");
-	        OutputStream out = new FileOutputStream(customPropertes);
-	        props.store(out, "Custom properties file");
+	        OutputStream out = new FileOutputStream(customProperties);
+	        properties.store(out, "Custom properties file");
 
 			settings = new Parameters();
 			settings.setPropertiesFileName(customProperties.getName());
