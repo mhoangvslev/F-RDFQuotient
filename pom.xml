@@ -97,7 +97,7 @@
 				  <descriptorRefs>
 					<descriptorRef>jar-with-dependencies</descriptorRef>
 				  </descriptorRefs>
-				 <finalName>quotientSummaryWithDependecies-${project.version}</finalName>
+				 <finalName>quotientSummaryWithDependencies-${project.version}</finalName>
 				<appendAssemblyId>false</appendAssemblyId>
 				</configuration>
 			</plugin>
