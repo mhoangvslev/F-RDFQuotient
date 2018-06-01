@@ -51,7 +51,7 @@ public class BuilderCmd {
 	private static void displayUsageInfo() {
 		System.out.println("The framework is designed to work with one graph at the time");
 		System.out.println("Usage:");
-		System.out.println("args[0]=load fileName opt1: loads a file fileName to the database fileName");
+		System.out.println("args[0]=load fileName opt1 opt2: loads a file fileName to the database fileName");
 		System.out.println("    if opt1 is true its saturation is computed and stored in the same database");
 		System.out.println("    if opt2 is true it exports loading statistics to disk");
 		System.out.println("args[0]=summarize fileName summaryType opt1 opt2 opt3 opt4");
@@ -72,24 +72,22 @@ public class BuilderCmd {
 
 		switch(args[0]) {
 			case "load":
-				if (args.length != 3) {
+				if (args.length != 4) {
 					displayUsageInfo();
 					return;
 				}
-				setUpConfiguration(args[1]);
-				getConnection();
+				setUpConfiguration(args[1], "true".equals(args[3]));
 				load(args[1], "true".equals(args[2]));
 				if ("true".equals(args[3])) {
 					exportLoadingStatisticsToDisk(args[1]);
 				}
-				closeConnection();
 				return;
 			case "summarize":
 				if (args.length != 7) {
 					displayUsageInfo();
 					return;
 				}
-				setUpConfiguration(args[1]);
+				setUpConfiguration(args[1], "true".equals(args[3]));
 				getConnection();
 				summarize(args[1], args[2], "true".equals(args[3]));
 				if ("true".equals(args[4])) {
@@ -124,20 +122,32 @@ public class BuilderCmd {
 			database.dictionary_table_name
 			database.encoded_saturated_triples_table_name
 	*/
-	private static void setUpConfiguration(String datasetName) {
+	private static void setUpConfiguration(String datasetName, boolean loadSaturated) {
 		properties = new Properties();
 		try {
 			properties.load(new FileReader(CONFIGURATION_FILE));
+
 			String databaseName = trimNT(datasetName, true);
 			properties.put("database.name", databaseName);
+
+			if (loadSaturated) {
+				properties.put("saturation.enable", "true");
+			}
+			else {
+				properties.put("saturation.enable", "false");
+			}
 
 			triplesTableName = properties.getProperty("database.triples_table_name");
 			dictionaryTableName = properties.getProperty("database.dictionary_table_name");
 			encodedTriplesTableName = properties.getProperty("database.encoded_triples_table_name");
 			encodedSaturatedTriplesTableName = properties.getProperty("database.encoded_saturated_triples_table_name");
 
+			File customProperties = new File("conf/custom.properties");
+	        OutputStream out = new FileOutputStream(customPropertes);
+	        props.store(out, "Custom properties file");
+
 			settings = new Parameters();
-			settings.setPropertiesFileName(CONFIGURATION_FILE);
+			settings.setPropertiesFileName(customProperties.getName());
 		}
 		catch (FileNotFoundException ex) {
 			LOGGER.error(ex);
@@ -150,6 +160,14 @@ public class BuilderCmd {
 	}
 
 	private static void getConnection() {
+		try {
+			Class.forName("org.postgresql.Driver");
+		}
+		catch (ClassNotFoundException ex) {
+			LOGGER.error(ex);
+			System.exit(1);
+		}
+
 		Properties connectionProps = new Properties();
 
 		connectionProps.put("user", properties.getProperty("database.user"));
@@ -186,24 +204,10 @@ public class BuilderCmd {
 
 	private static String trimNT(String fileName, boolean trimSlash) {
 		int lastDotPosition = Math.max(0, fileName.lastIndexOf("."));
-		int lastSlashPosition = 0;
-		if (trimSlash) {
-			lastSlashPosition = Math.max(0, fileName.lastIndexOf("/"));
-			if (lastDotPosition - lastSlashPosition < 1) {
-				throw new IllegalStateException("Was not able to extract a core component of the file name " + fileName);
-			}
-		}
-		return fileName.substring(lastSlashPosition, lastDotPosition);
+		return fileName.substring(trimSlash ? fileName.lastIndexOf("/") + 1 : 0, lastDotPosition);
 	}
 
 	private static void load(String datasetName, Boolean loadSaturated) {
-		if (loadSaturated) {
-			properties.put("saturation.enable", "true");
-		}
-		else {
-			properties.put("saturation.enable", "false");
-		}
-
 		LOGGER.info("Loading graph to Postgres");
 		try {
 			settings.getAllInFiles().add(datasetName);
