@@ -61,7 +61,10 @@ public class Summary {
 	protected static String STRONG_SUMMARY_PREFIX = "s_";
 	protected static String TYPED_WEAK_SUMMARY_PREFIX = "tw_";
 	protected static String TYPED_STRONG_SUMMARY_PREFIX = "ts_";
+	protected static String TWO_PASS_WEAK_SUMMARY_PREFIX = "2pw_";
+	protected static String TWO_PASS_WEAK_SUMMARY_WITH_UNION_FIND_PREFIX = "2pwuf_";
 	protected static String TWO_PASS_STRONG_SUMMARY_PREFIX = "2ps_";
+	protected static String TWO_PASS_TYPED_WEAK_SUMMARY_PREFIX = "2ptw_";
 	protected static String TWO_PASS_TYPED_STRONG_SUMMARY_PREFIX = "2pts_";
 	protected static String ONEFB_SUMMARY_PREFIX = "1fb_"; 
 
@@ -358,17 +361,16 @@ public class Summary {
 		catch (SQLException ex) {
 			LOGGER.error(ex);
 		}
-		String newTableName = "_encoded_";
+		String newTableName = encodedTriplesTableName;
 		String timestamp = SD_FORMAT.format(new Timestamp(System.currentTimeMillis()));
 		if (partialResult)
-			newTableName = "tmp" + newTableName + "summarized";
+			newTableName = newTableName + "_sum";
 		else
-			newTableName = "sav_" + timestamp + newTableName + summaryTablePrefix + summarizationTechnique;
+			newTableName = "sav_" + timestamp + "_" + newTableName + "_" + getSummaryURIPrefix();
 		String newSummaryTableNameRep = newTableName + "_rep";
-		String newSummaryTableNameSum = newTableName + "_sum";
-		String newDictionaryTableName = "sav_" + timestamp + "_" + dictionaryTableName;
+		String newSummaryTableNameEdges = newTableName + "_edges";
 
-		LOGGER.info("Saving " + this.getClass().getName() + " in Postgres in tables " + newSummaryTableNameRep + " and " + newSummaryTableNameSum);
+		LOGGER.info("Saving " + this.getClass().getName() + " in Postgres in tables " + newSummaryTableNameRep + " and " + newSummaryTableNameEdges);
 
 		Statement stmt;
 		try {
@@ -376,15 +378,6 @@ public class Summary {
 		}
 		catch (SQLException e) {
 			throw new IllegalStateException("Could not create the statement: " + e.toString());
-		}
-
-		// change the dictionary table's name by prepending the timestamp
-		try {
-			stmt.execute("alter table " + dictionaryTableName + " rename to " + newDictionaryTableName + ";");
-			conn.commit();
-		}
-		catch (SQLException e) {
-			throw new IllegalStateException("Could not rename table into " + newDictionaryTableName + ": " + e.toString());
 		}
 
 		if (!partialResult) {
@@ -429,19 +422,19 @@ public class Summary {
 		try {
 			long start = System.currentTimeMillis();
 			// create the table (it may have existed)
-			if (!existsTable(conn, newSummaryTableNameSum)) {
-				stmt.execute("create table " + newSummaryTableNameSum + "(s int not null, p int not null, o int not null);");
-				//LOGGER.debug("Table " + newSummaryTableNameSum + " created");
+			if (!existsTable(conn, newSummaryTableNameEdges)) {
+				stmt.execute("create table " + newSummaryTableNameEdges + "(s int not null, p int not null, o int not null);");
+				//LOGGER.debug("Table " + newSummaryTableNameEdges + " created");
 			}
 			else {
-				//LOGGER.debug("Did not create " + newSummaryTableNameSum + " table as it was already there");
+				//LOGGER.debug("Did not create " + newSummaryTableNameEdges + " table as it was already there");
 			}
 			// empty it (even if the creation failed, e.g. because the table was already there)
-			stmt.executeUpdate("delete from " + newSummaryTableNameSum + ";");
+			stmt.executeUpdate("delete from " + newSummaryTableNameEdges + ";");
 			conn.commit();
 
 			// now insert all the summary edges:
-			String insertIntoSummary = "insert into " + newSummaryTableNameSum + " values(?, ?, ?);";
+			String insertIntoSummary = "insert into " + newSummaryTableNameEdges + " values(?, ?, ?);";
 			try (PreparedStatement insertInSummary = conn.prepareStatement(insertIntoSummary)) {
 				ArrayList<Triple> edges = edgesWithProv.getSummaryEdges();
 				for (Triple t : edges) {
@@ -455,21 +448,18 @@ public class Summary {
 				//	stmt.executeUpdate("create index indSummaryS on encoded_summary(s);");
 				conn.commit();
 				summaryEdgesSavingTime = System.currentTimeMillis() - start;
-				LOGGER.info("Summary edges saved in " + summaryEdgesSavingTime + " ms");
+				LOGGER.info("Saved " + edges.size() + " summary edges in " + summaryEdgesSavingTime + " ms");
 				LOGGER.info("Summary saved in Postgres");
 			}
 		}
 		catch (SQLException e) {
-			throw new IllegalStateException("Could not insert summary triples in " + newSummaryTableNameSum + ": " + e.toString());
+			throw new IllegalStateException("Could not insert summary triples in " + newSummaryTableNameEdges + ": " + e.toString());
 		}
-
-		this.dictionaryTableName = newDictionaryTableName;
 
 		// saving the table names in Postgres: 
 		try {
-			stmt.executeUpdate("create table saved_summary_table_names(role varchar, name varchar);");
-			stmt.executeUpdate("insert into saved_summary_table_names values ('dictionary', '" + newDictionaryTableName + "');");
-			stmt.executeUpdate("insert into saved_summary_table_names values ('edges', '" + newSummaryTableNameSum + "');" );
+			stmt.executeUpdate("create table if not exists saved_summary_table_names(role varchar, name varchar);");
+			stmt.executeUpdate("insert into saved_summary_table_names values ('edges', '" + newSummaryTableNameEdges + "');" );
 			stmt.executeUpdate("insert into saved_summary_table_names values ('representation', '" + newSummaryTableNameRep + "');");
 			stmt.executeUpdate("insert into saved_summary_table_names values ('encoded_triples', '" + encodedTriplesTableName + "');");
 			conn.commit();
@@ -498,6 +488,54 @@ public class Summary {
 		catch (SQLException e) {
 			throw new IllegalStateException("Could not find out if an index exists on " + tableName + ": " + e.toString());
 		}
+	}
+
+	public void writeDecodedSummaryToNTFile(Connection conn) {
+		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
+
+		String summaryNTFileName = getNTSummaryFileName();
+		String URIprefix = properties.getProperty("prefixURIForSummaryNodes");
+
+		LOGGER.info("Decoding summary and writing it in .nt format to " + summaryNTFileName);
+
+		ArrayList<Triple> summEdges = edgesWithProv.getSummaryEdges();
+		try {
+			// write summary triples:
+			try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(summaryNTFileName)))) {
+				// write summary triples:
+				for (Triple t : summEdges) {
+					//LOGGER.debug("Summary triple: " + t.toString() );
+					String subject, property, object;
+					if (RDF2SQLEncoding.isDataProperty(t.p)) { // data
+						subject = getSummaryNodeURI(URIprefix, t.s);
+						property = RDF2SQLEncoding.dictionaryDecode(t.p);
+						object = getSummaryNodeURI(URIprefix, t.o);
+					} else if (RDF2SQLEncoding.isSchemaProperty(t.p)) { // schema
+						subject = RDF2SQLEncoding.dictionaryDecode(t.s);
+						property = RDF2SQLEncoding.dictionaryDecode(t.p);
+						object = RDF2SQLEncoding.dictionaryDecode(t.o);
+					} else { // type
+						subject = getSummaryNodeURI(URIprefix, t.s);
+						property = RDF2SQLEncoding.dictionaryDecode(t.p);
+						object = RDF2SQLEncoding.dictionaryDecode(t.o);
+					}
+					//LOGGER.debug(subject + " " + property + " " + object);
+					bw.write(subject + " " + property + " " + object + " .\n");
+				}
+			}
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Could not save the decoded summary in .nt file: " + e.toString());
+		}
+		LOGGER.info("Summary decoded and saved in .nt format");
+	}
+
+	public String getNTSummaryFileName() {
+		int lastDotPosition = Math.max(0, triplesFileName.lastIndexOf("."));
+		int lastSlashPosition = Math.max(0, triplesFileName.lastIndexOf("/"));
+		if (lastDotPosition - lastSlashPosition < 1)
+			throw new IllegalStateException("Was not able to extract a core component of the file name " + triplesFileName);
+		return triplesFileName.substring(0, lastDotPosition) + "_" + getSummaryURIPrefix() + ".nt";
 	}
 
 	/**
@@ -1049,22 +1087,24 @@ public class Summary {
 		return this.summaryTablePrefix.substring(0, this.summaryTablePrefix.length() - 1);
 	}
 
-	public HashMap<String, Long> getRunStatistics() {
-		HashMap<String, Long> stats = new HashMap<>();
+	public HashMap<String, String> getRunStatistics() {
+		HashMap<String, String> stats = new HashMap<>();
 
-		stats.put("summaryEdgesSavingTime", summaryEdgesSavingTime);
-		stats.put("representationFunctionSavingTime", representationFunctionSavingTime);
+		stats.put("inputFileName", triplesFileName);
 
-		stats.put("classSetCreationTime", classSetCreationTime);
-		stats.put("typeTriplesSummarizationTime", typeTriplesSummarizationTime);
-		stats.put("dataTriplesSummarizationTime", dataTriplesSummarizationTime);
-		stats.put("allTriplesSummarizationTime", allTriplesSummarizationTime);
+		stats.put("summaryEdgesSavingTime", Long.toString(summaryEdgesSavingTime));
+		stats.put("representationFunctionSavingTime", Long.toString(representationFunctionSavingTime));
 
-		stats.put("inputGraphSize", triplesSummarizedSoFar);
-		stats.put("outputGraphSize", new Long(edgesWithProv.getSummaryEdges().size()));
+		stats.put("classSetCreationTime", Long.toString(classSetCreationTime));
+		stats.put("typeTriplesSummarizationTime", Long.toString(typeTriplesSummarizationTime));
+		stats.put("dataTriplesSummarizationTime", Long.toString(dataTriplesSummarizationTime));
+		stats.put("allTriplesSummarizationTime", Long.toString(allTriplesSummarizationTime));
 
-		stats.put("inputGraphNumberOfNodes", rep.numberOfKeys());
-		stats.put("outputGraphNumberOfNodes", rep.numberOfDistinctValues());
+		stats.put("inputGraphSize", Long.toString(triplesSummarizedSoFar));
+		stats.put("outputGraphSize", Integer.toString(edgesWithProv.getSummaryEdges().size()));
+
+		stats.put("inputGraphNumberOfNodes", Long.toString(rep.numberOfKeys()));
+		stats.put("outputGraphNumberOfNodes", Long.toString(rep.numberOfDistinctValues()));
 
 		return stats;
 	}

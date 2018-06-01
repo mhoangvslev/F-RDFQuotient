@@ -968,16 +968,18 @@ public class StrongOrTypedStrongSummary extends Summary {
 			boolean c1empty = c1.equals(this.getEmptySourceCliqueID());
 			boolean c2empty = c2.equals(this.getEmptySourceCliqueID());
 			//LOGGER.debug("FuseCliquesIntoCreatedFirst SOURCE " + c1 + (c1empty?" (empty)":"") + " " + c2 + (c2empty?" (empty)":""));
-			if (c1empty){
+			if (c1empty) {
 				return c2;
 			}
-			if (c2empty){
+			if (c2empty) {
 				return c1;
 			}
-			if (c1 > c2){// we know none is empty
+			int c1Size = p2sc.getInverse(c1).size();
+			int c2Size = p2sc.getInverse(c2).size();
+			if (c1Size > c2Size) { // we know none is empty
 				return c1;
 			}
-			if (c2 > c1){// we know none is empty
+			if (c2Size > c1Size) { // we know none is empty
 				return c2;
 			}
 		}
@@ -986,20 +988,24 @@ public class StrongOrTypedStrongSummary extends Summary {
 			boolean c2empty = c2.equals(this.getEmptyTargetCliqueID());
 			//LOGGER.debug("FuseCliquesIntoCreatedFirst TARGET " + c1 + (c1empty?" (empty)":"") + " " + c2 + (c2empty?" (empty)":""));
 
-			if (c1empty){
+			if (c1empty) {
 				return c2;
 			}
-			if (c2empty){
+			if (c2empty) {
 				return c1;
 			}
-			if (c1 > c2){// we know none is empty
+			int c1Size = p2tc.getInverse(c1).size();
+			int c2Size = p2tc.getInverse(c2).size();
+			if (c1Size > c2Size) { // we know none is empty
 				return c1;
 			}
-			if (c2 > c1){// we know none is empty
+			if (c2Size > c1Size) { // we know none is empty
 				return c2;
 			}
 		}
-		else throw new IllegalStateException("Unknown code!");
+		else {
+			throw new IllegalStateException("Unknown code!");
+		}
 		return c1;
 	}
 
