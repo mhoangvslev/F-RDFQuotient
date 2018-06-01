@@ -366,7 +366,7 @@ public class Summary {
 		if (partialResult)
 			newTableName = newTableName + "_sum";
 		else
-			newTableName = timestamp + "_" + newTableName + "_" + getSummaryURIPrefix();
+			newTableName = "sav_" + timestamp + "_" + newTableName + "_" + getSummaryURIPrefix();
 		String newSummaryTableNameRep = newTableName + "_rep";
 		String newSummaryTableNameEdges = newTableName + "_edges";
 
