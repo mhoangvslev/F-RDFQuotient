@@ -67,6 +67,7 @@ public class BuilderCmd {
 
 		if (args.length == 0) {
 			displayUsageInfo();
+			return;
 		}
 
 		switch(args[0]) {
