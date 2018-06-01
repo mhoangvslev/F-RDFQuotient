@@ -20,7 +20,7 @@ public class OneBisimSummary extends Summary{
 	HashMap<Long, TreeSet<Long>> n2ip; // node to incoming property set
 	HashMap<Long, TreeSet<Long>> n2op; // node to outgoing property set
 	HashMap<TreeSet<Long>, HashMap<TreeSet<Long>, Long>> ip2op2sn; // incoming property set to outgoing property set to summary node
-	
+
 	public OneBisimSummary(String triplesFileName, String triplesTableName, String encodedTriplesTableName, String dictionaryTableName) {
 		super();
 		LOGGER.setLevel(Level.INFO);
@@ -121,8 +121,7 @@ public class OneBisimSummary extends Summary{
 		catch (SQLException e) {
 			throw new IllegalStateException("Postgres error encountered while summarizing data triples " + e.toString());
 		}
-		
-		
+
 		dataTriplesSummarizationTime = System.currentTimeMillis() - start - avoidCollisionsTime;
 		LOGGER.info("Summarized " + dataTriplesSummarizedSoFar + " data triples in " + dataTriplesSummarizationTime + " ms");
 		LOGGER.info("Representing type triples");
@@ -203,7 +202,7 @@ public class OneBisimSummary extends Summary{
 		}
 		return (o2n.get(nop));
 	}
-	
+
 	protected void handleTypeTripleAfterData(Triple t) {
 		rep.put(t.o, t.o); 
 		this.edgesWithProv.addTriple(rep.get(t.s), t.p, t.o);

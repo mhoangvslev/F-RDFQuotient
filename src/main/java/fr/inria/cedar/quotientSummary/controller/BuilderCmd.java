@@ -1,12 +1,30 @@
 package fr.inria.cedar.quotientSummary.controller;
 
+import com.google.common.base.Preconditions;
 import fr.inria.cedar.ontosql.rdfdb.dataloading.DataLoading;
 import fr.inria.cedar.ontosql.rdfdb.dataloading.Parameters;
 import fr.inria.cedar.quotientSummary.Summary;
+import fr.inria.cedar.quotientSummary.bisim.OneBisimSummary;
+import fr.inria.cedar.quotientSummary.strong.StrongSummary;
+import fr.inria.cedar.quotientSummary.strong.TwoPassStrongSummary;
+import fr.inria.cedar.quotientSummary.strong.TwoPassTypedStrongSummary;
+import fr.inria.cedar.quotientSummary.strong.TypedStrongSummary;
+import fr.inria.cedar.quotientSummary.weak.TwoPassTypedWeakSummary;
+import fr.inria.cedar.quotientSummary.weak.TwoPassWeakSummary;
+import fr.inria.cedar.quotientSummary.weak.TwoPassWeakSummaryWithUnionFind;
+import fr.inria.cedar.quotientSummary.weak.TypedWeakSummary;
+import fr.inria.cedar.quotientSummary.weak.WeakSummary;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Properties;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -23,6 +41,9 @@ public class BuilderCmd {
 	private static String encodedSaturatedTriplesTableName;
 	private static Connection connectionInUse;
 	private static Summary summaryInUse;
+	private static long saturationTime;
+	private static long summarySavingInPostgresTime;
+	private static long summarySavingToDiskTime;
 
 	public BuilderCmd() {
 	}
@@ -57,7 +78,7 @@ public class BuilderCmd {
 				getConnection();
 				load(args[1], "true".equals(args[2]));
 				if ("true".equals(args[3])) {
-					exportLoadingStatisticsToDisk();
+					exportLoadingStatisticsToDisk(args[1]);
 				}
 				closeConnection();
 				return;
@@ -104,35 +125,82 @@ public class BuilderCmd {
 		properties = new Properties();
 		try {
 			properties.load(new FileReader(CONFIGURATION_FILE));
+			String databaseName = trimNT(datasetName, true);
+			properties.put("database.name", databaseName);
+
+			triplesTableName = properties.getProperty("database.triples_table_name");
+			dictionaryTableName = properties.getProperty("database.dictionary_table_name");
+			encodedTriplesTableName = properties.getProperty("database.encoded_triples_table_name");
+			encodedSaturatedTriplesTableName = properties.getProperty("database.encoded_saturated_triples_table_name");
+
+			settings = new Parameters();
+			settings.setPropertiesFileName(CONFIGURATION_FILE);
 		}
 		catch (FileNotFoundException ex) {
 			LOGGER.error(ex);
+			System.exit(1);
 		}
 		catch (IOException ex) {
 			LOGGER.error(ex);
+			System.exit(1);
 		}
-
-		triplesTableName = properties.getProperty("database.triples_table_name");
-		dictionaryTableName = properties.getProperty("database.dictionary_table_name");
-		encodedTriplesTableName = properties.getProperty("database.encoded_triples_table_name");
-		encodedSaturatedTriplesTableName = properties.getProperty("database.encoded_saturated_triples_table_name");
-
-		settings = new Parameters();
-		settings.setPropertiesFileName(CONFIGURATION_FILE);
 	}
 
 	private static void getConnection() {
-		// TODO
+		Properties connectionProps = new Properties();
+
+		connectionProps.put("user", properties.getProperty("database.user"));
+		connectionProps.put("password", properties.getProperty("database.password"));
+
+		String connectionURL = "jdbc:postgresql://" + properties.getProperty("database.host")
+			+ ":" + properties.getProperty("database.port") + "/"
+			+ properties.getProperty("database.name");
+		try {
+			connectionInUse = DriverManager.getConnection(connectionURL, connectionProps);
+		}
+		catch (SQLException ex) {
+			LOGGER.error(ex);
+			System.exit(1);
+		}
+		LOGGER.info("Connection to Postgres established with URL: " + connectionURL
+			+ " with user " + properties.getProperty("database.user")
+			+ " and password " + properties.getProperty("database.password"));
+
+		Preconditions.checkState(connectionInUse != null, "No connection for " + connectionURL);
 	}
 
 	private static void closeConnection() {
-		// TODO
+		try {
+			connectionInUse.close();
+			connectionInUse = null;
+			LOGGER.info("Connection closed");
+		}
+		catch (SQLException ex) {
+			LOGGER.error(ex);
+			System.exit(1);
+		}
+	}
+
+	private static String trimNT(String fileName, boolean trimSlash) {
+		int lastDotPosition = Math.max(0, fileName.lastIndexOf("."));
+		int lastSlashPosition = 0;
+		if (trimSlash) {
+			lastSlashPosition = Math.max(0, fileName.lastIndexOf("/"));
+			if (lastDotPosition - lastSlashPosition < 1) {
+				throw new IllegalStateException("Was not able to extract a core component of the file name " + fileName);
+			}
+		}
+		return fileName.substring(lastSlashPosition, lastDotPosition);
 	}
 
 	private static void load(String datasetName, Boolean loadSaturated) {
-		// TODO
-		// set database.name to fileName
-		// set saturation.enable = true
+		if (loadSaturated) {
+			properties.put("saturation.enable", "true");
+		}
+		else {
+			properties.put("saturation.enable", "false");
+		}
+
 		LOGGER.info("Loading graph to Postgres");
 		try {
 			settings.getAllInFiles().add(datasetName);
@@ -140,56 +208,101 @@ public class BuilderCmd {
 		}
 		catch (IOException ex) {
 			LOGGER.error("Data loading failed: " + ex);
-			return;
+			System.exit(1);
 		}
+		saturationTime = (loadSaturated) ? DataLoading.timeExecutionPerProcess.get("RDFGraphSaturator") : 0L;
 		LOGGER.info("Graph loaded to Postgres");
 	}
 
-	private static void exportLoadingStatisticsToDisk() {
-		// TODO
-		// use -loading-statistics as a suffix
+	private static void exportLoadingStatisticsToDisk(String datasetName) {
+		String csvFileName = trimNT(datasetName, false) + "-loading-statistics.csv";
+		LOGGER.info("Exporting loading statistics to disk to the file " + csvFileName);
+		try (PrintWriter pw = new PrintWriter(new File(csvFileName))) {
+			StringBuilder sb = new StringBuilder();
+			sb.append("saturationTime").append('\n');
+			sb.append(saturationTime).append('\n');
+			pw.write(sb.toString());
+		}
+		catch (FileNotFoundException ex) {
+			LOGGER.error(ex);
+			System.exit(1);
+		}
+		LOGGER.info("Loading statistics exported to disk");
 	}
 
-	private static String abbreviation(String summaryType) {
-		switch(summaryType) {
+	private static Summary createNewSummary(String summaryType, String triplesFileName, String triplesTableName, String encodedTriplesTableName, String dictionaryTableName) {
+		String lowerCaseSummaryType = summaryType.toLowerCase();
+		switch (lowerCaseSummaryType) {
 			case "weak":
-				return "w";
+				return new WeakSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 			case "2pweak":
-				return "2pw";
+				return new TwoPassWeakSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 			case "2pweakunionfind":
-				return "2pwuf";
+				return new TwoPassWeakSummaryWithUnionFind(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 			case "strong":
-				return "s";
+				return new StrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 			case "2pstrong":
-				return "2ps";
+				return new TwoPassStrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 			case "typedweak":
-				return "tw";
+				return new TypedWeakSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 			case "2ptypedweak":
-				return "2ptw";
+				return new TwoPassTypedWeakSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 			case "typedstrong":
-				return "ts";
+				return new TypedStrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 			case "2ptypedstrong":
-				return "2pts";
+				return new TwoPassTypedStrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 			case "onefb":
-				return "1fb";
+				return new OneBisimSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName); 
 		}
 		return null;
 	}
 
 	private static void summarize(String datasetName, String summaryType, Boolean summarizeSaturated) {
-		// TODO
+		LOGGER.info("Summarizing graph from Postgres");
+		summaryInUse = createNewSummary(summaryType, datasetName, triplesTableName, summarizeSaturated ? encodedSaturatedTriplesTableName : encodedTriplesTableName, dictionaryTableName);
+		summaryInUse.summarizeFromPostgres(connectionInUse);
+		LOGGER.info("Graph from Postgres summarized");
 	}
 
 	private static void saveSummaryInPostgres() {
-		// TODO
+		long start = System.currentTimeMillis();
+		summaryInUse.saveSummaryInPostgres(connectionInUse, false, "");
+		summarySavingInPostgresTime = System.currentTimeMillis() - start;
 	}
 
 	private static void exportSummaryToDisk() {
-		// TODO
+		LOGGER.info("Exporting summary to disk");
+		long start = System.currentTimeMillis();
+		summaryInUse.writeDecodedSummaryToNTFile(connectionInUse);
+		summarySavingToDiskTime = System.currentTimeMillis() - start;
+		LOGGER.info("Summary exported to disk");
 	}
 
 	private static void exportSummarizationStatisticsToDisk() {
-		// TODO
-		// use -summarization-statistics as a suffix
+		String csvFileName = trimNT(summaryInUse.getNTSummaryFileName(), false) + "-summarization-statistics.csv";
+		LOGGER.info("Exporting summarization statistics to disk to the file " + csvFileName);
+		try (PrintWriter pw = new PrintWriter(new File(csvFileName))) {
+			HashMap<String, String> statistics = summaryInUse.getRunStatistics();
+			statistics.put("summarySavingInPostgresTime", Long.toString(summarySavingInPostgresTime));
+			statistics.put("summarySavingToDiskTime", Long.toString(summarySavingToDiskTime));
+			StringBuilder sb = new StringBuilder();
+			ArrayList<String> keys = new ArrayList<>();
+			keys.addAll(statistics.keySet());
+			Collections.sort(keys);
+			for (String key: keys) {
+				sb.append(key).append(',');
+			}
+			sb.append('\n');
+			for (String key: keys) {
+				sb.append(statistics.get(key)).append(',');
+			}
+			sb.append('\n');
+			pw.write(sb.toString());
+		}
+		catch (FileNotFoundException ex) {
+			LOGGER.error(ex);
+			System.exit(1);
+		}
+		LOGGER.info("Summarization statistics exported to disk");
 	}
 }

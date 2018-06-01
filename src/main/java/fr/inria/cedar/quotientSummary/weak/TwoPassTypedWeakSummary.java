@@ -104,7 +104,7 @@ public class TwoPassTypedWeakSummary extends WeakOrTypedWeakSummary {
 		start = System.currentTimeMillis();
 		collectSchemaNodes(conn);
 		// now all the non-type triples
-		
+
 		// first pass
 		String getUntypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p <> " + typeConstantCode);
 		try {

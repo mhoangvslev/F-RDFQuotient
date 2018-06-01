@@ -16,7 +16,7 @@ import org.apache.log4j.Logger;
 public class TwoPassTypedStrongSummary extends StrongOrTypedStrongSummary {
 	private static final Logger LOGGER = Logger.getLogger(TwoPassStrongSummary.class.getName());
 	//protected HashMap<Long, HashMap<Long, TreeSet<Long>>> edges;
-	
+
 	// The following three attribute serve to identify and store the class sets for RDF resources
 	Long2LongSet cs; // for each class set ID, a class set
 	Long2Long n2cs; // for each node, its class set ID. This is also the rep function for typed nodes

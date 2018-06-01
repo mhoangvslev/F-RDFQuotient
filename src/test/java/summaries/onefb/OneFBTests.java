@@ -57,7 +57,7 @@ public class OneFBTests {
 			throw new IllegalStateException("SQL error while summarizing " + e.toString());
 		}
 	}
-	
+
 	private String expectedOutput(int i, String summarizationTechnique) {
 		return "src/test/resources/test" + i + "-onefb/test-" + i + "_1fb_" + summarizationTechnique + "-reference.nt";
 	}
@@ -98,5 +98,4 @@ public class OneFBTests {
 			throw new IllegalStateException("Unable to open .nt files in 1-fb test 6 " + e.toString());
 		}
 	}
-	
 }

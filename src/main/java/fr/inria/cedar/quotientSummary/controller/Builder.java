@@ -415,7 +415,7 @@ public class Builder {
 		int lastDotPosition = Math.max(0, files[0].lastIndexOf("."));
 		String csvFileName = files[0].substring(0, lastDotPosition) + "_" + summaryInUse.getSummaryURIPrefix() + "_" + summarizationTechnique + "-statistics.csv";
 		try (PrintWriter pw = new PrintWriter(new File(csvFileName))) {
-			HashMap<String, Long> statistics = summaryInUse.getRunStatistics();
+			HashMap<String, String> statistics = summaryInUse.getRunStatistics();
 			StringBuilder sb = new StringBuilder();
 			ArrayList<String> keys = new ArrayList<>();
 			keys.addAll(statistics.keySet());
