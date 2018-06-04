@@ -41,18 +41,17 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		this.triplesTableName = triplesTableName;
 		this.encodedTriplesTableName = encodedTriplesTableName;
 		this.dictionaryTableName = dictionaryTableName;
+		this.summaryTablePrefix = TYPED_STRONG_SUMMARY_PREFIX;
+		isTypeFirst = true;
+		this.isTwoPass = false;
 		cs = new Long2LongSet();
 		n2sc = new Long2Long();
-		rep = new Long2Long();
 		n2cs = new Long2Long();
-
 		n2c = new Long2LongSet();
 		cs2csID = new HashMap<>();
 		minCliqueID = -1;
 		emptySCCount = Long.MAX_VALUE;
 		emptyTCCount = Long.MAX_VALUE;
-		this.summaryTablePrefix = TYPED_STRONG_SUMMARY_PREFIX;
-		isTypeFirst = true;
 	}
 
 	/**

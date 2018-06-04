@@ -1,4 +1,4 @@
-package fr.inria.cedar.quotientSummary.strong;
+package fr.inria.cedar.quotientSummary.datastructures;
 
 import java.util.ArrayList;
 import org.apache.log4j.Level;

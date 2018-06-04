@@ -23,6 +23,7 @@ public class TwoPassStrongSummary extends StrongOrTypedStrongSummary {
 		this.dictionaryTableName = dictionaryTableName;
 		this.summaryTablePrefix = TWO_PASS_STRONG_SUMMARY_PREFIX;
 		this.isTypeFirst = false;
+		this.isTwoPass = true;
 		//this.edges = new HashMap<>();
 	}
 

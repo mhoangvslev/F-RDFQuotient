@@ -23,7 +23,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 		this.dictionaryTableName = dictionaryTableName;
 		this.summaryTablePrefix = WEAK_SUMMARY_PREFIX;
 		this.isTypeFirst = false;
-		this.typeOnlyNodeID = -1;
+		this.isTwoPass = false;
 	}
 
 	/**

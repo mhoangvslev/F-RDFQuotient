@@ -4,6 +4,7 @@ import fr.inria.cedar.quotientSummary.Summary;
 import fr.inria.cedar.quotientSummary.datastructures.EdgeTransferSpecification;
 import fr.inria.cedar.quotientSummary.datastructures.Long2Long;
 import fr.inria.cedar.quotientSummary.datastructures.Long2LongSet;
+import fr.inria.cedar.quotientSummary.datastructures.ReplacementSpecification;
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
 import fr.inria.cedar.quotientSummary.datastructures.TwoLevelLongMap;
 import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
@@ -70,7 +71,6 @@ public class StrongOrTypedStrongSummary extends Summary {
 		n2tc = new Long2Long();
 		p2sc = new Long2Long();
 		p2tc = new Long2Long();
-		rep = new Long2Long();
 		untypedSummaryNodes = new TwoLevelLongMap();
 		minCliqueID = -1;
 		emptySCCount = Long.MAX_VALUE;
@@ -948,7 +948,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 	}
 
 	// -->
-	// Auxillary methods
+	// Auxiliary methods
 	// -->
 
 	/**

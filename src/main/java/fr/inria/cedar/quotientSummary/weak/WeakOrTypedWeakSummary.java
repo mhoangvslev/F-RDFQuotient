@@ -12,7 +12,6 @@ public class WeakOrTypedWeakSummary extends Summary {
 	private static final Logger LOGGER = Logger.getLogger(WeakOrTypedWeakSummary.class.getName());
 	HashMap<Long, Long> ps; // for each property, the property source
 	HashMap<Long, Long> pt; // for each property, the property target
-	long minSummaryNode;
 	// U means unrepresented (so far) 
 	// R means represented (so far) 
 	// TRS means typed (thus, already represented) represented so far
@@ -46,33 +45,6 @@ public class WeakOrTypedWeakSummary extends Summary {
 		LOGGER.setLevel(Level.INFO);
 		ps = new HashMap<>();
 		pt = new HashMap<>();
-		minSummaryNode = -1;
-	}
-
-	/**
-	 * Replaces oldNode with newNode in all the data structures that this summary has (or inherits).
-	 * @param oldNode
-	 * @param newNode
-	 */
-	protected void replaceAll(Long oldNode, Long newNode){ 
-		edgesWithProv.replaceNodeInSummaryEdges(oldNode, newNode);
-		rep.replaceValue(oldNode, newNode);
-		// now we need to replace oldNode with newNode in the property source and target. It does not suffice to do it for one property.
-		if (ps.containsValue(oldNode))
-			for (Long prop: ps.keySet())
-				if (ps.get(prop).equals(oldNode)) {
-					ps.replace(prop, newNode);
-				}
-		if (pt.containsValue(oldNode))
-			for (Long prop: pt.keySet())
-				if (pt.get(prop).equals(oldNode)) {
-					pt.replace(prop, newNode);
-				}
-	}
-
-	protected void applySubstitutions(Substitutions subs) {
-		for (Long n: subs.getNodesToBeReplaced())
-			replaceAll(n, subs.get(n));
 	}
 
 	// -->
@@ -287,6 +259,11 @@ public class WeakOrTypedWeakSummary extends Summary {
 	/**
 	 * In this case we need to: represent the subject by the property source if it exists, otherwise, create a new node and also register it as the source of p; 
 	 * add a p edge between this and the typed object, if not already there
+	 * @param t
+	 * @param repS
+	 * @param repO
+	 * @param sourceP
+	 * @param targetP
 	 */
 	protected void handleDataTriple_US_RP_TRO(Triple t, Long repS, Long repO, Long sourceP, Long targetP) {
 		Long addedTripleSource = sourceP; 
@@ -305,6 +282,11 @@ public class WeakOrTypedWeakSummary extends Summary {
 	 * In this case we need to represent o by the target of p, and add the edge from repS to that node.
 	 * The source of p (if it exists) is not affected.
 	 * The target of p, if it did not exist, may become the representative of o
+	 * @param t
+	 * @param repS
+	 * @param repO
+	 * @param sourceP
+	 * @param targetP
 	 */
 	protected void handleDataTriple_TRS_RP_UO(Triple t, Long repS, Long repO, Long sourceP, Long targetP) {
 		Long addedTripleSource = repS;
@@ -322,6 +304,11 @@ public class WeakOrTypedWeakSummary extends Summary {
 	/**
 	 * In this case we need to: create the source of p; we don't create a target for it.
 	 * We represent s by the source of p, and add an edge from that to repO.
+	 * @param t
+	 * @param repS
+	 * @param repO
+	 * @param sourceP
+	 * @param targetP
 	 */
 	protected void handleDataTriple_US_UP_TRO(Triple t, Long repS, Long repO, Long sourceP, Long targetP) {
 		sourceP = this.getNextSummaryNode();
@@ -333,6 +320,11 @@ public class WeakOrTypedWeakSummary extends Summary {
 	/**
 	 * In this case we need to create the target of p and represent o by it.
 	 * We do not create a source of p.
+	 * @param t
+	 * @param repS
+	 * @param repO
+	 * @param sourceP
+	 * @param targetP
 	 */
 	protected void handleDataTriple_TRS_UP_UO(Triple t, Long repS, Long repO, Long sourceP, Long targetP) {
 		targetP = this.getNextSummaryNode();
@@ -344,6 +336,11 @@ public class WeakOrTypedWeakSummary extends Summary {
 	/**
 	 * In this case we may have to fuse things between repS and the source of P
 	 * RepO remains unchanged.
+	 * @param t
+	 * @param repS
+	 * @param repO
+	 * @param sourceP
+	 * @param targetP
 	 */
 	protected void handleDataTriple_RS_RP_TRO(Triple t, Long repS, Long repO, Long sourceP, Long targetP) {
 		Long addedTripleSource = repS;
@@ -372,6 +369,11 @@ public class WeakOrTypedWeakSummary extends Summary {
 	/**
 	 * In this case we need to possibly fuse the target of p with repO.
 	 * The source of p (if it exists)  remains unchanged.
+	 * @param t
+	 * @param repS
+	 * @param repO
+	 * @param sourceP
+	 * @param targetP
 	 */
 	protected void handleDataTriple_TRS_RP_RO(Triple t, Long repS, Long repO, Long sourceP, Long targetP) {
 		Long addedTripleSource = repS;
@@ -399,18 +401,58 @@ public class WeakOrTypedWeakSummary extends Summary {
 	/**
 	 * In this case we need to: use repS as the source of P; we don't know a target for p.
 	 * We add the edge.
+	 * @param t
+	 * @param repS
+	 * @param repO
+	 * @param sourceP
+	 * @param targetP
 	 */
-	protected void handleDataTriple_RS_UP_TRO(Triple t, Long repS, Long repO, Long pSource, Long pTarget) {
+	protected void handleDataTriple_RS_UP_TRO(Triple t, Long repS, Long repO, Long sourceP, Long targetP) {
 		ps.put(t.p, repS);
 		edgesWithProv.addTriple(repS, t.p, repO);
 	}
 
 	/**
 	 * In this case we need to use repO as the target of p, and do nothing about p's source.
+	 * @param t
+	 * @param repS
+	 * @param repO
+	 * @param sourceP
+	 * @param targetP
 	 */
-	protected void handleDataTriple_TRS_UP_RO(Triple t, Long repS, Long repO, Long pSource, Long pTarget) {
+	protected void handleDataTriple_TRS_UP_RO(Triple t, Long repS, Long repO, Long sourceP, Long targetP) {
 		pt.put(t.p, repO);
 		edgesWithProv.addTriple(repS, t.p, repO);
+	}
+
+	// -->
+	// Auxiliary methods
+	// -->
+
+	/**
+	 * Replaces oldNode with newNode in all the data structures that this summary has (or inherits).
+	 * @param oldNode
+	 * @param newNode
+	 */
+	protected void replaceAll(Long oldNode, Long newNode){ 
+		edgesWithProv.replaceNodeInSummaryEdges(oldNode, newNode);
+		rep.replaceValue(oldNode, newNode);
+		// now we need to replace oldNode with newNode in the property source and target. It does not suffice to do it for one property.
+		if (ps.containsValue(oldNode))
+			for (Long prop: ps.keySet())
+				if (ps.get(prop).equals(oldNode)) {
+					ps.replace(prop, newNode);
+				}
+		if (pt.containsValue(oldNode))
+			for (Long prop: pt.keySet())
+				if (pt.get(prop).equals(oldNode)) {
+					pt.replace(prop, newNode);
+				}
+	}
+
+	protected void applySubstitutions(Substitutions subs) {
+		for (Long n: subs.getNodesToBeReplaced())
+			replaceAll(n, subs.get(n));
 	}
 
 	// -->

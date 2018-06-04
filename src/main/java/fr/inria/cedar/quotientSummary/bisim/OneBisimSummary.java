@@ -1,18 +1,16 @@
 package fr.inria.cedar.quotientSummary.bisim;
 
+import fr.inria.cedar.quotientSummary.Summary;
+import fr.inria.cedar.quotientSummary.datastructures.Triple;
+import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.TreeSet;
-
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-
-import fr.inria.cedar.quotientSummary.Summary;
-import fr.inria.cedar.quotientSummary.datastructures.Triple;
-import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 
 public class OneBisimSummary extends Summary{
 	private static final Logger LOGGER = Logger.getLogger(OneBisimSummary.class.getName());
@@ -30,8 +28,9 @@ public class OneBisimSummary extends Summary{
 		this.dictionaryTableName = dictionaryTableName;
 		this.summaryTablePrefix = ONEFB_SUMMARY_PREFIX;
 		this.isTypeFirst = false;
-		this.n2ip = new HashMap<Long, TreeSet<Long>>();
-		this.n2op = new HashMap<Long, TreeSet<Long>>(); 
+		this.isTwoPass = true;
+		this.n2ip = new HashMap<>();
+		this.n2op = new HashMap<>(); 
 		this.ip2op2sn = new HashMap<>(); 
 	}
 
@@ -159,24 +158,24 @@ public class OneBisimSummary extends Summary{
 		for (Long n: n2op.keySet()){
 			TreeSet<Long> nop = n2op.get(n);
 			TreeSet<Long> nip = n2ip.get(n);
-			Long sn = getSummaryNode(nop, nip);
-			if (sn == null){
-				sn = createSummaryNode(nop, nip);
+			Long summaryNode = getSummaryNode(nop, nip);
+			if (summaryNode == null){
+				summaryNode = createSummaryNode(nop, nip);
 			}
 			//LOGGER.info("REPRESENTED NODE (1) " + RDF2SQLEncoding.dictionaryDecode(n) + " BY " + sn); 
-			rep.put(n, sn);
+			rep.put(n, summaryNode);
 		}
 		// all nodes with incoming but not outgoing edges (those with both are covered above): 
 		for (Long n: n2ip.keySet()){
 			if (n2op.get(n) == null){
 				TreeSet<Long> nop = n2op.get(n);
 				TreeSet<Long> nip = n2ip.get(n);
-				Long sn = getSummaryNode(nop, nip);
-				if (sn == null){
-					sn = createSummaryNode(nop, nip);
+				Long summaryNode = getSummaryNode(nop, nip);
+				if (summaryNode == null){
+					summaryNode = createSummaryNode(nop, nip);
 				}
 				//LOGGER.info("REPRESENTED NODE (2) " + RDF2SQLEncoding.dictionaryDecode(n) + " BY " + sn); 
-				rep.put(n, sn);
+				rep.put(n, summaryNode);
 			}
 		}
 	}
@@ -209,12 +208,12 @@ public class OneBisimSummary extends Summary{
 		}
 		this.edgesWithProv.addTriple(sRep, t.p, oRep);
 	}
-	
+
 	private Long createSummaryNode(TreeSet<Long> nop, TreeSet<Long> nip) {
 		Long n = this.getNextSummaryNode();
 		HashMap<TreeSet<Long>, Long> o2n = this.ip2op2sn.get(nip);
 		if (o2n == null){
-			o2n = new HashMap<TreeSet<Long>, Long>();
+			o2n = new HashMap<>();
 			this.ip2op2sn.put(nip, o2n);
 		}
 		o2n.put(nop, n);
@@ -229,6 +228,7 @@ public class OneBisimSummary extends Summary{
 		return (o2n.get(nop));
 	}
 
+	@Override
 	protected void handleTypeTripleAfterData(Triple t) {
 		rep.put(t.o, t.o); 
 		this.edgesWithProv.addTriple(rep.get(t.s), t.p, t.o);
@@ -237,13 +237,13 @@ public class OneBisimSummary extends Summary{
 	private void classifyDataTriple(Triple t) {
 		TreeSet<Long> previousSOP = n2op.get(t.s);
 		if (previousSOP == null){
-			previousSOP = new TreeSet<Long>();
+			previousSOP = new TreeSet<>();
 			n2op.put(t.s, previousSOP);
 		}
 		previousSOP.add(t.p); 
 		TreeSet<Long> previousOIP = n2ip.get(t.o);
 		if (previousOIP == null){
-			previousOIP = new TreeSet<Long>();
+			previousOIP = new TreeSet<>();
 			n2ip.put(t.o, previousOIP);
 		}
 		previousOIP.add(t.p); 
@@ -252,5 +252,4 @@ public class OneBisimSummary extends Summary{
 	private void consistencyChecks() {
 		// TODO Auto-generated method stub
 	}
-
 }

@@ -41,12 +41,13 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		this.triplesTableName = triplesTableName;
 		this.encodedTriplesTableName = encodedTriplesTableName;
 		this.dictionaryTableName = dictionaryTableName;
+		this.isTypeFirst = true;
+		this.isTwoPass = false;
 		cs = new Long2LongSet();
 		n2cs = new Long2Long();
 		n2c = new Long2LongSet();
 		cs2csID = new HashMap<>();
 		this.summaryTablePrefix = TYPED_WEAK_SUMMARY_PREFIX;
-		this.isTypeFirst = true;
 	}
 
 	/**

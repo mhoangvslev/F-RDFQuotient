@@ -89,11 +89,12 @@ public class BuilderCmd {
 					displayUsageInfo();
 					return;
 				}
-				setUpConfiguration(args[1], "true".equals(args[3]));
+				Boolean saturated = "true".equals(args[3]);
+				setUpConfiguration(args[1], saturated);
 				getConnection();
-				summarize(args[1], args[2], "true".equals(args[3]));
+				summarize(args[1], args[2], saturated);
 				if ("true".equals(args[4])) {
-					saveSummaryInPostgres();
+					saveSummaryInPostgres(saturated);
 				}
 				if ("true".equals(args[5])) {
 					exportSummaryToDisk();
@@ -274,9 +275,9 @@ public class BuilderCmd {
 		LOGGER.info("Graph from Postgres summarized");
 	}
 
-	private static void saveSummaryInPostgres() {
+	private static void saveSummaryInPostgres(Boolean summarizeSaturated) {
 		long start = System.currentTimeMillis();
-		summaryInUse.saveSummaryInPostgres(connectionInUse, false, "");
+		summaryInUse.saveSummaryInPostgres(connectionInUse, false, summarizeSaturated ? "sat" : "");
 		summarySavingInPostgresTime = System.currentTimeMillis() - start;
 	}
 
@@ -289,7 +290,7 @@ public class BuilderCmd {
 	}
 
 	private static void exportSummarizationStatisticsToDisk() {
-		String csvFileName = trimNT(summaryInUse.getNTSummaryFileName(), false) + "-summarization-statistics.csv";
+		String csvFileName = trimNT(summaryInUse.getNTSummaryFileName(), false) + "_" + summaryInUse.getSummaryURIPrefix() + "-summarization-statistics.csv";
 		LOGGER.info("Exporting summarization statistics to disk to the file " + csvFileName);
 		try (PrintWriter pw = new PrintWriter(new File(csvFileName))) {
 			HashMap<String, String> statistics = summaryInUse.getRunStatistics();

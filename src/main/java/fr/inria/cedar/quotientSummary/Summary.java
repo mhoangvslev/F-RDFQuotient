@@ -3,6 +3,11 @@ package fr.inria.cedar.quotientSummary;
 import fr.inria.cedar.quotientSummary.datastructures.EdgesWithProvenanceCounts;
 import fr.inria.cedar.quotientSummary.datastructures.Long2Long;
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
+import fr.inria.cedar.quotientSummary.traversers.DataFirstTraverser;
+import fr.inria.cedar.quotientSummary.traversers.DataFirstTwoPassTraverser;
+import fr.inria.cedar.quotientSummary.traversers.Traverser;
+import fr.inria.cedar.quotientSummary.traversers.TypeFirstTraverser;
+import fr.inria.cedar.quotientSummary.traversers.TypeFirstTwoPassTraverser;
 import fr.inria.cedar.quotientSummary.util.DOTAuxiliary;
 import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 import java.io.BufferedWriter;
@@ -39,11 +44,7 @@ public class Summary {
 	//       the set of objects such that (subject, property, object) is in the summary
 	protected EdgesWithProvenanceCounts edgesWithProv;
 
-	// TODO possibly rewrite code gathering these
-	// for each summary node, the number of graph nodes it represents
-	protected HashMap<Long, Long> summaryNodeStatistics;
-	// for each summary edge, the number of graph edge it represents
-	protected HashMap<Triple, Long> summaryEdgeStatistics;
+	protected Traverser traverser;
 
 	// these serve to represent the nodes that may have types but no data property
 	protected long typeOnlyNodeID;
@@ -53,9 +54,11 @@ public class Summary {
 	protected long maxSummaryNode;
 	protected Properties properties;
 	protected static String SUMMARY_CONFIG_FILE = "conf/summarization.properties";
+
 	// repTablePrefix must be instantiated with a specific string for each summary type, so that each summary is saved as separated Postgres tables
 	protected String summaryTablePrefix;
 	protected boolean isTypeFirst = false;
+	protected boolean isTwoPass = false;
 	protected static String ROOT_SUMMARY_PREFIX = "";
 	protected static String WEAK_SUMMARY_PREFIX = "w_";
 	protected static String STRONG_SUMMARY_PREFIX = "s_";
@@ -81,6 +84,7 @@ public class Summary {
 	protected long dataTriplesSummarizedSoFar = 0;
 
 	protected DOTAuxiliary dax;
+
 	// statistics
 	protected long summaryEdgesSavingTime;
 	protected long representationFunctionSavingTime;
@@ -88,15 +92,22 @@ public class Summary {
 	protected long typeTriplesSummarizationTime;
 	protected long dataTriplesSummarizationTime;
 	protected long allTriplesSummarizationTime;
+	// TODO possibly rewrite code gathering these
+	// for each summary node, the number of graph nodes it represents
+	protected HashMap<Long, Long> summaryNodeStatistics;
+	// for each summary edge, the number of graph edge it represents
+	protected HashMap<Triple, Long> summaryEdgeStatistics;
 
 	public Summary() {
 		LOGGER.setLevel(Level.INFO);
-		rep = new Long2Long();
+		summaryTablePrefix = ROOT_SUMMARY_PREFIX;
+		typeOnlyNodeAlreadySeen = false;
 		sn = new HashSet<>();
+		rep = new Long2Long();
 		edgesWithProv = new EdgesWithProvenanceCounts();
+
 		//summaryNodeStatistics = new HashMap<>();
 		//summaryEdgeStatistics = new HashMap<>();
-		typeOnlyNodeAlreadySeen = false;
 		properties = new Properties();
 		try {
 			properties.load(new FileReader(SUMMARY_CONFIG_FILE));
@@ -104,13 +115,12 @@ public class Summary {
 		} catch (IOException e) {
 			throw new IllegalStateException("Unable to initialize summary properties");
 		}
-		summaryTablePrefix = ROOT_SUMMARY_PREFIX;
 		dax = new DOTAuxiliary();
 	}
 
 	public Summary(Connection conn) throws SQLException {
-		this.edgesWithProv = new EdgesWithProvenanceCounts();
 		this.rep = new Long2Long();
+		this.edgesWithProv = new EdgesWithProvenanceCounts();
 		try {
 			conn.setAutoCommit(false);
 		}
@@ -161,7 +171,7 @@ public class Summary {
 		try (
 				Statement getTriples = conn.createStatement();
 				ResultSet rs = getTriples.executeQuery(getSummaryTriples);
-				) {
+		) {
 			while (rs.next()) {
 				Long s = rs.getLong(1);
 				Long p = rs.getLong(2);
@@ -329,7 +339,6 @@ public class Summary {
 	}
 
 	/**
-	 * 
 	 * May 24, 2018: these statistics should be picked directly from the edgesWithCounter.
 	 */
 	protected void gatherEdgeStatistics() {
@@ -344,6 +353,26 @@ public class Summary {
 		throw new IllegalStateException("Not implemented at this level");
 	}
 
+	public void summarizeFromPostgres(Connection conn) {
+		if (isTypeFirst) {
+			if (isTwoPass) {
+				traverser = new DataFirstTwoPassTraverser(conn);
+			}
+			else {
+				traverser = new DataFirstTraverser(conn);
+			}
+		}
+		else {
+			if (isTwoPass) {
+				traverser = new TypeFirstTwoPassTraverser(conn);
+			}
+			else {
+				traverser = new TypeFirstTraverser(conn);
+			}
+		}
+		traverser.traverseAllTriples();
+	}
+
 	/**
 	 * Saves a summary as two Postgres tables: one is rep (the representation
 	 * function) the other one is the set of summary edges, encoded as integers.
@@ -352,9 +381,9 @@ public class Summary {
 	 *
 	 * @param conn
 	 * @param partialResult
-	 * @param summarizationTechnique
+	 * @param summarizationInput
 	 */
-	public void saveSummaryInPostgres(Connection conn, Boolean partialResult, String summarizationTechnique) {
+	public void saveSummaryInPostgres(Connection conn, Boolean partialResult, String summarizationInput) {
 		try {
 			conn.setAutoCommit(false);
 		}
@@ -366,7 +395,7 @@ public class Summary {
 		if (partialResult)
 			newTableName = newTableName + "_sum";
 		else
-			newTableName = "sav_" + timestamp + "_" + newTableName + "_" + getSummaryURIPrefix();
+			newTableName = "sav_" + timestamp + "_" + newTableName + "_" + summarizationInput + "_" + getSummaryURIPrefix();
 		String newSummaryTableNameRep = newTableName + "_rep";
 		String newSummaryTableNameEdges = newTableName + "_edges";
 
@@ -597,15 +626,15 @@ public class Summary {
 					for (Triple ts : this.summaryEdgeStatistics.keySet()) {
 						Long numberOfRepresentedEdges = this.summaryEdgeStatistics.get(ts);
 						String reifEdgeURI = getSummaryNodeURI(properties.getProperty("reifiedSummaryEdgeURIPrefix"),
-								reifiedEdgeNumber);
+							reifiedEdgeNumber);
 						bw.write(reifEdgeURI + " <" + properties.getProperty("reifiedEdgeHasSubject") + "> "
-								+ getSummaryNodeURI(URIprefix, ts.s) + " .\n");
+							+ getSummaryNodeURI(URIprefix, ts.s) + " .\n");
 						bw.write(reifEdgeURI + " <" + properties.getProperty("reifiedEdgeHasProperty") + "> <"
-								+ RDF2SQLEncoding.dictionaryDecode(ts.p) + "> .\n");
+							+ RDF2SQLEncoding.dictionaryDecode(ts.p) + "> .\n");
 						bw.write(reifEdgeURI + " <" + properties.getProperty("reifiedEdgeHasObject") + "> "
-								+ getSummaryNodeURI(URIprefix, ts.o) + " .\n");
+							+ getSummaryNodeURI(URIprefix, ts.o) + " .\n");
 						bw.write(reifEdgeURI + " <" + properties.getProperty("summaryEdgeSupportURI") + "> \""
-								+ numberOfRepresentedEdges + "\" .\n");
+							+ numberOfRepresentedEdges + "\" .\n");
 						reifiedEdgeNumber++;
 					}
 				}
@@ -916,10 +945,10 @@ public class Summary {
 	protected ResultSet getNonTypeTriplesCursorForDotDrawing(Connection conn, long triplesToDraw) {
 		try {
 			String query = "select d1.value, d2.value, d3.value from (select row_number() over () as id, s, p, o from "
-					+ encodedTriplesTableName + ") t join " + dictionaryTableName
-					+ " d1 on t.s = d1.key join " + dictionaryTableName
-					+ " d2 on t.p = d2.key join " + dictionaryTableName
-					+ " d3 on t.o = d3.key where d2.value <> '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' order by id limit " + triplesToDraw;
+				+ encodedTriplesTableName + ") t join " + dictionaryTableName
+				+ " d1 on t.s = d1.key join " + dictionaryTableName
+				+ " d2 on t.p = d2.key join " + dictionaryTableName
+				+ " d3 on t.o = d3.key where d2.value <> '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' order by id limit " + triplesToDraw;
 			return conn.createStatement().executeQuery(query);
 		}
 		catch(SQLException e) {
@@ -937,10 +966,10 @@ public class Summary {
 	protected ResultSet getTypeTriplesCursorForDotDrawing(Connection conn, long triplesToDraw) {
 		try {
 			String query = "select d1.value, d2.value, d3.value from "
-					+ encodedTriplesTableName + " t join " + dictionaryTableName
-					+ " d1 on t.s = d1.key join " + dictionaryTableName
-					+ " d2 on t.p = d2.key join " + dictionaryTableName
-					+ " d3 on t.o = d3.key where d2.value = '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' limit " + triplesToDraw;
+				+ encodedTriplesTableName + " t join " + dictionaryTableName
+				+ " d1 on t.s = d1.key join " + dictionaryTableName
+				+ " d2 on t.p = d2.key join " + dictionaryTableName
+				+ " d3 on t.o = d3.key where d2.value = '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' limit " + triplesToDraw;
 			return conn.createStatement().executeQuery(query);
 		}
 		catch(SQLException e){
@@ -1050,10 +1079,6 @@ public class Summary {
 		catch (IOException e) {
 			throw new IllegalStateException("Could not write encoded summary to dot file: " + dotFile + ". Is the path correct?");
 		}
-	}
-
-	public void summarizeFromPostgres(Connection conn) {
-		throw new IllegalStateException("This method is not defined for " + this.getClass().getName());
 	}
 
 	protected final String getSummaryTriplesSQLQuery() {
