@@ -72,7 +72,7 @@ public class BuilderCmd {
 			return;
 		}
 
-		switch(args[0]) {
+		switch (args[0]) {
 			case "load":
 				if (args.length != 4) {
 					displayUsageInfo();

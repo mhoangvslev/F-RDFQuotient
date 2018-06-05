@@ -78,7 +78,7 @@ public class OneBisimSummary extends Summary{
 						else
 							classifyDataTriple(t);
 						triplesSummarizedSoFar++;
-						dataTriplesSummarizedSoFar++;
+						nonTypeTriplesSummarizedSoFar++;
 						if (checkConsistency) {
 							consistencyChecks();
 						}
@@ -108,7 +108,7 @@ public class OneBisimSummary extends Summary{
 						else
 							representDataTriple(t);
 						triplesSummarizedSoFar++;
-						dataTriplesSummarizedSoFar++;
+						nonTypeTriplesSummarizedSoFar++;
 						if (checkConsistency) {
 							consistencyChecks();
 						}
@@ -121,8 +121,8 @@ public class OneBisimSummary extends Summary{
 			throw new IllegalStateException("Postgres error encountered while summarizing data triples " + e.toString());
 		}
 
-		dataTriplesSummarizationTime = System.currentTimeMillis() - start - avoidCollisionsTime;
-		LOGGER.info("Summarized " + dataTriplesSummarizedSoFar + " data triples in " + dataTriplesSummarizationTime + " ms");
+		nonTypeTriplesSummarizationTime = System.currentTimeMillis() - start - avoidCollisionsTime;
+		LOGGER.info("Summarized " + nonTypeTriplesSummarizedSoFar + " data triples in " + nonTypeTriplesSummarizationTime + " ms");
 		LOGGER.info("Representing type triples");
 		start = System.currentTimeMillis();
 		String getTypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p = " + typeConstantCode);
@@ -149,8 +149,13 @@ public class OneBisimSummary extends Summary{
 		typeTriplesSummarizationTime = System.currentTimeMillis() - start;
 		LOGGER.info("Summarized " + typeTriplesSummarizedSoFar + " type triples in " + typeTriplesSummarizationTime + " ms");
 
-		allTriplesSummarizationTime = dataTriplesSummarizationTime + typeTriplesSummarizationTime;
+		allTriplesSummarizationTime = nonTypeTriplesSummarizationTime + typeTriplesSummarizationTime;
 		LOGGER.info("Summarized " + triplesSummarizedSoFar + " overall triples in " + allTriplesSummarizationTime + " ms");
+	}
+
+	@Override
+	protected void handleTypeTripleBeforeData(Triple t) {
+		throw new IllegalStateException("This method does not belong to " + this.getClass().getName());
 	}
 
 	private void representDataNodes() {
@@ -249,7 +254,8 @@ public class OneBisimSummary extends Summary{
 		previousOIP.add(t.p); 
 	}
 
-	private void consistencyChecks() {
+	@Override
+	protected void consistencyChecks() {
 		// TODO Auto-generated method stub
 	}
 }

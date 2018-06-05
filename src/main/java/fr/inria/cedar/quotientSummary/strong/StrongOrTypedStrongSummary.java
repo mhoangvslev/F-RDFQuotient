@@ -145,7 +145,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 			fuseCliqueInto(targetCliqueP, newTargetCliqueO, TARGET);
 		}
 		//else {
-		//	otherwise do nothing
+		// do nothing
 		//}
 		//LOGGER.debug("RS_RP_RO After clique fusions, source cliques are " + sc.toString() + "\ntarget cliques are: " + tc.toString());
 		//LOGGER.debug("RS_RP_RO while untyped is: " + untypedSummaryNodes.toString());
@@ -180,7 +180,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 			computeAndApplyCliqueReplacements(targetCliqueO, targetCliqueP, newTargetCliqueO, TARGET, nodeReps);
 		}
 		//else {
-		//	otherwise do nothing
+		// do nothing
 		//}
 
 		// now patching summary edges if needed; this may involve the removal of
@@ -1255,6 +1255,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 	// Debug methods
 	// -->
 
+	@Override
 	protected void consistencyChecks(){
 		String msg = "After " + triplesSummarizedSoFar + " triples: ";
 		for (Long dataNode: n2sc.getKeys()){

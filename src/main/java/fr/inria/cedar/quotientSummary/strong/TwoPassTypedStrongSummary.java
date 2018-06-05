@@ -14,14 +14,8 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 public class TwoPassTypedStrongSummary extends StrongOrTypedStrongSummary {
-	private static final Logger LOGGER = Logger.getLogger(TwoPassStrongSummary.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(TwoPassTypedStrongSummary.class.getName());
 	//protected HashMap<Long, HashMap<Long, TreeSet<Long>>> edges;
-
-	// The following three attribute serve to identify and store the class sets for RDF resources
-	Long2LongSet cs; // for each class set ID, a class set
-	Long2Long n2cs; // for each node, its class set ID. This is also the rep function for typed nodes
-	Long2LongSet n2c; // for each node, the set of types we know so far for this node
-	HashMap<TreeSet<Long>, Long> cs2csID; // for each set of types known so far, the ID of that set
 
 	public TwoPassTypedStrongSummary(String triplesFileName, String triplesTableName, String encodedTriplesTableName, String dictionaryTableName) {
 		super();
@@ -169,7 +163,7 @@ public class TwoPassTypedStrongSummary extends StrongOrTypedStrongSummary {
 									rep.put(t.s, getOrCreateSummaryNode(sourceCliqueS, targetCliqueS));
 								}
 							}
-							if(!oTyped) {
+							if (!oTyped) {
 								if (sn.contains(t.o)) {
 									rep.put(t.o, t.o);
 								}
@@ -182,7 +176,7 @@ public class TwoPassTypedStrongSummary extends StrongOrTypedStrongSummary {
 							edgesWithProv.addTriple(rep.get(t.s), t.p, rep.get(t.o));
 						}
 						triplesSummarizedSoFar++;
-						dataTriplesSummarizedSoFar++;
+						nonTypeTriplesSummarizedSoFar++;
 						if (checkConsistency) {
 							consistencyChecks();
 						}
@@ -195,70 +189,11 @@ public class TwoPassTypedStrongSummary extends StrongOrTypedStrongSummary {
 			throw new IllegalStateException("Postgres error encountered while summarizing data triples " + e.toString());
 		}
 
-		dataTriplesSummarizationTime = System.currentTimeMillis() - start - avoidCollisionsTime;
-		LOGGER.info("Summarized " + dataTriplesSummarizedSoFar + " data triples in " + dataTriplesSummarizationTime + " ms");
+		nonTypeTriplesSummarizationTime = System.currentTimeMillis() - start - avoidCollisionsTime;
+		LOGGER.info("Summarized " + nonTypeTriplesSummarizedSoFar + " data triples in " + nonTypeTriplesSummarizationTime + " ms");
 
-		allTriplesSummarizationTime = classSetCreationTime + typeTriplesSummarizationTime + dataTriplesSummarizationTime;
+		allTriplesSummarizationTime = classSetCreationTime + typeTriplesSummarizationTime + nonTypeTriplesSummarizationTime;
 		LOGGER.info("Summarized " + triplesSummarizedSoFar + " triples overall in " + allTriplesSummarizationTime + " ms");
-	}
-
-	@Override
-	public void handleTypeTripleBeforeData(Triple t) {
-		//LOGGER.debug("@@@ Type triple: " + t.toString()); 
-
-		TreeSet<Long> classSetOfThisNode = n2c.get(t.s); 
-		if (classSetOfThisNode == null){ // this is the first time we encounter the node: create a class set with exactly this type
-			classSetOfThisNode = new TreeSet<>();
-			classSetOfThisNode.add(t.o); 
-			Long thisNodeClassSetID = cs2csID.get(classSetOfThisNode);
-			if (thisNodeClassSetID == null){
-				thisNodeClassSetID = this.getNextSummaryNode();
-				cs.put(thisNodeClassSetID, classSetOfThisNode);
-				cs2csID.put(classSetOfThisNode, thisNodeClassSetID);
-			}
-			n2c.put(t.s, classSetOfThisNode);
-			n2cs.put(t.s, thisNodeClassSetID);
-		}
-		else{ // we already had some types for t.s
-			if (classSetOfThisNode.contains(t.o)){
-				// do nothing
-			}
-			else {
-				// n is moving from classSetOfThisNode to newClassSetOfThisNode.
-				// TODO Check if classSetOfThisNode is deserted and if yes, maybe remove it.
-				// (We can also keep it there to reuse it later...)
-				TreeSet<Long> newClassSetOfThisNode = new TreeSet<>();
-				newClassSetOfThisNode.addAll(classSetOfThisNode);
-				newClassSetOfThisNode.add(t.o); 
-
-				Long newClassSetID = cs2csID.get(newClassSetOfThisNode);
-				if (newClassSetID == null){
-					// this class set was not already known. We create it.
-					newClassSetID = this.getNextSummaryNode();
-					cs.put(newClassSetID, newClassSetOfThisNode); // installs the new class set
-					cs2csID.put(newClassSetOfThisNode, newClassSetID); // installs the new class set
-				}
-				// whether or not newClassSetID was known:
-				n2cs.put(t.s, newClassSetID); // erases/replaces previously known class set ID
-				n2c.put(t.s, newClassSetOfThisNode); // erases/replaces previously known class set
-			}
-		}
-	}
-
-	/**
-	 * This method adds the type triples in the summary, based on the structures previously filled in while traversing those triples.
-	 * It is called only once and will output all the type triples of the summary.
-	 */
-	public void representTypeTriples() {
-		//LOGGER.debug("POST HANDLE TYPE TRIPLES");
-		for (Long node: this.n2cs.getKeys()){
-			Long thisClassSetID = this.n2cs.get(node);
-			TreeSet<Long> thisClassSet = this.cs.get(thisClassSetID);
-			for (Long thisClass: thisClassSet){
-				edgesWithProv.addTriple(thisClassSetID, RDF2SQLEncoding.getTypeCode(), thisClass);
-				rep.put(node, thisClassSetID);
-			}
-		}
 	}
 
 	@Override

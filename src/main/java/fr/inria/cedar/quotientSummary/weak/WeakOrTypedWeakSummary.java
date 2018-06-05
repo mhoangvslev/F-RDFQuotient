@@ -459,6 +459,7 @@ public class WeakOrTypedWeakSummary extends Summary {
 	// Debug methods
 	// -->
 
+	@Override
 	protected void consistencyChecks() {
 		throw new IllegalStateException("This check is not defined here, define it in specialized classes");
 	}

@@ -1,23 +1,19 @@
 package summaries.onefb;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
+import fr.inria.cedar.ontosql.db.UnsupportedDatabaseEngineException;
+import fr.inria.cedar.quotientSummary.controller.Builder;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import org.junit.Test;
 
-import fr.inria.cedar.ontosql.db.UnsupportedDatabaseEngineException;
-import fr.inria.cedar.quotientSummary.bisim.OneBisimSummary;
-import fr.inria.cedar.quotientSummary.controller.Builder;
-
 public class OneFBTests {
-	private static final Logger LOGGER = Logger.getLogger(OneBisimSummary.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(OneFBTests.class.getName());
 
 	public File summarizeUsingOneFBSummary(int i) {
 		LOGGER.setLevel(Level.INFO);

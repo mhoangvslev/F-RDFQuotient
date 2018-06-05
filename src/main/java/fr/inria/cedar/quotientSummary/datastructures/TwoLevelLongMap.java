@@ -122,7 +122,7 @@ public class TwoLevelLongMap {
 	@Override
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
-		for(Long flk: map.keySet()) {
+		for (Long flk: map.keySet()) {
 			sb.append(flk).append("=>{");
 			//LOGGER.debug("Source clique: " + sc);
 			HashMap<Long, Long> entriesOnFlk = map.get(flk);

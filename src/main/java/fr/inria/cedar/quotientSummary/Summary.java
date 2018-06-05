@@ -2,6 +2,7 @@ package fr.inria.cedar.quotientSummary;
 
 import fr.inria.cedar.quotientSummary.datastructures.EdgesWithProvenanceCounts;
 import fr.inria.cedar.quotientSummary.datastructures.Long2Long;
+import fr.inria.cedar.quotientSummary.datastructures.Long2LongSet;
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
 import fr.inria.cedar.quotientSummary.util.DOTAuxiliary;
 import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
@@ -38,6 +39,12 @@ public class Summary {
 	//     for each property
 	//       the set of objects such that (subject, property, object) is in the summary
 	protected EdgesWithProvenanceCounts edgesWithProv;
+
+	// The following three attribute serve to identify and store the class sets for RDF resources
+	protected Long2LongSet cs; // for each class set ID, a class set
+	protected Long2Long n2cs; // for each data node, its class set ID. This is also the rep function for typed nodes
+	protected Long2LongSet n2c; // for each data node, the set of types we know so far for this node
+	protected HashMap<TreeSet<Long>, Long> cs2csID; // for each set of types known so far, the ID of that set
 
 	protected Traverser traverser;
 
@@ -76,16 +83,17 @@ public class Summary {
 
 	protected long triplesSummarizedSoFar = 0;
 	protected long typeTriplesSummarizedSoFar = 0;
-	protected long dataTriplesSummarizedSoFar = 0;
+	protected long nonTypeTriplesSummarizedSoFar = 0;
 
 	protected DOTAuxiliary dax;
 
 	// statistics
+	protected long schemaNodesCollectionTime;
 	protected long summaryEdgesSavingTime;
 	protected long representationFunctionSavingTime;
 	protected long classSetCreationTime;
 	protected long typeTriplesSummarizationTime;
-	protected long dataTriplesSummarizationTime;
+	protected long nonTypeTriplesSummarizationTime;
 	protected long allTriplesSummarizationTime;
 	// TODO possibly rewrite code gathering these
 	// for each summary node, the number of graph nodes it represents
@@ -340,14 +348,11 @@ public class Summary {
 		//TODO
 	}
 
-	protected void handleTypeTripleBeforeData(Triple t) {
-		throw new IllegalStateException("Not implemented at this level");
-	}
-
-	protected void handleTypeTripleAfterData(Triple t) {
-		throw new IllegalStateException("Not implemented at this level");
-	}
-
+	/**
+	 * Summarizes an RDF graph assuming the data triples are in Postgres
+	 *
+	 * @param conn
+	 */
 	public void summarizeFromPostgres(Connection conn) {
 		if (isTypeFirst) {
 			if (isTwoPass) {
@@ -366,6 +371,88 @@ public class Summary {
 			}
 		}
 		traverser.traverseAllTriples();
+	}
+
+	protected void handleDataTriple(Triple t) {
+		throw new IllegalStateException("Not implemented at this level");
+	}
+
+	/**
+	 * This implementation should be shared by Weak and Strong
+	 *
+	 * @param t
+	 */
+	protected void handleTypeTripleAfterData(Triple t) {
+		Long repS = rep.get(t.s);
+		if (repS != null) {
+			edgesWithProv.addTriple(repS, t.p, t.o);
+		}
+		else {
+			if (!typeOnlyNodeAlreadySeen) {
+				typeOnlyNodeID = getNextSummaryNode();
+				typeOnlyNodeAlreadySeen = true;
+			}
+			edgesWithProv.addTriple(typeOnlyNodeID, t.p, t.o);
+			rep.put(t.s, typeOnlyNodeID);
+		}
+		rep.put(t.o, t.o);
+	}
+
+	protected void handleTypeTripleBeforeData(Triple t) {
+		TreeSet<Long> classSetOfThisNode = n2c.get(t.s);
+		if (classSetOfThisNode == null) { // this is the first time we encounter the node: create a class set with exactly this type
+			classSetOfThisNode = new TreeSet<>();
+			classSetOfThisNode.add(t.o);
+			Long thisNodeClassSetID = cs2csID.get(classSetOfThisNode); // comparison between sets uses equals and compares the structures of the sets
+			if (thisNodeClassSetID == null) {
+				// this class set was not already known so we create it
+				thisNodeClassSetID = getNextSummaryNode();
+				cs.put(thisNodeClassSetID, classSetOfThisNode); // installs the new class set
+				cs2csID.put(classSetOfThisNode, thisNodeClassSetID); // installs the new class set
+			}
+			// whether or not newClassSetID was known:
+			n2c.put(t.s, classSetOfThisNode); // erases/replaces previously known class set
+			n2cs.put(t.s, thisNodeClassSetID); // erases/replaces previously known class set ID
+		}
+		else if (!classSetOfThisNode.contains(t.o)) { // we already had some types for t.s but not this one so we need to add new type
+			// n is moving from classSetOfThisNode to newClassSetOfThisNode.
+			// TODO Check if classSetOfThisNode is deserted and if yes, maybe remove it.
+			// (We can also keep it there to reuse it later...)
+			TreeSet<Long> newClassSetOfThisNode = new TreeSet<>();
+			newClassSetOfThisNode.addAll(classSetOfThisNode);
+			newClassSetOfThisNode.add(t.o);
+			Long newClassSetID = cs2csID.get(newClassSetOfThisNode);
+			if (newClassSetID == null) {
+				newClassSetID = getNextSummaryNode();
+				cs.put(newClassSetID, newClassSetOfThisNode);
+				cs2csID.put(newClassSetOfThisNode, newClassSetID);
+			}
+			n2c.put(t.s, newClassSetOfThisNode);
+			n2cs.put(t.s, newClassSetID);
+		}
+		//else {
+		// do nothing
+		//}
+	}
+
+	/**
+	 * This method adds the type triples in the summary, based on the structures previously filled in while traversing those triples.
+	 * It is called only once and will output all the type triples of the summary.
+	 */
+	protected void representTypeTriples() {
+		//LOGGER.debug("POST HANDLE TYPE TRIPLES");
+		for (Long node: n2cs.getKeys()) {
+			Long thisClassSetID = n2cs.get(node);
+			TreeSet<Long> thisClassSet = cs.get(thisClassSetID); // the class set IS the representative
+			for (Long thisClass: thisClassSet) {
+				edgesWithProv.addTriple(thisClassSetID, RDF2SQLEncoding.getTypeCode(), thisClass);
+				rep.put(node, thisClassSetID);
+			}
+		}
+	}
+
+	protected void consistencyChecks() {
+		throw new IllegalStateException("Not implemented at this level");
 	}
 
 	/**
@@ -1115,12 +1202,15 @@ public class Summary {
 		stats.put("summaryEdgesSavingTime", Long.toString(summaryEdgesSavingTime));
 		stats.put("representationFunctionSavingTime", Long.toString(representationFunctionSavingTime));
 
+		stats.put("schemaNodesCollectionTime", Long.toString(schemaNodesCollectionTime));
 		stats.put("classSetCreationTime", Long.toString(classSetCreationTime));
 		stats.put("typeTriplesSummarizationTime", Long.toString(typeTriplesSummarizationTime));
-		stats.put("dataTriplesSummarizationTime", Long.toString(dataTriplesSummarizationTime));
+		stats.put("nonTypeTriplesSummarizationTime", Long.toString(nonTypeTriplesSummarizationTime));
 		stats.put("allTriplesSummarizationTime", Long.toString(allTriplesSummarizationTime));
 
 		stats.put("inputGraphSize", Long.toString(triplesSummarizedSoFar));
+		stats.put("inputGraphTypeTriples", Long.toString(typeTriplesSummarizedSoFar));
+		stats.put("inputGraphNonTypeTriples", Long.toString(nonTypeTriplesSummarizedSoFar));
 		stats.put("outputGraphSize", Integer.toString(edgesWithProv.getSummaryEdges().size()));
 
 		stats.put("inputGraphNumberOfNodes", Long.toString(rep.numberOfKeys()));

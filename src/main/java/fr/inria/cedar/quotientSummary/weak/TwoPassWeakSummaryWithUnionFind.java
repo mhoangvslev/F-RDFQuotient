@@ -116,7 +116,7 @@ public class TwoPassWeakSummaryWithUnionFind extends WeakOrTypedWeakSummary {
 							edgesWithProv.addTriple(repS, t.p, repO);
 						}
 						triplesSummarizedSoFar++;
-						dataTriplesSummarizedSoFar++;
+						nonTypeTriplesSummarizedSoFar++;
 						if (checkConsistency) {
 							consistencyChecks();
 						}
@@ -129,8 +129,8 @@ public class TwoPassWeakSummaryWithUnionFind extends WeakOrTypedWeakSummary {
 			throw new IllegalStateException("Postgres error encountered while summarizing data triples " + e.toString());
 		}
 
-		dataTriplesSummarizationTime = System.currentTimeMillis() - start - avoidCollisionsTime;
-		LOGGER.info("Summarized " + dataTriplesSummarizedSoFar + " data triples in " + dataTriplesSummarizationTime + " ms");
+		nonTypeTriplesSummarizationTime = System.currentTimeMillis() - start - avoidCollisionsTime;
+		LOGGER.info("Summarized " + nonTypeTriplesSummarizedSoFar + " data triples in " + nonTypeTriplesSummarizationTime + " ms");
 
 		start = System.currentTimeMillis();
 		String getTypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p = " + typeConstantCode);
@@ -157,8 +157,13 @@ public class TwoPassWeakSummaryWithUnionFind extends WeakOrTypedWeakSummary {
 		typeTriplesSummarizationTime = System.currentTimeMillis() - start;
 		LOGGER.info("Summarized " + typeTriplesSummarizedSoFar + " type triples in " + typeTriplesSummarizationTime + " ms");
 
-		allTriplesSummarizationTime = dataTriplesSummarizationTime + typeTriplesSummarizationTime;
+		allTriplesSummarizationTime = nonTypeTriplesSummarizationTime + typeTriplesSummarizationTime;
 		LOGGER.info("Summarized " + triplesSummarizedSoFar + " overall triples in " + allTriplesSummarizationTime + " ms");
+	}
+
+	@Override
+	protected void handleTypeTripleBeforeData(Triple t) {
+		throw new IllegalStateException("This method does not belong to " + this.getClass().getName());
 	}
 
 	public void handleDataTriple2P(Triple t) {
@@ -207,32 +212,5 @@ public class TwoPassWeakSummaryWithUnionFind extends WeakOrTypedWeakSummary {
 				disjointSetForest.union(ps.get(p1), pt.get(p2)); // source-target union
 			}
 		}
-	}
-
-	/** This implementation should be shared by Weak and Strong
-	 *
-	 * @param t
-	 */
-	@Override
-	protected void handleTypeTripleAfterData(Triple t) {
-		//LOGGER.debug("\nType triple " + t.toString());
-		Long repS = rep.get(t.s);
-		if (repS != null) {
-			//LOGGER.debug("Source " + t.s + " already represented");
-			//addSummaryEdge(repS, t.p, t.o);
-			edgesWithProv.addTriple(repS, t.p, t.o);
-		}
-		else {
-			//LOGGER.debug("Source " + t.s + " has no data properties");
-			if (!typeOnlyNodeAlreadySeen) {
-				//LOGGER.debug("Creating representative for type-only node"); 
-				this.typeOnlyNodeID = getNextSummaryNode();
-				typeOnlyNodeAlreadySeen = true;
-			}
-			//addSummaryEdge(typeOnlyNodeID, t.p, t.o);
-			edgesWithProv.addTriple(typeOnlyNodeID, t.p, t.o);
-			rep.put(t.s, typeOnlyNodeID);
-		}
-		rep.put(t.o, t.o);
 	}
 }

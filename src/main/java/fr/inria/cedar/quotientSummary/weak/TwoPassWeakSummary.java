@@ -115,7 +115,7 @@ public class TwoPassWeakSummary extends WeakOrTypedWeakSummary {
 							edgesWithProv.addTriple(repS, t.p, repO);
 						}
 						triplesSummarizedSoFar++;
-						dataTriplesSummarizedSoFar++;
+						nonTypeTriplesSummarizedSoFar++;
 						if (checkConsistency) {
 							consistencyChecks();
 						}
@@ -128,8 +128,8 @@ public class TwoPassWeakSummary extends WeakOrTypedWeakSummary {
 			throw new IllegalStateException("Postgres error encountered while summarizing data triples " + e.toString());
 		}
 
-		dataTriplesSummarizationTime = System.currentTimeMillis() - start - avoidCollisionsTime;
-		LOGGER.info("Summarized " + dataTriplesSummarizedSoFar + " data triples in " + dataTriplesSummarizationTime + " ms");
+		nonTypeTriplesSummarizationTime = System.currentTimeMillis() - start - avoidCollisionsTime;
+		LOGGER.info("Summarized " + nonTypeTriplesSummarizedSoFar + " data triples in " + nonTypeTriplesSummarizationTime + " ms");
 
 		start = System.currentTimeMillis();
 		String getTypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p = " + typeConstantCode);
@@ -156,16 +156,13 @@ public class TwoPassWeakSummary extends WeakOrTypedWeakSummary {
 		typeTriplesSummarizationTime = System.currentTimeMillis() - start;
 		LOGGER.info("Summarized " + typeTriplesSummarizedSoFar + " type triples in " + typeTriplesSummarizationTime + " ms");
 
-		allTriplesSummarizationTime = dataTriplesSummarizationTime + typeTriplesSummarizationTime;
+		allTriplesSummarizationTime = nonTypeTriplesSummarizationTime + typeTriplesSummarizationTime;
 		LOGGER.info("Summarized " + triplesSummarizedSoFar + " overall triples in " + allTriplesSummarizationTime + " ms");
 	}
 
-	private Long getMin(ArrayList<Long> list) {
-		Long min = list.get(0);
-		for (Long i : list) {
-			min = min < i ? min : i;
-		}
-		return min;
+	@Override
+	protected void handleTypeTripleBeforeData(Triple t) {
+		throw new IllegalStateException("This method does not belong to " + this.getClass().getName());
 	}
 
 	public void handleDataTriple2P(Triple t) {
@@ -183,6 +180,14 @@ public class TwoPassWeakSummary extends WeakOrTypedWeakSummary {
 		}
 		nodes.add(t.s);
 		nodes.add(t.o);
+	}
+
+	private Long getMin(ArrayList<Long> list) {
+		Long min = list.get(0);
+		for (Long i : list) {
+			min = min < i ? min : i;
+		}
+		return min;
 	}
 
 	private void findSummaryNodesAndEdges() {
@@ -226,32 +231,5 @@ public class TwoPassWeakSummary extends WeakOrTypedWeakSummary {
 				}
 			}
 		}
-	}
-
-	/** This implementation should be shared by Weak and Strong
-	 *
-	 * @param t
-	 */
-	@Override
-	protected void handleTypeTripleAfterData(Triple t) {
-		//LOGGER.debug("\nType triple " + t.toString());
-		Long repS = rep.get(t.s);
-		if (repS != null) {
-			//LOGGER.debug("Source " + t.s + " already represented");
-			//addSummaryEdge(repS, t.p, t.o);
-			edgesWithProv.addTriple(repS, t.p, t.o);
-		}
-		else {
-			//LOGGER.debug("Source " + t.s + " has no data properties");
-			if (!typeOnlyNodeAlreadySeen) {
-				//LOGGER.debug("Creating representative for type-only node"); 
-				this.typeOnlyNodeID = getNextSummaryNode();
-				typeOnlyNodeAlreadySeen = true;
-			}
-			//addSummaryEdge(typeOnlyNodeID, t.p, t.o);
-			edgesWithProv.addTriple(typeOnlyNodeID, t.p, t.o);
-			rep.put(t.s, typeOnlyNodeID);
-		}
-		rep.put(t.o, t.o);
 	}
 }

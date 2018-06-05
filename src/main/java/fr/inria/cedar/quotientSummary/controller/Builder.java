@@ -15,19 +15,15 @@ import fr.inria.cedar.quotientSummary.weak.TwoPassWeakSummary;
 import fr.inria.cedar.quotientSummary.weak.TwoPassWeakSummaryWithUnionFind;
 import fr.inria.cedar.quotientSummary.weak.TypedWeakSummary;
 import fr.inria.cedar.quotientSummary.weak.WeakSummary;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
 import org.apache.log4j.Level;
@@ -45,7 +41,6 @@ public class Builder {
 	private static String encodedSaturatedTableName;
 	private static Connection connectionInUse;
 	private static Summary summaryInUse;
-	private static long saturationTime;
 
 	// custom Property config, set to null by default
 	private static String customPropFile = "";
@@ -102,7 +97,7 @@ public class Builder {
 				connectionInUse = loadGraphInPostgres(false, false, filesToLoad);
 				summaryInUse = summarizeGraphFromPostgres(arg1, false, filesToLoad);
 				saveSummary(Boolean.TRUE, "shortcut");
-				exportSummary("noSaturation", false, filesToLoad);
+				exportSummary("noSaturation", false);
 				closeConnection();
 				String[] files = {filesToLoad[0].substring(0, filesToLoad[0].length() - 3) + "_" + prefix(arg1) + "noSaturation.nt"};
 				connectionInUse = loadGraphInPostgres(true, true, files);
@@ -118,13 +113,13 @@ public class Builder {
 				saveSummary(Boolean.FALSE, "shortcut");
 				return;
 			case "exportSummaryComputedWithoutSaturation":
-				exportSummary("noSaturation", arg1.equals("draw"), filesToLoad);
+				exportSummary("noSaturation", arg1.equals("draw"));
 				return;
 			case "exportSummaryComputedClassicalWay":
-				exportSummary("classical", arg1.equals("draw"), filesToLoad);
+				exportSummary("classical", arg1.equals("draw"));
 				return;
 			case "exportSummaryComputedUsingShortcut":
-				exportSummary("shortcut", arg1.equals("draw"), filesToLoad);
+				exportSummary("shortcut", arg1.equals("draw"));
 				return;
 			case "dropPartialResultsTables":
 				dropPartialResultsTables();
@@ -145,7 +140,7 @@ public class Builder {
 	}
 
 	private static String prefix(String summarizationTechnique) {
-		switch(summarizationTechnique) {
+		switch (summarizationTechnique) {
 			case "weak":
 				return "w_";
 			case "2pweak":
@@ -290,8 +285,6 @@ public class Builder {
 		}
 		LOGGER.info("Graph loaded to Postgres");
 
-		saturationTime = (saturate) ? DataLoading.timeExecutionPerProcess.get("RDFGraphSaturator") : 0L;
-
 		Properties connectionProps = new Properties();
 
 		// if there are custom configs sent by a file
@@ -362,7 +355,7 @@ public class Builder {
 
 		try {
 			ResultSet res = connectionInUse.getMetaData().getTables(null, null, encodedTableName + "_summarized_saturated", new String[] { "TABLE" });
-			if(res.next()) // if tmp_encoded_summarized_saturated exists
+			if (res.next()) // if tmp_encoded_summarized_saturated exists
 				return encodedTableName + "_summarized_saturated";
 		}
 		catch (SQLException e) {
@@ -405,34 +398,13 @@ public class Builder {
 		summaryInUse.saveSummaryInPostgres(connectionInUse, partialResult, summarizationTechnique);
 	}
 
-	private static void exportSummary(String summarizationTechnique, Boolean draw, String[] files) throws FileNotFoundException {
+	private static void exportSummary(String summarizationTechnique, Boolean draw) throws FileNotFoundException {
 		LOGGER.info("Exporting summary to disk");
 
 		summaryInUse.writeDecodedSummaryToNTFile(connectionInUse, summarizationTechnique);
 		if (draw)
 			summaryInUse.drawSummaryAndGraph(connectionInUse, summarizationTechnique);
 
-		int lastDotPosition = Math.max(0, files[0].lastIndexOf("."));
-		String csvFileName = files[0].substring(0, lastDotPosition) + "_" + summaryInUse.getSummaryURIPrefix() + "_" + summarizationTechnique + "-statistics.csv";
-		try (PrintWriter pw = new PrintWriter(new File(csvFileName))) {
-			HashMap<String, String> statistics = summaryInUse.getRunStatistics();
-			StringBuilder sb = new StringBuilder();
-			ArrayList<String> keys = new ArrayList<>();
-			keys.addAll(statistics.keySet());
-			Collections.sort(keys);
-			for (String key: keys) {
-				sb.append(key).append(',');
-			}
-			sb.append("saturationTime");
-			sb.append('\n');
-			for (String key: keys) {
-				sb.append(statistics.get(key)).append(',');
-			}
-			sb.append(saturationTime);
-			sb.append('\n');
-			pw.write(sb.toString());
-		}
-		LOGGER.info("Statistics saved in " + csvFileName);
 		LOGGER.info("Summary exported to disk");
 	}
 
