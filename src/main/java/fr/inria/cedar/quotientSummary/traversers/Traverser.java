@@ -7,7 +7,7 @@ public abstract class Traverser {
 	private final Summary summ;
 	private final Connection conn;
 
-	public Traverser (Summary summ, Connection conn) {
+	public Traverser(Summary summ, Connection conn) {
 		this.summ = summ;
 		this.conn = conn;
 	}
