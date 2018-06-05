@@ -1,6 +1,5 @@
-package fr.inria.cedar.quotientSummary.traversers;
+package fr.inria.cedar.quotientSummary;
 
-import fr.inria.cedar.quotientSummary.Summary;
 import java.sql.Connection;
 
 public abstract class Traverser {
@@ -12,7 +11,8 @@ public abstract class Traverser {
 		this.conn = conn;
 	}
 
-	private void schemaPass() {
+	private void schemaNodesDetection() {
+		summ.collectSchemaNodes(conn);
 	}
 
 	private void dataPass() {

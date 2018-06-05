@@ -1,6 +1,5 @@
-package fr.inria.cedar.quotientSummary.traversers;
+package fr.inria.cedar.quotientSummary;
 
-import fr.inria.cedar.quotientSummary.Summary;
 import java.sql.Connection;
 
 public class DataFirstTraverser extends Traverser {

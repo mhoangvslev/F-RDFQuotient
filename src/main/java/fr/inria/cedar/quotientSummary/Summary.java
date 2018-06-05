@@ -3,11 +3,6 @@ package fr.inria.cedar.quotientSummary;
 import fr.inria.cedar.quotientSummary.datastructures.EdgesWithProvenanceCounts;
 import fr.inria.cedar.quotientSummary.datastructures.Long2Long;
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
-import fr.inria.cedar.quotientSummary.traversers.DataFirstTraverser;
-import fr.inria.cedar.quotientSummary.traversers.DataFirstTwoPassTraverser;
-import fr.inria.cedar.quotientSummary.traversers.Traverser;
-import fr.inria.cedar.quotientSummary.traversers.TypeFirstTraverser;
-import fr.inria.cedar.quotientSummary.traversers.TypeFirstTwoPassTraverser;
 import fr.inria.cedar.quotientSummary.util.DOTAuxiliary;
 import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 import java.io.BufferedWriter;
@@ -356,18 +351,18 @@ public class Summary {
 	public void summarizeFromPostgres(Connection conn) {
 		if (isTypeFirst) {
 			if (isTwoPass) {
-				traverser = new DataFirstTwoPassTraverser(conn);
+				traverser = new DataFirstTwoPassTraverser(this, conn);
 			}
 			else {
-				traverser = new DataFirstTraverser(conn);
+				traverser = new DataFirstTraverser(this, conn);
 			}
 		}
 		else {
 			if (isTwoPass) {
-				traverser = new TypeFirstTwoPassTraverser(conn);
+				traverser = new TypeFirstTwoPassTraverser(this, conn);
 			}
 			else {
-				traverser = new TypeFirstTraverser(conn);
+				traverser = new TypeFirstTraverser(this, conn);
 			}
 		}
 		traverser.traverseAllTriples();
