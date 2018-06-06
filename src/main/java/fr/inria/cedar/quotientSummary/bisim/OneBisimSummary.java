@@ -112,12 +112,6 @@ public class OneBisimSummary extends Summary{
 		this.edgesWithProv.addTriple(repS, t.p, repO);
 	}
 
-	@Override
-	protected void representTypeTripleAfterData(Triple t) {
-		rep.put(t.o, t.o); 
-		this.edgesWithProv.addTriple(rep.get(t.s), t.p, t.o);
-	}
-
 	private Long createSummaryNode(TreeSet<Long> nop, TreeSet<Long> nip) {
 		Long n = this.getNextSummaryNode();
 		HashMap<TreeSet<Long>, Long> o2n = this.ip2op2sn.get(nip);

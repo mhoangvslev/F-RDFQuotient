@@ -21,7 +21,7 @@ public class TypeFirstTwoPassTraverser extends TypeFirstTraverser {
 		dataTriplesRepresentation();
 
 		summ.allTriplesSummarizationTime = setupTime + summ.schemaNodesCollectionTime + summ.classSetCreationTime + summ.nonTypeTriplesSummarizationTime + summ.typeTriplesSummarizationTime;
-		LOGGER.info("Summarized " + summ.triplesSummarizedSoFar + "input triples, created summary of size " + summ.edgesWithProv.getSummaryEdges().size()
+		LOGGER.info("Summarized " + summ.triplesSummarizedSoFar + " input triples, created summary of size " + summ.edgesWithProv.getSummaryEdges().size()
 			+ " triples overall in " + summ.allTriplesSummarizationTime + " ms");
 	}
 }
