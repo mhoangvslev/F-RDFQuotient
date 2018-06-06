@@ -35,7 +35,7 @@ public class Path implements Comparable<Path> {
 		return pNew;
 	}
 
-	void add(Triple t) {
+	public void add(Triple t) {
 		triples.add(t);
 	}
 
