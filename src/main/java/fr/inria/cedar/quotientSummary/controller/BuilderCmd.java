@@ -206,7 +206,7 @@ public class BuilderCmd {
 		}
 	}
 
-	private static String trimNT(String fileName, boolean trimSlash) {
+	public static String trimNT(String fileName, boolean trimSlash) {
 		int lastDotPosition = Math.max(0, fileName.lastIndexOf("."));
 		return fileName.substring(trimSlash ? fileName.lastIndexOf("/") + 1 : 0, lastDotPosition);
 	}
