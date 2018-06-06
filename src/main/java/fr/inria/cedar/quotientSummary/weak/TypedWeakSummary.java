@@ -41,7 +41,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 	}
 
 	@Override
-	protected void handleTypeTripleAfterData(Triple t) {
+	protected void representTypeTripleAfterData(Triple t) {
 		throw new IllegalStateException("This method does not belong to " + this.getClass().getName());
 	}
 

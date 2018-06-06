@@ -92,6 +92,73 @@ public abstract class Traverser {
 		summ.nonTypeTriplesSummarizationTime = System.currentTimeMillis() - start;
 	}
 
+	// first pass
+	protected void dataTriplesClassification() {
+		long start = System.currentTimeMillis();
+		String getUntypedTriplesString = ("select *  from " + summ.encodedTriplesTableName + " where p <> " + typeConstantCode);
+		try {
+			try (Statement getUntypedTriples = conn.createStatement()) {
+				getUntypedTriples.setFetchSize(10000);
+				try (ResultSet rs = getUntypedTriples.executeQuery(getUntypedTriplesString)) {
+					while (rs.next()) {
+						Triple t = new Triple(rs.getLong(1), rs.getLong(2), rs.getLong(3));
+						if ((t.p == subClassCode)
+						|| (t.p == subPropertyCode)
+						|| (t.p == domainCode)
+						|| (t.p == rangeCode)) { // schema triple
+							summ.edgesWithProv.addTriple(t.s, t.p, t.o);
+							summ.rep.put(t.s, t.s);
+							summ.rep.put(t.o, t.o);
+						}
+						else { // data triple
+							summ.classifyDataTriple(t);
+						}
+					}
+				}
+			}
+		}
+		catch (SQLException e) {
+			throw new IllegalStateException("Postgres error encountered while summarizing data triples " + e.toString());
+		}
+
+		summ.classificationPostProcessing();
+
+		summ.nonTypeTriplesSummarizationTime = System.currentTimeMillis() - start;
+	}
+
+	// second pass
+	protected void dataTriplesRepresentation() {
+		long start = System.currentTimeMillis();
+		String getUntypedTriplesString = ("select *  from " + summ.encodedTriplesTableName + " where p <> " + typeConstantCode);
+		try {
+			try (Statement getUntypedTriples = conn.createStatement()) {
+				getUntypedTriples.setFetchSize(10000);
+				try (ResultSet rs = getUntypedTriples.executeQuery(getUntypedTriplesString)) {
+					while (rs.next()) {
+						Triple t = new Triple(rs.getLong(1), rs.getLong(2), rs.getLong(3));
+						if ((t.p != subClassCode)
+						&& (t.p != subPropertyCode)
+						&& (t.p != domainCode)
+						&& (t.p != rangeCode)) { // data triple
+							summ.representDataTriple(t);
+							summ.edgesWithProv.addTriple(summ.rep.get(t.s), t.p, summ.rep.get(t.o));
+						}
+						summ.triplesSummarizedSoFar++;
+						summ.nonTypeTriplesSummarizedSoFar++;
+						if (summ.checkConsistency) {
+							summ.consistencyChecks();
+						}
+						//summ.drawSummaryAndGraph(conn, "after-" + summ.triplesSummarizedSoFar + "-" + t.s + "-" + t.p + "-" + t.o);
+					}
+				}
+			}
+		}
+		catch (SQLException e) {
+			throw new IllegalStateException("Postgres error encountered while summarizing data triples " + e.toString());
+		}
+		summ.nonTypeTriplesSummarizationTime += System.currentTimeMillis() - start;
+	}
+
 	// type triples
 	protected void typePass() {
 	}

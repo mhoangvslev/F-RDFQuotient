@@ -27,7 +27,7 @@ public class DataFirstTraverser extends Traverser {
 					while (rs.next()) {
 						// type triple
 						Triple t = new Triple(rs.getLong(1), rs.getLong(2), rs.getLong(3));
-						summ.handleTypeTripleAfterData(t);
+						summ.representTypeTripleAfterData(t);
 						summ.triplesSummarizedSoFar++;
 						summ.typeTriplesSummarizedSoFar++;
 						if (summ.checkConsistency) {

@@ -12,23 +12,12 @@ public class DataFirstTwoPassTraverser extends DataFirstTraverser {
 		LOGGER.setLevel(Level.INFO);
 	}
 
-	// first pass
-	private void dataSummaryNodesCollection() {
-		// TODO
-	}
-
-	// second pass
-	@Override
-	protected void dataPass() {
-		// TODO
-	}
-
 	@Override
 	public void traverseAllTriples() {
 		schemaNodesCollection();
 		setUp();
-		dataSummaryNodesCollection();
-		dataPass();
+		dataTriplesClassification();
+		dataTriplesRepresentation();
 		typePass();
 
 		summ.allTriplesSummarizationTime = setupTime + summ.schemaNodesCollectionTime /*+ summ.classSetCreationTime*/ + summ.nonTypeTriplesSummarizationTime + summ.typeTriplesSummarizationTime;

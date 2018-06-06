@@ -44,7 +44,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	}
 
 	@Override
-	protected void handleTypeTripleAfterData(Triple t) {
+	protected void representTypeTripleAfterData(Triple t) {
 		throw new IllegalStateException("This method does not belong to " + this.getClass().getName());
 	}
 
@@ -151,7 +151,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	}
 
 	@Override
-	public void handleDataTriple(Triple t) {
+	protected void handleDataTriple(Triple t) {
 		// 18 cases: (TRS, RS, US) x (RP, UP) x (TRO, RO, UO) also multiplied by: which cliques are empty and their consequences on fusion
 		Long classSetS = n2cs.get(t.s);
 		Long classSetO = n2cs.get(t.o);

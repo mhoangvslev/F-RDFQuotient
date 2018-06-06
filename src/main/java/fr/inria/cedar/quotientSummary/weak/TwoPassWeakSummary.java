@@ -1,11 +1,6 @@
 package fr.inria.cedar.quotientSummary.weak;
 
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
-import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -36,136 +31,13 @@ public class TwoPassWeakSummary extends WeakOrTypedWeakSummary {
 		nodes = new HashSet<>();
 	}
 
-	/**
-	 * Summarizes an RDF graph assuming the data triples are in Postgres
-	 *
-	 * @param conn
-	 */
-	@Override
-	public void summarizeFromPostgres(Connection conn) {
-		// first pass
-		long avoidCollisionsTimeStart;
-		long avoidCollisionsTime = 0;
-		long start = System.currentTimeMillis();
-		collectSchemaNodes(conn);
-		try {
-			conn.setAutoCommit(false);
-		}
-		catch (SQLException ex) {
-			LOGGER.error(ex);
-		}
-		// this is needed to find the constants associated to special RDF properties
-		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
-		long typeConstantCode = RDF2SQLEncoding.getTypeCode();
-		if (typeConstantCode != -1) {
-			avoidCollisionsTimeStart = System.currentTimeMillis();
-			avoidCollisionsWhenAssigningSummaryNodes(conn);
-			avoidCollisionsTime += System.currentTimeMillis() - avoidCollisionsTimeStart;
-		}
-		String getUntypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p <> " + typeConstantCode);
-		try {
-			try (Statement getUntypedTriples = conn.createStatement()) {
-				getUntypedTriples.setFetchSize(10000);
-				try (ResultSet rs = getUntypedTriples.executeQuery(getUntypedTriplesString)) {
-					while (rs.next()) {
-						Triple t = new Triple(rs.getInt(1), rs.getInt(2), rs.getInt(3));
-						if ((t.p == RDF2SQLEncoding.getSubClassCode())
-						|| (t.p == RDF2SQLEncoding.getSubPropertyCode())
-						|| (t.p == RDF2SQLEncoding.getDomainCode())
-						|| (t.p == RDF2SQLEncoding.getRangeCode())) {
-							edgesWithProv.addTriple(t.s, t.p, t.o);
-							rep.put(t.s, t.s);
-							rep.put(t.o, t.o);
-						}
-						else {
-							handleDataTriple2P(t);
-						}
-					}
-				}
-			}
-		}
-		catch (SQLException e) {
-			throw new IllegalStateException("Postgres error encountered while summarizing data triples " + e.toString());
-		}
-
-		findSummaryNodesAndEdges();
-
-		// second pass
-		getUntypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p <> " + typeConstantCode);
-		try {
-			try (Statement getUntypedTriples = conn.createStatement()) {
-				getUntypedTriples.setFetchSize(10000);
-				try (ResultSet rs = getUntypedTriples.executeQuery(getUntypedTriplesString)) {
-					while (rs.next()) {
-						Triple t = new Triple(rs.getInt(1), rs.getInt(2), rs.getInt(3));
-						if ((t.p != RDF2SQLEncoding.getSubClassCode())
-						&& (t.p != RDF2SQLEncoding.getSubPropertyCode())
-						&& (t.p != RDF2SQLEncoding.getDomainCode())
-						&& (t.p != RDF2SQLEncoding.getRangeCode())) {
-							Long repS = ps.get(t.p);
-							Long repO = pt.get(t.p);
-							if (sn.contains(t.s)) {
-								repS = t.s;
-							}
-							if (sn.contains(t.o)) {
-								repO = t.o;
-							}
-							rep.put(t.s, repS);
-							rep.put(t.o, repO);
-							edgesWithProv.addTriple(repS, t.p, repO);
-						}
-						triplesSummarizedSoFar++;
-						nonTypeTriplesSummarizedSoFar++;
-						if (checkConsistency) {
-							consistencyChecks();
-						}
-						//drawSummaryAndGraph(conn, "after-" + triplesSummarizedSoFar + "-" + t.s + "-" + t.p + "-" + t.o);
-					}
-				}
-			}
-		}
-		catch (SQLException e) {
-			throw new IllegalStateException("Postgres error encountered while summarizing data triples " + e.toString());
-		}
-
-		nonTypeTriplesSummarizationTime = System.currentTimeMillis() - start - avoidCollisionsTime;
-		LOGGER.info("Summarized " + nonTypeTriplesSummarizedSoFar + " data triples in " + nonTypeTriplesSummarizationTime + " ms");
-
-		start = System.currentTimeMillis();
-		String getTypedTriplesString = ("select *  from " + encodedTriplesTableName + " where p = " + typeConstantCode);
-		try {
-			try (Statement getTypedTriples = conn.createStatement()) {
-				getTypedTriples.setFetchSize(1000);
-				try (ResultSet rs = getTypedTriples.executeQuery(getTypedTriplesString)) {
-					while (rs.next()) {
-						Triple t = new Triple(rs.getInt(1), rs.getInt(2), rs.getInt(3));
-						this.handleTypeTripleAfterData(t);
-						triplesSummarizedSoFar++;
-						typeTriplesSummarizedSoFar++;
-						if (checkConsistency) {
-							consistencyChecks();
-						}
-						//drawSummaryAndGraph(conn, "after-" + triplesSummarizedSoFar + "-" + t.s + "-" + t.p + "-" + t.o);
-					}
-				}
-			}
-		}
-		catch (SQLException e) {
-			throw new IllegalStateException("Postgres error encountered while summarizing type triples: " + e.toString());
-		}
-		typeTriplesSummarizationTime = System.currentTimeMillis() - start;
-		LOGGER.info("Summarized " + typeTriplesSummarizedSoFar + " type triples in " + typeTriplesSummarizationTime + " ms");
-
-		allTriplesSummarizationTime = nonTypeTriplesSummarizationTime + typeTriplesSummarizationTime;
-		LOGGER.info("Summarized " + triplesSummarizedSoFar + " overall triples in " + allTriplesSummarizationTime + " ms");
-	}
-
 	@Override
 	protected void handleTypeTripleBeforeData(Triple t) {
 		throw new IllegalStateException("This method does not belong to " + this.getClass().getName());
 	}
 
-	public void handleDataTriple2P(Triple t) {
+	@Override
+	protected void classifyDataTriple(Triple t) {
 		if (!sn.contains(t.s)) {
 			if (n2o.get(t.s) == null) {
 				n2o.put(t.s, new TreeSet<>());
@@ -190,7 +62,12 @@ public class TwoPassWeakSummary extends WeakOrTypedWeakSummary {
 		return min;
 	}
 
-	private void findSummaryNodesAndEdges() {
+	@Override
+	protected void classificationPostProcessing() {
+		findSummaryNodesAndEdges();
+	}
+
+	protected void findSummaryNodesAndEdges() {
 		for (Long n: nodes) {
 			ArrayList<Long> outgoing = new ArrayList<>();
 			if (n2o.containsKey(n)) {
@@ -231,5 +108,19 @@ public class TwoPassWeakSummary extends WeakOrTypedWeakSummary {
 				}
 			}
 		}
+	}
+
+	@Override
+	protected void representDataTriple(Triple t) {
+		Long repS = ps.get(t.p);
+		Long repO = pt.get(t.p);
+		if (sn.contains(t.s)) {
+			repS = t.s;
+		}
+		if (sn.contains(t.o)) {
+			repO = t.o;
+		}
+		rep.put(t.s, repS);
+		rep.put(t.o, repO);
 	}
 }

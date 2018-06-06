@@ -356,18 +356,18 @@ public class Summary {
 	public void summarizeFromPostgres(Connection conn) {
 		if (isTypeFirst) {
 			if (isTwoPass) {
-				traverser = new DataFirstTwoPassTraverser(this, conn);
-			}
-			else {
-				traverser = new DataFirstTraverser(this, conn);
-			}
-		}
-		else {
-			if (isTwoPass) {
 				traverser = new TypeFirstTwoPassTraverser(this, conn);
 			}
 			else {
 				traverser = new TypeFirstTraverser(this, conn);
+			}
+		}
+		else {
+			if (isTwoPass) {
+				traverser = new DataFirstTwoPassTraverser(this, conn);
+			}
+			else {
+				traverser = new DataFirstTraverser(this, conn);
 			}
 		}
 		traverser.traverseAllTriples();
@@ -382,7 +382,7 @@ public class Summary {
 	 *
 	 * @param t
 	 */
-	protected void handleTypeTripleAfterData(Triple t) {
+	protected void representTypeTripleAfterData(Triple t) {
 		Long repS = rep.get(t.s);
 		if (repS != null) {
 			edgesWithProv.addTriple(repS, t.p, t.o);
@@ -439,7 +439,7 @@ public class Summary {
 	 * This method adds the type triples in the summary, based on the structures previously filled in while traversing those triples.
 	 * It is called only once and will output all the type triples of the summary.
 	 */
-	protected void representTypeTriples() {
+	protected void representTypeTriplesBeforeData() {
 		//LOGGER.debug("POST HANDLE TYPE TRIPLES");
 		for (Long node: n2cs.getKeys()) {
 			Long thisClassSetID = n2cs.get(node);
@@ -449,6 +449,18 @@ public class Summary {
 				rep.put(node, thisClassSetID);
 			}
 		}
+	}
+
+	protected void classifyDataTriple(Triple t) {
+		throw new IllegalStateException("Not implemented at this level");
+	}
+
+	protected void classificationPostProcessing() {
+		throw new IllegalStateException("Not implemented at this level");
+	}
+
+	protected void representDataTriple(Triple t) {
+		throw new IllegalStateException("Not implemented at this level");
 	}
 
 	protected void consistencyChecks() {
@@ -794,16 +806,16 @@ public class Summary {
 						subject = getVeryShortForDot(RDF2SQLEncoding.dictionaryDecode(t.s));
 						subjectInDot = subject.replaceAll("\"", "");
 						if (t.p == RDF2SQLEncoding.getSubClassCode()){
-							propertyInDot = "subClass";
+							propertyInDot = "rdfs:subClass";
 						}
 						if (t.p == RDF2SQLEncoding.getSubPropertyCode()){
-							propertyInDot = "subProperty";
+							propertyInDot = "rdfs:subProperty";
 						}
 						if (t.p == RDF2SQLEncoding.getDomainCode()){
-							propertyInDot = "domain";
+							propertyInDot = "rdfs:domain";
 						}
 						if (t.p == RDF2SQLEncoding.getRangeCode()){
-							propertyInDot = "range";
+							propertyInDot = "rdfs:range";
 						}
 						object = getVeryShortForDot(RDF2SQLEncoding.dictionaryDecode(t.o));
 						objectInDot = object.replaceAll("\"", "");
@@ -1082,16 +1094,16 @@ public class Summary {
 			else if (RDF2SQLEncoding.isSchemaProperty(p)) {
 				//LOGGER.debug("SCHEMA TRIPLE"); 
 				if (p.equals(RDF2SQLEncoding.getSubClassCode())){
-					propertyForDot = "subClass"; 
+					propertyForDot = "rdfs:subClass"; 
 				}
 				if (p.equals(RDF2SQLEncoding.getSubPropertyCode())){
-					propertyForDot = "subProperty"; 
+					propertyForDot = "rdfs:subProperty"; 
 				}
 				if (p.equals(RDF2SQLEncoding.getDomainCode())){
-					propertyForDot = "domain"; 
+					propertyForDot = "rdfs:domain"; 
 				}
 				if (p.equals(RDF2SQLEncoding.getRangeCode())){
-					propertyForDot = "range"; 
+					propertyForDot = "rdfs:range"; 
 				}
 				//LOGGER.debug("SCH1 " + s + " (" + subject + ") represented by  " + sRep + " written alone as " + subjectForDot); 
 				bw.write("\"" + subjectForDot + "\" [fontcolor=white, style = filled, color=black];\n");

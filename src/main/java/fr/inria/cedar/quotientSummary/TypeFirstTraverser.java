@@ -45,7 +45,7 @@ public class TypeFirstTraverser extends Traverser {
 		summ.classSetCreationTime = System.currentTimeMillis() - start;
 
 		start = System.currentTimeMillis();
-		summ.representTypeTriples();
+		summ.representTypeTriplesBeforeData();
 		summ.typeTriplesSummarizationTime = System.currentTimeMillis() - start;
 	}
 

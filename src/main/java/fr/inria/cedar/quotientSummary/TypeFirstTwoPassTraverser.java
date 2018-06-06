@@ -12,24 +12,13 @@ public class TypeFirstTwoPassTraverser extends TypeFirstTraverser {
 		LOGGER.setLevel(Level.INFO);
 	}
 
-	// first pass
-	private void dataSummaryNodesCollection() {
-		// TODO
-	}
-
-	// second pass
-	@Override
-	protected void dataPass() {
-		// TODO
-	}
-
 	@Override
 	public void traverseAllTriples() {
 		schemaNodesCollection();
 		setUp();
 		typePass();
-		dataSummaryNodesCollection();
-		dataPass();
+		dataTriplesClassification();
+		dataTriplesRepresentation();
 
 		summ.allTriplesSummarizationTime = setupTime + summ.schemaNodesCollectionTime + summ.classSetCreationTime + summ.nonTypeTriplesSummarizationTime + summ.typeTriplesSummarizationTime;
 		LOGGER.info("Summarized " + summ.triplesSummarizedSoFar + "input triples, created summary of size " + summ.edgesWithProv.getSummaryEdges().size()
