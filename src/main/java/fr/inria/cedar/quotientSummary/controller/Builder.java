@@ -478,11 +478,22 @@ public class Builder {
 		connectionProps.put("password", password);
 
 		String cDatabaseName = customProp.getProperty("database.name").trim();
-		String cHost = customProp.getProperty("database.host").trim();
-		String cPort = customProp.getProperty("database.port").trim();
-		String cUser = customProp.getProperty("database.user").trim();
-		String cPassword = customProp.getProperty("database.password").trim();
-
+		String cHost = customProp.getProperty("database.host");
+		if (cHost != null){
+			cHost = cHost.trim();
+		}
+		String cPort = customProp.getProperty("database.port");
+		if (cPort != null){
+			cPort = cPort.trim();
+		}
+		String cUser = customProp.getProperty("database.user");
+		if (cUser != null){
+			cUser = cUser.trim();
+		}
+		String cPassword = customProp.getProperty("database.password");
+		if (cPassword != null){
+			cPassword = cPassword.trim(); 
+		}
 		if (cDatabaseName != null && cDatabaseName.length() > 0) {
 			connectionProps.put("database", cDatabaseName);  
 			databaseName = cDatabaseName; 
