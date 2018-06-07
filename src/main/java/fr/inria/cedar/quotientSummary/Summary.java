@@ -265,13 +265,15 @@ public class Summary {
 
 		String getTriplesString = "select distinct s from " + encodedTriplesTableName
 			+ " where p = " + subClassCode
-			+ " or p = " + subPropertyCode + ";";
+			+ " or p = " + subPropertyCode
+			+ " or p = " + domainCode
+			+ " or p = " + rangeCode + ";";
 		try {
 			try (Statement getTriples = conn.createStatement()) {
 				getTriples.setFetchSize(10000);
 				try (ResultSet rs = getTriples.executeQuery(getTriplesString)) {
 					while (rs.next()) {
-						long s = rs.getInt(1);
+						long s = rs.getLong(1);
 						sn.add(s);
 						rep.put(s, s);
 					}
@@ -292,7 +294,7 @@ public class Summary {
 				getTriples.setFetchSize(10000);
 				try (ResultSet rs = getTriples.executeQuery(getTriplesString)) {
 					while (rs.next()) {
-						long o = rs.getInt(1);
+						long o = rs.getLong(1);
 						sn.add(o);
 						rep.put(o, o);
 					}
@@ -488,8 +490,12 @@ public class Summary {
 		String timestamp = SD_FORMAT.format(new Timestamp(System.currentTimeMillis()));
 		if (partialResult)
 			newTableName = newTableName + "_sum";
-		else
+		else if (summarizationInput.equals("")) {
+			newTableName = "sav_" + timestamp + "_" + newTableName + "_" + getSummaryURIPrefix();
+		}
+		else {
 			newTableName = "sav_" + timestamp + "_" + newTableName + "_" + summarizationInput + "_" + getSummaryURIPrefix();
+		}
 		String newSummaryTableNameRep = newTableName + "_rep";
 		String newSummaryTableNameEdges = newTableName + "_edges";
 
@@ -631,15 +637,30 @@ public class Summary {
 					//LOGGER.debug("Summary triple: " + t.toString() );
 					String subject, property, object;
 					if (RDF2SQLEncoding.isDataProperty(t.p)) { // data
-						subject = getSummaryNodeURI(URIprefix, t.s);
+						if (sn.contains(t.s)) {
+							subject = RDF2SQLEncoding.dictionaryDecode(t.s);
+						}
+						else {
+							subject = getSummaryNodeURI(URIprefix, t.s);
+						}
 						property = RDF2SQLEncoding.dictionaryDecode(t.p);
-						object = getSummaryNodeURI(URIprefix, t.o);
+						if (sn.contains(t.o)) {
+							object = RDF2SQLEncoding.dictionaryDecode(t.o);
+						}
+						else {
+							object = getSummaryNodeURI(URIprefix, t.o);
+						}
 					} else if (RDF2SQLEncoding.isSchemaProperty(t.p)) { // schema
 						subject = RDF2SQLEncoding.dictionaryDecode(t.s);
 						property = RDF2SQLEncoding.dictionaryDecode(t.p);
 						object = RDF2SQLEncoding.dictionaryDecode(t.o);
 					} else { // type
-						subject = getSummaryNodeURI(URIprefix, t.s);
+						if (sn.contains(t.s)) {
+							subject = RDF2SQLEncoding.dictionaryDecode(t.s);
+						}
+						else {
+							subject = getSummaryNodeURI(URIprefix, t.s);
+						}
 						property = RDF2SQLEncoding.dictionaryDecode(t.p);
 						object = RDF2SQLEncoding.dictionaryDecode(t.o);
 					}
@@ -691,15 +712,30 @@ public class Summary {
 					//LOGGER.debug("Summary triple: " + t.toString() );
 					String subject, property, object;
 					if (RDF2SQLEncoding.isDataProperty(t.p)) { // data
-						subject = getSummaryNodeURI(URIprefix, t.s);
+						if (sn.contains(t.s)) {
+							subject = RDF2SQLEncoding.dictionaryDecode(t.s);
+						}
+						else {
+							subject = getSummaryNodeURI(URIprefix, t.s);
+						}
 						property = RDF2SQLEncoding.dictionaryDecode(t.p);
-						object = getSummaryNodeURI(URIprefix, t.o);
+						if (sn.contains(t.o)) {
+							object = RDF2SQLEncoding.dictionaryDecode(t.o);
+						}
+						else {
+							object = getSummaryNodeURI(URIprefix, t.o);
+						}
 					} else if (RDF2SQLEncoding.isSchemaProperty(t.p)) { // schema
 						subject = RDF2SQLEncoding.dictionaryDecode(t.s);
 						property = RDF2SQLEncoding.dictionaryDecode(t.p);
 						object = RDF2SQLEncoding.dictionaryDecode(t.o);
 					} else { // type
-						subject = getSummaryNodeURI(URIprefix, t.s);
+						if (sn.contains(t.s)) {
+							subject = RDF2SQLEncoding.dictionaryDecode(t.s);
+						}
+						else {
+							subject = getSummaryNodeURI(URIprefix, t.s);
+						}
 						property = RDF2SQLEncoding.dictionaryDecode(t.p);
 						object = RDF2SQLEncoding.dictionaryDecode(t.o);
 					}
@@ -793,12 +829,22 @@ public class Summary {
 					propertyInDot = getVeryShortForDot(property.replaceAll("\"", ""));
 
 					if (RDF2SQLEncoding.isDataProperty(t.p)) { // data
-						subject = this.getSummaryNodeURI(URIprefix, t.s);
+						if (sn.contains(t.s)) {
+							subject = RDF2SQLEncoding.dictionaryDecode(t.s);
+						}
+						else {
+							subject = getSummaryNodeURI(URIprefix, t.s);
+						}
 						subjectInDot = getVeryShortForDot(subject).replaceAll("\"", "");
 						if (dax.unknownSummaryNode(t.s)){
 							writeNodeToDot(bw, t.s, subjectInDot); 
 						}
-						object = this.getSummaryNodeURI(URIprefix, t.o);
+						if (sn.contains(t.o)) {
+							object = RDF2SQLEncoding.dictionaryDecode(t.o);
+						}
+						else {
+							object = getSummaryNodeURI(URIprefix, t.o);
+						}
 						objectInDot = getVeryShortForDot(object).replaceAll("\"", "");
 						if (dax.unknownSummaryNode(t.o)){
 							writeNodeToDot(bw, t.o, objectInDot); 
@@ -823,7 +869,12 @@ public class Summary {
 						bw.write("\"" + subjectInDot + "\" [fontcolor=white, style = filled, color=black];\n");
 						bw.write("\"" + objectInDot + "\" [fontcolor=white, style = filled, color=black];\n");
 					} else { // type
-						subject = this.getSummaryNodeURI(URIprefix, t.s);
+						if (sn.contains(t.s)) {
+							subject = RDF2SQLEncoding.dictionaryDecode(t.s);
+						}
+						else {
+							subject = getSummaryNodeURI(URIprefix, t.s);
+						}
 						subjectInDot = getVeryShortForDot(subject).replaceAll("\"", "");
 						object = getVeryShortForDot(RDF2SQLEncoding.dictionaryDecode(t.o));
 						objectInDot = object.replaceAll("\"", "");
