@@ -620,69 +620,6 @@ public class Summary {
 		}
 	}
 
-	public void writeDecodedSummaryToNTFile(Connection conn) {
-		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
-
-		String summaryNTFileName = getNTSummaryFileName();
-		String URIprefix = properties.getProperty("prefixURIForSummaryNodes");
-
-		LOGGER.info("Decoding summary and writing it in .nt format to " + summaryNTFileName);
-
-		ArrayList<Triple> summEdges = edgesWithProv.getSummaryEdges();
-		try {
-			// write summary triples:
-			try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(summaryNTFileName)))) {
-				// write summary triples:
-				for (Triple t : summEdges) {
-					//LOGGER.debug("Summary triple: " + t.toString() );
-					String subject, property, object;
-					if (RDF2SQLEncoding.isDataProperty(t.p)) { // data
-						if (sn.contains(t.s)) {
-							subject = RDF2SQLEncoding.dictionaryDecode(t.s);
-						}
-						else {
-							subject = getSummaryNodeURI(URIprefix, t.s);
-						}
-						property = RDF2SQLEncoding.dictionaryDecode(t.p);
-						if (sn.contains(t.o)) {
-							object = RDF2SQLEncoding.dictionaryDecode(t.o);
-						}
-						else {
-							object = getSummaryNodeURI(URIprefix, t.o);
-						}
-					} else if (RDF2SQLEncoding.isSchemaProperty(t.p)) { // schema
-						subject = RDF2SQLEncoding.dictionaryDecode(t.s);
-						property = RDF2SQLEncoding.dictionaryDecode(t.p);
-						object = RDF2SQLEncoding.dictionaryDecode(t.o);
-					} else { // type
-						if (sn.contains(t.s)) {
-							subject = RDF2SQLEncoding.dictionaryDecode(t.s);
-						}
-						else {
-							subject = getSummaryNodeURI(URIprefix, t.s);
-						}
-						property = RDF2SQLEncoding.dictionaryDecode(t.p);
-						object = RDF2SQLEncoding.dictionaryDecode(t.o);
-					}
-					//LOGGER.debug(subject + " " + property + " " + object);
-					bw.write(subject + " " + property + " " + object + " .\n");
-				}
-			}
-		}
-		catch (IOException e) {
-			throw new IllegalStateException("Could not save the decoded summary in .nt file: " + e.toString());
-		}
-		LOGGER.info("Summary decoded and saved in .nt format");
-	}
-
-	public String getNTSummaryFileName() {
-		int lastDotPosition = Math.max(0, triplesFileName.lastIndexOf("."));
-		int lastSlashPosition = Math.max(0, triplesFileName.lastIndexOf("/"));
-		if (lastDotPosition - lastSlashPosition < 1)
-			throw new IllegalStateException("Was not able to extract a core component of the file name " + triplesFileName);
-		return triplesFileName.substring(0, lastDotPosition) + "_" + getSummaryURIPrefix() + ".nt";
-	}
-
 	/**
 	 * This decodes the summary (replaces property codes with the original URIs
 	 * or strings) based on a dictionary table in Postgres. It prints the
@@ -777,11 +714,17 @@ public class Summary {
 		LOGGER.info("Summary decoded and saved in .nt format");
 	}
 
-	protected String getNTSummaryFileName(String summarizationTechnique) {
+	public String getNTSummaryFileName(String summarizationTechnique) {
 		int lastDotPosition = Math.max(0, triplesFileName.lastIndexOf("."));
 		int lastSlashPosition = Math.max(0, triplesFileName.lastIndexOf("/"));
 		if (lastDotPosition - lastSlashPosition < 1)
 			throw new IllegalStateException("Was not able to extract a core component of the file name " + triplesFileName);
+		if (summarizationTechnique.equals("")) {
+			return triplesFileName.substring(0, lastDotPosition) + "_" + getSummaryURIPrefix() + ".nt";
+		}
+		if (summarizationTechnique.equals("sat")) {
+			return triplesFileName.substring(0, lastDotPosition) + "_sat_" + getSummaryURIPrefix() + ".nt";
+		}
 		return triplesFileName.substring(0, lastDotPosition) + "_" + summaryTablePrefix + summarizationTechnique + ".nt";
 	}
 

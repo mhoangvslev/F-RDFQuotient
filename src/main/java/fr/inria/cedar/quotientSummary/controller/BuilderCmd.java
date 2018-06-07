@@ -72,16 +72,21 @@ public class BuilderCmd {
 			return;
 		}
 
+		String fileName, summaryType;
+		Boolean saturate, exportLoadingStatistics, saturated, saveInPostgres, exportToDisk, exportSummarizationStatistics;
 		switch (args[0]) {
 			case "load":
 				if (args.length != 4) {
 					displayUsageInfo();
 					return;
 				}
-				setUpConfiguration(args[1], "true".equals(args[3]));
-				load(args[1], "true".equals(args[2]));
-				if ("true".equals(args[3])) {
-					exportLoadingStatisticsToDisk(args[1]);
+				fileName = args[1];
+				saturate = "true".equals(args[2]);
+				exportLoadingStatistics = "true".equals(args[3]);
+				setUpConfiguration(fileName, saturate);
+				load(fileName, saturate);
+				if (exportLoadingStatistics) {
+					exportLoadingStatisticsToDisk(fileName);
 				}
 				return;
 			case "summarize":
@@ -89,18 +94,23 @@ public class BuilderCmd {
 					displayUsageInfo();
 					return;
 				}
-				Boolean saturated = "true".equals(args[3]);
-				setUpConfiguration(args[1], saturated);
+				fileName = args[1];
+				summaryType = args[2];
+				saturated = "true".equals(args[3]);
+				saveInPostgres = "true".equals(args[4]);
+				exportToDisk = "true".equals(args[5]);
+				exportSummarizationStatistics = "true".equals(args[6]);
+				setUpConfiguration(fileName, saturated);
 				getConnection();
-				summarize(args[1], args[2], saturated);
-				if ("true".equals(args[4])) {
+				summarize(fileName, summaryType, saturated);
+				if (saveInPostgres) {
 					saveSummaryInPostgres(saturated);
 				}
-				if ("true".equals(args[5])) {
-					exportSummaryToDisk();
+				if (exportToDisk) {
+					exportSummaryToDisk(saturated);
 				}
-				if ("true".equals(args[6])) {
-					exportSummarizationStatisticsToDisk();
+				if (exportSummarizationStatistics) {
+					exportSummarizationStatisticsToDisk(saturated);
 				}
 				closeConnection();
 				return;
@@ -281,16 +291,16 @@ public class BuilderCmd {
 		summarySavingInPostgresTime = System.currentTimeMillis() - start;
 	}
 
-	private static void exportSummaryToDisk() {
+	private static void exportSummaryToDisk(Boolean summarizeSaturated) {
 		LOGGER.info("Exporting summary to disk");
 		long start = System.currentTimeMillis();
-		summaryInUse.writeDecodedSummaryToNTFile(connectionInUse);
+		summaryInUse.writeDecodedSummaryToNTFile(connectionInUse, summarizeSaturated ? "sat" : "");
 		summarySavingToDiskTime = System.currentTimeMillis() - start;
 		LOGGER.info("Summary exported to disk");
 	}
 
-	private static void exportSummarizationStatisticsToDisk() {
-		String csvFileName = trimNT(summaryInUse.getNTSummaryFileName(), false) + "-summarization-statistics.csv";
+	private static void exportSummarizationStatisticsToDisk(Boolean summarizeSaturated) {
+		String csvFileName = trimNT(summaryInUse.getNTSummaryFileName(summarizeSaturated ? "sat" : ""), false) + "-summarization-statistics.csv";
 		LOGGER.info("Exporting summarization statistics to disk to the file " + csvFileName);
 		try (PrintWriter pw = new PrintWriter(new File(csvFileName))) {
 			HashMap<String, String> statistics = summaryInUse.getRunStatistics();
