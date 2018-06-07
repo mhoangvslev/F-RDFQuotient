@@ -133,7 +133,7 @@ public class RDF2SQLEncoding {
 			try (ResultSet rs = stmtEncode.executeQuery()) {
 				//LOGGER.debug("Asked query: " + learnCodeQueryString);
 				if (rs.next()) {
-					code = rs.getInt(1);
+					code = rs.getLong(1);
 					//LOGGER.debug("The code of " + URI + " is: " + constantCode);
 				}
 			}

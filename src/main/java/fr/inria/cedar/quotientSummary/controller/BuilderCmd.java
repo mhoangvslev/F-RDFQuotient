@@ -145,7 +145,7 @@ public class BuilderCmd {
 			encodedTriplesTableName = properties.getProperty("database.encoded_triples_table_name");
 			encodedSaturatedTriplesTableName = properties.getProperty("database.encoded_saturated_triples_table_name");
 
-			String customPropertiesFileName = "conf/custom" + databaseName + ".properties";
+			String customPropertiesFileName = "conf/" + databaseName + ".properties";
 			File customProperties = new File(customPropertiesFileName);
 	        OutputStream out = new FileOutputStream(customProperties);
 	        properties.store(out, "Custom properties file");
@@ -290,7 +290,7 @@ public class BuilderCmd {
 	}
 
 	private static void exportSummarizationStatisticsToDisk() {
-		String csvFileName = trimNT(summaryInUse.getNTSummaryFileName(), false) + "_" + summaryInUse.getSummaryURIPrefix() + "-summarization-statistics.csv";
+		String csvFileName = trimNT(summaryInUse.getNTSummaryFileName(), false) + "-summarization-statistics.csv";
 		LOGGER.info("Exporting summarization statistics to disk to the file " + csvFileName);
 		try (PrintWriter pw = new PrintWriter(new File(csvFileName))) {
 			HashMap<String, String> statistics = summaryInUse.getRunStatistics();
