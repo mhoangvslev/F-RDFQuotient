@@ -96,7 +96,7 @@ public class Builder {
 			case "loadAndSummarizeUsingShortcut":
 				connectionInUse = loadGraphInPostgres(false, false, filesToLoad);
 				summaryInUse = summarizeGraphFromPostgres(arg1, false, filesToLoad);
-				saveSummary(Boolean.TRUE, "shortcut");
+				saveSummary(true, "shortcut");
 				exportSummary("noSaturation", false);
 				closeConnection();
 				String[] files = {filesToLoad[0].substring(0, filesToLoad[0].length() - 3) + "_" + prefix(arg1) + "noSaturation.nt"};
@@ -104,13 +104,13 @@ public class Builder {
 				summaryInUse = summarizeGraphFromPostgres(arg1, true, filesToLoad);
 				return;
 			case "saveSummaryComputedWithoutSaturation":
-				saveSummary(Boolean.FALSE, "noSaturation");
+				saveSummary(false, "noSaturation");
 				return;
 			case "saveSummaryComputedClassicalWay":
-				saveSummary(Boolean.FALSE, "classical");
+				saveSummary(false, "classical");
 				return;
 			case "saveSummaryComputedUsingShortcut":
-				saveSummary(Boolean.FALSE, "shortcut");
+				saveSummary(false, "shortcut");
 				return;
 			case "exportSummaryComputedWithoutSaturation":
 				exportSummary("noSaturation", arg1.equals("draw"));
@@ -221,7 +221,7 @@ public class Builder {
 	 *     then the first file contains the data and the last contains the schema
 	 *     otherwise (only one file) that file contains everything (data and schema)
 	 */
-	private static Connection loadGraphInPostgres(Boolean saturate, Boolean shortcut, String[] files) throws FileNotFoundException, IOException, UnsupportedDatabaseEngineException, SQLException {
+	private static Connection loadGraphInPostgres(boolean saturate, boolean shortcut, String[] files) throws FileNotFoundException, IOException, UnsupportedDatabaseEngineException, SQLException {
 		LOGGER.info("Loading graph to Postgres");
 		//LOGGER.debug(System.getProperty("user.dir"));
 
@@ -314,7 +314,7 @@ public class Builder {
 	 * @throws IOException
 	 * @throws SQLException
 	 */
-	private static Summary summarizeGraphFromPostgres(String summaryType, Boolean summarizeSaturated, String[] files) throws SQLException, IOException {
+	private static Summary summarizeGraphFromPostgres(String summaryType, boolean summarizeSaturated, String[] files) throws SQLException, IOException {
 		LOGGER.info("Summarizing graph from Postgres");
 		Summary sum = createNewSummary(summaryType, files[0], triplesTableName, tableName(summarizeSaturated), dictionaryTableName);
 		sum.summarizeFromPostgres(connectionInUse);
@@ -349,7 +349,7 @@ public class Builder {
 		return null;
 	}
 
-	private static String tableName(Boolean saturated) {
+	private static String tableName(boolean saturated) {
 		if (!saturated)
 			return encodedTableName;
 
@@ -394,11 +394,11 @@ public class Builder {
 		}
 	}
 
-	private static void saveSummary(Boolean partialResult, String summarizationTechnique) {
+	private static void saveSummary(boolean partialResult, String summarizationTechnique) {
 		summaryInUse.saveSummaryInPostgres(connectionInUse, partialResult, summarizationTechnique);
 	}
 
-	private static void exportSummary(String summarizationTechnique, Boolean draw) throws FileNotFoundException {
+	private static void exportSummary(String summarizationTechnique, boolean draw) throws FileNotFoundException {
 		LOGGER.info("Exporting summary to disk");
 
 		summaryInUse.writeDecodedSummaryToNTFile(connectionInUse, summarizationTechnique);

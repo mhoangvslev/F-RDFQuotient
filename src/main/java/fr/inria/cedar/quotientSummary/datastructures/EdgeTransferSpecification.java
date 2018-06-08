@@ -23,8 +23,8 @@ public class EdgeTransferSpecification {
 		Long2Long rep,
 		HashMap<Long, Long2LongSet> triplesBySubject,
 		HashMap<Long, Long2LongSet> triplesByObject,
-		Long dataNode,
-		Long summaryNode,
+		long dataNode,
+		long summaryNode,
 		char param
 	) {
 		// CAUTION: uses old rep
@@ -33,8 +33,8 @@ public class EdgeTransferSpecification {
 
 		if (param == SOURCE) { // distribute the edges outgoing from dataNode
 			if (triplesBySubject.get(dataNode) != null) {
-				for (Long p: triplesBySubject.get(dataNode).keys()) {
-					for (Long o: triplesBySubject.get(dataNode).get(p)) {
+				for (long p: triplesBySubject.get(dataNode).keys()) {
+					for (long o: triplesBySubject.get(dataNode).get(p)) {
 						Long repO = rep.get(o);
 						if (repO != null) {
 							if (edgesToTransfer.get(summaryNode) == null) {
@@ -50,14 +50,17 @@ public class EdgeTransferSpecification {
 								edgesToTransfer.get(summaryNode).get(p).put(repO, edgesToTransfer.get(summaryNode).get(p).get(repO) + 1L);
 							}
 						}
+						else {
+							throw new IllegalStateException("Unrepresented object of cached triple");
+						}
 					}
 				}
 			}
 		}
 		else if (param == TARGET) { // distribute the edges incoming to dataNode
 			if (triplesByObject.get(dataNode) != null) {
-				for (Long p: triplesByObject.get(dataNode).keys()) {
-					for (Long s: triplesByObject.get(dataNode).get(p)) {
+				for (long p: triplesByObject.get(dataNode).keys()) {
+					for (long s: triplesByObject.get(dataNode).get(p)) {
 						Long repS = rep.get(s);
 						if (repS != null) {
 							if (edgesToTransfer.get(repS) == null) {
@@ -73,6 +76,9 @@ public class EdgeTransferSpecification {
 								edgesToTransfer.get(repS).get(p).put(summaryNode, edgesToTransfer.get(repS).get(p).get(summaryNode) + 1L);
 							}
 						}
+						else {
+							throw new IllegalStateException("Unrepresented subject of cached triple");
+						}
 					}
 				}
 			}
@@ -86,10 +92,10 @@ public class EdgeTransferSpecification {
 			edgesToTransfer = edgesToTransferToAdd;
 		}
 		else { // 2 splits
-			for (Long s: edgesToTransferToAdd.keySet()) {
-				for (Long p: edgesToTransferToAdd.get(s).keySet()) {
-					for (Long o: edgesToTransferToAdd.get(s).get(p).keySet()) {
-						Long counter = edgesToTransferToAdd.get(s).get(p).get(o);
+			for (long s: edgesToTransferToAdd.keySet()) {
+				for (long p: edgesToTransferToAdd.get(s).keySet()) {
+					for (long o: edgesToTransferToAdd.get(s).get(p).keySet()) {
+						long counter = edgesToTransferToAdd.get(s).get(p).get(o);
 						if (edgesToTransfer.get(s) == null) {
 							edgesToTransfer.put(s, new HashMap<>());
 						}
@@ -115,11 +121,11 @@ public class EdgeTransferSpecification {
 	}
 
 	public void applyTransfers(EdgesWithProvenanceCounts edgesWithProv, Long repS, Long newRepS, Long repO, Long newRepO) {
-		for (Long s: edgesToTransfer.keySet()) {
-			for (Long p: edgesToTransfer.get(s).keySet()) {
-				for (Long o: edgesToTransfer.get(s).get(p).keySet()) {
-					Long counter = edgesToTransfer.get(s).get(p).get(o);
-					Long summaryEdgeCounter = edgesWithProv.getCounter(s, p, o);
+		for (long s: edgesToTransfer.keySet()) {
+			for (long p: edgesToTransfer.get(s).keySet()) {
+				for (long o: edgesToTransfer.get(s).get(p).keySet()) {
+					long counter = edgesToTransfer.get(s).get(p).get(o);
+					long summaryEdgeCounter = edgesWithProv.getCounter(s, p, o);
 					if (counter > summaryEdgeCounter) {
 						throw new IllegalStateException("The value which is subtracted cannot be greater then summary counter for this edge");
 					}
@@ -132,8 +138,8 @@ public class EdgeTransferSpecification {
 					}
 
 					// reconcile
-					Long finalS = s;
-					Long finalO = o;
+					long finalS = s;
+					long finalO = o;
 					if (Objects.equals(s, repS)) {
 						finalS = newRepS;
 					}
@@ -146,13 +152,13 @@ public class EdgeTransferSpecification {
 					if (Objects.equals(s, repO)) {
 						finalS = newRepO;
 					}
-					Long alreadyThere = edgesWithProv.getCounter(finalS, p, finalO);
-					if (alreadyThere == null || alreadyThere == 0L) {
+					boolean alreadyThere = edgesWithProv.containsEdge(finalS, p, finalO);
+					if (!alreadyThere) {
 						edgesWithProv.addTriple(finalS, p, finalO);
 						edgesWithProv.setCounter(finalS, p, finalO, counter);
 					}
 					else {
-						edgesWithProv.setCounter(finalS, p, finalO, counter + alreadyThere);
+						edgesWithProv.setCounter(finalS, p, finalO, counter + edgesWithProv.getCounter(finalS, p, finalO));
 					}
 				}
 			}

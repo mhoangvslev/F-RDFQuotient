@@ -18,7 +18,7 @@ public class WeakSummaryTests {
 	public File summarizeUsingWeakSummary(int i) {
 		LOGGER.setLevel(Level.INFO);
 		System.out.println("################################################################################");
-		System.out.println("Weak summary test " + Integer.toString(i) + " only summarization");
+		System.out.println("Weak summary test " + i + " only summarization");
 		System.out.println("################################################################################");
 
 		String inputFileName = "src/test/resources/test" + i + "-weak/test-" + i + ".nt";
@@ -61,7 +61,7 @@ public class WeakSummaryTests {
 
 	public File saturateAndSummarizeUsingWeakSummary(int i) {
 		System.out.println("################################################################################");
-		System.out.println("Weak summary test " + Integer.toString(i) + " saturation and summarization");
+		System.out.println("Weak summary test " + i + " saturation and summarization");
 		System.out.println("################################################################################");
 
 		String inputFileName = "src/test/resources/test" + i + "-weak/test-" + i + ".nt";
@@ -104,7 +104,7 @@ public class WeakSummaryTests {
 
 	public File summarizeThroughShortcutUsingWeakSummary(int i) {
 		System.out.println("################################################################################");
-		System.out.println("Weak summary test " + Integer.toString(i) + " summarization through shortcut");
+		System.out.println("Weak summary test " + i + " summarization through shortcut");
 		System.out.println("################################################################################");
 
 		String inputFileName = "src/test/resources/test" + i + "-weak/test-" + i + ".nt";

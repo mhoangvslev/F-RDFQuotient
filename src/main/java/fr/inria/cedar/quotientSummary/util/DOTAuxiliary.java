@@ -30,7 +30,7 @@ public class DOTAuxiliary {
 		initDarkColors();
 	}
 	private void initDarkColors(){
-		darkColorNames = new TreeSet<String>();
+		darkColorNames = new TreeSet<>();
 		darkColorNames.add("blueviolet");
 		darkColorNames.add("navy");
 		darkColorNames.add("firebrick"); 

@@ -18,7 +18,7 @@ public class TwoPassStrongSummaryTests {
 	public File summarizeUsingTwoPassStrongSummary(int i) {
 		LOGGER.setLevel(Level.INFO);
 		System.out.println("################################################################################");
-		System.out.println("Two-pass Strong summary test " + Integer.toString(i) + " only summarization");
+		System.out.println("Two-pass Strong summary test " + i + " only summarization");
 		System.out.println("################################################################################");
 
 		String inputFileName = "src/test/resources/test" + i + "-2pstrong/test-" + i + ".nt";
@@ -56,7 +56,7 @@ public class TwoPassStrongSummaryTests {
 
 	public File saturateAndSummarizeUsingTwoPassStrongSummary(int i) {
 		System.out.println("################################################################################");
-		System.out.println("Two-pass Strong summary test " + Integer.toString(i) + " saturation and summarization");
+		System.out.println("Two-pass Strong summary test " + i + " saturation and summarization");
 		System.out.println("################################################################################");
 
 		String inputFileName = "src/test/resources/test" + i + "-2pstrong/test-" + i + ".nt";
@@ -94,7 +94,7 @@ public class TwoPassStrongSummaryTests {
 
 	public File summarizeThroughShortcutUsingTwoPassStrongSummary(int i) {
 		System.out.println("################################################################################");
-		System.out.println("Two-pass Strong summary test " + Integer.toString(i) + " summarization through shortcut");
+		System.out.println("Two-pass Strong summary test " + i + " summarization through shortcut");
 		System.out.println("################################################################################");
 
 		String inputFileName = "src/test/resources/test" + i + "-2pstrong/test-" + i + ".nt";

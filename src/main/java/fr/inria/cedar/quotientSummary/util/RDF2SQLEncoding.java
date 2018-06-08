@@ -146,7 +146,7 @@ public class RDF2SQLEncoding {
 		return code;
 	}
 
-	public static String dictionaryDecode(Long URL) {
+	public static String dictionaryDecode(long URL) {
 		// try to use the cache if possible
 		String alreadyKnownURIOrLiteral = codeToURIOrLiteral.get(URL);
 		if (alreadyKnownURIOrLiteral != null)
@@ -168,18 +168,18 @@ public class RDF2SQLEncoding {
 		}
 	}
 
-	public static boolean isSchemaProperty(Long p) {
+	public static boolean isSchemaProperty(long p) {
 		return ((p == subPropertyCode) && (subPropertyCode != -1))
 			   || ((p == subClassCode) && (subClassCode != -1))
 			   || ((p == domainCode) && (domainCode != -1))
 			   || ((p == rangeCode) && (rangeCode != -1));
 	}
 
-	public static boolean isSpecialProperty(Long p) {
+	public static boolean isSpecialProperty(long p) {
 		return ((p == typeCode) && (typeCode != -1)) || isSchemaProperty(p);
 	}
 
-	public static boolean isDataProperty(Long p) {
+	public static boolean isDataProperty(long p) {
 		return (!(isSpecialProperty(p)));
 	}
 

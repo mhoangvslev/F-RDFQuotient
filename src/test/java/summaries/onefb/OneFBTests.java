@@ -18,7 +18,7 @@ public class OneFBTests {
 	public File summarizeUsingOneFBSummary(int i) {
 		LOGGER.setLevel(Level.INFO);
 		System.out.println("################################################################################");
-		System.out.println("OneFB summary test " + Integer.toString(i) + " only summarization");
+		System.out.println("OneFB summary test " + i + " only summarization");
 		System.out.println("################################################################################");
 
 		String inputFileName = "src/test/resources/test" + i + "-onefb/test-" + i + ".nt";

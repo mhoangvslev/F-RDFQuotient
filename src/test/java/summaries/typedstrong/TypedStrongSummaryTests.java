@@ -18,7 +18,7 @@ public class TypedStrongSummaryTests {
 	public File summarizeUsingTypedStrongSummary(int i) {
 		LOGGER.setLevel(Level.INFO);
 		System.out.println("################################################################################");
-		System.out.println("Typed Strong summary test " + Integer.toString(i) + " only summarization");
+		System.out.println("Typed Strong summary test " + i + " only summarization");
 		System.out.println("################################################################################");
 
 		String inputFileName = "src/test/resources/test" + i + "-typedstrong/test-" + i + ".nt";
@@ -56,7 +56,7 @@ public class TypedStrongSummaryTests {
 
 	public File saturateAndSummarizeUsingTypedStrongSummary(int i) {
 		System.out.println("################################################################################");
-		System.out.println("Typed Strong summary test " + Integer.toString(i) + " saturation and summarization");
+		System.out.println("Typed Strong summary test " + i + " saturation and summarization");
 		System.out.println("################################################################################");
 
 		String inputFileName = "src/test/resources/test" + i + "-typedstrong/test-" + i + ".nt";

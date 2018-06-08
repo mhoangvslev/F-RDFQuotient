@@ -18,7 +18,7 @@ public class EdgesWithProvenanceCounts {
 		counts = new HashMap<>();
 	}
 
-	public HashMap<Long, TreeSet<Long>> get(Long s){
+	public HashMap<Long, TreeSet<Long>> get(long s){
 		return edges.get(s);
 	}
 
@@ -29,7 +29,7 @@ public class EdgesWithProvenanceCounts {
 	 * @param p
 	 * @param o
 	 */
-	public final void addTriple(Long s, Long p, Long o) {
+	public final void addTriple(long s, long p, long o) {
 		//LOGGER.debug("ADDING SUMMARY TRIPLE: " + s + " " + p + " " + o);
 		Triple t = new Triple(s, p, o);
 		HashMap<Long, TreeSet<Long>> triplesForThisSubject = edges.get(s);
@@ -46,35 +46,29 @@ public class EdgesWithProvenanceCounts {
 		HashMap<Long, Long> countsForThisSubjectAndProperty = countsForThisSubject.get(p);
 		if (objectsForThisSubjectAndProperty == null) { // no edges yet for this subject and property; otherwise, s has already some p edges
 			objectsForThisSubjectAndProperty = new TreeSet<>();
-			triplesForThisSubject.put(t.p, objectsForThisSubjectAndProperty);
+			triplesForThisSubject.put(p, objectsForThisSubjectAndProperty);
 			countsForThisSubjectAndProperty = new HashMap<>();
-			countsForThisSubject.put(t.p, countsForThisSubjectAndProperty);
+			countsForThisSubject.put(p, countsForThisSubjectAndProperty);
 		}
-		if (!objectsForThisSubjectAndProperty.contains(t.o)) { // otherwise, s p o
+		if (!objectsForThisSubjectAndProperty.contains(o)) { // otherwise, s p o
 			objectsForThisSubjectAndProperty.add(o);
-			countsForThisSubjectAndProperty.put(t.o, 1L);
+			countsForThisSubjectAndProperty.put(o, 1L);
 		}
 		else{
-			Long count = countsForThisSubjectAndProperty.get(t.o);
-			countsForThisSubjectAndProperty.put(t.o, (count + 1L));
+			long count = countsForThisSubjectAndProperty.get(o);
+			countsForThisSubjectAndProperty.put(o, (count + 1L));
 		}
 	}
 
-	public void setCounter(Long s, Long p, Long o, Long value){
-		HashMap<Long,  HashMap<Long, Long>> countsForS = counts.get(s);
-		if (countsForS == null){
-			countsForS = new HashMap<>();
-			counts.put(s, countsForS);
-		}
-		HashMap<Long, Long> countsForSP = countsForS.get(p);
-		if (countsForSP == null){
-			countsForSP = new HashMap<>();
-			countsForS.put(p, countsForSP);
-		}
-		countsForSP.put(o, value); // overwrites whatever was there
+	public boolean containsEdge(long s, long p, long o) {
+		return edges.get(s) != null && edges.get(s).get(p) != null && edges.get(s).get(p).contains(o);
 	}
 
-	public Long getCounter(Long s, Long p, Long o){
+	public void setCounter(long s, long p, long o, long value) {
+		counts.get(s).get(p).put(o, value); // overwrites whatever was there
+	}
+
+	public long getCounter(long s, long p, long o) {
 		HashMap<Long,  HashMap<Long, Long>> countsForS = counts.get(s);
 		if (countsForS == null){
 			return 0L;
@@ -86,17 +80,17 @@ public class EdgesWithProvenanceCounts {
 		return countsForSP.get(o) != null ? countsForSP.get(o) : 0L;
 	}
 
-	public void replaceNodeInSummaryEdges(Long oldNode, Long newNode) {
+	public void replaceNodeInSummaryEdges(long oldNode, long newNode) {
 		// replacing oldNode with newNode in object position
-		for (Long s: edges.keySet()) {
-			for (Long p: edges.get(s).keySet()) {
+		for (long s: edges.keySet()) {
+			for (long p: edges.get(s).keySet()) {
 				if (edges.get(s).get(p).contains(oldNode)) {
-					Long oldNodeCounter = getCounter(s, p, oldNode);
+					long oldNodeCounter = getCounter(s, p, oldNode);
 					edges.get(s).get(p).remove(oldNode);
 					counts.get(s).get(p).remove(oldNode);
 					if (!edges.get(s).get(p).contains(newNode)) {
 						edges.get(s).get(p).add(newNode);
-						setCounter(s, p, newNode, oldNodeCounter);
+						counts.get(s).get(p).put(newNode, oldNodeCounter);
 					}
 					else {
 						setCounter(s, p, newNode, oldNodeCounter + getCounter(s, p, newNode));
@@ -109,23 +103,23 @@ public class EdgesWithProvenanceCounts {
 		if (edges.get(oldNode) != null) {
 			HashMap<Long, HashMap<Long, TreeSet<Long>>> newEdges = new HashMap<>();
 			newEdges.put(newNode, new HashMap<>());
-			for (Long p: edges.get(oldNode).keySet()) {
+			for (long p: edges.get(oldNode).keySet()) {
 				newEdges.get(newNode).put(p, edges.get(oldNode).get(p));
 			}
 			if (edges.get(newNode) == null) {
 				edges.put(newNode, new HashMap<>());
 				counts.put(newNode, new HashMap<>());
 			}
-			for (Long p: newEdges.get(newNode).keySet()) {
-				for (Long o: newEdges.get(newNode).get(p)) {
-					Long oldNodeCounter = getCounter(oldNode, p, o);
+			for (long p: newEdges.get(newNode).keySet()) {
+				for (long o: newEdges.get(newNode).get(p)) {
+					long oldNodeCounter = getCounter(oldNode, p, o);
 					if (edges.get(newNode).get(p) == null) {
 						edges.get(newNode).put(p, new TreeSet<>());
 						counts.get(newNode).put(p, new HashMap<>());
 					}
 					if (!edges.get(newNode).get(p).contains(o)) {
 						edges.get(newNode).get(p).add(o);
-						setCounter(newNode, p, o, oldNodeCounter);
+						counts.get(newNode).get(p).put(o, oldNodeCounter);
 					}
 					else {
 						setCounter(newNode, p, o, oldNodeCounter + getCounter(newNode, p, o));
@@ -139,11 +133,11 @@ public class EdgesWithProvenanceCounts {
 
 	public ArrayList<Triple> getSummaryEdges() {
 		ArrayList<Triple> res = new ArrayList<>();
-		for (Long s : edges.keySet()) {
+		for (long s : edges.keySet()) {
 			HashMap<Long, TreeSet<Long>> triplesOfThisSubject = edges.get(s);
-			for (Long p : triplesOfThisSubject.keySet()) {
+			for (long p : triplesOfThisSubject.keySet()) {
 				TreeSet<Long> objectsOfThisSandP = triplesOfThisSubject.get(p);
-				for (Long o : objectsOfThisSandP) {
+				for (long o : objectsOfThisSandP) {
 					Triple t = new Triple(s, p, o);
 					res.add(t);
 				}
@@ -152,7 +146,7 @@ public class EdgesWithProvenanceCounts {
 		return res;
 	}
 
-	public void removeTriple(Long s, Long p, Long o) {
+	public void removeTriple(long s, long p, long o) {
 		//LOGGER.debug("REMOVING SUMMARY TRIPLE: " + s + " " + p + " " + o);
 		if (edges.get(s) == null || edges.get(s).get(p) == null || !edges.get(s).get(p).contains(o)) {
 			throw new IllegalStateException("Triple " + s + " " + p + " " + o + " does not exist in edges");
@@ -178,13 +172,13 @@ public class EdgesWithProvenanceCounts {
 		return edges.keySet();
 	}
 
-	public Long totalEdgeCount(){
-		Long res = 0L;
-		for (Long s: counts.keySet()){
+	public long totalEdgeCount(){
+		long res = 0L;
+		for (long s: counts.keySet()) {
 			HashMap<Long, HashMap<Long, Long>> maps = counts.get(s);
-			for (Long p: maps.keySet()){
+			for (long p: maps.keySet()) {
 				HashMap<Long, Long> mapsp = maps.get(p);
-				for (Long o: mapsp.keySet()){
+				for (long o: mapsp.keySet()) {
 					res += mapsp.get(o);
 				}
 			}

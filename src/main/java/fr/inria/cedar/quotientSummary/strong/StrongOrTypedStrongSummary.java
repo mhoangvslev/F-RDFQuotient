@@ -1296,10 +1296,6 @@ public class StrongOrTypedStrongSummary extends Summary {
 					msg += "In edges we have an empty set for s = " + s + " and p = " + p;
 					throw new IllegalStateException(msg);
 				}
-				else if (edgesWithProv.getCounter(s, p, edgesWithProv.get(s).get(p).first()) == null) {
-					msg += "In edges counts we have a missing counter for s = " + s + " and p = " + p;
-					throw new IllegalStateException(msg);
-				}
 			}
 		}
 

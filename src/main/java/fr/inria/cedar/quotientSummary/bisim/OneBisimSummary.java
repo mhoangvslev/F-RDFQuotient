@@ -57,7 +57,7 @@ public class OneBisimSummary extends Summary{
 
 	private void representDataNodes() {
 		// all nodes with outgoing edges and possibly incoming edges:
-		for (Long n: n2op.keySet()){
+		for (long n: n2op.keySet()){
 			TreeSet<Long> nop = n2op.get(n);
 			TreeSet<Long> nip = n2ip.get(n);
 			Long summaryNode = getSummaryNode(nop, nip);
@@ -68,7 +68,7 @@ public class OneBisimSummary extends Summary{
 			rep.put(n, summaryNode);
 		}
 		// all nodes with incoming but not outgoing edges (those with both are covered above): 
-		for (Long n: n2ip.keySet()){
+		for (long n: n2ip.keySet()){
 			if (n2op.get(n) == null){
 				TreeSet<Long> nop = n2op.get(n);
 				TreeSet<Long> nip = n2ip.get(n);
@@ -112,15 +112,15 @@ public class OneBisimSummary extends Summary{
 		this.edgesWithProv.addTriple(repS, t.p, repO);
 	}
 
-	private Long createSummaryNode(TreeSet<Long> nop, TreeSet<Long> nip) {
-		Long n = this.getNextSummaryNode();
+	private long createSummaryNode(TreeSet<Long> nop, TreeSet<Long> nip) {
+		long n = this.getNextSummaryNode();
 		HashMap<TreeSet<Long>, Long> o2n = this.ip2op2sn.get(nip);
 		if (o2n == null){
 			o2n = new HashMap<>();
 			this.ip2op2sn.put(nip, o2n);
 		}
 		o2n.put(nop, n);
-		return n; 
+		return n;
 	}
 
 	private Long getSummaryNode(TreeSet<Long> nop, TreeSet<Long> nip) {

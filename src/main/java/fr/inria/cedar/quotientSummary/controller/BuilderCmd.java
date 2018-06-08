@@ -73,7 +73,7 @@ public class BuilderCmd {
 		}
 
 		String fileName, summaryType;
-		Boolean saturate, exportLoadingStatistics, saturated, saveInPostgres, exportToDisk, exportSummarizationStatistics;
+		boolean saturate, exportLoadingStatistics, saturated, saveInPostgres, exportToDisk, exportSummarizationStatistics;
 		switch (args[0]) {
 			case "load":
 				if (args.length != 4) {
@@ -221,7 +221,7 @@ public class BuilderCmd {
 		return fileName.substring(trimSlash ? fileName.lastIndexOf("/") + 1 : 0, lastDotPosition);
 	}
 
-	private static void load(String datasetName, Boolean loadSaturated) {
+	private static void load(String datasetName, boolean loadSaturated) {
 		LOGGER.info("Loading graph to Postgres");
 		try {
 			settings.getAllInFiles().add(datasetName);
@@ -278,20 +278,20 @@ public class BuilderCmd {
 		return null;
 	}
 
-	private static void summarize(String datasetName, String summaryType, Boolean summarizeSaturated) {
+	private static void summarize(String datasetName, String summaryType, boolean summarizeSaturated) {
 		LOGGER.info("Summarizing graph from Postgres");
 		summaryInUse = createNewSummary(summaryType, datasetName, triplesTableName, summarizeSaturated ? encodedSaturatedTriplesTableName : encodedTriplesTableName, dictionaryTableName);
 		summaryInUse.summarizeFromPostgres(connectionInUse);
 		LOGGER.info("Graph from Postgres summarized");
 	}
 
-	private static void saveSummaryInPostgres(Boolean summarizeSaturated) {
+	private static void saveSummaryInPostgres(boolean summarizeSaturated) {
 		long start = System.currentTimeMillis();
 		summaryInUse.saveSummaryInPostgres(connectionInUse, false, summarizeSaturated ? "sat" : "");
 		summarySavingInPostgresTime = System.currentTimeMillis() - start;
 	}
 
-	private static void exportSummaryToDisk(Boolean summarizeSaturated) {
+	private static void exportSummaryToDisk(boolean summarizeSaturated) {
 		LOGGER.info("Exporting summary to disk");
 		long start = System.currentTimeMillis();
 		summaryInUse.writeDecodedSummaryToNTFile(connectionInUse, summarizeSaturated ? "sat" : "");
@@ -299,7 +299,7 @@ public class BuilderCmd {
 		LOGGER.info("Summary exported to disk");
 	}
 
-	private static void exportSummarizationStatisticsToDisk(Boolean summarizeSaturated) {
+	private static void exportSummarizationStatisticsToDisk(boolean summarizeSaturated) {
 		String csvFileName = trimNT(summaryInUse.getNTSummaryFileName(summarizeSaturated ? "sat" : ""), false) + "-summarization-statistics.csv";
 		LOGGER.info("Exporting summarization statistics to disk to the file " + csvFileName);
 		try (PrintWriter pw = new PrintWriter(new File(csvFileName))) {

@@ -52,7 +52,6 @@ public class Summary {
 	protected long typeOnlyNodeID;
 	protected boolean typeOnlyNodeAlreadySeen;
 
-	protected Triple lastReadTriple;
 	protected long maxSummaryNode;
 	protected Properties properties;
 	protected static String SUMMARY_CONFIG_FILE = "conf/summarization.properties";
@@ -176,9 +175,9 @@ public class Summary {
 				ResultSet rs = getTriples.executeQuery(getSummaryTriples);
 		) {
 			while (rs.next()) {
-				Long s = rs.getLong(1);
-				Long p = rs.getLong(2);
-				Long o = rs.getLong(3);
+				long s = rs.getLong(1);
+				long p = rs.getLong(2);
+				long o = rs.getLong(3);
 				edgesWithProv.addTriple(s, p, o);
 			}
 		}
@@ -312,15 +311,15 @@ public class Summary {
 
 	protected String showRep() {
 		StringBuilder sb = new StringBuilder();
-		for (Long node : this.rep.getKeys()) {
+		for (long node : this.rep.getKeys()) {
 			//sb.append(node).append("=>").append(rep.get(node)).append(" ");
 			sb.append(node).append(" (").append(RDF2SQLEncoding.dictionaryDecode(node)).append(") => ").append(rep.get(node)).append("\n");
 		}
 		return sb.toString();
 	}
 
-	protected Long getNextSummaryNode() {
-		Long node = this.maxSummaryNode;
+	protected long getNextSummaryNode() {
+		long node = this.maxSummaryNode;
 		this.maxSummaryNode++;
 		return node;
 	}
@@ -447,10 +446,10 @@ public class Summary {
 	 */
 	protected void representTypeTriplesBeforeData() {
 		//LOGGER.debug("POST HANDLE TYPE TRIPLES");
-		for (Long node: n2cs.getKeys()) {
-			Long thisClassSetID = n2cs.get(node);
+		for (long node: n2cs.getKeys()) {
+			long thisClassSetID = n2cs.get(node);
 			TreeSet<Long> thisClassSet = cs.get(thisClassSetID); // the class set IS the representative
-			for (Long thisClass: thisClassSet) {
+			for (long thisClass: thisClassSet) {
 				edgesWithProv.addTriple(thisClassSetID, RDF2SQLEncoding.getTypeCode(), thisClass);
 				rep.put(node, thisClassSetID);
 			}
@@ -483,7 +482,7 @@ public class Summary {
 	 * @param partialResult
 	 * @param summarizationInput
 	 */
-	public void saveSummaryInPostgres(Connection conn, Boolean partialResult, String summarizationInput) {
+	public void saveSummaryInPostgres(Connection conn, boolean partialResult, String summarizationInput) {
 		try {
 			conn.setAutoCommit(false);
 		}
@@ -532,8 +531,8 @@ public class Summary {
 				String insertIntoRep = "insert into " + newSummaryTableNameRep + " values(?, ?);";
 				try (PreparedStatement insertInRep = conn.prepareStatement(insertIntoRep)) {
 					Set<Long> origNodes = rep.getKeys();
-					for (Long origNode : origNodes) {
-						Long sumNode = rep.get(origNode);
+					for (long origNode : origNodes) {
+						long sumNode = rep.get(origNode);
 						insertInRep.setLong(1, origNode);
 						insertInRep.setLong(2, sumNode);
 						insertInRep.executeUpdate();
@@ -685,8 +684,8 @@ public class Summary {
 				}
 				if (gatherStatistics) {
 					// write node cardinality statistics:
-					for (Long node : this.summaryNodeStatistics.keySet()) {
-						Long numberOfRepresentedGraphNodes = this.summaryNodeStatistics.get(node);
+					for (long node : this.summaryNodeStatistics.keySet()) {
+						long numberOfRepresentedGraphNodes = this.summaryNodeStatistics.get(node);
 						String subject = getSummaryNodeURI(URIprefix, node);
 						String property = properties.getProperty("summaryNodeSupportURI");
 						String object = ("\"" + numberOfRepresentedGraphNodes + "\"");
@@ -696,7 +695,7 @@ public class Summary {
 					// write edge cardinality statistics:
 					int reifiedEdgeNumber = 0;
 					for (Triple ts : this.summaryEdgeStatistics.keySet()) {
-						Long numberOfRepresentedEdges = this.summaryEdgeStatistics.get(ts);
+						long numberOfRepresentedEdges = this.summaryEdgeStatistics.get(ts);
 						String reifEdgeURI = getSummaryNodeURI(properties.getProperty("reifiedSummaryEdgeURIPrefix"),
 							reifiedEdgeNumber);
 						bw.write(reifEdgeURI + " <" + properties.getProperty("reifiedEdgeHasSubject") + "> "
@@ -853,7 +852,7 @@ public class Summary {
 		}
 	}
 
-	private void writeNodeToDot(BufferedWriter bw, Long node, String label) {
+	private void writeNodeToDot(BufferedWriter bw, long node, String label) {
 	try{
 		String nColor = dax.getSummaryNodeColor(node);
 		bw.write("\"" + label + "\" [style = filled, color=" + 
@@ -934,7 +933,7 @@ public class Summary {
 		}
 	}
 	protected String dotSuffixOfStringsAndURIs(String s){
-		int suffixLength = new Integer(properties.getProperty("maxNodeLabelLength"));
+		int suffixLength = Integer.parseInt(properties.getProperty("maxNodeLabelLength"));
 		if (s.length() <= suffixLength){
 			return s; 
 		}
@@ -1004,17 +1003,17 @@ public class Summary {
 		try {
 			while (rs.next()) {
 				String subject = rs.getString(1);
-				Long s = RDF2SQLEncoding.dictionaryEncode(subject);
-				Long sRep = rep.get(s);
+				long s = RDF2SQLEncoding.dictionaryEncode(subject);
+				long sRep = rep.get(s);
 				//LOGGER.debug("DrawTriples: Encoded " + subject + " into " + s + " whose representative is: "  + sRep);
 
 				String object = rs.getString(3);
-				Long o = RDF2SQLEncoding.dictionaryEncode(object);
-				Long oRep = rep.get(o);
+				long o = RDF2SQLEncoding.dictionaryEncode(object);
+				long oRep = rep.get(o);
 
 				//LOGGER.debug("DrawTriples: Encoded " + object + " into " + o + " whose representative is: " + oRep);
 				String property = rs.getString(2);
-				Long p = RDF2SQLEncoding.dictionaryEncode(property);
+				long p = RDF2SQLEncoding.dictionaryEncode(property);
 				//LOGGER.debug("DRAW Triple! (" + subject + " " + property + " " + object + ")");
 				//LOGGER.debug("DRAW Represented by: " + sRep + " " + p + " " + oRep);
 				writeGraphTripleToDotFile(bw, s, p, o, subject, property, object, sRep, oRep);
@@ -1070,7 +1069,7 @@ public class Summary {
 		}
 	}
 
-	protected void writeGraphTripleToDotFile(BufferedWriter bw, Long s, Long p, Long o, String subject, String property, String object, Long sRep, Long oRep) {
+	protected void writeGraphTripleToDotFile(BufferedWriter bw, long s, long p, long o, String subject, String property, String object, long sRep, long oRep) {
 		//LOGGER.debug("WRITE GRAPH TRIPLE TO DOT s: " + s + " p: " + p + " o: " + o + " subject: "  + subject + " property " + property + " object " + object + " sRep: " + sRep + " oRep: " + oRep); 
 		String subjectForDot = getVeryShortForDot(subject).replaceAll("\"", "");
 		String objectForDot = getVeryShortForDot(object).replaceAll("\"", "");
@@ -1092,16 +1091,16 @@ public class Summary {
 			}
 			else if (RDF2SQLEncoding.isSchemaProperty(p)) {
 				//LOGGER.debug("SCHEMA TRIPLE"); 
-				if (p.equals(RDF2SQLEncoding.getSubClassCode())){
+				if (p == RDF2SQLEncoding.getSubClassCode()) {
 					propertyForDot = "rdfs:subClass"; 
 				}
-				if (p.equals(RDF2SQLEncoding.getSubPropertyCode())){
+				if (p == RDF2SQLEncoding.getSubPropertyCode()) {
 					propertyForDot = "rdfs:subProperty"; 
 				}
-				if (p.equals(RDF2SQLEncoding.getDomainCode())){
+				if (p == RDF2SQLEncoding.getDomainCode()) {
 					propertyForDot = "rdfs:domain"; 
 				}
-				if (p.equals(RDF2SQLEncoding.getRangeCode())){
+				if (p == RDF2SQLEncoding.getRangeCode()) {
 					propertyForDot = "rdfs:range"; 
 				}
 				//LOGGER.debug("SCH1 " + s + " (" + subject + ") represented by  " + sRep + " written alone as " + subjectForDot); 
@@ -1116,9 +1115,6 @@ public class Summary {
 				//LOGGER.debug("TYP1 " + s + " (" + subject + ") represented by  " + sRep);
 				if (dax == null) {
 					throw new IllegalStateException("Null dax");
-				}
-				if (sRep == null) {
-					throw new IllegalStateException("Null sRep");
 				}
 				bw.write("\"" + subjectForDot + "\" [style = filled, color=" + dax.getSummaryNodeColor(sRep) + "];\n");
 
@@ -1237,20 +1233,20 @@ public class Summary {
 	protected String showCliqueAsString(TreeSet<Long> clique) {
 		StringBuffer sb = new StringBuffer();
 		sb.append("[");
-		for (Long l : clique)
+		for (long l : clique)
 			sb.append(l).append("(").append(RDF2SQLEncoding.dictionaryDecode(l)).append(") ");
 		sb.append("]");
 		return new String(sb); 
 	}
 
-	protected HashMap<Long, TreeSet<Long>> getEdgesFrom(Long s){
-		return this.edgesWithProv.get(s); 
+	protected HashMap<Long, TreeSet<Long>> getEdgesFrom(long s){
+		return this.edgesWithProv.get(s);
 	}
 
-	protected HashMap<Long, TreeSet<Long>> getEdgesTo(Long o){
+	protected HashMap<Long, TreeSet<Long>> getEdgesTo(long o){
 		HashMap<Long, TreeSet<Long>> res = new HashMap<>();
-		for (Long s: edgesWithProv.keySet()){
-			for (Long p: edgesWithProv.get(s).keySet()){
+		for (long s: edgesWithProv.keySet()){
+			for (long p: edgesWithProv.get(s).keySet()){
 				// if there is an edge s--p-->o
 				if (edgesWithProv.get(s).get(p).contains(o)) {
 					TreeSet<Long> onP = res.get(p);

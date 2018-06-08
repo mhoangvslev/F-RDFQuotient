@@ -18,7 +18,7 @@ public class StrongSummaryTests {
 	public File summarizeUsingStrongSummary(int i) {
 		LOGGER.setLevel(Level.INFO);
 		System.out.println("################################################################################");
-		System.out.println("Strong summary test " + Integer.toString(i) + " only summarization");
+		System.out.println("Strong summary test " + i + " only summarization");
 		System.out.println("################################################################################");
 
 		String inputFileName = "src/test/resources/test" + i + "-strong/test-" + i + ".nt";
@@ -56,7 +56,7 @@ public class StrongSummaryTests {
 
 	public File saturateAndSummarizeUsingStrongSummary(int i) {
 		System.out.println("################################################################################");
-		System.out.println("Strong summary test " + Integer.toString(i) + " saturation and summarization");
+		System.out.println("Strong summary test " + i + " saturation and summarization");
 		System.out.println("################################################################################");
 
 		String inputFileName = "src/test/resources/test" + i + "-strong/test-" + i + ".nt";
@@ -94,7 +94,7 @@ public class StrongSummaryTests {
 
 	public File summarizeThroughShortcutUsingStrongSummary(int i) {
 		System.out.println("################################################################################");
-		System.out.println("Strong summary test " + Integer.toString(i) + " summarization through shortcut");
+		System.out.println("Strong summary test " + i + " summarization through shortcut");
 		System.out.println("################################################################################");
 
 		String inputFileName = "src/test/resources/test" + i + "-strong/test-" + i + ".nt";

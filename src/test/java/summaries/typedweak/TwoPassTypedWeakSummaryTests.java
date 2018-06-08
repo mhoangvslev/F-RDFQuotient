@@ -18,7 +18,7 @@ public class TwoPassTypedWeakSummaryTests {
 	public File summarizeUsingTwoPassTypedWeakSummary(int i) {
 		LOGGER.setLevel(Level.INFO);
 		System.out.println("################################################################################");
-		System.out.println("Typed Weak summary test " + Integer.toString(i) + " only summarization");
+		System.out.println("Typed Weak summary test " + i + " only summarization");
 		System.out.println("################################################################################");
 
 		String inputFileName = "src/test/resources/test" + i + "-2ptypedweak/test-" + i + ".nt";
@@ -56,7 +56,7 @@ public class TwoPassTypedWeakSummaryTests {
 
 	public File saturateAndSummarizeUsingTwoPassTypedWeakSummary(int i) {
 		System.out.println("################################################################################");
-		System.out.println("Typed Weak summary test " + Integer.toString(i) + " saturation and summarization");
+		System.out.println("Typed Weak summary test " + i + " saturation and summarization");
 		System.out.println("################################################################################");
 
 		String inputFileName = "src/test/resources/test" + i + "-2ptypedweak/test-" + i + ".nt";
