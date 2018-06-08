@@ -262,12 +262,14 @@ public class Summary {
 		long subPropertyCode = RDF2SQLEncoding.getSubPropertyCode();
 		long domainCode = RDF2SQLEncoding.getDomainCode();
 		long rangeCode = RDF2SQLEncoding.getRangeCode();
+		long typeCode = RDF2SQLEncoding.getTypeCode();
 
 		String getTriplesString = "select distinct s from " + encodedTriplesTableName
 			+ " where p = " + subClassCode
 			+ " or p = " + subPropertyCode
 			+ " or p = " + domainCode
-			+ " or p = " + rangeCode + ";";
+			+ " or p = " + rangeCode
+			+ ";";
 		try {
 			try (Statement getTriples = conn.createStatement()) {
 				getTriples.setFetchSize(10000);
@@ -288,7 +290,9 @@ public class Summary {
 			+ " where p = " + subClassCode
 			+ " or p = " + subPropertyCode
 			+ " or p = " + domainCode
-			+ " or p = " + rangeCode + ";";
+			+ " or p = " + rangeCode
+			+ " or p = " + typeCode
+			+ ";";
 		try {
 			try (Statement getTriples = conn.createStatement()) {
 				getTriples.setFetchSize(10000);

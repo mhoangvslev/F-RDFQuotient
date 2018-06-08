@@ -24,10 +24,13 @@ public class StrongOrTypedStrongSummary extends Summary {
 	Long2Long n2tc; // for each data node, its target clique ID
 	Long2Long p2sc; // property to source clique
 	Long2Long p2tc; // property to target clique
+	TwoLevelLongMap untypedSummaryNodes; // source clique --> target clique --> summary node
+	// for patching edges, we really need to store the data graph in memory... :(
+	HashMap<Long, Long2LongSet> triplesBySubject; // s-->{p-->{o}} s, o are data nodes
+	HashMap<Long, Long2LongSet> triplesByObject; // o-->{p-->{s}}
 	long minCliqueID;
 	protected long emptySCCount; // empty source clique number (will never change)
 	protected long emptyTCCount; // empty target clique number (will never change) 
-	TwoLevelLongMap untypedSummaryNodes; // source clique --> target clique --> summary node
 	protected char SOURCE = 0;
 	protected char TARGET = 1;
 	// U means unrepresented (so far) 
@@ -58,10 +61,6 @@ public class StrongOrTypedStrongSummary extends Summary {
 	protected final static char US_UP_RO = 17;
 	protected final static char US_UP_UO = 18;
 
-	// for patching edges, we really need to store the data graph in memory... :(
-	HashMap<Long, Long2LongSet> triplesBySubject; // s-->{p-->{o}} s, o are data nodes
-	HashMap<Long, Long2LongSet> triplesByObject; // o-->{p-->{s}}
-
 	public StrongOrTypedStrongSummary() {
 		super();
 		LOGGER.setLevel(Level.INFO);
@@ -72,11 +71,11 @@ public class StrongOrTypedStrongSummary extends Summary {
 		p2sc = new Long2Long();
 		p2tc = new Long2Long();
 		untypedSummaryNodes = new TwoLevelLongMap();
+		triplesBySubject = new HashMap<>();
+		triplesByObject = new HashMap<>();
 		minCliqueID = -1;
 		emptySCCount = Long.MAX_VALUE;
 		emptyTCCount = Long.MAX_VALUE;
-		triplesBySubject = new HashMap<>();
-		triplesByObject = new HashMap<>();
 	}
 
 	// -->
@@ -954,8 +953,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 	/**
 	 * Read-only
 	 * 
-	 * Clique IDs are negative. So, the higher value is the one created first. We will keep the higher value and replace the
-	 * lower value with this higher value.
+	 * We will take the bigger clique's ID.
 	 * An exception is made if one of the cliques is the empty clique: in this case, fusion systematically
 	 * takes the other clique.
 	 * @param c1

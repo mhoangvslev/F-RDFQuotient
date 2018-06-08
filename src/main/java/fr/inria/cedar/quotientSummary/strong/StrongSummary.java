@@ -93,7 +93,6 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 
 	@Override
 	protected void handleDataTriple(Triple t) {
-		// 8 cases: (RS, US) x (RP, UP) x (RO, UO)
 		Long sourceCliqueS = n2sc.get(t.s);
 		Long targetCliqueS = n2tc.get(t.s);
 		Long sourceCliqueO = n2sc.get(t.o);
