@@ -1,5 +1,7 @@
 #!/bin/bash
 
-./summarize.sh insee/insee_geo.nt 2pstrong false
-./summarize.sh insee/insee_geo.nt weak false
-./summarize.sh insee/insee_geo.nt onefb false
+for SUMMARY_TYPE in weak, strong, typedweak, typedstrong, 2pweak, 2pstrong, 2ptypedweak, 2ptypedstrong; do
+	for DATASET in dbpedia/dbpedia_persondata_en.nt, springer/conference.nt, nobel/conference, insee/insee_geo.nt; do
+		./summarize.sh $DATASET $SUMMARY_TYPE false
+	done
+done
