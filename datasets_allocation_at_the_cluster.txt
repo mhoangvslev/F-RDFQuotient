@@ -1,0 +1,26 @@
+cedar001
+DBPedia person
+Springer LOD conferences
+Nobel prizes
+INSEE Geo
+
+cedar002
+LUBM1M
+
+cedar003
+LUBM10M
+
+cedar004
+LUBM100M
+
+cedar005
+BSBM1M
+
+cedar006
+BSBM10M
+
+cedar007
+BSBM100M
+
+cedar008
+DBLP
