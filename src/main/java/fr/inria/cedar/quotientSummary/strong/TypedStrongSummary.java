@@ -152,7 +152,6 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 
 	@Override
 	protected void handleDataTriple(Triple t) {
-		// 18 cases: (TRS, RS, US) x (RP, UP) x (TRO, RO, UO) also multiplied by: which cliques are empty and their consequences on fusion
 		Long classSetS = n2cs.get(t.s);
 		Long classSetO = n2cs.get(t.o);
 
@@ -167,12 +166,12 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		Long repO = rep.get(t.o);
 		Long repS = rep.get(t.s);
 
-		boolean pRepresented = (sourceCliqueP != null);
-		boolean sRepresented = (repS != null);
-		boolean sTyped = (classSetS != null);
+		boolean pRepresented = sourceCliqueP != null || targetCliqueP != null;
+		boolean sRepresented = repS != null;
+		boolean sTyped = classSetS != null;
 		boolean sSchemaNode = sn.contains(t.s);
-		boolean oRepresented = (repO != null);
-		boolean oTyped = (classSetO != null);
+		boolean oRepresented = repO != null;
+		boolean oTyped = classSetO != null;
 		boolean oSchemaNode = sn.contains(t.o);
 
 		char caseNumber = identifyTripleSummarizationCase(sRepresented, sSchemaNode, sTyped, pRepresented, oRepresented, oTyped, oSchemaNode);

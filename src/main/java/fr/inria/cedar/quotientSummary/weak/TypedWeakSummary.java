@@ -159,12 +159,12 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		// may have a source but lack a target, or the opposite.
 		// Thus, is "represented" a property having a source OR a target. It doesn't have to have both.
 		// If a property only occurs between typed nodes, it is considered non represented.
-		boolean pRepresented = ((pSource != null) || (pTarget != null)); 
-		boolean sRepresented = (repS != null);
-		boolean sTyped = (n2cs.get(t.s) != null);
+		boolean pRepresented = pSource != null || pTarget != null;
+		boolean sRepresented = repS != null;
+		boolean sTyped = n2cs.get(t.s) != null;
 		boolean sSchemaNode = sn.contains(t.s);
-		boolean oRepresented = (repO != null);
-		boolean oTyped = (n2cs.get(t.o) != null);
+		boolean oRepresented = repO != null;
+		boolean oTyped = n2cs.get(t.o) != null;
 		boolean oSchemaNode = sn.contains(t.o);
 
 		char caseNumber = identifyTripleSummarizationCase(sRepresented, sSchemaNode, sTyped, pRepresented, oRepresented, oTyped, oSchemaNode);

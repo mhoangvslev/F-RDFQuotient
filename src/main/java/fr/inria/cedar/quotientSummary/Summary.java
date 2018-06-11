@@ -400,44 +400,50 @@ public class Summary {
 			edgesWithProv.addTriple(typeOnlyNodeID, t.p, t.o);
 			rep.put(t.s, typeOnlyNodeID);
 		}
-		rep.put(t.o, t.o);
+		// o already represenated in collectSchemaNodes
 	}
 
 	protected void handleTypeTripleBeforeData(Triple t) {
-		TreeSet<Long> classSetOfThisNode = n2c.get(t.s);
-		if (classSetOfThisNode == null) { // this is the first time we encounter the node: create a class set with exactly this type
-			classSetOfThisNode = new TreeSet<>();
-			classSetOfThisNode.add(t.o);
-			Long thisNodeClassSetID = cs2csID.get(classSetOfThisNode); // comparison between sets uses equals and compares the structures of the sets
-			if (thisNodeClassSetID == null) {
-				// this class set was not already known so we create it
-				thisNodeClassSetID = getNextSummaryNode();
-				cs.put(thisNodeClassSetID, classSetOfThisNode); // installs the new class set
-				cs2csID.put(classSetOfThisNode, thisNodeClassSetID); // installs the new class set
-			}
-			// whether or not newClassSetID was known:
-			n2c.put(t.s, classSetOfThisNode); // erases/replaces previously known class set
-			n2cs.put(t.s, thisNodeClassSetID); // erases/replaces previously known class set ID
+		if (sn.contains(t.s)) { // schemaNode rdf:type classNode, represent right away
+			edgesWithProv.addTriple(t.s, t.p, t.o);
+			// s, o already represenated in collectSchemaNodes
 		}
-		else if (!classSetOfThisNode.contains(t.o)) { // we already had some types for t.s but not this one so we need to add new type
-			// n is moving from classSetOfThisNode to newClassSetOfThisNode.
-			// TODO Check if classSetOfThisNode is deserted and if yes, maybe remove it.
-			// (We can also keep it there to reuse it later...)
-			TreeSet<Long> newClassSetOfThisNode = new TreeSet<>();
-			newClassSetOfThisNode.addAll(classSetOfThisNode);
-			newClassSetOfThisNode.add(t.o);
-			Long newClassSetID = cs2csID.get(newClassSetOfThisNode);
-			if (newClassSetID == null) {
-				newClassSetID = getNextSummaryNode();
-				cs.put(newClassSetID, newClassSetOfThisNode);
-				cs2csID.put(newClassSetOfThisNode, newClassSetID);
+		else {
+			TreeSet<Long> classSetOfThisNode = n2c.get(t.s);
+			if (classSetOfThisNode == null) { // this is the first time we encounter the node: create a class set with exactly this type
+				classSetOfThisNode = new TreeSet<>();
+				classSetOfThisNode.add(t.o);
+				Long thisNodeClassSetID = cs2csID.get(classSetOfThisNode); // comparison between sets uses equals and compares the structures of the sets
+				if (thisNodeClassSetID == null) {
+					// this class set was not already known so we create it
+					thisNodeClassSetID = getNextSummaryNode();
+					cs.put(thisNodeClassSetID, classSetOfThisNode); // installs the new class set
+					cs2csID.put(classSetOfThisNode, thisNodeClassSetID); // installs the new class set
+				}
+				// whether or not newClassSetID was known:
+				n2c.put(t.s, classSetOfThisNode); // erases/replaces previously known class set
+				n2cs.put(t.s, thisNodeClassSetID); // erases/replaces previously known class set ID
 			}
-			n2c.put(t.s, newClassSetOfThisNode);
-			n2cs.put(t.s, newClassSetID);
+			else if (!classSetOfThisNode.contains(t.o)) { // we already had some types for t.s but not this one so we need to add new type
+				// n is moving from classSetOfThisNode to newClassSetOfThisNode.
+				// TODO Check if classSetOfThisNode is deserted and if yes, maybe remove it.
+				// (We can also keep it there to reuse it later...)
+				TreeSet<Long> newClassSetOfThisNode = new TreeSet<>();
+				newClassSetOfThisNode.addAll(classSetOfThisNode);
+				newClassSetOfThisNode.add(t.o);
+				Long newClassSetID = cs2csID.get(newClassSetOfThisNode);
+				if (newClassSetID == null) {
+					newClassSetID = getNextSummaryNode();
+					cs.put(newClassSetID, newClassSetOfThisNode);
+					cs2csID.put(newClassSetOfThisNode, newClassSetID);
+				}
+				n2c.put(t.s, newClassSetOfThisNode);
+				n2cs.put(t.s, newClassSetID);
+			}
+			//else {
+			// do nothing
+			//}
 		}
-		//else {
-		// do nothing
-		//}
 	}
 
 	/**
@@ -452,6 +458,7 @@ public class Summary {
 			for (long thisClass: thisClassSet) {
 				edgesWithProv.addTriple(thisClassSetID, RDF2SQLEncoding.getTypeCode(), thisClass);
 				rep.put(node, thisClassSetID);
+				// o already represenated in collectSchemaNodes
 			}
 		}
 	}
@@ -1205,6 +1212,7 @@ public class Summary {
 		HashMap<String, String> stats = new HashMap<>();
 
 		stats.put("inputFileName", triplesFileName);
+		stats.put("summaryType", getSummaryURIPrefix());
 
 		stats.put("summaryEdgesSavingTime", Long.toString(summaryEdgesSavingTime));
 		stats.put("representationFunctionSavingTime", Long.toString(representationFunctionSavingTime));

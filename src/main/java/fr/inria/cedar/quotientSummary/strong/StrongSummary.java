@@ -104,10 +104,10 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 		Long repS = rep.get(t.s);
 		Long repO = rep.get(t.o);
 
-		boolean pRepresented = (sourceCliqueP != null);
-		boolean sRepresented = (repS != null);
+		boolean pRepresented = sourceCliqueP != null || targetCliqueP != null;
+		boolean sRepresented = repS != null;
 		boolean sSchemaNode = sn.contains(t.s);
-		boolean oRepresented = (repO != null);
+		boolean oRepresented = repO != null;
 		boolean oSchemaNode = sn.contains(t.o);
 
 		char caseNumber = identifyTripleSummarizationCase(sRepresented, sSchemaNode, pRepresented, oRepresented, oSchemaNode);

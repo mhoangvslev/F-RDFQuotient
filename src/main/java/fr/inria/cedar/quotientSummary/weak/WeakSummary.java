@@ -106,13 +106,11 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 		Long repO = rep.get(t.o);
 		Long pSource = ps.get(t.p);
 		Long pTarget = pt.get(t.p);
-		//if ((pSource == null && pTarget != null) || (pSource != null && pTarget == null))
-		//	throw new IllegalStateException("Source represented and target not represented, or the opposite");
 
-		boolean pRepresented = (pSource != null);
-		boolean sRepresented = (repS != null);
+		boolean pRepresented = pSource != null || pTarget != null;
+		boolean sRepresented = repS != null;
 		boolean sSchemaNode = sn.contains(t.s);
-		boolean oRepresented = (repO != null);
+		boolean oRepresented = repO != null;
 		boolean oSchemaNode = sn.contains(t.o);
 
 		char caseNumber = identifyTripleSummarizationCase(sRepresented, sSchemaNode, pRepresented, oRepresented, oSchemaNode);
