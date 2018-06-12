@@ -1,7 +1,6 @@
 package fr.inria.cedar.quotientSummary.datastructures;
 
 import java.util.HashMap;
-import java.util.Objects;
 import java.util.TreeSet;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -83,9 +82,7 @@ public class EdgeTransferSpecification {
 		}
 	}
 
-	public void applyTransfers(EdgesWithProvenanceCounts edgesWithProv, Long2Long rep, Long repS, Long newRepS, Long repO, Long newRepO) {
-		HashMap<Long, Long> repUpdates = new HashMap<>();
-
+	public void applyTransfers(EdgesWithProvenanceCounts edgesWithProv, Long2Long rep, Long splitEdgeS, Long newRepS, Long splitEdgeO, Long newRepO) {
 		for (long s: edgesToTransfer.keySet()) {
 			for (long p: edgesToTransfer.get(s).keySet()) {
 				for (long o: edgesToTransfer.get(s).get(p)) {
@@ -98,26 +95,18 @@ public class EdgeTransferSpecification {
 					else {
 						edgesWithProv.setCounter(repSTriple, p, repOTriple, summaryEdgeCounter - 1L);
 					}
+				}
+			}
+		}
 
-					// reconcile
-					long finalS = repSTriple;
-					long finalO = repOTriple;
-					if (Objects.equals(repSTriple, repS)) {
-						finalS = newRepS;
-					}
-					if (Objects.equals(repOTriple, repS)) {
-						finalO = newRepS;
-					}
-					if (Objects.equals(repOTriple, repO)) {
-						finalO = newRepO;
-					}
-					if (Objects.equals(repSTriple, repO)) {
-						finalS = newRepO;
-					}
+		rep.put(splitEdgeS, newRepS);
+		rep.put(splitEdgeO, newRepO);
 
-					repUpdates.put(s, finalS);
-					repUpdates.put(o, finalO);
-
+		for (long s: edgesToTransfer.keySet()) {
+			for (long p: edgesToTransfer.get(s).keySet()) {
+				for (long o: edgesToTransfer.get(s).get(p)) {
+					Long finalS = rep.get(s);
+					Long finalO = rep.get(o);
 					boolean alreadyThere = edgesWithProv.containsEdge(finalS, p, finalO);
 					if (alreadyThere) {
 						edgesWithProv.setCounter(finalS, p, finalO, edgesWithProv.getCounter(finalS, p, finalO) + 1L);
@@ -128,10 +117,6 @@ public class EdgeTransferSpecification {
 					}
 				}
 			}
-		}
-
-		for (long n: repUpdates.keySet()) {
-			rep.put(n, repUpdates.get(n));
 		}
 	}
 }

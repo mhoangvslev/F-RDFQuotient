@@ -194,7 +194,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		if (!replaceForO) {
 			edgesTransfersSpecification.addAll(EdgeTransferSpecification.determineEdgesToTransfer(triplesBySubject, triplesByObject, t.o, SOURCE));
 		}
-		edgesTransfersSpecification.applyTransfers(edgesWithProv, rep, !replaceForS ? repS : null, !replaceForS ? newRepS : null, !replaceForO ? repO : null, !replaceForO ? newRepO : null);
+		edgesTransfersSpecification.applyTransfers(edgesWithProv, rep, t.s, newRepS, t.o, newRepO);
 
 		// now modify summary edges
 		// apply nodeReplacements in all cases, because it only contains
@@ -293,7 +293,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		if (!replaceForO) {
 			edgesTransfersSpecification.addAll(EdgeTransferSpecification.determineEdgesToTransfer(triplesBySubject, triplesByObject, t.o, SOURCE));
 		}
-		edgesTransfersSpecification.applyTransfers(edgesWithProv, rep, !replaceForS ? repS : null, !replaceForS ? newRepS : null, !replaceForO ? repO : null, !replaceForO ? newRepO : null);
+		edgesTransfersSpecification.applyTransfers(edgesWithProv, rep, t.s, newRepS, t.o, newRepO);
 
 		for (ReplacementSpecification reps: nodeReps) {
 			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode());
@@ -354,7 +354,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		if (!replaceForO) {
 			edgesTransfersSpecification.addAll(EdgeTransferSpecification.determineEdgesToTransfer(triplesBySubject, triplesByObject, t.o, SOURCE));
 		}
-		edgesTransfersSpecification.applyTransfers(edgesWithProv, rep, null, null, repO, newRepO);
+		edgesTransfersSpecification.applyTransfers(edgesWithProv, rep, t.s, newRepS, t.o, newRepO);
 
 		for (ReplacementSpecification reps: nodeReps) {
 			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode());
@@ -415,7 +415,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		if (!replaceForS) {
 			edgesTransfersSpecification.addAll(EdgeTransferSpecification.determineEdgesToTransfer(triplesBySubject, triplesByObject, t.s, TARGET));
 		}
-		edgesTransfersSpecification.applyTransfers(edgesWithProv, rep, repS, newRepS, null, null);
+		edgesTransfersSpecification.applyTransfers(edgesWithProv, rep, t.s, newRepS, t.o, newRepO);
 
 		for (ReplacementSpecification reps: nodeReps) {
 			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode());
@@ -480,7 +480,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		if (!replaceForO) {
 			edgesTransfersSpecification.addAll(EdgeTransferSpecification.determineEdgesToTransfer(triplesBySubject, triplesByObject, t.o, SOURCE));
 		}
-		edgesTransfersSpecification.applyTransfers(edgesWithProv, rep, null, null, repO, newRepO);
+		edgesTransfersSpecification.applyTransfers(edgesWithProv, rep, t.s, newRepS, t.o, newRepO);
 
 		for (ReplacementSpecification reps: nodeReps) {
 			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode());
@@ -545,7 +545,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		if (!replaceForS) {
 			edgesTransfersSpecification.addAll(EdgeTransferSpecification.determineEdgesToTransfer(triplesBySubject, triplesByObject, t.s, TARGET));
 		}
-		edgesTransfersSpecification.applyTransfers(edgesWithProv, rep, repS, newRepS, null, null);
+		edgesTransfersSpecification.applyTransfers(edgesWithProv, rep, t.s, newRepS, t.o, newRepO);
 
 		for (ReplacementSpecification reps: nodeReps) {
 			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode());
@@ -669,7 +669,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		if (!replaceForS) {
 			edgesTransfersSpecification.addAll(EdgeTransferSpecification.determineEdgesToTransfer(triplesBySubject, triplesByObject, t.s, TARGET));
 		}
-		edgesTransfersSpecification.applyTransfers(edgesWithProv, rep, repS, newRepS, repO, newRepO);
+		edgesTransfersSpecification.applyTransfers(edgesWithProv, rep, t.s, newRepS, t.o, newRepO);
 
 		for (ReplacementSpecification reps: nodeReps) {
 			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode());
@@ -726,7 +726,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		if (!replaceForO) {
 			edgesTransfersSpecification.addAll(EdgeTransferSpecification.determineEdgesToTransfer(triplesBySubject, triplesByObject, t.o, SOURCE));
 		}
-		edgesTransfersSpecification.applyTransfers(edgesWithProv, rep, repS, newRepS, repO, newRepO);
+		edgesTransfersSpecification.applyTransfers(edgesWithProv, rep, t.s, newRepS, t.o, newRepO);
 
 		for (ReplacementSpecification reps: nodeReps) {
 			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode());
@@ -785,7 +785,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		if (!replaceForS) {
 			edgesTransfersSpecification.addAll(EdgeTransferSpecification.determineEdgesToTransfer(triplesBySubject, triplesByObject, t.s, TARGET));
 		}
-		edgesTransfersSpecification.applyTransfers(edgesWithProv, rep, repS, newRepS, repO, newRepO);
+		edgesTransfersSpecification.applyTransfers(edgesWithProv, rep, t.s, newRepS, t.o, newRepO);
 
 		for (ReplacementSpecification reps: nodeReps) {
 			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode());
@@ -844,7 +844,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		if (!replaceForO) {
 			edgesTransfersSpecification.addAll(EdgeTransferSpecification.determineEdgesToTransfer(triplesBySubject, triplesByObject, t.o, SOURCE));
 		}
-		edgesTransfersSpecification.applyTransfers(edgesWithProv, rep, repS, newRepS, repO, newRepO);
+		edgesTransfersSpecification.applyTransfers(edgesWithProv, rep, t.s, newRepS, t.o, newRepO);
 
 		for (ReplacementSpecification reps: nodeReps) {
 			edgesWithProv.replaceNodeInSummaryEdges(reps.getOldNode(), reps.getNewNode());
