@@ -70,8 +70,7 @@ public abstract class Traverser {
 						|| (t.p == domainCode)
 						|| (t.p == rangeCode)) { // schema triple
 							summ.edgesWithProv.addTriple(t.s, t.p, t.o);
-							summ.rep.put(t.s, t.s);
-							summ.rep.put(t.o, t.o);
+							// s, o represented in collectSchemaNodes
 						}
 						else { // data triple
 							summ.handleDataTriple(t);
@@ -107,8 +106,7 @@ public abstract class Traverser {
 						|| (t.p == domainCode)
 						|| (t.p == rangeCode)) { // schema triple
 							summ.edgesWithProv.addTriple(t.s, t.p, t.o);
-							summ.rep.put(t.s, t.s);
-							summ.rep.put(t.o, t.o);
+							// s, o represented in collectSchemaNodes
 						}
 						else { // data triple
 							summ.classifyDataTriple(t);

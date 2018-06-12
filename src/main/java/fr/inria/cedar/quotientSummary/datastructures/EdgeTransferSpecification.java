@@ -2,6 +2,7 @@ package fr.inria.cedar.quotientSummary.datastructures;
 
 import java.util.HashMap;
 import java.util.Objects;
+import java.util.TreeSet;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
@@ -11,7 +12,7 @@ public class EdgeTransferSpecification {
 	private static final char SOURCE = 0;
 	private static final char TARGET = 1;
 
-	private HashMap<Long, HashMap<Long, HashMap<Long, Long>>> edgesToTransfer;
+	private HashMap<Long, HashMap<Long, TreeSet<Long>>> edgesToTransfer;
 
 	public EdgeTransferSpecification() {
 		LOGGER.setLevel(Level.INFO);
@@ -19,40 +20,25 @@ public class EdgeTransferSpecification {
 	}
 
 	// Examines the data node in order to determine which edges in the summary are going to be transferred
-	public static HashMap<Long, HashMap<Long, HashMap<Long, Long>>> determineEdgesToTransfer(
-		Long2Long rep,
+	public static HashMap<Long, HashMap<Long, TreeSet<Long>>> determineEdgesToTransfer(
 		HashMap<Long, Long2LongSet> triplesBySubject,
 		HashMap<Long, Long2LongSet> triplesByObject,
 		long dataNode,
-		long summaryNode,
 		char param
 	) {
-		// CAUTION: uses old rep
-
-		HashMap<Long, HashMap<Long, HashMap<Long, Long>>> edgesToTransfer = new HashMap<>();
+		HashMap<Long, HashMap<Long, TreeSet<Long>>> edgesToTransfer = new HashMap<>();
 
 		if (param == SOURCE) { // distribute the edges outgoing from dataNode
 			if (triplesBySubject.get(dataNode) != null) {
 				for (long p: triplesBySubject.get(dataNode).keys()) {
 					for (long o: triplesBySubject.get(dataNode).get(p)) {
-						Long repO = rep.get(o);
-						if (repO != null) {
-							if (edgesToTransfer.get(summaryNode) == null) {
-								edgesToTransfer.put(summaryNode, new HashMap<>());
-							}
-							if (edgesToTransfer.get(summaryNode).get(p) == null) {
-								edgesToTransfer.get(summaryNode).put(p, new HashMap<>());
-							}
-							if (edgesToTransfer.get(summaryNode).get(p).get(repO) == null) {
-								edgesToTransfer.get(summaryNode).get(p).put(repO, 1L);
-							}
-							else {
-								edgesToTransfer.get(summaryNode).get(p).put(repO, edgesToTransfer.get(summaryNode).get(p).get(repO) + 1L);
-							}
+						if (edgesToTransfer.get(dataNode) == null) {
+							edgesToTransfer.put(dataNode, new HashMap<>());
 						}
-						else {
-							throw new IllegalStateException("Unrepresented object of cached triple");
+						if (edgesToTransfer.get(dataNode).get(p) == null) {
+							edgesToTransfer.get(dataNode).put(p, new TreeSet<>());
 						}
+						edgesToTransfer.get(dataNode).get(p).add(o);
 					}
 				}
 			}
@@ -61,24 +47,13 @@ public class EdgeTransferSpecification {
 			if (triplesByObject.get(dataNode) != null) {
 				for (long p: triplesByObject.get(dataNode).keys()) {
 					for (long s: triplesByObject.get(dataNode).get(p)) {
-						Long repS = rep.get(s);
-						if (repS != null) {
-							if (edgesToTransfer.get(repS) == null) {
-								edgesToTransfer.put(repS, new HashMap<>());
-							}
-							if (edgesToTransfer.get(repS).get(p) == null) {
-								edgesToTransfer.get(repS).put(p, new HashMap<>());
-							}
-							if (edgesToTransfer.get(repS).get(p).get(summaryNode) == null) {
-								edgesToTransfer.get(repS).get(p).put(summaryNode, 1L);
-							}
-							else {
-								edgesToTransfer.get(repS).get(p).put(summaryNode, edgesToTransfer.get(repS).get(p).get(summaryNode) + 1L);
-							}
+						if (edgesToTransfer.get(s) == null) {
+							edgesToTransfer.put(s, new HashMap<>());
 						}
-						else {
-							throw new IllegalStateException("Unrepresented subject of cached triple");
+						if (edgesToTransfer.get(s).get(p) == null) {
+							edgesToTransfer.get(s).put(p, new TreeSet<>());
 						}
+						edgesToTransfer.get(s).get(p).add(dataNode);
 					}
 				}
 			}
@@ -87,81 +62,76 @@ public class EdgeTransferSpecification {
 		return edgesToTransfer;
 	}
 
-	public void addAll(HashMap<Long, HashMap<Long, HashMap<Long, Long>>> edgesToTransferToAdd) {
+	public void addAll(HashMap<Long, HashMap<Long, TreeSet<Long>>> edgesToTransferToAdd) {
 		if (edgesToTransfer.isEmpty()) {
 			edgesToTransfer = edgesToTransferToAdd;
 		}
 		else { // 2 splits
 			for (long s: edgesToTransferToAdd.keySet()) {
 				for (long p: edgesToTransferToAdd.get(s).keySet()) {
-					for (long o: edgesToTransferToAdd.get(s).get(p).keySet()) {
-						long counter = edgesToTransferToAdd.get(s).get(p).get(o);
+					for (long o: edgesToTransferToAdd.get(s).get(p)) {
 						if (edgesToTransfer.get(s) == null) {
 							edgesToTransfer.put(s, new HashMap<>());
 						}
 						if (edgesToTransfer.get(s).get(p) == null) {
-							edgesToTransfer.get(s).put(p, new HashMap<>());
+							edgesToTransfer.get(s).put(p, new TreeSet<>());
 						}
-						if (edgesToTransfer.get(s).get(p).get(o) == null) {
-							edgesToTransfer.get(s).get(p).put(o, counter);
-						}
-						else {
-							// reconcile
-							if (!Objects.equals(edgesToTransfer.get(s).get(p).get(o), counter)) {
-								throw new IllegalStateException("Impossible case, counters cannot differ");
-							}
-							//else {
-							// we already know the specification of this summary edge transfer (we can have it only once, counters do NOT sum up!)
-							//}
-						}
+						edgesToTransfer.get(s).get(p).add(o);
 					}
 				}
 			}
 		}
 	}
 
-	public void applyTransfers(EdgesWithProvenanceCounts edgesWithProv, Long repS, Long newRepS, Long repO, Long newRepO) {
+	public void applyTransfers(EdgesWithProvenanceCounts edgesWithProv, Long2Long rep, Long repS, Long newRepS, Long repO, Long newRepO) {
+		HashMap<Long, Long> repUpdates = new HashMap<>();
+
 		for (long s: edgesToTransfer.keySet()) {
 			for (long p: edgesToTransfer.get(s).keySet()) {
-				for (long o: edgesToTransfer.get(s).get(p).keySet()) {
-					long counter = edgesToTransfer.get(s).get(p).get(o);
-					long summaryEdgeCounter = edgesWithProv.getCounter(s, p, o);
-					if (counter > summaryEdgeCounter) {
-						throw new IllegalStateException("The value which is subtracted cannot be greater then summary counter for this edge");
-					}
-
-					if (Objects.equals(summaryEdgeCounter, counter)) {
-						edgesWithProv.removeTriple(s, p, o);
+				for (long o: edgesToTransfer.get(s).get(p)) {
+					Long repSTriple = rep.get(s);
+					Long repOTriple = rep.get(o);
+					long summaryEdgeCounter = edgesWithProv.getCounter(repSTriple, p, repOTriple);
+					if (summaryEdgeCounter == 1L) {
+						edgesWithProv.removeTriple(repSTriple, p, repOTriple);
 					}
 					else {
-						edgesWithProv.setCounter(s, p, o, summaryEdgeCounter - counter);
+						edgesWithProv.setCounter(repSTriple, p, repOTriple, summaryEdgeCounter - 1L);
 					}
 
 					// reconcile
-					long finalS = s;
-					long finalO = o;
-					if (Objects.equals(s, repS)) {
+					long finalS = repSTriple;
+					long finalO = repOTriple;
+					if (Objects.equals(repSTriple, repS)) {
 						finalS = newRepS;
 					}
-					if (Objects.equals(o, repS)) {
+					if (Objects.equals(repOTriple, repS)) {
 						finalO = newRepS;
 					}
-					if (Objects.equals(o, repO)) {
+					if (Objects.equals(repOTriple, repO)) {
 						finalO = newRepO;
 					}
-					if (Objects.equals(s, repO)) {
+					if (Objects.equals(repSTriple, repO)) {
 						finalS = newRepO;
 					}
+
+					repUpdates.put(s, finalS);
+					repUpdates.put(o, finalO);
+
 					boolean alreadyThere = edgesWithProv.containsEdge(finalS, p, finalO);
-					if (!alreadyThere) {
-						edgesWithProv.addTriple(finalS, p, finalO);
-						edgesWithProv.setCounter(finalS, p, finalO, counter);
+					if (alreadyThere) {
+						edgesWithProv.setCounter(finalS, p, finalO, edgesWithProv.getCounter(finalS, p, finalO) + 1L);
 					}
 					else {
-						edgesWithProv.setCounter(finalS, p, finalO, counter + edgesWithProv.getCounter(finalS, p, finalO));
+						edgesWithProv.addTriple(finalS, p, finalO);
+						edgesWithProv.setCounter(finalS, p, finalO, 1L);
 					}
 				}
 			}
+		}
+
+		for (long n: repUpdates.keySet()) {
+			rep.put(n, repUpdates.get(n));
 		}
 	}
 }

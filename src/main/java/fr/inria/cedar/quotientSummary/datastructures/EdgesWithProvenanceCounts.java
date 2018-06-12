@@ -31,7 +31,6 @@ public class EdgesWithProvenanceCounts {
 	 */
 	public final void addTriple(long s, long p, long o) {
 		//LOGGER.debug("ADDING SUMMARY TRIPLE: " + s + " " + p + " " + o);
-		Triple t = new Triple(s, p, o);
 		HashMap<Long, TreeSet<Long>> triplesForThisSubject = edges.get(s);
 		HashMap<Long, HashMap<Long, Long>> countsForThisSubject = counts.get(s);
 
