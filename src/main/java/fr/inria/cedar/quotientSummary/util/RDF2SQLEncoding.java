@@ -18,16 +18,16 @@ import org.apache.log4j.Logger;
  */
 public class RDF2SQLEncoding {
 	private static final Logger LOGGER = Logger.getLogger(RDF2SQLEncoding.class.getName());
-	protected static long typeCode = -1; // this is the long associated by OntoSQL to rdf:type. 
-	protected static long subClassCode = -1;
-	protected static long subPropertyCode = -1;
-	protected static long domainCode = -1;
-	protected static long rangeCode = -1;
-	static HashMap<Long, String> codeToURIOrLiteral;
-	static HashMap<String, Long> uriOrLiteralToCode;
-	static Connection conn;
-	protected static PreparedStatement stmtDecode;
-	protected static PreparedStatement stmtEncode;
+	private static long typeCode = -1; // this is the long associated by OntoSQL to rdf:type. 
+	private static long subClassCode = -1;
+	private static long subPropertyCode = -1;
+	private static long domainCode = -1;
+	private static long rangeCode = -1;
+	private static HashMap<Long, String> codeToURIOrLiteral;
+	private static HashMap<String, Long> uriOrLiteralToCode;
+	private static Connection conn;
+	private static PreparedStatement stmtDecode;
+	private static PreparedStatement stmtEncode;
 
 	public RDF2SQLEncoding() {
 	}

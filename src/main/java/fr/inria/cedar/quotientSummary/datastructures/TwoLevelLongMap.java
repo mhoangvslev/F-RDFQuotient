@@ -68,7 +68,7 @@ public class TwoLevelLongMap {
 		HashMap<Long, Long> entriesOnOld = map.get(old);
 		HashMap<Long, Long> entriesOnNew = map.get(newX);
 		if (entriesOnOld != null){ // there is some stuff to replace
-			if (entriesOnNew != null){// there were already entries on the new 
+			if (entriesOnNew != null){ // there were already entries on the new 
 				// try to move entries of the old, onto the new, check for conflicts
 				for (Long key2ndLevel: entriesOnOld.keySet()) {
 					Long aNodeOnOld = entriesOnOld.get(key2ndLevel); // for sure not null

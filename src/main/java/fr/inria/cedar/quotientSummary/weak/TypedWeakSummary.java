@@ -150,16 +150,16 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 	@Override
 	protected void handleDataTriple(Triple t) {
 		//LOGGER.debug("### Data triple: " + t.toString());
-		Long repS = rep.get(t.s);
-		Long repO = rep.get(t.o);
-		Long pSource = ps.get(t.p);
-		Long pTarget = pt.get(t.p);
+		repS = rep.get(t.s);
+		repO = rep.get(t.o);
+		sourceP = ps.get(t.p);
+		targetP = pt.get(t.p);
 
 		// Properties appearing in triples where one node is typed and the other is not,
 		// may have a source but lack a target, or the opposite.
 		// Thus, is "represented" a property having a source OR a target. It doesn't have to have both.
 		// If a property only occurs between typed nodes, it is considered non represented.
-		boolean pRepresented = pSource != null || pTarget != null;
+		boolean pRepresented = sourceP != null || targetP != null;
 		boolean sRepresented = repS != null;
 		boolean sTyped = n2cs.get(t.s) != null;
 		boolean sSchemaNode = sn.contains(t.s);
@@ -178,23 +178,23 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 				break;
 			case SN_RP_RO:
 			case TRS_RP_RO:
-				handleDataTriple_TRS_RP_RO(t, repS, repO, pSource, pTarget);
+				handleDataTriple_TRS_RP_RO(t);
 				break;
 			case SN_RP_UO:
 			case TRS_RP_UO:
-				handleDataTriple_TRS_RP_UO(t, repS, repO, pSource, pTarget);
+				handleDataTriple_TRS_RP_UO(t);
 				break;
 			case SN_UP_RO:
 			case TRS_UP_RO:
-				handleDataTriple_TRS_UP_RO(t, repS, repO, pSource, pTarget);
+				handleDataTriple_TRS_UP_RO(t);
 				break;
 			case SN_UP_UO:
 			case TRS_UP_UO:
-				handleDataTriple_TRS_UP_UO(t, repS, repO, pSource, pTarget);
+				handleDataTriple_TRS_UP_UO(t);
 				break;
 			case RS_RP_SN:
 			case RS_RP_TRO:
-				handleDataTriple_RS_RP_TRO(t, repS, repO, pSource, pTarget);
+				handleDataTriple_RS_RP_TRO(t);
 				break;
 			case RS_RP_RO:
 				handleDataTriple_RS_RP_RO(t);
@@ -204,7 +204,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 				break;
 			case RS_UP_SN:
 			case RS_UP_TRO:
-				handleDataTriple_RS_UP_TRO(t, repS, repO, pSource, pTarget);
+				handleDataTriple_RS_UP_TRO(t);
 				break;
 			case RS_UP_RO:
 				handleDataTriple_RS_UP_RO(t);
@@ -214,7 +214,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 				break;
 			case US_RP_SN:
 			case US_RP_TRO:
-				handleDataTriple_US_RP_TRO(t, repS, repO, pSource, pTarget);
+				handleDataTriple_US_RP_TRO(t);
 				break;
 			case US_RP_RO:
 				handleDataTriple_US_RP_RO(t);
@@ -224,7 +224,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 				break;
 			case US_UP_SN:
 			case US_UP_TRO:
-				handleDataTriple_US_UP_TRO(t, repS, repO, pSource, pTarget);
+				handleDataTriple_US_UP_TRO(t);
 				break;
 			case US_UP_RO:
 				handleDataTriple_US_UP_RO(t);

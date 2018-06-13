@@ -10,8 +10,14 @@ import org.apache.log4j.Logger;
 
 public class WeakOrTypedWeakSummary extends Summary {
 	private static final Logger LOGGER = Logger.getLogger(WeakOrTypedWeakSummary.class.getName());
-	HashMap<Long, Long> ps; // for each property, the property source
-	HashMap<Long, Long> pt; // for each property, the property target
+	protected final HashMap<Long, Long> ps; // for each property, the property source
+	protected final HashMap<Long, Long> pt; // for each property, the property target
+
+	protected Long repS;
+	protected Long repO;
+	protected Long sourceP;
+	protected Long targetP;
+
 	// U means unrepresented (so far) 
 	// R means represented (so far) 
 	// TRS means typed (thus, already represented) represented so far
@@ -55,52 +61,52 @@ public class WeakOrTypedWeakSummary extends Summary {
 		// everything has been represented. In this case we must:
 		// - fuse the subject of p with the representative of s (keep the smallest)
 		// - fuse the object of p with the representative of s (keep the smallest)
-		Long sourceP = ps.get(t.p);
-		Long targetP = pt.get(t.p);
-		Long repS = rep.get(t.s);
-		Long repO = rep.get(t.o);
 
 		Long addedTripleSource = repS;
 		Long addedTripleTarget = repO;
 
-		if (sourceP != null){
-			if (targetP != null){
+		if (sourceP != null) {
+			if (targetP != null) {
 				Substitutions subs = new Substitutions(sourceP, repS, targetP, repO);
 				//LOGGER.debug("Substitutions: " + subs.toString());
 				// update added triple source and target, if needed
 				Long possibleNewAddedTripleSource = subs.get(addedTripleSource);
-				if (possibleNewAddedTripleSource != null)
+				if (possibleNewAddedTripleSource != null) {
 					addedTripleSource = possibleNewAddedTripleSource;
+				}
 				Long possibleNewAddedTripleTarget = subs.get(addedTripleTarget);
-				if (possibleNewAddedTripleTarget != null)
+				if (possibleNewAddedTripleTarget != null) {
 					addedTripleTarget = possibleNewAddedTripleTarget;
+				}
 				// apply replacements, if any
 				applySubstitutions(subs);
 			}
-			else{// sourceP not null, targetP is null
+			else { // sourceP not null, targetP is null
 				Substitutions subs = new Substitutions(sourceP, repS);
 				//LOGGER.debug("Substitutions: " + subs.toString());
 				// update added triple source, if needed
 				Long possibleNewAddedTripleSource = subs.get(addedTripleSource);
-				if (possibleNewAddedTripleSource != null)
+				if (possibleNewAddedTripleSource != null) {
 					addedTripleSource = possibleNewAddedTripleSource;
+				}
 				// apply replacements, if any
 				applySubstitutions(subs);
 			}
 		}
-		else{// sourceP is null
-			if (targetP != null){//sourceP is null, targetP is not null
+		else { // sourceP is null
+			if (targetP != null) { //sourceP is null, targetP is not null
 				Substitutions subs = new Substitutions(targetP, repO);
 				//LOGGER.debug("Substitutions: " + subs.toString());
 				// update added triple target, if needed
 				Long possibleNewAddedTripleTarget = subs.get(addedTripleTarget);
-				if (possibleNewAddedTripleTarget != null)
+				if (possibleNewAddedTripleTarget != null) {
 					addedTripleTarget = possibleNewAddedTripleTarget;
+				}
 				// apply replacements, if any
 				applySubstitutions(subs);
 			}
-			else{
-				throw new IllegalStateException("Both source and target are null for represented property " + t.p); 
+			else {
+				throw new IllegalStateException("Both source and target are null for represented property " + t.p);
 			}
 		}
 		edgesWithProv.addTriple(addedTripleSource, t.p, addedTripleTarget);
@@ -110,8 +116,8 @@ public class WeakOrTypedWeakSummary extends Summary {
 	protected void handleDataTriple_RS_UP_RO(Triple t) {
 		// the subject and object have been represented, not the property
 		// represent the property by the subject and object codes
-		Long sourceP = rep.get(t.s);
-		Long targetP = rep.get(t.o);
+		sourceP = rep.get(t.s);
+		targetP = rep.get(t.o);
 		ps.put(t.p, sourceP);
 		pt.put(t.p, targetP);
 		edgesWithProv.addTriple(sourceP, t.p, targetP);
@@ -121,8 +127,8 @@ public class WeakOrTypedWeakSummary extends Summary {
 	protected void handleDataTriple_RS_UP_UO(Triple t) {
 		// the subject has been represented, not the object nor the property
 		// we need to create the property target, represent o by this
-		Long sourceP = rep.get(t.s);
-		Long targetP = this.getNextSummaryNode();
+		sourceP = rep.get(t.s);
+		targetP = getNextSummaryNode();
 		rep.put(t.o, targetP);
 		ps.put(t.p, sourceP);
 		pt.put(t.p, targetP);
@@ -132,9 +138,9 @@ public class WeakOrTypedWeakSummary extends Summary {
 	protected void handleDataTriple_US_UP_RO(Triple t) {
 		// only the object has been seen so far: it must have been seen as the target of *another* property.  
 		// We need to: mark the target of p as the target of that property: 
-		Long targetP = rep.get(t.o);
+		targetP = rep.get(t.o);
 		// create source for p; represent the subject by that source; 
-		Long sourceP = this.getNextSummaryNode();
+		sourceP = getNextSummaryNode();
 		rep.put(t.s, sourceP);
 		ps.put(t.p, sourceP);
 		pt.put(t.p, targetP);
@@ -146,29 +152,28 @@ public class WeakOrTypedWeakSummary extends Summary {
 	// - represent the subject by the source of the property (if not empty)
 	// - fuse the target of p (if not empty) with the representative of o. 
 	protected void handleDataTriple_US_RP_RO(Triple t) {
-		Long sourceP = ps.get(t.p);
-		if (sourceP == null){
-			sourceP = this.getNextSummaryNode();
-			ps.put(t.p, sourceP); 
+		if (sourceP == null) {
+			sourceP = getNextSummaryNode();
+			ps.put(t.p, sourceP);
 		}
 		Long addedTripleSource = sourceP;
 		rep.put(t.s, addedTripleSource);
 
-		Long repO = rep.get(t.o);
-		Long targetP = pt.get(t.p);
 		Long addedTripleTarget = repO; // initialize with any of them
 
-		if (targetP != null){ // in this case we need to fuse repO with targetP
+		if (targetP != null) { // in this case we need to fuse repO with targetP
 			Substitutions subs = new Substitutions(sourceP, sourceP, repO, targetP);
 			Long possibleNewTripleSource = subs.get(addedTripleSource);
-			if (possibleNewTripleSource != null)
+			if (possibleNewTripleSource != null) {
 				addedTripleSource = possibleNewTripleSource;
+			}
 			Long possibleNewTripleTarget = subs.get(addedTripleTarget);
-			if (possibleNewTripleTarget != null)
+			if (possibleNewTripleTarget != null) {
 				addedTripleTarget = possibleNewTripleTarget;
+			}
 			applySubstitutions(subs);
 		}
-		else{ // target of p was null, just take repO as target 
+		else { // target of p was null, just take repO as target 
 			pt.put(t.p, repO);
 		}
 		edgesWithProv.addTriple(addedTripleSource, t.p, addedTripleTarget);
@@ -178,31 +183,30 @@ public class WeakOrTypedWeakSummary extends Summary {
 	// - fuse the source of p (if not null) with the representative of s. 
 	// - represent the object by the target of the property (if not null), otherwise create a new node for this
 	protected void handleDataTriple_RS_RP_UO(Triple t) {
-		Long sourceP = ps.get(t.p);
-		long repS = rep.get(t.s);
 		Long addedTripleSource = repS;
 
-		Long targetP = pt.get(t.p); // we have no repO
-		if (targetP == null){ // fixing the triple target if not already there
-			targetP = this.getNextSummaryNode();
+		if (targetP == null) { // fixing the triple target if not already there
+			targetP = getNextSummaryNode();
 			pt.put(t.p, targetP);
 		}
 		Long addedTripleTarget = targetP;
 		rep.put(t.o, addedTripleTarget);
 
 		// if repS needs to change through a substitution, do it
-		if (sourceP != null){
+		if (sourceP != null) {
 			Substitutions subs = new Substitutions(repS, sourceP, targetP, targetP);
 			//LOGGER.debug("RS_RP_UO: source substitution: " + subs.toString());
 			Long possibleNewTripleSubject = subs.get(addedTripleSource);
-			if (possibleNewTripleSubject != null)
+			if (possibleNewTripleSubject != null) {
 				addedTripleSource = possibleNewTripleSubject;
+			}
 			Long possibleNewTripleObject = subs.get(addedTripleTarget);
-			if (possibleNewTripleObject != null)
+			if (possibleNewTripleObject != null) {
 				addedTripleTarget = possibleNewTripleObject;
+			}
 			applySubstitutions(subs);
 		}
-		else{ // p may have empty source if so far we only found it on typed nodes
+		else { // p may have empty source if so far we only found it on typed nodes
 			// here, s is represented and untyped. Thus, we put p's source on s' representative.
 			//LOGGER.debug("RS_RP_UO: source of " +  t.p + " is: " + repS); 
 			ps.put(t.p, repS);
@@ -213,16 +217,15 @@ public class WeakOrTypedWeakSummary extends Summary {
 	protected void handleDataTriple_US_RP_UO(Triple t) {
 		// the property has been seen so far, not the subject nor the object
 		// in this case we need to represent s by the source of p and o by the target of p
-		Long sourceP = ps.get(t.p);
 		if (sourceP == null) {
-			sourceP = this.getNextSummaryNode();
-			ps.put(t.p, sourceP); 
+			sourceP = getNextSummaryNode();
+			ps.put(t.p, sourceP);
 		}
-		Long targetP = pt.get(t.p);
 		if (targetP == null) {
 			targetP = sourceP;
-			if (t.s != t.o) // if it's not a self loop
-				targetP = this.getNextSummaryNode();
+			if (t.s != t.o) { // if it's not a self loop
+				targetP = getNextSummaryNode();
+			}
 			pt.put(t.p, targetP);
 		}
 		rep.put(t.s, sourceP);
@@ -233,61 +236,54 @@ public class WeakOrTypedWeakSummary extends Summary {
 	protected void handleDataTriple_US_UP_UO(Triple t) {
 		// nothing has been seen so far
 		//LOGGER.debug("US_UP_UO: " + RDF2SQLEncoding.dictionaryDecode(t.s) + " " + RDF2SQLEncoding.dictionaryDecode(t.p) + " " + RDF2SQLEncoding.dictionaryDecode(t.o));
-		Long pSource = this.getNextSummaryNode();
-		Long pTarget = pSource;
-		if (t.s != t.o) // if it's not a self loop
-			pTarget = this.getNextSummaryNode();
-		ps.put(t.p, pSource);
-		pt.put(t.p, pTarget);
-		rep.put(t.s, pSource);
-		rep.put(t.o, pTarget);
-		edgesWithProv.addTriple(pSource, t.p, pTarget);
+		sourceP = getNextSummaryNode();
+		targetP = sourceP;
+		if (t.s != t.o) { // if it's not a self loop
+			targetP = getNextSummaryNode();
+		}
+		ps.put(t.p, sourceP);
+		pt.put(t.p, targetP);
+		rep.put(t.s, sourceP);
+		rep.put(t.o, targetP);
+		edgesWithProv.addTriple(sourceP, t.p, targetP);
 	}
 
 	protected void handleDataTriple_SELF_SELF(Triple t) {
-		Long repS = rep.get(t.s);
-		Long repO = rep.get(t.o);
 		edgesWithProv.addTriple(repS, t.p, repO);
 	}
 
 	/**
-	 * In this case we need to: represent the subject by the property source if it exists, otherwise, create a new node and also register it as the source of p; 
+	 * In this case we need to: represent the subject by the property source if it exists, otherwise, create a new node and also register it as the source of p;
 	 * add a p edge between this and the typed object, if not already there
+	 *
 	 * @param t
-	 * @param repS
-	 * @param repO
-	 * @param sourceP
-	 * @param targetP
 	 */
-	protected void handleDataTriple_US_RP_TRO(Triple t, Long repS, Long repO, Long sourceP, Long targetP) {
-		Long addedTripleSource = sourceP; 
+	protected void handleDataTriple_US_RP_TRO(Triple t) {
+		Long addedTripleSource = sourceP;
 		Long addedTripleTarget = repO;
 
-		if (sourceP == null){
-			addedTripleSource = this.getNextSummaryNode();
+		if (sourceP == null) {
+			addedTripleSource = getNextSummaryNode();
 		}
 		rep.put(t.s, addedTripleSource);
 		ps.put(t.p, addedTripleSource);
 
-		edgesWithProv.addTriple(addedTripleSource, t.p, addedTripleTarget); 
+		edgesWithProv.addTriple(addedTripleSource, t.p, addedTripleTarget);
 	}
 
 	/**
 	 * In this case we need to represent o by the target of p, and add the edge from repS to that node.
 	 * The source of p (if it exists) is not affected.
 	 * The target of p, if it did not exist, may become the representative of o
+	 *
 	 * @param t
-	 * @param repS
-	 * @param repO
-	 * @param sourceP
-	 * @param targetP
 	 */
-	protected void handleDataTriple_TRS_RP_UO(Triple t, Long repS, Long repO, Long sourceP, Long targetP) {
+	protected void handleDataTriple_TRS_RP_UO(Triple t) {
 		Long addedTripleSource = repS;
 		Long addedTripleTarget = targetP;
 
 		if (targetP == null) {
-			addedTripleTarget = this.getNextSummaryNode();
+			addedTripleTarget = getNextSummaryNode();
 		}
 		rep.put(t.o, addedTripleTarget);
 		pt.put(t.p, addedTripleTarget);
@@ -298,14 +294,11 @@ public class WeakOrTypedWeakSummary extends Summary {
 	/**
 	 * In this case we need to: create the source of p; we don't create a target for it.
 	 * We represent s by the source of p, and add an edge from that to repO.
+	 *
 	 * @param t
-	 * @param repS
-	 * @param repO
-	 * @param sourceP
-	 * @param targetP
 	 */
-	protected void handleDataTriple_US_UP_TRO(Triple t, Long repS, Long repO, Long sourceP, Long targetP) {
-		sourceP = this.getNextSummaryNode();
+	protected void handleDataTriple_US_UP_TRO(Triple t) {
+		sourceP = getNextSummaryNode();
 		ps.put(t.p, sourceP);
 		rep.put(t.s, sourceP);
 		edgesWithProv.addTriple(sourceP, t.p, repO);
@@ -314,14 +307,11 @@ public class WeakOrTypedWeakSummary extends Summary {
 	/**
 	 * In this case we need to create the target of p and represent o by it.
 	 * We do not create a source of p.
+	 *
 	 * @param t
-	 * @param repS
-	 * @param repO
-	 * @param sourceP
-	 * @param targetP
 	 */
-	protected void handleDataTriple_TRS_UP_UO(Triple t, Long repS, Long repO, Long sourceP, Long targetP) {
-		targetP = this.getNextSummaryNode();
+	protected void handleDataTriple_TRS_UP_UO(Triple t) {
+		targetP = getNextSummaryNode();
 		pt.put(t.p, targetP);
 		rep.put(t.o, targetP);
 		edgesWithProv.addTriple(repS, t.p, targetP);
@@ -330,29 +320,27 @@ public class WeakOrTypedWeakSummary extends Summary {
 	/**
 	 * In this case we may have to fuse things between repS and the source of P
 	 * RepO remains unchanged.
+	 *
 	 * @param t
-	 * @param repS
-	 * @param repO
-	 * @param sourceP
-	 * @param targetP
 	 */
-	protected void handleDataTriple_RS_RP_TRO(Triple t, Long repS, Long repO, Long sourceP, Long targetP) {
+	protected void handleDataTriple_RS_RP_TRO(Triple t) {
 		Long addedTripleSource = repS;
 		Long addedTripleTarget = repO;
 
-		if (sourceP != null){
+		if (sourceP != null) {
 			Substitutions subs = new Substitutions(sourceP, repS);
 			//LOGGER.debug("Substitutions: " + subs.toString());
 
 			// update added triple source, if needed
 			Long possibleNewAddedTripleSource = subs.get(addedTripleSource);
-			if (possibleNewAddedTripleSource != null)
+			if (possibleNewAddedTripleSource != null) {
 				addedTripleSource = possibleNewAddedTripleSource;
+			}
 
 			// apply replacements, if any
 			applySubstitutions(subs);
 		}
-		else{
+		else {
 			ps.put(t.p, addedTripleSource);
 		}
 		edgesWithProv.addTriple(addedTripleSource, t.p, addedTripleTarget);
@@ -360,29 +348,27 @@ public class WeakOrTypedWeakSummary extends Summary {
 
 	/**
 	 * In this case we need to possibly fuse the target of p with repO.
-	 * The source of p (if it exists)  remains unchanged.
+	 * The source of p (if it exists) remains unchanged.
+	 *
 	 * @param t
-	 * @param repS
-	 * @param repO
-	 * @param sourceP
-	 * @param targetP
 	 */
-	protected void handleDataTriple_TRS_RP_RO(Triple t, Long repS, Long repO, Long sourceP, Long targetP) {
+	protected void handleDataTriple_TRS_RP_RO(Triple t) {
 		Long addedTripleSource = repS;
 		Long addedTripleTarget = repO;
 
-		if (targetP != null){
+		if (targetP != null) {
 			Substitutions subs = new Substitutions(targetP, repO);
 			//LOGGER.debug("Substitutions: " + subs.toString());
 
 			// update added triple  target, if needed
 			Long possibleNewAddedTripleTarget = subs.get(addedTripleTarget);
-			if (possibleNewAddedTripleTarget != null)
+			if (possibleNewAddedTripleTarget != null) {
 				addedTripleTarget = possibleNewAddedTripleTarget;
+			}
 			// apply replacements, if any
 			applySubstitutions(subs);
 		}
-		else{
+		else {
 			pt.put(t.p, addedTripleTarget);
 		}
 		edgesWithProv.addTriple(addedTripleSource, t.p, addedTripleTarget);
@@ -391,26 +377,20 @@ public class WeakOrTypedWeakSummary extends Summary {
 	/**
 	 * In this case we need to: use repS as the source of P; we don't know a target for p.
 	 * We add the edge.
+	 *
 	 * @param t
-	 * @param repS
-	 * @param repO
-	 * @param sourceP
-	 * @param targetP
 	 */
-	protected void handleDataTriple_RS_UP_TRO(Triple t, Long repS, Long repO, Long sourceP, Long targetP) {
+	protected void handleDataTriple_RS_UP_TRO(Triple t) {
 		ps.put(t.p, repS);
 		edgesWithProv.addTriple(repS, t.p, repO);
 	}
 
 	/**
 	 * In this case we need to use repO as the target of p, and do nothing about p's source.
+	 *
 	 * @param t
-	 * @param repS
-	 * @param repO
-	 * @param sourceP
-	 * @param targetP
 	 */
-	protected void handleDataTriple_TRS_UP_RO(Triple t, Long repS, Long repO, Long sourceP, Long targetP) {
+	protected void handleDataTriple_TRS_UP_RO(Triple t) {
 		pt.put(t.p, repO);
 		edgesWithProv.addTriple(repS, t.p, repO);
 	}
@@ -418,31 +398,36 @@ public class WeakOrTypedWeakSummary extends Summary {
 	// -->
 	// Auxiliary methods
 	// -->
-
 	/**
 	 * Replaces oldNode with newNode in all the data structures that this summary has (or inherits).
+	 *
 	 * @param oldNode
 	 * @param newNode
 	 */
-	protected void replaceAll(Long oldNode, Long newNode){ 
+	protected void replaceAll(Long oldNode, Long newNode) {
 		edgesWithProv.replaceNodeInSummaryEdges(oldNode, newNode);
 		rep.replaceValue(oldNode, newNode);
 		// now we need to replace oldNode with newNode in the property source and target. It does not suffice to do it for one property.
-		if (ps.containsValue(oldNode))
-			for (Long prop: ps.keySet())
+		if (ps.containsValue(oldNode)) {
+			for (Long prop: ps.keySet()) {
 				if (ps.get(prop).equals(oldNode)) {
 					ps.replace(prop, newNode);
 				}
-		if (pt.containsValue(oldNode))
-			for (Long prop: pt.keySet())
+			}
+		}
+		if (pt.containsValue(oldNode)) {
+			for (Long prop: pt.keySet()) {
 				if (pt.get(prop).equals(oldNode)) {
 					pt.replace(prop, newNode);
 				}
+			}
+		}
 	}
 
 	protected void applySubstitutions(Substitutions subs) {
-		for (Long n: subs.getNodesToBeReplaced())
+		for (Long n: subs.getNodesToBeReplaced()) {
 			replaceAll(n, subs.get(n));
+		}
 	}
 
 	// -->

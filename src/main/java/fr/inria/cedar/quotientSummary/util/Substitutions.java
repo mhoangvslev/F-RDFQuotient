@@ -21,9 +21,9 @@ import org.apache.log4j.Logger;
  */
 public class Substitutions {
 	private static final Logger LOGGER = Logger.getLogger(Substitutions.class.getName());
-	ArrayList<Long> l1;
-	ArrayList<Long> l2;
-	HashMap<Long, Long> substitutions;
+	private final ArrayList<Long> l1;
+	private final ArrayList<Long> l2;
+	private HashMap<Long, Long> substitutions;
 
 	/**
 	 * First and third go into list1

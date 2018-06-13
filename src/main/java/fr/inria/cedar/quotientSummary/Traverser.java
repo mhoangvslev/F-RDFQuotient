@@ -16,10 +16,10 @@ public abstract class Traverser {
 	protected final Connection conn;
 	protected long setupTime;
 	protected long typeConstantCode;
-	long subClassCode;
-	long subPropertyCode;
-	long domainCode;
-	long rangeCode;
+	protected long subClassCode;
+	protected long subPropertyCode;
+	protected long domainCode;
+	protected long rangeCode;
 
 	public Traverser(Summary summ, Connection conn) {
 		this.summ = summ;

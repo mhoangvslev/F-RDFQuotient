@@ -48,7 +48,7 @@ public class Long2LongSet {
 			for (Long i1: ll1)
 				if (!ll2.contains(i1))
 					ll2.add(i1);
-			// the (augmented) ll2 is already the value associated to l2; 
+			// the (augmented) ll2 is already the value associated to l2;
 			// value l1 needs to disappear:
 			map.remove(l1);
 		}
@@ -63,7 +63,7 @@ public class Long2LongSet {
 				sb.append("#").append(key).append("|{");
 				TreeSet<Long> values = map.get(key);
 				for (Long val: values){
-					String decodedVal = ""; 
+					String decodedVal = "";
 					try{
 						decodedVal = RDF2SQLEncoding.dictionaryDecode(val);
 					}

@@ -273,7 +273,7 @@ public class BuilderCmd {
 			case "2ptypedstrong":
 				return new TwoPassTypedStrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 			case "onefb":
-				return new OneBisimSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName); 
+				return new OneBisimSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 		}
 		return null;
 	}

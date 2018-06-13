@@ -10,9 +10,9 @@ import org.apache.log4j.Logger;
 public class OneBisimSummary extends Summary{
 	private static final Logger LOGGER = Logger.getLogger(OneBisimSummary.class.getName());
 
-	HashMap<Long, TreeSet<Long>> n2ip; // node to incoming property set
-	HashMap<Long, TreeSet<Long>> n2op; // node to outgoing property set
-	HashMap<TreeSet<Long>, HashMap<TreeSet<Long>, Long>> ip2op2sn; // incoming property set to outgoing property set to summary node
+	private final HashMap<Long, TreeSet<Long>> n2ip; // node to incoming property set
+	private final HashMap<Long, TreeSet<Long>> n2op; // node to outgoing property set
+	private final HashMap<TreeSet<Long>, HashMap<TreeSet<Long>, Long>> ip2op2sn; // incoming property set to outgoing property set to summary node
 
 	public OneBisimSummary(String triplesFileName, String triplesTableName, String encodedTriplesTableName, String dictionaryTableName) {
 		super();

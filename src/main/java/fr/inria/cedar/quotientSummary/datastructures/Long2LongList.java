@@ -50,7 +50,7 @@ public class Long2LongList {
 			for (Long i1: ll1)
 				if (!ll2.contains(i1))
 					ll2.add(i1);
-			// the (augmented) ll2 is already the value associated to l2; 
+			// the (augmented) ll2 is already the value associated to l2;
 			// value l1 needs to disappear:
 			map.remove(l1);
 		}
@@ -65,7 +65,7 @@ public class Long2LongList {
 				ArrayList<Long> values = map.get(key);
 				for (Long val: values) {
 					//sb.append(val).append(", ");
-					sb.append(val).append(" (").append(RDF2SQLEncoding.dictionaryDecode(val)).append(")"); 
+					sb.append(val).append(" (").append(RDF2SQLEncoding.dictionaryDecode(val)).append(")");
 				}
 				sb.append("} ");
 			}

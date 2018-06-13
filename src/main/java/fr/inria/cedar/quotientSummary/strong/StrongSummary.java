@@ -93,13 +93,13 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 
 	@Override
 	protected void handleDataTriple(Triple t) {
-		Long sourceCliqueS = n2sc.get(t.s);
-		Long targetCliqueS = n2tc.get(t.s);
-		Long sourceCliqueO = n2sc.get(t.o);
-		Long targetCliqueO = n2tc.get(t.o);
+		sourceCliqueS = n2sc.get(t.s);
+		targetCliqueS = n2tc.get(t.s);
+		sourceCliqueO = n2sc.get(t.o);
+		targetCliqueO = n2tc.get(t.o);
 
-		Long sourceCliqueP = p2sc.get(t.p);
-		Long targetCliqueP = p2tc.get(t.p);
+		sourceCliqueP = p2sc.get(t.p);
+		targetCliqueP = p2tc.get(t.p);
 
 		Long repS = rep.get(t.s);
 		Long repO = rep.get(t.o);
@@ -114,61 +114,61 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 		//LOGGER.debug("\n" + t.toString() + " " + RDF2SQLEncoding.decode(t) + " case: " + showCaseName(caseNumber));
 		switch (caseNumber) {
 			case SELF_SELF:
-				handleDataTriple_SELF_SELF(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				handleDataTriple_SELF_SELF(t);
 				break;
 			case SN_RP_RO:
-				handleDataTriple_TRS_RP_RO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				handleDataTriple_TRS_RP_RO(t);
 				break;
 			case SN_RP_UO:
-				handleDataTriple_TRS_RP_UO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				handleDataTriple_TRS_RP_UO(t);
 				break;
 			case RS_RP_SN:
-				handleDataTriple_RS_RP_TRO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				handleDataTriple_RS_RP_TRO(t);
 				break;
 			case RS_RP_RO:
-				handleDataTriple_RS_RP_RO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				handleDataTriple_RS_RP_RO(t);
 				break;
 			case RS_RP_UO:
-				handleDataTriple_RS_RP_UO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				handleDataTriple_RS_RP_UO(t);
 				break;
 			case US_RP_SN:
-				handleDataTriple_US_RP_TRO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				handleDataTriple_US_RP_TRO(t);
 				break;
 			case US_RP_RO:
-				handleDataTriple_US_RP_RO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				handleDataTriple_US_RP_RO(t);
 				break;
 			case US_RP_UO:
-				handleDataTriple_US_RP_UO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				handleDataTriple_US_RP_UO(t);
 				break;
 			case SN_UP_RO:
-				handleDataTriple_TRS_UP_RO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				handleDataTriple_TRS_UP_RO(t);
 				break;
 			case SN_UP_UO:
-				handleDataTriple_TRS_UP_UO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				handleDataTriple_TRS_UP_UO(t);
 				break;
 			case RS_UP_SN:
-				handleDataTriple_RS_UP_TRO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				handleDataTriple_RS_UP_TRO(t);
 				break;
 			case RS_UP_RO:
-				handleDataTriple_RS_UP_RO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				handleDataTriple_RS_UP_RO(t);
 				break;
 			case RS_UP_UO:
-				handleDataTriple_RS_UP_UO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				handleDataTriple_RS_UP_UO(t);
 				break;
 			case US_UP_SN:
-				handleDataTriple_US_UP_TRO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				handleDataTriple_US_UP_TRO(t);
 				break;
 			case US_UP_RO:
-				handleDataTriple_US_UP_RO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				handleDataTriple_US_UP_RO(t);
 				break;
 			case US_UP_UO:
-				handleDataTriple_US_UP_UO(t, sourceCliqueS, sourceCliqueO, targetCliqueS, targetCliqueO, sourceCliqueP, targetCliqueP);
+				handleDataTriple_US_UP_UO(t);
 				break;
 			default:
 				throw new IllegalStateException("Unknown case;");
 		}
 		cacheTriple(t);
-		//display(); 
+		//display();
 	}
 
 	@Override
@@ -181,7 +181,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 	// -->
 
 	@Override
-	protected String showCaseName(char caseNumber) { 
+	protected String showCaseName(char caseNumber) {
 		switch (caseNumber) {
 			case SELF_SELF:
 				return "SELF_SELF";

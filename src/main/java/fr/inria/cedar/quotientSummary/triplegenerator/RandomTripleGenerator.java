@@ -6,15 +6,15 @@ import java.io.IOException;
 import java.util.Random;
 
 public class RandomTripleGenerator {
-	long dataTripleNumber;
-	long typeTripleNumber;
-	long maxURI;
-	long classNumber;
-	long propertyNumber;
-	long typeProperty = 2;
-	String dataTriplesFile;
-	String typeTriplesFile;
-	Random r;
+	private final long dataTripleNumber;
+	private final long typeTripleNumber;
+	private final long maxURI;
+	private final long classNumber;
+	private final long propertyNumber;
+	private final long typeProperty = 2;
+	private final String dataTriplesFile;
+	private final String typeTriplesFile;
+	private Random r;
 
 	public RandomTripleGenerator(String typeFile, String dataFile, Long typeNo, Long dataNo, Long maxURI, Long classNo, long propertyNo) {
 		this.typeTriplesFile = typeFile;

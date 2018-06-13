@@ -18,21 +18,29 @@ import org.apache.log4j.Logger;
 public class StrongOrTypedStrongSummary extends Summary {
 	private static final Logger LOGGER = Logger.getLogger(StrongOrTypedStrongSummary.class.getName());
 
-	Long2LongSet sc; // for each source clique ID, its source clique
-	Long2LongSet tc; // for each target clique ID, its target clique
-	Long2Long n2sc; // for each data node, its source clique ID
-	Long2Long n2tc; // for each data node, its target clique ID
-	Long2Long p2sc; // property to source clique
-	Long2Long p2tc; // property to target clique
-	TwoLevelLongMap untypedSummaryNodes; // source clique --> target clique --> summary node
+	protected Long2LongSet sc; // for each source clique ID, its source clique
+	protected Long2LongSet tc; // for each target clique ID, its target clique
+	protected Long2Long n2sc; // for each data node, its source clique ID
+	protected Long2Long n2tc; // for each data node, its target clique ID
+	protected Long2Long p2sc; // property to source clique
+	protected Long2Long p2tc; // property to target clique
+	protected TwoLevelLongMap untypedSummaryNodes; // source clique --> target clique --> summary node
 	// for patching edges, we really need to store the data graph in memory... :(
-	HashMap<Long, Long2LongSet> triplesBySubject; // s-->{p-->{o}} s, o are data nodes
-	HashMap<Long, Long2LongSet> triplesByObject; // o-->{p-->{s}}
-	long minCliqueID;
+	protected HashMap<Long, Long2LongSet> triplesBySubject; // s-->{p-->{o}} s, o are data nodes
+	protected HashMap<Long, Long2LongSet> triplesByObject; // o-->{p-->{s}}
+	protected long minCliqueID;
 	protected long emptySCCount; // empty source clique number (will never change)
 	protected long emptyTCCount; // empty target clique number (will never change) 
 	protected char SOURCE = 0;
 	protected char TARGET = 1;
+
+	protected Long sourceCliqueS;
+	protected Long sourceCliqueO;
+	protected Long targetCliqueS;
+	protected Long targetCliqueO;
+	protected Long sourceCliqueP;
+	protected Long targetCliqueP;
+
 	// U means unrepresented (so far) 
 	// R means represented (so far) 
 	// TRS means typed (thus, already represented) represented so far
@@ -86,7 +94,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 	// untyped, represented object
 	// represented property
 	// untyped, represented subject
-	protected void handleDataTriple_RS_RP_RO(Triple t, Long sourceCliqueS, Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
+	protected void handleDataTriple_RS_RP_RO(Triple t) {
 		// determine future cliques
 		Long newSourceCliqueS = cliqueFusionResult(sourceCliqueS, sourceCliqueP, SOURCE);
 		Long newTargetCliqueO = cliqueFusionResult(targetCliqueO, targetCliqueP, TARGET);
@@ -226,7 +234,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 	// untyped, represented object
 	// unrepresented property
 	// untyped, represented subject
-	protected void handleDataTriple_RS_UP_RO(Triple t, Long sourceCliqueS, Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
+	protected void handleDataTriple_RS_UP_RO(Triple t) {
 		// sourceCliqueP is null, targetCliqueP is null
 		sourceCliqueP = makeAndAddNewSourceClique(t.p);
 		targetCliqueP = makeAndAddNewTargetClique(t.p);
@@ -315,7 +323,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 	// represented property
 	// untyped, represented object
 	// in this case the subject should be represented based on the source clique of P and the empty target clique
-	protected void handleDataTriple_US_RP_RO(Triple t, Long sourceCliqueS, Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
+	protected void handleDataTriple_US_RP_RO(Triple t) {
 		Long newSourceCliqueS = sourceCliqueP;
 		Long newTargetCliqueO = cliqueFusionResult(targetCliqueO, targetCliqueP, TARGET);
 
@@ -377,7 +385,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 	// represented property
 	// untyped, represented object
 	// in this case the object should be represented based on the target clique of P and the empty target clique
-	protected void handleDataTriple_RS_RP_UO(Triple t, Long sourceCliqueS, Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
+	protected void handleDataTriple_RS_RP_UO(Triple t) {
 		Long newSourceCliqueS = cliqueFusionResult(sourceCliqueS, sourceCliqueP, SOURCE);
 		Long newTargetCliqueO = targetCliqueP;
 
@@ -438,7 +446,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 	// unknown property
 	// untyped, represented object
 	// in this case the subject should be represented based on the (newly created) source clique of P and the empty target clique
-	protected void handleDataTriple_US_UP_RO(Triple t, Long sourceCliqueS, Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
+	protected void handleDataTriple_US_UP_RO(Triple t) {
 		// sourceCliqueS is null, targetCliqueS is null, sourceCliqueP is null, targetCliqueP is null
 		sourceCliqueP = makeAndAddNewSourceClique(t.p);
 		targetCliqueP = makeAndAddNewTargetClique(t.p);
@@ -503,7 +511,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 	// unknown property
 	// untyped, unrepresented object
 	// in this case the object should be represented based on the empty source clique and the (newly created) target clique of p
-	protected void handleDataTriple_RS_UP_UO(Triple t, Long sourceCliqueS, Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
+	protected void handleDataTriple_RS_UP_UO(Triple t) {
 		// sourceCliqueP is null, targetCliqueP is null, sourceCliqueO is null, targetCliqueO is null
 		sourceCliqueP = makeAndAddNewSourceClique(t.p);
 		targetCliqueP = makeAndAddNewTargetClique(t.p);
@@ -570,7 +578,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 	// in this case the subject should be represented based on the source clique
 	// of P and the empty target clique and the object should be represented
 	// based on the empty source clique and the target source clique of P
-	protected void handleDataTriple_US_RP_UO(Triple t, Long sourceCliqueS, Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
+	protected void handleDataTriple_US_RP_UO(Triple t) {
 		Long newSourceCliqueS = sourceCliqueP;
 		Long newTargetCliqueO = targetCliqueP;
 
@@ -598,7 +606,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 	// created) source clique of P and the empty target clique and the object
 	// should be represented based on the empty source clique and the (newly
 	// created) target source clique of P
-	protected void handleDataTriple_US_UP_UO(Triple t, Long sourceCliqueS, Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
+	protected void handleDataTriple_US_UP_UO(Triple t) {
 		sourceCliqueP = makeAndAddNewSourceClique(t.p);
 		targetCliqueP = makeAndAddNewTargetClique(t.p);
 
@@ -622,7 +630,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		edgesWithProv.addTriple(newRepS, t.p, newRepO);
 	}
 
-	protected void handleDataTriple_SELF_SELF(Triple t, Long sourceCliqueS, Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
+	protected void handleDataTriple_SELF_SELF(Triple t) {
 		Long repS = rep.get(t.s);
 		Long repO = rep.get(t.o);
 
@@ -632,7 +640,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 	// untyped, represented subject
 	// represented property
 	// typed, represented object
-	protected void handleDataTriple_RS_RP_TRO(Triple t, Long sourceCliqueS, Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
+	protected void handleDataTriple_RS_RP_TRO(Triple t) {
 		Long newSourceCliqueS = cliqueFusionResult(sourceCliqueS, sourceCliqueP, SOURCE);
 
 		Long repS = rep.get(t.s);
@@ -689,7 +697,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 	// represented property
 	// untyped, represented object
 	// we need to unify the target clique of O with the target clique of P
-	protected void handleDataTriple_TRS_RP_RO(Triple t, Long sourceCliqueS, Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
+	protected void handleDataTriple_TRS_RP_RO(Triple t) {
 		Long newTargetCliqueO = cliqueFusionResult(targetCliqueO, targetCliqueP, TARGET);
 
 		Long repS = rep.get(t.s);
@@ -745,7 +753,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 	// untyped, represented subject: it has a source clique, which needs to gain p
 	// unknown property
 	// typed, represented object which won't change
-	protected void handleDataTriple_RS_UP_TRO(Triple t, Long sourceCliqueS, Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
+	protected void handleDataTriple_RS_UP_TRO(Triple t) {
 		sourceCliqueP = makeAndAddNewSourceClique(t.p);
 		targetCliqueP = makeAndAddNewTargetClique(t.p);
 
@@ -804,7 +812,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 	// typed, represented subject won't change
 	// unknown property
 	// untyped, represented object, with a target clique which needs to change as p was unknown
-	protected void handleDataTriple_TRS_UP_RO(Triple t, Long sourceCliqueS, Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
+	protected void handleDataTriple_TRS_UP_RO(Triple t) {
 		sourceCliqueP = makeAndAddNewSourceClique(t.p);
 		targetCliqueP = makeAndAddNewTargetClique(t.p);
 
@@ -863,7 +871,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 	// untyped, unrepresented subject
 	// known property
 	// typed, represented object
-	protected void handleDataTriple_US_RP_TRO(Triple t, Long sourceCliqueS, Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
+	protected void handleDataTriple_US_RP_TRO(Triple t) {
 		Long newSourceCliqueS = sourceCliqueP;
 
 		Long repS = getOrCreateSummaryNode(newSourceCliqueS, getEmptyTargetCliqueID());
@@ -883,7 +891,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 	// typed, represented subject
 	// known property
 	// untyped, unrepresented object
-	protected void handleDataTriple_TRS_RP_UO(Triple t, Long sourceCliqueS, Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
+	protected void handleDataTriple_TRS_RP_UO(Triple t) {
 		Long newTargetCliqueO = targetCliqueP;
 
 		Long repS = rep.get(t.s);
@@ -903,7 +911,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 	// untyped, unrepresented subject
 	// unknown property
 	// typed (thus represented) object
-	protected void handleDataTriple_US_UP_TRO(Triple t, Long sourceCliqueS, Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
+	protected void handleDataTriple_US_UP_TRO(Triple t) {
 		sourceCliqueP = makeAndAddNewSourceClique(t.p);
 		targetCliqueP = makeAndAddNewTargetClique(t.p);
 
@@ -926,7 +934,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 	// typed, represented subject which won't change
 	// unknown property: both its cliques need to be created
 	// untyped, unrepresented object
-	protected void handleDataTriple_TRS_UP_UO(Triple t, Long sourceCliqueS, Long sourceCliqueO, Long targetCliqueS, Long targetCliqueO, Long sourceCliqueP, Long targetCliqueP) {
+	protected void handleDataTriple_TRS_UP_UO(Triple t) {
 		sourceCliqueP = makeAndAddNewSourceClique(t.p);
 		targetCliqueP = makeAndAddNewTargetClique(t.p);
 

@@ -14,7 +14,7 @@ public class ReplacementSpecification {
 	public ReplacementSpecification(Long sc, Long tc, Long oldNode, Long newNode) {
 		LOGGER.setLevel(Level.INFO);
 		this.sc = sc;
-		this.tc = tc; 
+		this.tc = tc;
 		this.oldNode = oldNode;
 		this.newNode = newNode;
 	}
@@ -24,7 +24,7 @@ public class ReplacementSpecification {
 	}
 
 	public Long getTC() {
-		return tc; 
+		return tc;
 	}
 
 	public Long getOldNode() {
@@ -32,12 +32,12 @@ public class ReplacementSpecification {
 	}
 
 	public Long getNewNode() {
-		return newNode; 
+		return newNode;
 	}
 
 	public void checkForConflicts(ArrayList<ReplacementSpecification> nodeReps) {
 		for (ReplacementSpecification rs2: nodeReps){
-			checkForConflict(rs2); 
+			checkForConflict(rs2);
 		}
 	}
 

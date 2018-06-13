@@ -102,12 +102,12 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 	@Override
 	protected void handleDataTriple(Triple t) {
 		//LOGGER.debug("\n### Read data triple: " + t.toString());
-		Long repS = rep.get(t.s);
-		Long repO = rep.get(t.o);
-		Long pSource = ps.get(t.p);
-		Long pTarget = pt.get(t.p);
+		repS = rep.get(t.s);
+		repO = rep.get(t.o);
+		sourceP = ps.get(t.p);
+		targetP = pt.get(t.p);
 
-		boolean pRepresented = pSource != null || pTarget != null;
+		boolean pRepresented = sourceP != null || targetP != null;
 		boolean sRepresented = repS != null;
 		boolean sSchemaNode = sn.contains(t.s);
 		boolean oRepresented = repO != null;
@@ -120,19 +120,19 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 				handleDataTriple_SELF_SELF(t);
 				break;
 			case SN_RP_RO:
-				handleDataTriple_TRS_RP_RO(t, repS, repO, pSource, pTarget);
+				handleDataTriple_TRS_RP_RO(t);
 				break;
 			case SN_RP_UO:
-				handleDataTriple_TRS_RP_UO(t, repS, repO, pSource, pTarget);
+				handleDataTriple_TRS_RP_UO(t);
 				break;
 			case SN_UP_RO:
-				handleDataTriple_TRS_UP_RO(t, repS, repO, pSource, pTarget);
+				handleDataTriple_TRS_UP_RO(t);
 				break;
 			case SN_UP_UO:
-				handleDataTriple_TRS_UP_UO(t, repS, repO, pSource, pTarget);
+				handleDataTriple_TRS_UP_UO(t);
 				break;
 			case RS_RP_SN:
-				handleDataTriple_RS_RP_TRO(t, repS, repO, pSource, pTarget);
+				handleDataTriple_RS_RP_TRO(t);
 				break;
 			case RS_RP_RO:
 				handleDataTriple_RS_RP_RO(t);
@@ -141,7 +141,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 				handleDataTriple_RS_RP_UO(t);
 				break;
 			case RS_UP_SN:
-				handleDataTriple_RS_UP_TRO(t, repS, repO, pSource, pTarget);
+				handleDataTriple_RS_UP_TRO(t);
 				break;
 			case RS_UP_RO:
 				handleDataTriple_RS_UP_RO(t);
@@ -150,7 +150,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 				handleDataTriple_RS_UP_UO(t);
 				break;
 			case US_RP_SN:
-				handleDataTriple_US_RP_TRO(t, repS, repO, pSource, pTarget);
+				handleDataTriple_US_RP_TRO(t);
 				break;
 			case US_RP_RO:
 				handleDataTriple_US_RP_RO(t);
@@ -159,7 +159,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 				handleDataTriple_US_RP_UO(t);
 				break;
 			case US_UP_SN:
-				handleDataTriple_US_UP_TRO(t, repS, repO, pSource, pTarget);
+				handleDataTriple_US_UP_TRO(t);
 				break;
 			case US_UP_RO:
 				handleDataTriple_US_UP_RO(t);
@@ -187,14 +187,18 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 					if (objectsOfThisSandP.size() > 1)
 						throw new IllegalStateException("Subject " + s + " has more than one edge with label " + p);
 					for (Long o: objectsOfThisSandP) {
-						if (ps.get(p) == null)
+						if (ps.get(p) == null) {
 							throw new IllegalStateException("No source for " + p);
-						if (!ps.get(p).equals(s))
+						}
+						if (!ps.get(p).equals(s)) {
 							throw new IllegalStateException("Source of " + p + " is not " + s + " but " + ps.get(p));
-						if (pt.get(p) == null)
+						}
+						if (pt.get(p) == null) {
 							throw new IllegalStateException("No target for " + p);
-						if (!pt.get(p).equals(o))
+						}
+						if (!pt.get(p).equals(o)) {
 							throw new IllegalStateException("Target of " + p + " is not " + o + " but " + pt.get(p));
+						}
 					}
 				}
 			}
@@ -202,7 +206,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 	}
 
 	@Override
-	protected String showCaseName(char caseNumber) { 
+	protected String showCaseName(char caseNumber) {
 		switch (caseNumber) {
 			case SELF_SELF:
 				return "SELF_SELF";

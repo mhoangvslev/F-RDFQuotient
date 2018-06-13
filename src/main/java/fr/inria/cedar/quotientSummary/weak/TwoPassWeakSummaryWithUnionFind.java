@@ -12,9 +12,9 @@ public class TwoPassWeakSummaryWithUnionFind extends WeakOrTypedWeakSummary {
 	private static final Logger LOGGER = Logger.getLogger(TwoPassWeakSummaryWithUnionFind.class.getName());
 	private final DisjointSetForest disjointSetForest;
 
-	HashSet<Long> nodes;
-	HashMap<Long, TreeSet<Long>> n2i;
-	HashMap<Long, TreeSet<Long>> n2o;
+	private final HashSet<Long> nodes;
+	private final HashMap<Long, TreeSet<Long>> n2i;
+	private final HashMap<Long, TreeSet<Long>> n2o;
 
 	public TwoPassWeakSummaryWithUnionFind(String triplesFileName, String triplesTableName, String encodedTriplesTableName, String dictionaryTableName) {
 		super();

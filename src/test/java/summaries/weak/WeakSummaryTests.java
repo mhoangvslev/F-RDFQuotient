@@ -53,7 +53,7 @@ public class WeakSummaryTests {
 		}
 		catch (SQLException e) {
 			throw new IllegalStateException("SQL error while summarizing " + e.toString());
-		} 
+		}
 		//catch (UnsupportedDatabaseEngineException e) {
 		//	throw new IllegalStateException("Cannot load custom config file!");
 		//}
