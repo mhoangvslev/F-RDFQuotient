@@ -25,8 +25,8 @@ public class OneBisimSummary extends Summary{
 		this.isTypeFirst = false;
 		this.isTwoPass = true;
 		this.n2ip = new HashMap<>();
-		this.n2op = new HashMap<>(); 
-		this.ip2op2sn = new HashMap<>(); 
+		this.n2op = new HashMap<>();
+		this.ip2op2sn = new HashMap<>();
 	}
 
 	@Override
@@ -41,13 +41,13 @@ public class OneBisimSummary extends Summary{
 			previousSOP = new TreeSet<>();
 			n2op.put(t.s, previousSOP);
 		}
-		previousSOP.add(t.p); 
+		previousSOP.add(t.p);
 		TreeSet<Long> previousOIP = n2ip.get(t.o);
 		if (previousOIP == null){
 			previousOIP = new TreeSet<>();
 			n2ip.put(t.o, previousOIP);
 		}
-		previousOIP.add(t.p); 
+		previousOIP.add(t.p);
 	}
 
 	@Override
@@ -58,26 +58,30 @@ public class OneBisimSummary extends Summary{
 	private void representDataNodes() {
 		// all nodes with outgoing edges and possibly incoming edges:
 		for (long n: n2op.keySet()){
-			TreeSet<Long> nop = n2op.get(n);
-			TreeSet<Long> nip = n2ip.get(n);
-			Long summaryNode = getSummaryNode(nop, nip);
-			if (summaryNode == null){
-				summaryNode = createSummaryNode(nop, nip);
-			}
-			//LOGGER.debug("REPRESENTED NODE (1) " + RDF2SQLEncoding.dictionaryDecode(n) + " BY " + sn); 
-			rep.put(n, summaryNode);
-		}
-		// all nodes with incoming but not outgoing edges (those with both are covered above): 
-		for (long n: n2ip.keySet()){
-			if (n2op.get(n) == null){
+			if (!sn.contains(n)) { // not a schema node
 				TreeSet<Long> nop = n2op.get(n);
 				TreeSet<Long> nip = n2ip.get(n);
 				Long summaryNode = getSummaryNode(nop, nip);
 				if (summaryNode == null){
 					summaryNode = createSummaryNode(nop, nip);
 				}
-				//LOGGER.debug("REPRESENTED NODE (2) " + RDF2SQLEncoding.dictionaryDecode(n) + " BY " + sn); 
+				//LOGGER.debug("REPRESENTED NODE (1) " + RDF2SQLEncoding.dictionaryDecode(n) + " BY " + sn);
 				rep.put(n, summaryNode);
+			}
+		}
+		// all nodes with incoming but not outgoing edges (those with both are covered above):
+		for (long n: n2ip.keySet()){
+			if (n2op.get(n) == null) {
+				if (!sn.contains(n)) { // not a schema node
+					TreeSet<Long> nop = n2op.get(n);
+					TreeSet<Long> nip = n2ip.get(n);
+					Long summaryNode = getSummaryNode(nop, nip);
+					if (summaryNode == null){
+						summaryNode = createSummaryNode(nop, nip);
+					}
+					//LOGGER.debug("REPRESENTED NODE (2) " + RDF2SQLEncoding.dictionaryDecode(n) + " BY " + sn);
+					rep.put(n, summaryNode);
+				}
 			}
 		}
 	}
@@ -86,28 +90,28 @@ public class OneBisimSummary extends Summary{
 	// and represents all data triples
 	@Override
 	protected void representDataTriple(Triple t) {
-		//LOGGER.debug("REPRESENTING DATA TRIPLE " + RDF2SQLEncoding.decode(t).toString()); 
+		//LOGGER.debug("REPRESENTING DATA TRIPLE " + RDF2SQLEncoding.decode(t).toString());
 		Long repS = rep.get(t.s);
 		if (repS == null){
 			TreeSet<Long> sop = n2op.get(t.s);
 			TreeSet<Long> sip = n2ip.get(t.s);
-			// probably both are null. We know rep doesn't exist, so we create it: 
+			// probably both are null. We know rep doesn't exist, so we create it:
 			repS = getSummaryNode(sop, sip);
 			if (repS == null){
 				repS = createSummaryNode(sop, sip);
 			}
-			rep.put(t.s, repS); 
+			rep.put(t.s, repS);
 		}
 		Long repO = rep.get(t.o);
 		if (repO == null){
 			TreeSet<Long> oop = n2op.get(t.s);
 			TreeSet<Long> oip = n2ip.get(t.s);
-			// probably both are null. We know rep doesn't exist, so we create it: 
+			// probably both are null. We know rep doesn't exist, so we create it:
 			repO = getSummaryNode(oop, oip);
 			if (repO == null){
 				repO = createSummaryNode(oop, oip);
 			}
-			rep.put(t.o, repO); 
+			rep.put(t.o, repO);
 		}
 		this.edgesWithProv.addTriple(repS, t.p, repO);
 	}
