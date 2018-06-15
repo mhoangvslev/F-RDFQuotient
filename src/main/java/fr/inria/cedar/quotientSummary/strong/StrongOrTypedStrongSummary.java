@@ -99,13 +99,25 @@ public class StrongOrTypedStrongSummary extends Summary {
 		Long newSourceCliqueS = cliqueFusionResult(sourceCliqueS, sourceCliqueP, SOURCE);
 		Long newTargetCliqueO = cliqueFusionResult(targetCliqueO, targetCliqueP, TARGET);
 
+		Long newSourceCliqueO;
+		Long newTargetCliqueS;
+
+		if (t.s == t.o) {
+			newSourceCliqueO = newSourceCliqueS;
+			newTargetCliqueS = newTargetCliqueO;
+		}
+		else {
+			newSourceCliqueO = sourceCliqueO;
+			newTargetCliqueS = targetCliqueS;
+		}
+
 		// determine current representatives
 		Long repS = rep.get(t.s);
 		Long repO = rep.get(t.o);
 
 		// determine future representatives: we create them but do nothing else so far
-		Long newRepS = getOrCreateSummaryNode(newSourceCliqueS, targetCliqueS);
-		Long newRepO = getOrCreateSummaryNode(sourceCliqueO, newTargetCliqueO);
+		Long newRepS = getOrCreateSummaryNode(newSourceCliqueS, newTargetCliqueS);
+		Long newRepO = getOrCreateSummaryNode(newSourceCliqueO, newTargetCliqueO);
 
 		// for s (o), we will either replace the former with the new
 		// representative, or change the representative just of s (o) while
@@ -242,11 +254,23 @@ public class StrongOrTypedStrongSummary extends Summary {
 		Long newSourceCliqueS = cliqueFusionResult(sourceCliqueS, sourceCliqueP, SOURCE);
 		Long newTargetCliqueO = cliqueFusionResult(targetCliqueO, targetCliqueP, TARGET);
 
+		Long newSourceCliqueO;
+		Long newTargetCliqueS;
+
+		if (t.s == t.o) {
+			newSourceCliqueO = newSourceCliqueS;
+			newTargetCliqueS = newTargetCliqueO;
+		}
+		else {
+			newSourceCliqueO = sourceCliqueO;
+			newTargetCliqueS = targetCliqueS;
+		}
+
 		Long repS = rep.get(t.s);
 		Long repO = rep.get(t.o);
 
-		Long newRepS = getOrCreateSummaryNode(newSourceCliqueS, targetCliqueS);
-		Long newRepO = getOrCreateSummaryNode(sourceCliqueO, newTargetCliqueO);
+		Long newRepS = getOrCreateSummaryNode(newSourceCliqueS, newSourceCliqueO);
+		Long newRepO = getOrCreateSummaryNode(newTargetCliqueS, newTargetCliqueO);
 
 		boolean replaceForS = true;
 		boolean replaceForO = true;
