@@ -11,8 +11,7 @@ conf/bsbm10m.properties
 conf/bsbm1m.properties
 conf/conference.properties
 conf/dblp_large.properties
-conf/dblp.properties
-conf/dbpedia_persondata_en.properties
+conf/dbpedia_persondata_en_uniq.properties
 conf/insee_geo.properties
 conf/lubm100m.properties
 conf/lubm10m.properties
