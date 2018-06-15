@@ -112,8 +112,8 @@ public class TwoPassWeakSummary extends WeakOrTypedWeakSummary {
 
 	@Override
 	protected void representDataTriple(Triple t) {
-		Long repS = ps.get(t.p);
-		Long repO = pt.get(t.p);
+		repS = ps.get(t.p);
+		repO = pt.get(t.p);
 		if (sn.contains(t.s)) {
 			repS = t.s;
 		}

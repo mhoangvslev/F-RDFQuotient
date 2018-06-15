@@ -582,19 +582,37 @@ public class StrongOrTypedStrongSummary extends Summary {
 		Long newSourceCliqueS = sourceCliqueP;
 		Long newTargetCliqueO = targetCliqueP;
 
-		Long repS = getOrCreateSummaryNode(newSourceCliqueS, getEmptyTargetCliqueID());
-		Long repO = getOrCreateSummaryNode(getEmptySourceCliqueID(), newTargetCliqueO);
+		Long newRepS;
+		Long newRepO;
 
-		Long newRepS = repS;
-		Long newRepO = repO;
+		if (t.s == t.o) {
+			if (newSourceCliqueS == null) {
+				newSourceCliqueS = makeAndAddNewSourceClique(t.p);
+			}
+			else if (newTargetCliqueO == null) {
+				newTargetCliqueO = makeAndAddNewTargetClique(t.p);
+			}
+			//else { // both not null
+			//}
+			newRepS = getOrCreateSummaryNode(newSourceCliqueS, newTargetCliqueO);
+			newRepO = getOrCreateSummaryNode(newSourceCliqueS, newTargetCliqueO);
 
-		rep.put(t.s, newRepS);
-		rep.put(t.o, newRepO);
+			n2sc.put(t.o, newSourceCliqueS);
+			n2tc.put(t.s, newTargetCliqueO);
+		}
+		else {
+			newRepS = getOrCreateSummaryNode(newSourceCliqueS, getEmptyTargetCliqueID());
+			newRepO = getOrCreateSummaryNode(getEmptySourceCliqueID(), newTargetCliqueO);
+
+			n2sc.put(t.o, getEmptySourceCliqueID());
+			n2tc.put(t.s, getEmptyTargetCliqueID());
+		}
 
 		n2sc.put(t.s, newSourceCliqueS);
 		n2tc.put(t.o, newTargetCliqueO);
-		n2sc.put(t.o, getEmptySourceCliqueID());
-		n2tc.put(t.s, getEmptyTargetCliqueID());
+
+		rep.put(t.s, newRepS);
+		rep.put(t.o, newRepO);
 
 		edgesWithProv.addTriple(newRepS, t.p, newRepO);
 	}

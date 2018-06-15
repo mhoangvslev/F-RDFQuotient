@@ -45,7 +45,7 @@ public class TwoPassWeakSummaryWithUnionFind extends WeakOrTypedWeakSummary {
 			}
 			n2o.get(t.s).add(t.p);
 
-			Long repS = disjointSetForest.find(shiftNodeNumber(t.s));
+			repS = disjointSetForest.find(shiftNodeNumber(t.s));
 			if (!ps.containsKey(t.p)) {
 				ps.put(t.p, repS);
 			}
@@ -59,7 +59,7 @@ public class TwoPassWeakSummaryWithUnionFind extends WeakOrTypedWeakSummary {
 			}
 			n2i.get(t.o).add(t.p);
 
-			Long repO = disjointSetForest.find(shiftNodeNumber(t.o));
+			repO = disjointSetForest.find(shiftNodeNumber(t.o));
 			if (!pt.containsKey(t.p)) {
 				pt.put(t.p, repO);
 			}
@@ -93,8 +93,8 @@ public class TwoPassWeakSummaryWithUnionFind extends WeakOrTypedWeakSummary {
 
 	@Override
 	protected void representDataTriple(Triple t) {
-		Long repS = disjointSetForest.find(ps.get(t.p));
-		Long repO = disjointSetForest.find(pt.get(t.p));
+		repS = disjointSetForest.find(ps.get(t.p));
+		repO = disjointSetForest.find(pt.get(t.p));
 		if (sn.contains(t.s)) {
 			repS = t.s;
 		}

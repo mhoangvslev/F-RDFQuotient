@@ -27,13 +27,13 @@ public class TwoPassStrongSummary extends StrongOrTypedStrongSummary {
 
 	@Override
 	protected void classifyDataTriple(Triple t) {
-		Long sourceCliqueS = n2sc.get(t.s);
-		//Long targetCliqueS = n2tc.get(t.s);
-		//Long sourceCliqueO = n2sc.get(t.o);
-		Long targetCliqueO = n2tc.get(t.o);
+		sourceCliqueS = n2sc.get(t.s);
+		//targetCliqueS = n2tc.get(t.s);
+		//sourceCliqueO = n2sc.get(t.o);
+		targetCliqueO = n2tc.get(t.o);
 
-		Long sourceCliqueP = p2sc.get(t.p);
-		Long targetCliqueP = p2tc.get(t.p);
+		sourceCliqueP = p2sc.get(t.p);
+		targetCliqueP = p2tc.get(t.p);
 
 		boolean sSchemaNode = sn.contains(t.s);
 		boolean oSchemaNode = sn.contains(t.o);
@@ -136,16 +136,16 @@ public class TwoPassStrongSummary extends StrongOrTypedStrongSummary {
 			rep.put(t.s, t.s);
 		}
 		else {
-			Long sourceCliqueS = n2sc.get(t.s) != null ? n2sc.get(t.s) : getEmptySourceCliqueID();
-			Long targetCliqueS = n2tc.get(t.s) != null ? n2tc.get(t.s) : getEmptyTargetCliqueID();
+			sourceCliqueS = n2sc.get(t.s) != null ? n2sc.get(t.s) : getEmptySourceCliqueID();
+			targetCliqueS = n2tc.get(t.s) != null ? n2tc.get(t.s) : getEmptyTargetCliqueID();
 			rep.put(t.s, getOrCreateSummaryNode(sourceCliqueS, targetCliqueS));
 		}
 		if (sn.contains(t.o)) {
 			rep.put(t.o, t.o);
 		}
 		else {
-			Long sourceCliqueO = n2sc.get(t.o) != null ? n2sc.get(t.o) : getEmptySourceCliqueID();
-			Long targetCliqueO = n2tc.get(t.o) != null ? n2tc.get(t.o) : getEmptyTargetCliqueID();
+			sourceCliqueO = n2sc.get(t.o) != null ? n2sc.get(t.o) : getEmptySourceCliqueID();
+			targetCliqueO = n2tc.get(t.o) != null ? n2tc.get(t.o) : getEmptyTargetCliqueID();
 			rep.put(t.o, getOrCreateSummaryNode(sourceCliqueO, targetCliqueO));
 		}
 	}

@@ -53,7 +53,7 @@ public class EdgesWithProvenanceCounts {
 			objectsForThisSubjectAndProperty.add(o);
 			countsForThisSubjectAndProperty.put(o, 1L);
 		}
-		else{
+		else {
 			long count = countsForThisSubjectAndProperty.get(o);
 			countsForThisSubjectAndProperty.put(o, (count + 1L));
 		}
