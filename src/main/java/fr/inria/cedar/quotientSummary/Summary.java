@@ -1234,11 +1234,11 @@ public class Summary {
 		return stats;
 	}
 
-	protected void displayClique(TreeSet<Long> clique) {
+	protected void displayClique(HashSet<Long> clique) {
 		System.out.println(showCliqueAsString(clique));
 	}
 
-	protected String showCliqueAsString(TreeSet<Long> clique) {
+	protected String showCliqueAsString(HashSet<Long> clique) {
 		StringBuffer sb = new StringBuffer();
 		sb.append("[");
 		for (long l : clique)
@@ -1247,19 +1247,19 @@ public class Summary {
 		return new String(sb); 
 	}
 
-	protected HashMap<Long, TreeSet<Long>> getEdgesFrom(long s){
+	protected HashMap<Long, HashSet<Long>> getEdgesFrom(long s){
 		return this.edgesWithProv.get(s);
 	}
 
-	protected HashMap<Long, TreeSet<Long>> getEdgesTo(long o){
-		HashMap<Long, TreeSet<Long>> res = new HashMap<>();
+	protected HashMap<Long, HashSet<Long>> getEdgesTo(long o){
+		HashMap<Long, HashSet<Long>> res = new HashMap<>();
 		for (long s: edgesWithProv.keySet()){
 			for (long p: edgesWithProv.get(s).keySet()){
 				// if there is an edge s--p-->o
 				if (edgesWithProv.get(s).get(p).contains(o)) {
-					TreeSet<Long> onP = res.get(p);
+					HashSet<Long> onP = res.get(p);
 					if (onP == null){ // the first edge labeled p which goes into o 
-						onP = new TreeSet<>();
+						onP = new HashSet<>();
 						res.put(p, onP);
 					}
 					onP.add(s); // add s on p in the result

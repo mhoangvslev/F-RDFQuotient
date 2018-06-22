@@ -5,7 +5,7 @@ import fr.inria.cedar.quotientSummary.datastructures.Long2LongSet;
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
 import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 import java.util.HashMap;
-import java.util.TreeSet;
+import java.util.HashSet;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
@@ -247,12 +247,12 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 	@Override
 	protected void consistencyChecks() {
 		for (Long s: edgesWithProv.keySet()) { // s is a summary node 
-			HashMap<Long, TreeSet<Long>> triplesOfThisSubject = edgesWithProv.get(s);
+			HashMap<Long, HashSet<Long>> triplesOfThisSubject = edgesWithProv.get(s);
 			if (triplesOfThisSubject == null)
 				throw new IllegalStateException("No triples whose subject is " + s);
 			if (n2cs.getInverse(s) == null) { // untyped s
 				for (Long p: triplesOfThisSubject.keySet()) {
-					TreeSet<Long> objectsOfThisSandP = triplesOfThisSubject.get(p);
+					HashSet<Long> objectsOfThisSandP = triplesOfThisSubject.get(p);
 					if (RDF2SQLEncoding.isDataProperty(p)) {
 						if (objectsOfThisSandP.size() > 1)
 							throw new IllegalStateException("Subject " + s + " has more than one edge with label " + p);

@@ -1,7 +1,7 @@
 package fr.inria.cedar.quotientSummary.datastructures;
 
 import java.util.HashMap;
-import java.util.TreeSet;
+import java.util.HashSet;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
@@ -11,7 +11,7 @@ public class EdgeTransferSpecification {
 	private static final char SOURCE = 0;
 	private static final char TARGET = 1;
 
-	private HashMap<Long, HashMap<Long, TreeSet<Long>>> edgesToTransfer;
+	private HashMap<Long, HashMap<Long, HashSet<Long>>> edgesToTransfer;
 
 	public EdgeTransferSpecification() {
 		LOGGER.setLevel(Level.INFO);
@@ -19,13 +19,13 @@ public class EdgeTransferSpecification {
 	}
 
 	// Examines the data node in order to determine which edges in the summary are going to be transferred
-	public static HashMap<Long, HashMap<Long, TreeSet<Long>>> determineEdgesToTransfer(
+	public static HashMap<Long, HashMap<Long, HashSet<Long>>> determineEdgesToTransfer(
 		HashMap<Long, Long2LongSet> triplesBySubject,
 		HashMap<Long, Long2LongSet> triplesByObject,
 		long dataNode,
 		char param
 	) {
-		HashMap<Long, HashMap<Long, TreeSet<Long>>> edgesToTransfer = new HashMap<>();
+		HashMap<Long, HashMap<Long, HashSet<Long>>> edgesToTransfer = new HashMap<>();
 
 		if (param == SOURCE) { // distribute the edges outgoing from dataNode
 			if (triplesBySubject.get(dataNode) != null) {
@@ -35,7 +35,7 @@ public class EdgeTransferSpecification {
 							edgesToTransfer.put(dataNode, new HashMap<>());
 						}
 						if (edgesToTransfer.get(dataNode).get(p) == null) {
-							edgesToTransfer.get(dataNode).put(p, new TreeSet<>());
+							edgesToTransfer.get(dataNode).put(p, new HashSet<>());
 						}
 						edgesToTransfer.get(dataNode).get(p).add(o);
 					}
@@ -50,7 +50,7 @@ public class EdgeTransferSpecification {
 							edgesToTransfer.put(s, new HashMap<>());
 						}
 						if (edgesToTransfer.get(s).get(p) == null) {
-							edgesToTransfer.get(s).put(p, new TreeSet<>());
+							edgesToTransfer.get(s).put(p, new HashSet<>());
 						}
 						edgesToTransfer.get(s).get(p).add(dataNode);
 					}
@@ -61,7 +61,7 @@ public class EdgeTransferSpecification {
 		return edgesToTransfer;
 	}
 
-	public void addAll(HashMap<Long, HashMap<Long, TreeSet<Long>>> edgesToTransferToAdd) {
+	public void addAll(HashMap<Long, HashMap<Long, HashSet<Long>>> edgesToTransferToAdd) {
 		if (edgesToTransfer.isEmpty()) {
 			edgesToTransfer = edgesToTransferToAdd;
 		}
@@ -73,7 +73,7 @@ public class EdgeTransferSpecification {
 							edgesToTransfer.put(s, new HashMap<>());
 						}
 						if (edgesToTransfer.get(s).get(p) == null) {
-							edgesToTransfer.get(s).put(p, new TreeSet<>());
+							edgesToTransfer.get(s).put(p, new HashSet<>());
 						}
 						edgesToTransfer.get(s).get(p).add(o);
 					}

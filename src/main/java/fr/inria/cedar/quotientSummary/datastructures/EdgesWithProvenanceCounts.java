@@ -2,14 +2,14 @@ package fr.inria.cedar.quotientSummary.datastructures;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Set;
-import java.util.TreeSet;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 public class EdgesWithProvenanceCounts {
 	private static final Logger LOGGER = Logger.getLogger(EdgesWithProvenanceCounts.class.getName());
-	protected HashMap<Long, HashMap<Long, TreeSet<Long>>> edges;
+	protected HashMap<Long, HashMap<Long, HashSet<Long>>> edges;
 	protected HashMap<Long, HashMap<Long, HashMap<Long, Long>>> counts;
 
 	public EdgesWithProvenanceCounts(){
@@ -18,7 +18,7 @@ public class EdgesWithProvenanceCounts {
 		counts = new HashMap<>();
 	}
 
-	public HashMap<Long, TreeSet<Long>> get(long s){
+	public HashMap<Long, HashSet<Long>> get(long s){
 		return edges.get(s);
 	}
 
@@ -31,7 +31,7 @@ public class EdgesWithProvenanceCounts {
 	 */
 	public final void addTriple(long s, long p, long o) {
 		//LOGGER.debug("ADDING SUMMARY TRIPLE: " + s + " " + p + " " + o);
-		HashMap<Long, TreeSet<Long>> triplesForThisSubject = edges.get(s);
+		HashMap<Long, HashSet<Long>> triplesForThisSubject = edges.get(s);
 		HashMap<Long, HashMap<Long, Long>> countsForThisSubject = counts.get(s);
 
 		if (triplesForThisSubject == null) { // no edges yet for this subject;
@@ -41,10 +41,10 @@ public class EdgesWithProvenanceCounts {
 			edges.put(s, triplesForThisSubject);
 			counts.put(s, countsForThisSubject);
 		}
-		TreeSet<Long> objectsForThisSubjectAndProperty = triplesForThisSubject.get(p);
+		HashSet<Long> objectsForThisSubjectAndProperty = triplesForThisSubject.get(p);
 		HashMap<Long, Long> countsForThisSubjectAndProperty = countsForThisSubject.get(p);
 		if (objectsForThisSubjectAndProperty == null) { // no edges yet for this subject and property; otherwise, s has already some p edges
-			objectsForThisSubjectAndProperty = new TreeSet<>();
+			objectsForThisSubjectAndProperty = new HashSet<>();
 			triplesForThisSubject.put(p, objectsForThisSubjectAndProperty);
 			countsForThisSubjectAndProperty = new HashMap<>();
 			countsForThisSubject.put(p, countsForThisSubjectAndProperty);
@@ -100,7 +100,7 @@ public class EdgesWithProvenanceCounts {
 
 		// replacing oldNode with newNode in subject position
 		if (edges.get(oldNode) != null) {
-			HashMap<Long, HashMap<Long, TreeSet<Long>>> newEdges = new HashMap<>();
+			HashMap<Long, HashMap<Long, HashSet<Long>>> newEdges = new HashMap<>();
 			newEdges.put(newNode, new HashMap<>());
 			for (long p: edges.get(oldNode).keySet()) {
 				newEdges.get(newNode).put(p, edges.get(oldNode).get(p));
@@ -113,7 +113,7 @@ public class EdgesWithProvenanceCounts {
 				for (long o: newEdges.get(newNode).get(p)) {
 					long oldNodeCounter = getCounter(oldNode, p, o);
 					if (edges.get(newNode).get(p) == null) {
-						edges.get(newNode).put(p, new TreeSet<>());
+						edges.get(newNode).put(p, new HashSet<>());
 						counts.get(newNode).put(p, new HashMap<>());
 					}
 					if (!edges.get(newNode).get(p).contains(o)) {
@@ -133,9 +133,9 @@ public class EdgesWithProvenanceCounts {
 	public ArrayList<Triple> getSummaryEdges() {
 		ArrayList<Triple> res = new ArrayList<>();
 		for (long s : edges.keySet()) {
-			HashMap<Long, TreeSet<Long>> triplesOfThisSubject = edges.get(s);
+			HashMap<Long, HashSet<Long>> triplesOfThisSubject = edges.get(s);
 			for (long p : triplesOfThisSubject.keySet()) {
-				TreeSet<Long> objectsOfThisSandP = triplesOfThisSubject.get(p);
+				HashSet<Long> objectsOfThisSandP = triplesOfThisSubject.get(p);
 				for (long o : objectsOfThisSandP) {
 					Triple t = new Triple(s, p, o);
 					res.add(t);

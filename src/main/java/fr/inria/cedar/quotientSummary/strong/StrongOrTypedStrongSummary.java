@@ -1185,7 +1185,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 
 	protected boolean addingPropertyToSWillCauseASplit(Long repS, Long sourceCliqueS, Long s) {
 		if (sourceCliqueS.equals(this.getEmptySourceCliqueID())) { // due to the current triple, newSCS for sure is not empty.
-			TreeSet<Long> inverseRep = rep.getInverse(repS);
+			HashSet<Long> inverseRep = rep.getInverse(repS);
 			if (inverseRep.size() > 1) { // several nodes shared this representative: they all had empty sourceCliqueID
 				// and is is the only one for which this situation changes. Thus, we will split.
 				return true;

@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Objects;
-import java.util.TreeSet;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
@@ -15,8 +14,8 @@ public class TwoPassTypedWeakSummary extends WeakOrTypedWeakSummary {
 	private static final Logger LOGGER = Logger.getLogger(TwoPassTypedWeakSummary.class.getName());
 
 	private final HashSet<Long> nodes;
-	private final HashMap<Long, TreeSet<Long>> n2i;
-	private final HashMap<Long, TreeSet<Long>> n2o;
+	private final HashMap<Long, HashSet<Long>> n2i;
+	private final HashMap<Long, HashSet<Long>> n2o;
 
 	public TwoPassTypedWeakSummary(String triplesFileName, String triplesTableName, String encodedTriplesTableName, String dictionaryTableName) {
 		super();
@@ -51,13 +50,13 @@ public class TwoPassTypedWeakSummary extends WeakOrTypedWeakSummary {
 
 		if (!sn.contains(t.s) && !sTyped) {
 			if (n2o.get(t.s) == null) {
-				n2o.put(t.s, new TreeSet<>());
+				n2o.put(t.s, new HashSet<>());
 			}
 			n2o.get(t.s).add(t.p);
 		}
 		if (!sn.contains(t.o) && !oTyped) {
 			if (n2i.get(t.o) == null) {
-				n2i.put(t.o, new TreeSet<>());
+				n2i.put(t.o, new HashSet<>());
 			}
 			n2i.get(t.o).add(t.p);
 		}

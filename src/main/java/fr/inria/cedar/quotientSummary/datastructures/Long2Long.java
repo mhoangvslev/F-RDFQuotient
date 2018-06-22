@@ -1,8 +1,8 @@
 package fr.inria.cedar.quotientSummary.datastructures;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Set;
-import java.util.TreeSet;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
@@ -11,7 +11,7 @@ public class Long2Long {
 	// from the node to the ID of its clique
 	final HashMap<Long, Long> map;
 	// from the ID of a clique, to the list of IDs of all the nodes
-	final HashMap<Long, TreeSet<Long>> inverse;
+	final HashMap<Long, HashSet<Long>> inverse;
 
 	public Long2Long() {
 		LOGGER.setLevel(Level.INFO);
@@ -23,7 +23,7 @@ public class Long2Long {
 		return map.get(node);
 	}
 
-	public TreeSet<Long> getInverse(Long l) {
+	public HashSet<Long> getInverse(Long l) {
 		return inverse.get(l);
 	}
 
@@ -41,7 +41,7 @@ public class Long2Long {
 		Long previous = map.get(k);
 
 		if (previous != null){
-			TreeSet<Long> inversePrev = inverse.get(previous);
+			HashSet<Long> inversePrev = inverse.get(previous);
 			if (inversePrev == null){
 				//LOGGER.debug("Long2Long: Problem " + this.display());
 				throw new IllegalStateException("Map has " + previous + " on " + k + " but nothing in inverse for " + previous); 
@@ -56,9 +56,9 @@ public class Long2Long {
 		}
 		map.put(k, v);
 
-		TreeSet<Long> keysForV = inverse.get(v);
+		HashSet<Long> keysForV = inverse.get(v);
 		if (keysForV == null) {
-			keysForV = new TreeSet<>();
+			keysForV = new HashSet<>();
 			inverse.put(v, keysForV);
 		}
 		if (!keysForV.contains(k)){
@@ -100,11 +100,11 @@ public class Long2Long {
 	 */
 	public void replaceValue(Long v1, Long v2) {
 		//LOGGER.debug("Trying to replace value " + v1 + " with " + v2 + " in:");
-		TreeSet<Long> keysWithV1 = inverse.get(v1);
+		HashSet<Long> keysWithV1 = inverse.get(v1);
 		if (keysWithV1 != null){
-			TreeSet<Long> keysWithV2 = inverse.get(v2);
+			HashSet<Long> keysWithV2 = inverse.get(v2);
 			if (keysWithV2 == null){
-				keysWithV2 = new TreeSet<>();
+				keysWithV2 = new HashSet<>();
 				inverse.put(v2, keysWithV2); 
 			}
 			for (Long l: keysWithV1) {
@@ -123,7 +123,7 @@ public class Long2Long {
 		Long value = map.get(key);
 		if (value != null) {
 			map.remove(key);
-			TreeSet<Long> a = inverse.get(value);
+			HashSet<Long> a = inverse.get(value);
 			a.remove(key);
 			if (a.isEmpty())
 				inverse.remove(value);
@@ -139,7 +139,7 @@ public class Long2Long {
 	}
 
 	public long numberOfDistinctValues() {
-		/*TreeSet<Long> values = new TreeSet<>();
+		/*HashSet<Long> values = new HashSet<>();
 		for (Long key: map.keySet()) {
 			Long val = map.get(key);
 			if (!values.contains(val))
