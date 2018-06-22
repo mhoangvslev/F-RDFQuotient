@@ -2,15 +2,15 @@
 
 translate_summary_name() {
 	if [ "$1" = "weak" ]; then
-		return "w"
+		echo "w"
 	elif [ "$1" = "strong" ]; then
-		return "s"
+		echo "s"
 	elif [ "$1" = "2pweak" ]; then
-		return "2pw"
+		echo "2pw"
 	elif [ "$1" = "2pstrong" ]; then
-		return "2ps"
+		echo "2ps"
 	elif [ "$1" = "2pweakunionfind" ]; then
-		return "2pwuf"
+		echo "2pwuf"
 	fi
 }
 
@@ -18,14 +18,15 @@ for SUMMARY_TYPE in weak strong 2pweak 2pstrong 2pweakunionfind; do
 	for DATASET in springer/conference.nt nobel/nobel.nt insee/insee_geo.nt; do
 		# SATURATE + SUMMARIZE
 		# summarize saturated
-		./scripts/summarize.sh $DATASET $SUMMARY_TYPE true
+		#./scripts/summarize.sh $DATASET $SUMMARY_TYPE true
 
 		# SHORTCUT
 		# summarize not saturated
 		#./scripts/summarize.sh $DATASET $SUMMARY_TYPE false
 		# load the summary with saturation
-		./scripts/load.sh $DATASET\_$(translate_summary_name $SUMMARY_TYPE).nt true
+		DATASET=${DATASET%.*}\_$(translate_summary_name $SUMMARY_TYPE).nt
+		./scripts/load.sh $DATASET true
 		# summarize saturated
-		./scripts/summarize.sh $DATASET\_$(translate_summary_name $SUMMARY_TYPE).nt $SUMMARY_TYPE true
+		./scripts/summarize.sh $DATASET $SUMMARY_TYPE true
 	done
 done

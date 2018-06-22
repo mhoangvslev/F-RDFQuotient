@@ -2,15 +2,15 @@
 
 translate_summary_name() {
 	if [ "$1" = "weak" ]; then
-		return "w"
+		echo "w"
 	elif [ "$1" = "strong" ]; then
-		return "s"
+		echo "s"
 	elif [ "$1" = "2pweak" ]; then
-		return "2pw"
+		echo "2pw"
 	elif [ "$1" = "2pstrong" ]; then
-		return "2ps"
+		echo "2ps"
 	elif [ "$1" = "2pweakunionfind" ]; then
-		return "2pwuf"
+		echo "2pwuf"
 	fi
 }
 
