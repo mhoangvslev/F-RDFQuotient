@@ -33,7 +33,7 @@ for SUMMARY_TYPE in weak strong typedweak typedstrong 2pweak 2pstrong 2ptypedwea
 	# summarize not saturated
 	./scripts/summarize.sh bsbm/bsbm1m.nt $SUMMARY_TYPE true
 	# load the summary with saturation
-	./scripts/load.sh bsbm/bsbm1m_$(translate_summary_name($SUMMARY_TYPE)).nt true
+	./scripts/load.sh bsbm/bsbm1m_$(translate_summary_name $SUMMARY_TYPE).nt true
 	# summarize saturated
-	./scripts/summarize.sh bsbm/bsbm1m_$(translate_summary_name($SUMMARY_TYPE)).nt $SUMMARY_TYPE true
+	./scripts/summarize.sh bsbm/bsbm1m_$(translate_summary_name $SUMMARY_TYPE).nt $SUMMARY_TYPE true
 done
