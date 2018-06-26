@@ -269,8 +269,8 @@ public class StrongOrTypedStrongSummary extends Summary {
 		Long repS = rep.get(t.s);
 		Long repO = rep.get(t.o);
 
-		Long newRepS = getOrCreateSummaryNode(newSourceCliqueS, newSourceCliqueO);
-		Long newRepO = getOrCreateSummaryNode(newTargetCliqueS, newTargetCliqueO);
+		Long newRepS = getOrCreateSummaryNode(newSourceCliqueS, newTargetCliqueS);
+		Long newRepO = getOrCreateSummaryNode(newSourceCliqueO, newTargetCliqueO);
 
 		boolean replaceForS = true;
 		boolean replaceForO = true;
