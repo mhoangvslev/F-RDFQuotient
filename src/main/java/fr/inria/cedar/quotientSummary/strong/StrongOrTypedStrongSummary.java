@@ -138,11 +138,17 @@ public class StrongOrTypedStrongSummary extends Summary {
 				// Also, we should not replace sourceCliqueS with newSC, but
 				// create newSourceCliqueS and keep sourceCliqueS!
 				replaceForS = false;
+				if (t.s == t.o) {
+					replaceForO = false;
+				}
 			}
 		}
 		if (targetCliqueO.equals(getEmptyTargetCliqueID())) {
 			if (rep.getInverse(repO).size() > 1) {
 				replaceForO = false;
+				if (t.s == t.o) {
+					replaceForS = false;
+				}
 			}
 		}
 
@@ -277,11 +283,17 @@ public class StrongOrTypedStrongSummary extends Summary {
 		if (sourceCliqueS.equals(getEmptySourceCliqueID())) {
 			if (rep.getInverse(repS).size() > 1) {
 				replaceForS = false;
+				if (t.s == t.o) {
+					replaceForO = false;
+				}
 			}
 		}
 		if (targetCliqueO.equals(getEmptyTargetCliqueID())) {
 			if (rep.getInverse(repO).size() > 1) {
 				replaceForO = false;
+				if (t.s == t.o) {
+					replaceForS = false;
+				}
 			}
 		}
 
