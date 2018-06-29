@@ -28,6 +28,14 @@ conf/bsbm1m_2pwuf.properties
 conf/bsbm1m.properties
 conf/bsbm1m_s.properties
 conf/bsbm1m_w.properties
+conf/bsbm138m.properties
+conf/bsbm138m_1fb.properties
+conf/bsbm138m_2ps.properties
+conf/bsbm138m_2pw.properties
+conf/bsbm138m_2pwuf.properties
+conf/bsbm138m_s.properties
+conf/bsbm138m_w.properties
+conf/bsbm200m.properties
 conf/conference_1fb.properties
 conf/conference_2ps.properties
 conf/conference_2pw.properties
@@ -35,7 +43,7 @@ conf/conference_2pwuf.properties
 conf/conference.properties
 conf/conference_s.properties
 conf/conference_w.properties
-conf/dblp_large.properties
+conf/dblp_large_uniq.properties
 conf/dbpedia_persondata_en_uniq.properties
 conf/insee_geo_1fb.properties
 conf/insee_geo_2ps.properties
