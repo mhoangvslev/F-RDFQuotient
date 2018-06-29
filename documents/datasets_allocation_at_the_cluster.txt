@@ -12,12 +12,17 @@ LUBM10M
 
 cedar004
 LUBM100M
+DBPedia person
+Springer LOD conferences
+Nobel prizes
+INSEE Geo
 
 cedar005
 BSBM1M
 
 cedar006
 BSBM10M
+BSBM138M
 
 cedar007
 BSBM100M
