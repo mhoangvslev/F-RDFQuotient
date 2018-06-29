@@ -85,9 +85,9 @@ public class RDF2SQLEncoding {
 		setTypeCode();
 		//LOGGER.debug("rdf:type code is " + typeCode);
 		setSubClassCode();
-		//LOGGER.debug("rdfs:subclass  code is: " + subClassCode);
+		//LOGGER.debug("rdfs:subClassOf code is: " + subClassCode);
 		setSubPropertyCode();
-		//LOGGER.debug("rdfs:subproperty code is: " + subPropertyCode);
+		//LOGGER.debug("rdfs:subPropertyOf code is: " + subPropertyCode);
 		setDomainCode();
 		//LOGGER.debug("rdfs:domain code is: " + domainCode);
 		setRangeCode();
