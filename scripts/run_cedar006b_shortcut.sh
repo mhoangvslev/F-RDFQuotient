@@ -19,13 +19,13 @@ translate_summary_name() {
 for SUMMARY_TYPE in weak strong 2pweak 2pstrong 2pweakunionfind onefb; do
 	# SATURATE + SUMMARIZE
 	# summarize saturated
-	./scripts/summarize.sh bsbm/bsbm100m.nt $SUMMARY_TYPE true
+	./scripts/summarize.sh bsbm/bsbm138m.nt $SUMMARY_TYPE true
 
 	# SHORTCUT
 	# summarize not saturated
-	#./scripts/summarize.sh bsbm/bsbm100m.nt $SUMMARY_TYPE false
+	#./scripts/summarize.sh bsbm/bsbm138m.nt $SUMMARY_TYPE false
 	# load the summary with saturation
-	./scripts/load.sh bsbm/bsbm100m_$(translate_summary_name $SUMMARY_TYPE).nt true
+	./scripts/load.sh bsbm/bsbm138m_$(translate_summary_name $SUMMARY_TYPE).nt true
 	# summarize saturated
-	./scripts/summarize.sh bsbm/bsbm100m_$(translate_summary_name $SUMMARY_TYPE).nt $SUMMARY_TYPE true
+	./scripts/summarize.sh bsbm/bsbm138m_$(translate_summary_name $SUMMARY_TYPE).nt $SUMMARY_TYPE true
 done
