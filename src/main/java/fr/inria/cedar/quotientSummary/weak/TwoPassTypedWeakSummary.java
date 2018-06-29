@@ -29,7 +29,6 @@ public class TwoPassTypedWeakSummary extends WeakOrTypedWeakSummary {
 		this.isTwoPass = true;
 		cs = new Long2LongSet();
 		n2cs = new Long2Long();
-		n2c = new Long2LongSet();
 		cs2csID = new HashMap<>();
 		n2i = new HashMap<>();
 		n2o = new HashMap<>();

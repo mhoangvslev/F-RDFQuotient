@@ -43,7 +43,6 @@ public class Summary {
 	// The following three attribute serve to identify and store the class sets for RDF resources
 	protected Long2LongSet cs; // for each class set ID, a class set
 	protected Long2Long n2cs; // for each data node, its class set ID. This is also the rep function for typed nodes
-	protected Long2LongSet n2c; // for each data node, the set of types we know so far for this node
 	protected HashMap<TreeSet<Long>, Long> cs2csID; // for each set of types known so far, the ID of that set
 
 	protected Traverser traverser;
@@ -400,20 +399,25 @@ public class Summary {
 			edgesWithProv.addTriple(typeOnlyNodeID, t.p, t.o);
 			rep.put(t.s, typeOnlyNodeID);
 		}
-		// o already represenated in collectSchemaNodes
+		// o already represented in collectSchemaNodes
 	}
 
 	protected void handleTypeTripleBeforeData(Triple t) {
 		if (sn.contains(t.s)) { // schemaNode rdf:type classNode, represent right away
 			edgesWithProv.addTriple(t.s, t.p, t.o);
-			// s, o already represenated in collectSchemaNodes
+			// s, o already represented in collectSchemaNodes
 		}
 		else {
-			TreeSet<Long> classSetOfThisNode = n2c.get(t.s);
+			Long classSetIDOfThisNode = n2cs.get(t.s);
+			TreeSet<Long> classSetOfThisNode = null; 
+			if (classSetIDOfThisNode != null){
+				classSetOfThisNode = cs.get(classSetIDOfThisNode); 
+			}
 			if (classSetOfThisNode == null) { // this is the first time we encounter the node: create a class set with exactly this type
 				classSetOfThisNode = new TreeSet<>();
 				classSetOfThisNode.add(t.o);
-				Long thisNodeClassSetID = cs2csID.get(classSetOfThisNode); // comparison between sets uses equals and compares the structures of the sets
+				Long thisNodeClassSetID = cs2csID.get(classSetOfThisNode); 
+				// comparison between sets uses equals and compares the structures of the sets
 				if (thisNodeClassSetID == null) {
 					// this class set was not already known so we create it
 					thisNodeClassSetID = getNextSummaryNode();
@@ -421,7 +425,6 @@ public class Summary {
 					cs2csID.put(classSetOfThisNode, thisNodeClassSetID); // installs the new class set
 				}
 				// whether or not newClassSetID was known:
-				n2c.put(t.s, classSetOfThisNode); // erases/replaces previously known class set
 				n2cs.put(t.s, thisNodeClassSetID); // erases/replaces previously known class set ID
 			}
 			else if (!classSetOfThisNode.contains(t.o)) { // we already had some types for t.s but not this one so we need to add new type
@@ -437,7 +440,6 @@ public class Summary {
 					cs.put(newClassSetID, newClassSetOfThisNode);
 					cs2csID.put(newClassSetOfThisNode, newClassSetID);
 				}
-				n2c.put(t.s, newClassSetOfThisNode);
 				n2cs.put(t.s, newClassSetID);
 			}
 			//else {
@@ -445,7 +447,7 @@ public class Summary {
 			//}
 		}
 	}
-
+	
 	/**
 	 * This method adds the type triples in the summary, based on the structures previously filled in while traversing those triples.
 	 * It is called only once and will output all the type triples of the summary.

@@ -6,6 +6,7 @@
 *.csv
 *.png
 *.dot
+.DS_Store
 conf/bsbm100m_1fb.properties
 conf/bsbm100m_2ps.properties
 conf/bsbm100m_2pw.properties
