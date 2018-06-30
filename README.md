@@ -25,4 +25,5 @@ The framework can be used as a standalone command-line application. An interface
 To start using it, you just need to download the jar of the project [here](files.inria.fr/quotientSummaryWithDependencies-1.6.jar) or build it from sources by cloning the repository.
 
 Caution: the Postgres server has to be started before
+
 Caution: the database name will be the one specified in conf/dataLoading.properties
