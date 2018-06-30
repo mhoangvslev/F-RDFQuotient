@@ -774,7 +774,7 @@ public class Summary {
 
 		try {
 			try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(dotFileName)))) {
-				bw.write("digraph g{\n");
+				bw.write("digraph g{\nratio=0.66;\n");
 
 				ArrayList<Triple> summEdges = edgesWithProv.getSummaryEdges();
 				for (Triple t : summEdges) {
@@ -954,8 +954,8 @@ public class Summary {
 	public void writeRDFGraphToDotFile(Connection conn, String dotFileName) {
 		try {
 			try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(dotFileName)))) {
-				bw.write("digraph g{\n");
-				long triplesToDraw = Math.min(25, triplesSummarizedSoFar);
+				bw.write("digraph g{\nratio=0.66;\n");
+				long triplesToDraw = Math.min(100, triplesSummarizedSoFar);
 				//LOGGER.debug("Writing " + triplesToDraw + " RDF graph triples to DOT");
 				long triplesDrawn;
 				if (this.isTypeFirst) {
@@ -1168,7 +1168,7 @@ public class Summary {
 	public void writeEncodedSummaryToDotFile(String dotFile) {
 		try {
 			try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(dotFile)))) {
-				bw.write("digraph g{\n");
+				bw.write("digraph g{\nratio=0.66;\n");
 				for (Triple t : edgesWithProv.getSummaryEdges())
 					bw.write(t.s + " -> " + t.o + " [label=\"" + t.p + "\"];\n");
 				bw.write("}\n");
