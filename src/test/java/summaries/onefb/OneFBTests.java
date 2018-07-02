@@ -57,25 +57,6 @@ public class OneFBTests {
 	private String expectedOutput(int i, String summarizationTechnique) {
 		return "src/test/resources/test" + i + "-onefb/test-" + i + "_1fb_" + summarizationTechnique + "-reference.nt";
 	}
-
-	@Test
-	public void summarizeOneFBTest9() {
-		String referenceFileName = expectedOutput(9, "noSaturation");
-		File expectedOutput = new File(referenceFileName);
-		try {
-			File testOutput = summarizeUsingOneFBSummary(9);
-			if (!testOutput.exists()) {
-				fail("Test output not found ");
-			}
-			if (!expectedOutput.exists()) {
-				fail("Expected output not found " + referenceFileName);
-			}
-			assertTrue("Different summary one-fb 9", FileUtils.contentEquals(testOutput, expectedOutput));
-		}
-		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in 1-fb test 9 " + e.toString());
-		}
-	}
 	@Test
 	public void summarizeOneFBTest6() {
 		String referenceFileName = expectedOutput(6, "noSaturation");
@@ -94,4 +75,41 @@ public class OneFBTests {
 			throw new IllegalStateException("Unable to open .nt files in 1-fb test 6 " + e.toString());
 		}
 	}
+	@Test
+	public void summarizeOneFBTest8() {
+		String referenceFileName = expectedOutput(8, "noSaturation");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = summarizeUsingOneFBSummary(8);
+			if (!testOutput.exists()) {
+				fail("Test output not found ");
+			}
+			if (!expectedOutput.exists()) {
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary one-fb 8", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in 1-fb test 8 " + e.toString());
+		}
+	}
+	@Test
+	public void summarizeOneFBTest9() {
+		String referenceFileName = expectedOutput(9, "noSaturation");
+		File expectedOutput = new File(referenceFileName);
+		try {
+			File testOutput = summarizeUsingOneFBSummary(9);
+			if (!testOutput.exists()) {
+				fail("Test output not found ");
+			}
+			if (!expectedOutput.exists()) {
+				fail("Expected output not found " + referenceFileName);
+			}
+			assertTrue("Different summary one-fb 9", FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in 1-fb test 9 " + e.toString());
+		}
+	}
+	
 }
