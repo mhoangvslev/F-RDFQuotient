@@ -22,7 +22,7 @@ Framework's features:
 The framework can be used as a standalone command-line application. An interface is provided in the BuilderCmd class. For the sake of our own experimentation we have created running scripts that facilitate interations with the software. Namely, two main functionalities of the BuilderCmd can be accessed in the simmilar manner as in the scripts [load.sh](https://gitlab.inria.fr/cedar/quotientSummary/blob/master/scripts/load.sh) and [summarize.sh](https://gitlab.inria.fr/cedar/quotientSummary/blob/master/scripts/summarize.sh). The example usage of those promitives in the scheduled computation of the set of experiments for a given datset can be found e.g. in [run_cedar001.sh](https://gitlab.inria.fr/cedar/quotientSummary/blob/master/scripts/run_cedar001.sh) and [run_cedar001_shortcut.sh](https://gitlab.inria.fr/cedar/quotientSummary/blob/master/scripts/run_cedar001_shortcut.sh)
 
 
-To start using it, you just need to download the jar of the project [here](files.inria.fr/quotientSummaryWithDependencies-1.6.jar) or build it from sources by cloning the repository.
+To start using it, you just need to download the jar of the project [here](http://files.inria.fr/cedar/quotientSummaryWithDependencies-1.6.jar) or build it from sources by cloning the repository.
 
 Caution: the Postgres server has to be started before
 
