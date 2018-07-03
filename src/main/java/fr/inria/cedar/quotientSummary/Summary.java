@@ -183,6 +183,10 @@ public class Summary {
 		LOGGER.info("Summary read from Postgres");
 	}
 
+	public void setSummaryConfigFile(String fileName) {
+		SUMMARY_CONFIG_FILE = fileName;
+	}
+
 	// we need to be sure that integers which we invent to represent nodes
 	// will not collide with the codes already given to classes and properties
 	// (which, in this implementation, for simplicity, are preserved).
