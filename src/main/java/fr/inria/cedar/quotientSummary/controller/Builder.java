@@ -32,9 +32,10 @@ import org.apache.log4j.Logger;
 public class Builder {
 	private static final Logger LOGGER = Logger.getLogger(Builder.class.getName());
 	// Default properties files
-	private static final String DEFAULT_CONFIG_FILE = System.getProperty("user.dir") + "/conf/dataLoading.properties";
-	private static final String SATURATION_CONFIG_FILE = System.getProperty("user.dir") + "/conf/dataLoadingWithSaturation.properties";
-	private static final String SATURATION_SHORTCUT_CONFIG_FILE = System.getProperty("user.dir") + "/conf/dataLoadingWithSaturationForShortcut.properties";
+	private static String SUMMARY_CONFIG_FILE = "";
+	private static String DEFAULT_CONFIG_FILE = System.getProperty("user.dir") + "/conf/dataLoading.properties";
+	private static String SATURATION_CONFIG_FILE = System.getProperty("user.dir") + "/conf/dataLoadingWithSaturation.properties";
+	private static String SATURATION_SHORTCUT_CONFIG_FILE = System.getProperty("user.dir") + "/conf/dataLoadingWithSaturationForShortcut.properties";
 	private static String triplesTableName;
 	private static String dictionaryTableName;
 	private static String encodedTableName;
@@ -205,6 +206,18 @@ public class Builder {
 		return suffix;
 	}
 
+	public static void setDataLoadingConfigFile(String fileName) {
+		DEFAULT_CONFIG_FILE = fileName;
+	}
+
+	public static void setDataLoadingWithSaturationConfigFile(String fileName) {
+		SATURATION_CONFIG_FILE = fileName;
+	}
+
+	public static void setDataLoadingShortcutConfigFile(String fileName) {
+		SATURATION_SHORTCUT_CONFIG_FILE = fileName;
+	}
+
 	/**
 	 * This method loads the data in Postgres through the ontoSQL loader
 	 *
@@ -305,6 +318,10 @@ public class Builder {
 		return conn;
 	}
 
+	public static void setSummaryConfigFile(String fileName) {
+		SUMMARY_CONFIG_FILE = fileName;
+	}
+
 	/**
 	 * This method assumes the graph has already been loaded
 	 *
@@ -317,6 +334,9 @@ public class Builder {
 	private static Summary summarizeGraphFromPostgres(String summaryType, boolean summarizeSaturated, String[] files) throws SQLException, IOException {
 		LOGGER.info("Summarizing graph from Postgres");
 		Summary sum = createNewSummary(summaryType, files[0], triplesTableName, tableName(summarizeSaturated), dictionaryTableName);
+		if (!SUMMARY_CONFIG_FILE.equals("")) {
+			sum.setSummaryConfigFile(SUMMARY_CONFIG_FILE);
+		}
 		sum.summarizeFromPostgres(connectionInUse);
 		LOGGER.info("Graph from Postgres summarized");
 		return sum;
