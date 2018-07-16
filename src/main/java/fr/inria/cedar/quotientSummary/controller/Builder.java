@@ -74,94 +74,94 @@ public class Builder {
 		}
 
 		switch (arg0) {
-			case "loadWithoutSaturation":
-				connectionInUse = loadGraphInPostgres(false, false, filesToLoad);
-				return;
-			case "loadWithSaturation":
-				connectionInUse = loadGraphInPostgres(true, false, filesToLoad);
-				return;
-			case "summarizeUnsaturated":
-				summaryInUse = summarizeGraphFromPostgres(arg1, false, filesToLoad);
-				return;
-			case "summarizeSaturated":
-				summaryInUse = summarizeGraphFromPostgres(arg1, true, filesToLoad);
-				return;
-			case "loadAndSummarize":
-				connectionInUse = loadGraphInPostgres(false, false, filesToLoad);
-				summaryInUse = summarizeGraphFromPostgres(arg1, false, filesToLoad);
-				return;
-			case "loadWithSaturationAndSummarize":
-				connectionInUse = loadGraphInPostgres(true, false, filesToLoad);
-				summaryInUse = summarizeGraphFromPostgres(arg1, true, filesToLoad);
-				return;
-			case "loadAndSummarizeUsingShortcut":
-				connectionInUse = loadGraphInPostgres(false, false, filesToLoad);
-				summaryInUse = summarizeGraphFromPostgres(arg1, false, filesToLoad);
-				saveSummary(true, "shortcut");
-				exportSummary("noSaturation", false);
-				closeConnection();
-				String[] files = {filesToLoad[0].substring(0, filesToLoad[0].length() - 3) + "_" + prefix(arg1) + "noSaturation.nt"};
-				connectionInUse = loadGraphInPostgres(true, true, files);
-				summaryInUse = summarizeGraphFromPostgres(arg1, true, filesToLoad);
-				return;
-			case "saveSummaryComputedWithoutSaturation":
-				saveSummary(false, "noSaturation");
-				return;
-			case "saveSummaryComputedClassicalWay":
-				saveSummary(false, "classical");
-				return;
-			case "saveSummaryComputedUsingShortcut":
-				saveSummary(false, "shortcut");
-				return;
-			case "exportSummaryComputedWithoutSaturation":
-				exportSummary("noSaturation", arg1.equals("draw"));
-				return;
-			case "exportSummaryComputedClassicalWay":
-				exportSummary("classical", arg1.equals("draw"));
-				return;
-			case "exportSummaryComputedUsingShortcut":
-				exportSummary("shortcut", arg1.equals("draw"));
-				return;
-			case "dropPartialResultsTables":
-				dropPartialResultsTables();
-				return;
-			case "closeConnection":
-				closeConnection();
-				return;
-			case "readSummaryComputedWithoutSaturation":
-				Summary s = readSummaryFromPostgres(); 
-				return;
-			case "setCustomConfig":
-				if (filesToLoad.length != 0) customPropFile = filesToLoad[0];
-				return;
-			default:
-				break;
+		case "loadWithoutSaturation":
+			connectionInUse = loadGraphInPostgres(false, false, filesToLoad);
+			return;
+		case "loadWithSaturation":
+			connectionInUse = loadGraphInPostgres(true, false, filesToLoad);
+			return;
+		case "summarizeUnsaturated":
+			summaryInUse = summarizeGraphFromPostgres(arg1, false, filesToLoad);
+			return;
+		case "summarizeSaturated":
+			summaryInUse = summarizeGraphFromPostgres(arg1, true, filesToLoad);
+			return;
+		case "loadAndSummarize":
+			connectionInUse = loadGraphInPostgres(false, false, filesToLoad);
+			summaryInUse = summarizeGraphFromPostgres(arg1, false, filesToLoad);
+			return;
+		case "loadWithSaturationAndSummarize":
+			connectionInUse = loadGraphInPostgres(true, false, filesToLoad);
+			summaryInUse = summarizeGraphFromPostgres(arg1, true, filesToLoad);
+			return;
+		case "loadAndSummarizeUsingShortcut":
+			connectionInUse = loadGraphInPostgres(false, false, filesToLoad);
+			summaryInUse = summarizeGraphFromPostgres(arg1, false, filesToLoad);
+			saveSummary(true, "shortcut");
+			exportSummary("noSaturation", false);
+			closeConnection();
+			String[] files = {filesToLoad[0].substring(0, filesToLoad[0].length() - 3) + "_" + prefix(arg1) + "noSaturation.nt"};
+			connectionInUse = loadGraphInPostgres(true, true, files);
+			summaryInUse = summarizeGraphFromPostgres(arg1, true, filesToLoad);
+			return;
+		case "saveSummaryComputedWithoutSaturation":
+			saveSummary(false, "noSaturation");
+			return;
+		case "saveSummaryComputedClassicalWay":
+			saveSummary(false, "classical");
+			return;
+		case "saveSummaryComputedUsingShortcut":
+			saveSummary(false, "shortcut");
+			return;
+		case "exportSummaryComputedWithoutSaturation":
+			exportSummary("noSaturation", arg1.equals("draw"));
+			return;
+		case "exportSummaryComputedClassicalWay":
+			exportSummary("classical", arg1.equals("draw"));
+			return;
+		case "exportSummaryComputedUsingShortcut":
+			exportSummary("shortcut", arg1.equals("draw"));
+			return;
+		case "dropPartialResultsTables":
+			dropPartialResultsTables();
+			return;
+		case "closeConnection":
+			closeConnection();
+			return;
+		case "readSummaryComputedWithoutSaturation":
+			Summary s = readSummaryFromPostgres(); 
+			return;
+		case "setCustomConfig":
+			if (filesToLoad.length != 0) customPropFile = filesToLoad[0];
+			return;
+		default:
+			break;
 		}
 		printUsage();
 	}
 
 	private static String prefix(String summarizationTechnique) {
 		switch (summarizationTechnique) {
-			case "weak":
-				return "w_";
-			case "2pweak":
-				return "2pw_";
-			case "2pweakunionfind":
-				return "2pwuf_";
-			case "strong":
-				return "s_";
-			case "2pstrong":
-				return "2ps_";
-			case "typedweak":
-				return "tw_";
-			case "2ptypedweak":
-				return "2ptw_";
-			case "typedstrong":
-				return "ts_";
-			case "2ptypedstrong":
-				return "2pts_";
-			case "onefb":
-				return "1fb_"; 
+		case "weak":
+			return "w_";
+		case "2pweak":
+			return "2pw_";
+		case "2pweakunionfind":
+			return "2pwuf_";
+		case "strong":
+			return "s_";
+		case "2pstrong":
+			return "2ps_";
+		case "typedweak":
+			return "tw_";
+		case "2ptypedweak":
+			return "2ptw_";
+		case "typedstrong":
+			return "ts_";
+		case "2ptypedstrong":
+			return "2pts_";
+		case "onefb":
+			return "1fb_"; 
 		}
 		return null;
 	}
@@ -279,23 +279,19 @@ public class Builder {
 		Parameters settings = new Parameters();
 		settings.setPropertiesFileName(configFile);
 
-		try {
-			if (rdfsFiles.isEmpty())
-				for (String tripleFile: tripleFiles) {
-					settings.getAllInFiles().add(tripleFile);
-					DataLoading.process(settings);
-				}
-			else
-				for (String tripleFile: tripleFiles) {
-					settings.getTripleFiles().add(tripleFile);
-					settings.setRdfsFile(rdfsFiles.get(0));
-					DataLoading.process(settings);
-				}
-		}
-		catch (IOException ex) {
-			LOGGER.error("Data loading failed: " + ex);
-			throw ex;
-		}
+
+		if (rdfsFiles.isEmpty())
+			for (String tripleFile: tripleFiles) {
+				settings.getAllInFiles().add(tripleFile);
+				DataLoading.process(settings);
+			}
+		else
+			for (String tripleFile: tripleFiles) {
+				settings.getTripleFiles().add(tripleFile);
+				settings.setRdfsFile(rdfsFiles.get(0));
+				DataLoading.process(settings);
+			}
+
 		LOGGER.info("Graph loaded to Postgres");
 
 		Properties connectionProps = new Properties();
@@ -309,10 +305,10 @@ public class Builder {
 		connectionProps.put("password", properties.getProperty("database.password"));
 
 		String connectionURL = "jdbc:postgresql://" + properties.getProperty("database.host") + ":" + 
-			properties.getProperty("database.port") + "/" + properties.getProperty("database.name");
+				properties.getProperty("database.port") + "/" + properties.getProperty("database.name");
 		Connection conn = DriverManager.getConnection(connectionURL, connectionProps);
 		LOGGER.info("Connection to Postgres established with URL: " + connectionURL + " with user " + 
-			properties.getProperty("database.user") + " and password " + properties.getProperty("database.password")); 
+				properties.getProperty("database.user") + " and password " + properties.getProperty("database.password")); 
 		Preconditions.checkState(conn != null, "No connection for " + connectionURL);
 
 		return conn;
@@ -345,26 +341,26 @@ public class Builder {
 	private static Summary createNewSummary(String summaryType, String triplesFileName, String triplesTableName, String encodedTriplesTableName, String dictionaryTableName) {
 		String lowerCaseSummaryType = summaryType.toLowerCase();
 		switch (lowerCaseSummaryType) {
-			case "weak":
-				return new WeakSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
-			case "2pweak":
-				return new TwoPassWeakSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
-			case "2pweakunionfind":
-				return new TwoPassWeakSummaryWithUnionFind(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
-			case "strong":
-				return new StrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
-			case "2pstrong":
-				return new TwoPassStrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
-			case "typedweak":
-				return new TypedWeakSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
-			case "2ptypedweak":
-				return new TwoPassTypedWeakSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
-			case "typedstrong":
-				return new TypedStrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
-			case "2ptypedstrong":
-				return new TwoPassTypedStrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
-			case "onefb":
-				return new OneBisimSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName); 
+		case "weak":
+			return new WeakSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
+		case "2pweak":
+			return new TwoPassWeakSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
+		case "2pweakunionfind":
+			return new TwoPassWeakSummaryWithUnionFind(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
+		case "strong":
+			return new StrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
+		case "2pstrong":
+			return new TwoPassStrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
+		case "typedweak":
+			return new TypedWeakSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
+		case "2ptypedweak":
+			return new TwoPassTypedWeakSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
+		case "typedstrong":
+			return new TypedStrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
+		case "2ptypedstrong":
+			return new TwoPassTypedStrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
+		case "onefb":
+			return new OneBisimSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName); 
 		}
 		return null;
 	}
@@ -441,7 +437,7 @@ public class Builder {
 	 */
 	public static Connection getConnection() {
 		if (connectionInUse == null){
-			 getConnection(DEFAULT_CONFIG_FILE); 
+			getConnection(DEFAULT_CONFIG_FILE); 
 		}
 		return connectionInUse;
 	}

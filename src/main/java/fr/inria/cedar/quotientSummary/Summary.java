@@ -1,15 +1,6 @@
 package fr.inria.cedar.quotientSummary;
 
-import fr.inria.cedar.quotientSummary.datastructures.EdgesWithProvenanceCounts;
-import fr.inria.cedar.quotientSummary.datastructures.Long2Long;
-import fr.inria.cedar.quotientSummary.datastructures.Long2LongSet;
-import fr.inria.cedar.quotientSummary.datastructures.Triple;
-import fr.inria.cedar.quotientSummary.util.DOTAuxiliary;
-import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
-import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -25,8 +16,17 @@ import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
+
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+
+import fr.inria.cedar.quotientSummary.datastructures.EdgesWithProvenanceCounts;
+import fr.inria.cedar.quotientSummary.datastructures.Long2Long;
+import fr.inria.cedar.quotientSummary.datastructures.Long2LongSet;
+import fr.inria.cedar.quotientSummary.datastructures.Triple;
+import fr.inria.cedar.quotientSummary.export.SummaryExport;
+import fr.inria.cedar.quotientSummary.util.DOTAuxiliary;
+import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 
 public class Summary {
 	private static final Logger LOGGER = Logger.getLogger(Summary.class.getName());
@@ -79,11 +79,9 @@ public class Summary {
 	protected String edgeTableName = "";
 	protected boolean checkConsistency = false;
 
-	protected long triplesSummarizedSoFar = 0;
+	public long triplesSummarizedSoFar = 0;
 	protected long typeTriplesSummarizedSoFar = 0;
 	protected long nonTypeTriplesSummarizedSoFar = 0;
-
-	protected DOTAuxiliary dax;
 
 	// statistics
 	protected long schemaNodesCollectionTime;
@@ -99,6 +97,8 @@ public class Summary {
 	// for each summary edge, the number of graph edge it represents
 	protected HashMap<Triple, Long> summaryEdgeStatistics;
 
+	protected DOTAuxiliary dax; 
+	
 	public Summary() {
 		LOGGER.setLevel(Level.INFO);
 		summaryTablePrefix = ROOT_SUMMARY_PREFIX;
@@ -337,7 +337,7 @@ public class Summary {
 		this.maxSummaryNode += n;
 	}
 
-	protected void gatherStatistics() {
+	public void gatherStatistics() {
 		gatherNodeStatistics();
 		gatherEdgeStatistics();
 	}
@@ -636,551 +636,28 @@ public class Summary {
 		}
 	}
 
-	/**
-	 * This decodes the summary (replaces property codes with the original URIs
-	 * or strings) based on a dictionary table in Postgres. It prints the
-	 * summary to the standard output and also saves it in a separate .nt file
-	 *
-	 * @param conn
-	 * @param summarizationTechnique
-	 */
-	public void writeDecodedSummaryToNTFile(Connection conn, String summarizationTechnique) {
-		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
-
-		String URIprefix = properties.getProperty("prefixURIForSummaryNodes");
-
-		String summaryNTFileName = getNTSummaryFileName(summarizationTechnique);
-
-		LOGGER.info("Decoding summary and writing it in .nt format to " + summaryNTFileName);
-
-		boolean gatherStatistics = properties.getProperty("gatherStatistics").toLowerCase().equals("true");
-		if (gatherStatistics)
-			this.gatherStatistics();
-		ArrayList<Triple> summEdges = edgesWithProv.getSummaryEdges();
-		try {
-			// write summary triples:
-			try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(summaryNTFileName)))) {
-				// write summary triples:
-				for (Triple t : summEdges) {
-					//LOGGER.debug("Summary triple: " + t.toString() );
-					String subject, property, object;
-					if (RDF2SQLEncoding.isDataProperty(t.p)) { // data
-						if (sn.contains(t.s)) {
-							subject = RDF2SQLEncoding.dictionaryDecode(t.s);
-						}
-						else {
-							subject = getSummaryNodeURI(URIprefix, t.s);
-						}
-						property = RDF2SQLEncoding.dictionaryDecode(t.p);
-						if (sn.contains(t.o)) {
-							object = RDF2SQLEncoding.dictionaryDecode(t.o);
-						}
-						else {
-							object = getSummaryNodeURI(URIprefix, t.o);
-						}
-					} else if (RDF2SQLEncoding.isSchemaProperty(t.p)) { // schema
-						subject = RDF2SQLEncoding.dictionaryDecode(t.s);
-						property = RDF2SQLEncoding.dictionaryDecode(t.p);
-						object = RDF2SQLEncoding.dictionaryDecode(t.o);
-					} else { // type
-						if (sn.contains(t.s)) {
-							subject = RDF2SQLEncoding.dictionaryDecode(t.s);
-						}
-						else {
-							subject = getSummaryNodeURI(URIprefix, t.s);
-						}
-						property = RDF2SQLEncoding.dictionaryDecode(t.p);
-						object = RDF2SQLEncoding.dictionaryDecode(t.o);
-					}
-					//LOGGER.debug(subject + " " + property + " " + object);
-					bw.write(subject + " " + property + " " + object + " .\n");
-				}
-				if (gatherStatistics) {
-					// write node cardinality statistics:
-					for (long node : this.summaryNodeStatistics.keySet()) {
-						long numberOfRepresentedGraphNodes = this.summaryNodeStatistics.get(node);
-						String subject = getSummaryNodeURI(URIprefix, node);
-						String property = properties.getProperty("summaryNodeSupportURI");
-						String object = ("\"" + numberOfRepresentedGraphNodes + "\"");
-						//LOGGER.debug(subject + " " + property + " " + object);
-						bw.write(subject + " <" + property + "> " + object + " .\n");
-					}
-					// write edge cardinality statistics:
-					int reifiedEdgeNumber = 0;
-					for (Triple ts : this.summaryEdgeStatistics.keySet()) {
-						long numberOfRepresentedEdges = this.summaryEdgeStatistics.get(ts);
-						String reifEdgeURI = getSummaryNodeURI(properties.getProperty("reifiedSummaryEdgeURIPrefix"),
-							reifiedEdgeNumber);
-						bw.write(reifEdgeURI + " <" + properties.getProperty("reifiedEdgeHasSubject") + "> "
-							+ getSummaryNodeURI(URIprefix, ts.s) + " .\n");
-						bw.write(reifEdgeURI + " <" + properties.getProperty("reifiedEdgeHasProperty") + "> <"
-							+ RDF2SQLEncoding.dictionaryDecode(ts.p) + "> .\n");
-						bw.write(reifEdgeURI + " <" + properties.getProperty("reifiedEdgeHasObject") + "> "
-							+ getSummaryNodeURI(URIprefix, ts.o) + " .\n");
-						bw.write(reifEdgeURI + " <" + properties.getProperty("summaryEdgeSupportURI") + "> \""
-							+ numberOfRepresentedEdges + "\" .\n");
-						reifiedEdgeNumber++;
-					}
-				}
-			}
-		}
-		catch (IOException e) {
-			throw new IllegalStateException("Could not save the decoded summary in .nt file: " + e.toString());
-		}
-		LOGGER.info("Summary decoded and saved in .nt format");
-	}
-
-	public String getNTSummaryFileName(String summarizationTechnique) {
-		int lastDotPosition = Math.max(0, triplesFileName.lastIndexOf("."));
-		int lastSlashPosition = Math.max(0, triplesFileName.lastIndexOf("/"));
-		if (lastDotPosition - lastSlashPosition < 1)
-			throw new IllegalStateException("Was not able to extract a core component of the file name " + triplesFileName);
-		if (summarizationTechnique.equals("")) {
-			return triplesFileName.substring(0, lastDotPosition) + "_" + getSummaryURIPrefix() + ".nt";
-		}
-		if (summarizationTechnique.equals("sat")) {
-			return triplesFileName.substring(0, lastDotPosition) + "_sat_" + getSummaryURIPrefix() + ".nt";
-		}
-		return triplesFileName.substring(0, lastDotPosition) + "_" + summaryTablePrefix + summarizationTechnique + ".nt";
-	}
-
-	/**
-	 * This is the inventor of summary node URIs.
-	 *
-	 * @param uriPrefix
-	 * @param n
-	 *
-	 * @return
-	 */
-	protected String getSummaryNodeURI(String uriPrefix, long n) {
-		return ("<" + uriPrefix + this.getSummaryURIPrefix() + n + ">");
-	}
-
 	public void drawSummaryAndGraph(Connection conn, String suffix) {
-		String summaryDotFileName = getDotFileName(suffix);
-		writeSummaryToDotFile(conn, summaryDotFileName);
-		String graphDotFileName = getRDFDotFileName(suffix);
-		writeRDFGraphToDotFile(conn, graphDotFileName);
-	}
-
-	/**
-	 * This decodes the summary (replaces property codes with the original URIs
-	 * or strings) based on a dictionary table in Postgres
-	 *
-	 * @param conn
-	 * @param dotFileName
-	 */
-	protected void writeSummaryToDotFile(Connection conn, String dotFileName) {
-		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
-		dax.resetColors();
-		String URIprefix = properties.getProperty("prefixURIForSummaryNodes");
-		//LOGGER.debug("writeSummaryToDotFile:");
-
-		try {
-			try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(dotFileName)))) {
-				bw.write("digraph g{\nratio=0.66;\n");
-
-				ArrayList<Triple> summEdges = edgesWithProv.getSummaryEdges();
-				for (Triple t : summEdges) {
-					String subject, property, object, subjectInDot, propertyInDot, objectInDot;
-					// in all cases, edge labels are preserved:
-					property = RDF2SQLEncoding.dictionaryDecode(t.p);
-					propertyInDot = getVeryShortForDot(property.replaceAll("\"", ""));
-
-					if (RDF2SQLEncoding.isDataProperty(t.p)) { // data
-						if (sn.contains(t.s)) {
-							subject = RDF2SQLEncoding.dictionaryDecode(t.s);
-						}
-						else {
-							subject = getSummaryNodeURI(URIprefix, t.s);
-						}
-						subjectInDot = getVeryShortForDot(subject).replaceAll("\"", "");
-						if (dax.unknownSummaryNode(t.s)){
-							writeNodeToDot(bw, t.s, subjectInDot); 
-						}
-						if (sn.contains(t.o)) {
-							object = RDF2SQLEncoding.dictionaryDecode(t.o);
-						}
-						else {
-							object = getSummaryNodeURI(URIprefix, t.o);
-						}
-						objectInDot = getVeryShortForDot(object).replaceAll("\"", "");
-						if (dax.unknownSummaryNode(t.o)){
-							writeNodeToDot(bw, t.o, objectInDot); 
-						}
-					} else if (RDF2SQLEncoding.isSchemaProperty(t.p)) { // schema
-						subject = getVeryShortForDot(RDF2SQLEncoding.dictionaryDecode(t.s));
-						subjectInDot = subject.replaceAll("\"", "");
-						if (t.p == RDF2SQLEncoding.getSubClassCode()){
-							propertyInDot = "rdfs:subClass";
-						}
-						if (t.p == RDF2SQLEncoding.getSubPropertyCode()){
-							propertyInDot = "rdfs:subProperty";
-						}
-						if (t.p == RDF2SQLEncoding.getDomainCode()){
-							propertyInDot = "rdfs:domain";
-						}
-						if (t.p == RDF2SQLEncoding.getRangeCode()){
-							propertyInDot = "rdfs:range";
-						}
-						object = getVeryShortForDot(RDF2SQLEncoding.dictionaryDecode(t.o));
-						objectInDot = object.replaceAll("\"", "");
-						bw.write("\"" + subjectInDot + "\" [fontcolor=white, style = filled, color=black];\n");
-						bw.write("\"" + objectInDot + "\" [fontcolor=white, style = filled, color=black];\n");
-					} else { // type
-						if (sn.contains(t.s)) {
-							subject = RDF2SQLEncoding.dictionaryDecode(t.s);
-						}
-						else {
-							subject = getSummaryNodeURI(URIprefix, t.s);
-						}
-						subjectInDot = getVeryShortForDot(subject).replaceAll("\"", "");
-						object = getVeryShortForDot(RDF2SQLEncoding.dictionaryDecode(t.o));
-						objectInDot = object.replaceAll("\"", "");
-						propertyInDot = "rdf:type";
-						if (dax.unknownSummaryNode(t.s)){
-							this.writeNodeToDot(bw, t.s, subjectInDot);
-						}
-						bw.write("\"" + objectInDot + "\" [fontcolor=white, style = filled, color=black];\n");
-					}
-					// write the triple in all cases:
-					bw.write("\"" + subjectInDot + "\"" + " -> \"" + objectInDot + "\" [label=\"" + propertyInDot + "\"];\n");
-				}
-				bw.write("}\n");
-			}
-		}
-		catch (IOException e) {
-			throw new IllegalStateException("Unable to open the DOT file to for the summary: " + e.toString());
-		}
-		LOGGER.info("Summary written to DOT file " + dotFileName);
-
-		String pathToDot = properties.getProperty("pathToDot");
-		try {
-			String pngFileName = dotFileName.substring(0, dotFileName.length() - 4) + ".png";
-			Runtime.getRuntime().exec(pathToDot + " -Tpng " + dotFileName + " -o " + pngFileName);
-			LOGGER.info("Summary drawn to PNG file " + pngFileName);
-		}
-		catch (IOException e) {
-			LOGGER.error("Could not turn .dot file into .png (check the pathToDot value in summarization.properties)" + e.toString());
-		}
-	}
-
-	private void writeNodeToDot(BufferedWriter bw, long node, String label) {
-	try{
-		String nColor = dax.getSummaryNodeColor(node);
-		bw.write("\"" + label + "\" [style = filled, color=" + 
-				nColor +
-				(dax.isDarkColor(nColor)?", fontcolor=white ":"")
-				+ "];\n");
-	}
-	catch (IOException e) {
-		LOGGER.error("Could not turn .dot file into .png (check the pathToDot value in summarization.properties)" + e.toString());
-	}
-}
-
-	/**
-	 * Given a path to an .nt RDF data file, computes a file name by inserting
-	 * the prefix encoding the summary type before the main file name, and
-	 * replacing the trailing .nt with .dot
-	 *
-	 * It also inserts the suffix before the ".".
-	 *
-	 * @param suffix
-	 *
-	 * @return
-	 */
-	protected String getDotFileName(String suffix) {
-		int lastDotPosition = Math.max(0, triplesFileName.lastIndexOf("."));
-		int lastSlashPosition = Math.max(0, triplesFileName.lastIndexOf("/"));
-		if (lastDotPosition - lastSlashPosition < 1)
-			throw new IllegalStateException("Was not able to extract a core component of the file name " + triplesFileName);
-		return triplesFileName.substring(0, lastDotPosition) + "_" + summaryTablePrefix + suffix + ".dot"; // replace .nt with .dot
-	}
-
-	/**
-	 * Given a path to an .nt RDF data file, computes a file name by replacing
-	 * the trailing .nt with .dot.
-	 *
-	 * It also adds the suffix just before the "."
-	 *
-	 * @param suffix
-	 *
-	 * @return
-	 */
-	protected String getRDFDotFileName(String suffix) {
-		return (triplesFileName.substring(0, triplesFileName.length() - 3)) + "_" + suffix + ".dot";
-	}
-
-	/**
-	 * URIs can be too long, thus they may need to be shortened in a .dot file.
-	 *
-	 * @param URI
-	 *
-	 * @return
-	 */
-	protected String getShortURIForDot(String URI) {
-		int maxNodeLabelLength = Integer.parseInt(properties.getProperty("maxNodeLabelLength"));
-		if (URI.length() < maxNodeLabelLength)
-			return URI;
-		else
-			return "..." + URI.substring(URI.length() - (maxNodeLabelLength - 4), URI.length());
-	}
-
-	protected String getVeryShortForDot(String URIorLiteral){
-		boolean URI = false;
-		if (URIorLiteral.charAt(0) == '<' && (URIorLiteral.charAt(URIorLiteral.length() - 1)) == '>'){
-			URI = true; 
-		}
-		if (!URI){
-			return dotSuffixOfStringsAndURIs(URIorLiteral); 
-		}
-		else{
-			int closing = URIorLiteral.length() - 1;
-			int lastSlash = URIorLiteral.lastIndexOf('/');
-			if (lastSlash == -1){
-				return dotSuffixOfStringsAndURIs(URIorLiteral);
-			}
-			else{
-				return URIorLiteral.substring(lastSlash+1, closing); 
-			}
-		}
-	}
-	protected String dotSuffixOfStringsAndURIs(String s){
-		int suffixLength = Integer.parseInt(properties.getProperty("maxNodeLabelLength"));
-		if (s.length() <= suffixLength){
-			return s; 
-		}
-		else{
-			return  s.substring(s.length() - suffixLength, s.length());
-		}
-	}
-
-	public void writeRDFGraphToDotFile(Connection conn, String dotFileName) {
-		try {
-			try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(dotFileName)))) {
-				bw.write("digraph g{\nratio=0.66;\n");
-				long triplesToDraw = Math.min(100, triplesSummarizedSoFar);
-				//LOGGER.debug("Writing " + triplesToDraw + " RDF graph triples to DOT");
-				long triplesDrawn;
-				if (this.isTypeFirst) {
-					try (ResultSet rs = getTypeTriplesCursorForDotDrawing(conn, triplesToDraw)) {
-						triplesDrawn = drawTriples(rs, bw);
-					}
-					if (triplesDrawn < triplesToDraw){
-						try (ResultSet rs2 = getNonTypeTriplesCursorForDotDrawing(conn, triplesToDraw-triplesDrawn)) {
-							drawTriples(rs2, bw);
-						}
-					}
-				}
-				else {
-					try (ResultSet rs = getNonTypeTriplesCursorForDotDrawing(conn, triplesToDraw)) {
-						triplesDrawn = drawTriples(rs, bw);
-					}
-					if (triplesDrawn < triplesToDraw){
-						try (ResultSet rs2 = getTypeTriplesCursorForDotDrawing(conn, triplesToDraw-triplesDrawn)) {
-							drawTriples(rs2, bw);
-						}
-					}
-				}
-				bw.write("}\n");
-			}
-		}
-		catch (IOException e) {
-			throw new IllegalStateException("Unable to open the DOT file to for the summary: " + e.toString());
-		}
-		catch (SQLException e) {
-			throw new IllegalStateException("Unable to read and plot RDF triples: " + e.toString());
-
-		}
-		LOGGER.info("Graph written to DOT file " + dotFileName);
-
-		String pathToDot = properties.getProperty("pathToDot");
-		try {
-			String pngFileName = dotFileName.substring(0, dotFileName.length() - 4) + ".png";
-			Runtime.getRuntime().exec(pathToDot + " -Tpng " + dotFileName + " -o " + pngFileName);
-			LOGGER.info("Graph drawn to PNG file " + pngFileName);
-		}
-		catch (IOException e) {
-			LOGGER.error("Could not turn .dot file into .png (check the pathToDot value in summarization.properties)" + e.toString());
-		}
-	}
-
-	/**
-	 * Takes triples from a cursor and prints them in DOT format into a buffered writer.
-	 * @param rs
-	 * @param bw
-	 * @return the number of triples drawn. This is needed to control how many triples (if any) we need to print from the second group of triples. 
-	 */
-	protected long drawTriples(ResultSet rs, BufferedWriter bw){
-		long triplesDrawnInDot = 0; 
-		try {
-			while (rs.next()) {
-				String subject = rs.getString(1);
-				long s = RDF2SQLEncoding.dictionaryEncode(subject);
-				long sRep = rep.get(s);
-				//LOGGER.debug("DrawTriples: Encoded " + subject + " into " + s + " whose representative is: "  + sRep);
-
-				String object = rs.getString(3);
-				long o = RDF2SQLEncoding.dictionaryEncode(object);
-				long oRep = rep.get(o);
-
-				//LOGGER.debug("DrawTriples: Encoded " + object + " into " + o + " whose representative is: " + oRep);
-				String property = rs.getString(2);
-				long p = RDF2SQLEncoding.dictionaryEncode(property);
-				//LOGGER.debug("DRAW Triple! (" + subject + " " + property + " " + object + ")");
-				//LOGGER.debug("DRAW Represented by: " + sRep + " " + p + " " + oRep);
-				writeGraphTripleToDotFile(bw, s, p, o, subject, property, object, sRep, oRep);
-				triplesDrawnInDot++;
-			}
-		}
-		catch (SQLException e){
-			throw new IllegalStateException("Could not get triple from cursor " + e.toString());
-		}
-		return triplesDrawnInDot; 
-	}
-
-	/**
-	 * This is used only when drawing the graph using Dot. 
-	 * Different summaries need to traverse their triples in different orders, thus the two cursors which differ between the typed and untyped summaries.
-	 * Returns the first cursor, over the non-type triples
-	 * @param conn
-	 * @param triplesToDraw
-	 * @return
-	 */
-	protected ResultSet getNonTypeTriplesCursorForDotDrawing(Connection conn, long triplesToDraw) {
-		try {
-			String query = "select d1.value, d2.value, d3.value from (select row_number() over () as id, s, p, o from "
-				+ encodedTriplesTableName + ") t join " + dictionaryTableName
-				+ " d1 on t.s = d1.key join " + dictionaryTableName
-				+ " d2 on t.p = d2.key join " + dictionaryTableName
-				+ " d3 on t.o = d3.key where d2.value <> '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' order by id limit " + triplesToDraw;
-			return conn.createStatement().executeQuery(query);
-		}
-		catch(SQLException e) {
-			throw new IllegalStateException("Could not get a cursor on the graph triples for drawing"); 
-		}
-	}
-	/**
-	 * This is used only when drawing the graph using Dot. 
-	 * Different summaries need to traverse their triples in different orders, thus the two cursors which differ between the typed and untyped summaries.
-	 * Returns the second cursor, over the type triples.
-	 * @param conn
-	 * @param triplesToDraw
-	 * @return
-	 */
-	protected ResultSet getTypeTriplesCursorForDotDrawing(Connection conn, long triplesToDraw) {
-		try {
-			String query = "select d1.value, d2.value, d3.value from "
-				+ encodedTriplesTableName + " t join " + dictionaryTableName
-				+ " d1 on t.s = d1.key join " + dictionaryTableName
-				+ " d2 on t.p = d2.key join " + dictionaryTableName
-				+ " d3 on t.o = d3.key where d2.value = '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' limit " + triplesToDraw;
-			return conn.createStatement().executeQuery(query);
-		}
-		catch(SQLException e){
-			throw new IllegalStateException("Could not get a cursor on the graph triples for drawing"); 
-		}
-	}
-
-	protected void writeGraphTripleToDotFile(BufferedWriter bw, long s, long p, long o, String subject, String property, String object, long sRep, long oRep) {
-		//LOGGER.debug("WRITE GRAPH TRIPLE TO DOT s: " + s + " p: " + p + " o: " + o + " subject: "  + subject + " property " + property + " object " + object + " sRep: " + sRep + " oRep: " + oRep); 
-		String subjectForDot = getVeryShortForDot(subject).replaceAll("\"", "");
-		String objectForDot = getVeryShortForDot(object).replaceAll("\"", "");
-		String propertyForDot = getVeryShortForDot(property).replaceAll("\"", "");
-
-		try {
-			if (RDF2SQLEncoding.isDataProperty(p)) {
-				//LOGGER.debug("Data-S " + s + " (" + subject + ") represented by  " + sRep);
-				//LOGGER.debug(" colored " + 	dax.getSummaryNodeColor(sRep));
-				String sColor =  dax.getSummaryNodeColor(sRep); 
-				String oColor =  dax.getSummaryNodeColor(oRep); 
-				bw.write("\"" + subjectForDot + "\" [style = filled, color=" + sColor + 
-						(dax.isDarkColor(sColor)?", fontcolor=white ":"")+ 
-						"];\n");
-				//LOGGER.debug("Data-O " + o + " (" + object + ") represented by " + oRep + " colored " + dax.getSummaryNodeColor(oRep));
-				bw.write("\"" + objectForDot + "\" [style = filled, color=" + oColor + 
-						(dax.isDarkColor(oColor)?", fontcolor=white ":"")+ 
-						"];\n");
-			}
-			else if (RDF2SQLEncoding.isSchemaProperty(p)) {
-				//LOGGER.debug("SCHEMA TRIPLE"); 
-				if (p == RDF2SQLEncoding.getSubClassCode()) {
-					propertyForDot = "rdfs:subClass"; 
-				}
-				if (p == RDF2SQLEncoding.getSubPropertyCode()) {
-					propertyForDot = "rdfs:subProperty"; 
-				}
-				if (p == RDF2SQLEncoding.getDomainCode()) {
-					propertyForDot = "rdfs:domain"; 
-				}
-				if (p == RDF2SQLEncoding.getRangeCode()) {
-					propertyForDot = "rdfs:range"; 
-				}
-				//LOGGER.debug("SCH1 " + s + " (" + subject + ") represented by  " + sRep + " written alone as " + subjectForDot); 
-				bw.write("\"" + subjectForDot + "\" [fontcolor=white, style = filled, color=black];\n");
-
-				//LOGGER.debug("SCH2 " + o + " (" + object + ") represented by  " + oRep + " written alone as  "+ objectForDot);
-				bw.write("\"" + objectForDot + "\" [fontcolor=white, style = filled, color=black];\n");
-			}
-			else { // type
-				//LOGGER.debug("TYPE TRIPLE"); 
-				propertyForDot = "rdf:type";
-				//LOGGER.debug("TYP1 " + s + " (" + subject + ") represented by  " + sRep);
-				if (dax == null) {
-					throw new IllegalStateException("Null dax");
-				}
-				bw.write("\"" + subjectForDot + "\" [style = filled, color=" + dax.getSummaryNodeColor(sRep) + "];\n");
-
-				//LOGGER.debug("TYP2 " + o + " (" + object + ") represented by  " + oRep);
-				bw.write("\"" + objectForDot + "\" [fontcolor=white, style = filled, color=black];\n");
-			}
-			bw.write("\"" + subjectForDot + "\"" + " -> \"" + objectForDot + "\" [label=\"" + propertyForDot + "\"];\n");
-		}
-		catch (IOException e) {
-			throw new IllegalStateException("Unable to open the DOT file to for the summary: " + e.toString());
-		}
+		SummaryExport exporter = new SummaryExport(this, properties, dax, 
+				dictionaryTableName, triplesFileName, encodedTriplesTableName); 
+		String summaryDotFileName = exporter.getDotFileName(suffix);
+		exporter.writeSummaryToDotFile(conn, summaryDotFileName);
+		String graphDotFileName = exporter.getRDFDotFileName(suffix);
+		exporter.writeRDFGraphToDotFile(conn, graphDotFileName);
 	}
 
 	public void writeToFileAndDraw() {
-		writeEncodedSummaryToFile(getNTSummaryFileName(""));
-		writeEncodedSummaryToDotFile(getDotFileName(""));
+		SummaryExport exporter = new SummaryExport(this, properties, dax, 
+				dictionaryTableName, triplesFileName, encodedTriplesTableName); 
+		exporter.writeEncodedSummaryToFile(exporter.getNTSummaryFileName(""));
+		exporter.writeEncodedSummaryToDotFile(exporter.getDotFileName(""));
 	}
-
-	public void writeEncodedSummaryToFile(String fileName) {
-		try {
-			try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(fileName)))) {
-				this.writeEncodedTripleToFile(bw);
-			}
-		}
-		catch (IOException e) {
-			throw new IllegalStateException("Could not write encoded summary to file: " + fileName + ". Is the path correct?");
-		}
-	}
-
-	protected void writeEncodedTripleToFile(BufferedWriter bw) throws IOException {
-		for (Triple t : edgesWithProv.getSummaryEdges())
-			bw.write(t.toString() + "\n");
-	}
+	
 
 	public void display() {
 		System.out.println("SUMMARY " + this.getClass().getName());
 		edgesWithProv.display();
 		System.out.println("REPRESENTATION: " + rep.toString()); 
 		System.out.println("=======");
-	}
-
-	public void writeEncodedSummaryToDotFile(String dotFile) {
-		try {
-			try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(dotFile)))) {
-				bw.write("digraph g{\nratio=0.66;\n");
-				for (Triple t : edgesWithProv.getSummaryEdges())
-					bw.write(t.s + " -> " + t.o + " [label=\"" + t.p + "\"];\n");
-				bw.write("}\n");
-			}
-		}
-		catch (IOException e) {
-			throw new IllegalStateException("Could not write encoded summary to dot file: " + dotFile + ". Is the path correct?");
-		}
 	}
 
 	protected final String getSummaryTriplesSQLQuery() {
@@ -1287,11 +764,35 @@ public class Summary {
 		return edgesWithProv.getSummaryEdges(); 
 	}
 
+	public HashMap<Long, Long> getSummaryNodeStatistics(){
+		return this.summaryNodeStatistics; 
+	}
+	public HashMap<Triple, Long> getSummaryEdgeStatistics(){
+		return this.summaryEdgeStatistics; 
+	}
 	public String getEncodedTriplesTableName() {
 		return this.encodedTriplesTableName; 
 	}
 
 	public String getDictionaryTableName() {
 		return this.dictionaryTableName; 
+	}
+
+	public boolean isTypeFirst() {
+		return this.isTypeFirst; 
+	}
+
+	public long getRepresentative(long l) {
+		return rep.get(l); 
+	}
+
+	public HashSet<Long> getSchemaNodes() {
+		return sn; 
+	}
+
+	public void writeDecodedSummaryToNTFile(Connection conn, String summarizationTechnique) {
+		SummaryExport e =  new SummaryExport(this, properties, dax, 
+				dictionaryTableName, triplesFileName, encodedTriplesTableName); 
+		e.writeDecodedSummaryToNTFile(conn, summarizationTechnique);
 	}
 }
