@@ -97,7 +97,11 @@ public class Summary {
 	// for each summary edge, the number of graph edge it represents
 	protected HashMap<Triple, Long> summaryEdgeStatistics;
 
+	// helper class for multicolor printing to DOT
 	protected DOTAuxiliary dax; 
+	
+	// exporter utility
+	protected SummaryExport exporter; 
 	
 	public Summary() {
 		LOGGER.setLevel(Level.INFO);
@@ -187,6 +191,15 @@ public class Summary {
 		SUMMARY_CONFIG_FILE = fileName;
 	}
 
+	/**
+	 * Fills in the exporter object
+	 */
+	protected void ensureExporter(){
+		if (exporter == null){
+			exporter = new SummaryExport(this, properties, dax, 
+					dictionaryTableName, triplesFileName, encodedTriplesTableName); 
+		}
+	}
 	// we need to be sure that integers which we invent to represent nodes
 	// will not collide with the codes already given to classes and properties
 	// (which, in this implementation, for simplicity, are preserved).
@@ -791,8 +804,12 @@ public class Summary {
 	}
 
 	public void writeDecodedSummaryToNTFile(Connection conn, String summarizationTechnique) {
-		SummaryExport e =  new SummaryExport(this, properties, dax, 
-				dictionaryTableName, triplesFileName, encodedTriplesTableName); 
-		e.writeDecodedSummaryToNTFile(conn, summarizationTechnique);
+		ensureExporter();
+		exporter.writeDecodedSummaryToNTFile(conn, summarizationTechnique);
+	}
+
+	public String getNTSummaryFileName(String summarizationTechnique) {
+		ensureExporter();
+		return exporter.getNTSummaryFileName(summarizationTechnique);
 	}
 }

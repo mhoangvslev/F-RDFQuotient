@@ -75,47 +75,47 @@ public class BuilderCmd {
 		String fileName, summaryType;
 		boolean saturate, exportLoadingStatistics, saturated, saveInPostgres, exportToDisk, exportSummarizationStatistics;
 		switch (args[0]) {
-			case "load":
-				if (args.length != 4) {
-					displayUsageInfo();
-					return;
-				}
-				fileName = args[1];
-				saturate = "true".equals(args[2]);
-				exportLoadingStatistics = "true".equals(args[3]);
-				setUpConfiguration(fileName, saturate);
-				load(fileName, saturate);
-				if (exportLoadingStatistics) {
-					exportLoadingStatisticsToDisk(fileName);
-				}
-				return;
-			case "summarize":
-				if (args.length != 7) {
-					displayUsageInfo();
-					return;
-				}
-				fileName = args[1];
-				summaryType = args[2];
-				saturated = "true".equals(args[3]);
-				saveInPostgres = "true".equals(args[4]);
-				exportToDisk = "true".equals(args[5]);
-				exportSummarizationStatistics = "true".equals(args[6]);
-				setUpConfiguration(fileName, saturated);
-				getConnection();
-				summarize(fileName, summaryType, saturated);
-				if (saveInPostgres) {
-					saveSummaryInPostgres(saturated);
-				}
-				if (exportToDisk) {
-					exportSummaryToDisk(saturated);
-				}
-				if (exportSummarizationStatistics) {
-					exportSummarizationStatisticsToDisk(saturated);
-				}
-				closeConnection();
-				return;
-			default:
+		case "load":
+			if (args.length != 4) {
 				displayUsageInfo();
+				return;
+			}
+			fileName = args[1];
+			saturate = "true".equals(args[2]);
+			exportLoadingStatistics = "true".equals(args[3]);
+			setUpConfiguration(fileName, saturate);
+			load(fileName, saturate);
+			if (exportLoadingStatistics) {
+				exportLoadingStatisticsToDisk(fileName);
+			}
+			return;
+		case "summarize":
+			if (args.length != 7) {
+				displayUsageInfo();
+				return;
+			}
+			fileName = args[1];
+			summaryType = args[2];
+			saturated = "true".equals(args[3]);
+			saveInPostgres = "true".equals(args[4]);
+			exportToDisk = "true".equals(args[5]);
+			exportSummarizationStatistics = "true".equals(args[6]);
+			setUpConfiguration(fileName, saturated);
+			getConnection();
+			summarize(fileName, summaryType, saturated);
+			if (saveInPostgres) {
+				saveSummaryInPostgres(saturated);
+			}
+			if (exportToDisk) {
+				exportSummaryToDisk(saturated);
+			}
+			if (exportSummarizationStatistics) {
+				exportSummarizationStatisticsToDisk(saturated);
+			}
+			closeConnection();
+			return;
+		default:
+			displayUsageInfo();
 		}
 	}
 
@@ -134,7 +134,7 @@ public class BuilderCmd {
 			database.encoded_triples_table_name
 			database.dictionary_table_name
 			database.encoded_saturated_triples_table_name
-	*/
+	 */
 	private static void setUpConfiguration(String datasetName, boolean loadSaturated) {
 		properties = new Properties();
 		try {
@@ -157,8 +157,8 @@ public class BuilderCmd {
 
 			String customPropertiesFileName = "conf/" + databaseName + ".properties";
 			File customProperties = new File(customPropertiesFileName);
-	        OutputStream out = new FileOutputStream(customProperties);
-	        properties.store(out, "Custom properties file");
+			OutputStream out = new FileOutputStream(customProperties);
+			properties.store(out, "Custom properties file");
 
 			settings = new Parameters();
 			settings.setPropertiesFileName(customPropertiesFileName);
@@ -188,8 +188,8 @@ public class BuilderCmd {
 		connectionProps.put("password", properties.getProperty("database.password"));
 
 		String connectionURL = "jdbc:postgresql://" + properties.getProperty("database.host")
-			+ ":" + properties.getProperty("database.port") + "/"
-			+ properties.getProperty("database.name");
+		+ ":" + properties.getProperty("database.port") + "/"
+		+ properties.getProperty("database.name");
 		try {
 			connectionInUse = DriverManager.getConnection(connectionURL, connectionProps);
 		}
@@ -198,8 +198,8 @@ public class BuilderCmd {
 			System.exit(1);
 		}
 		LOGGER.info("Connection to Postgres established with URL: " + connectionURL
-			+ " with user " + properties.getProperty("database.user")
-			+ " and password " + properties.getProperty("database.password"));
+				+ " with user " + properties.getProperty("database.user")
+				+ " and password " + properties.getProperty("database.password"));
 
 		Preconditions.checkState(connectionInUse != null, "No connection for " + connectionURL);
 	}
@@ -223,14 +223,8 @@ public class BuilderCmd {
 
 	private static void load(String datasetName, boolean loadSaturated) {
 		LOGGER.info("Loading graph to Postgres");
-		try {
-			settings.getAllInFiles().add(datasetName);
-			DataLoading.process(settings);
-		}
-		catch (IOException ex) {
-			LOGGER.error("Data loading failed: " + ex);
-			System.exit(1);
-		}
+		settings.getAllInFiles().add(datasetName);
+		DataLoading.process(settings);
 		saturationTime = (loadSaturated) ? DataLoading.timeExecutionPerProcess.get("RDFGraphSaturator") : 0L;
 		LOGGER.info("Graph loaded to Postgres");
 	}
@@ -254,26 +248,26 @@ public class BuilderCmd {
 	private static Summary createNewSummary(String summaryType, String triplesFileName, String triplesTableName, String encodedTriplesTableName, String dictionaryTableName) {
 		String lowerCaseSummaryType = summaryType.toLowerCase();
 		switch (lowerCaseSummaryType) {
-			case "weak":
-				return new WeakSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
-			case "2pweak":
-				return new TwoPassWeakSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
-			case "2pweakunionfind":
-				return new TwoPassWeakSummaryWithUnionFind(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
-			case "strong":
-				return new StrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
-			case "2pstrong":
-				return new TwoPassStrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
-			case "typedweak":
-				return new TypedWeakSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
-			case "2ptypedweak":
-				return new TwoPassTypedWeakSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
-			case "typedstrong":
-				return new TypedStrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
-			case "2ptypedstrong":
-				return new TwoPassTypedStrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
-			case "onefb":
-				return new OneBisimSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
+		case "weak":
+			return new WeakSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
+		case "2pweak":
+			return new TwoPassWeakSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
+		case "2pweakunionfind":
+			return new TwoPassWeakSummaryWithUnionFind(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
+		case "strong":
+			return new StrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
+		case "2pstrong":
+			return new TwoPassStrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
+		case "typedweak":
+			return new TypedWeakSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
+		case "2ptypedweak":
+			return new TwoPassTypedWeakSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
+		case "typedstrong":
+			return new TypedStrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
+		case "2ptypedstrong":
+			return new TwoPassTypedStrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
+		case "onefb":
+			return new OneBisimSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 		}
 		return null;
 	}
