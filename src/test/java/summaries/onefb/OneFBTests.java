@@ -10,11 +10,52 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class OneFBTests {
 	private static final Logger LOGGER = Logger.getLogger(OneFBTests.class.getName());
 
+	public File summarizeUsingOneFBSummary(String fileName){
+		LOGGER.setLevel(Level.INFO);
+		System.out.println("################################################################################");
+		System.out.println("OneFB summary test " + fileName + " only summarization");
+		System.out.println("################################################################################");
+
+		String inputFileName =  fileName;
+		String outputFileName = fileName.substring(0, fileName.length() - 3)  + "_1fb_noSaturation.nt";
+		try {
+			String[] argsSum = {"loadAndSummarize", "onefb", inputFileName};
+			try {
+				Builder.main(argsSum);
+				String[] argsSave = {"saveSummaryComputedWithoutSaturation"};
+				Builder.main(argsSave);
+				String[] argsExport = {"exportSummaryComputedWithoutSaturation", "draw", inputFileName};
+				Builder.main(argsExport);
+			}
+			catch (UnsupportedDatabaseEngineException ex) {
+				LOGGER.error(ex);
+			}
+			finally {
+				String[] argsCloseConnection = {"closeConnection"};
+				try {
+					Builder.main(argsCloseConnection);
+				}
+				catch (UnsupportedDatabaseEngineException ex1) {
+					LOGGER.error(ex1);
+				}
+			}
+			return new File(outputFileName);
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open .nt files in onefb " + fileName + " " + e.toString());
+		}
+		catch (SQLException e) {
+			throw new IllegalStateException("SQL error while summarizing " + e.toString());
+		}
+	}
+	
 	public File summarizeUsingOneFBSummary(int i) {
 		LOGGER.setLevel(Level.INFO);
 		System.out.println("################################################################################");
@@ -57,6 +98,16 @@ public class OneFBTests {
 	private String expectedOutput(int i, String summarizationTechnique) {
 		return "src/test/resources/test" + i + "-onefb/test-" + i + "_1fb_" + summarizationTechnique + "-reference.nt";
 	}
+	@Test	@Ignore 
+	// useful when testing summarization on a given file, e.g. for drawing purposes
+	public void summarizeGivenFile(){
+		String rdfFileName = "/Users/ioanamanolescu/GITLAB/rdfConnection/resources/rdf-nt-files/model-03_17.nt"; 
+		File testOutput = summarizeUsingOneFBSummary(rdfFileName);
+		if (!testOutput.exists()) {
+			fail("Test output not found ");
+		}
+	}
+	
 	@Test
 	public void summarizeOneFBTest6() {
 		String referenceFileName = expectedOutput(6, "noSaturation");
