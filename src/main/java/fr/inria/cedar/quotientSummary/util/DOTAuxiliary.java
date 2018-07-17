@@ -1,6 +1,7 @@
 package fr.inria.cedar.quotientSummary.util;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.TreeSet;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -15,17 +16,24 @@ public class DOTAuxiliary {
 											"lightgoldenrod", "orange", "khaki1", "orangered", "navy",
 											"lightpink", "magenta", "cyan", "firebrick"};
 	public static TreeSet<String> darkColorNames; 
-	// color index for each summary node (may cycle if there are more summary nodes than colors)
+	
+	// color index for each summary node (may cycle if there are more 
+	// summary nodes than colors)
 	public HashMap<Long, Integer> coloredSummaryNodes;
-	// whether or not the RDF node has already been colored. We do not store colors for them
-	// as we will use the colors from the representative node.
+	
+	// whether or not the RDF node has already been colored. 
+	// We do not store colors for them as we will use the colors 
+	// of their from the representative node.
 	public TreeSet<Long> coloredRDFNodes;
 	public int nextSummaryColorToGive;
 
+	public HashSet<Long> schemaNodes; 
+	
 	public DOTAuxiliary() {
 		LOGGER.setLevel(Level.INFO);
 		coloredSummaryNodes = new HashMap<>();
 		coloredRDFNodes = new TreeSet<>();
+		schemaNodes = new HashSet<Long>();
 		nextSummaryColorToGive = -1;
 		initDarkColors();
 	}
@@ -43,17 +51,18 @@ public class DOTAuxiliary {
 		if (colorForThisNode == null) {
 			int modulo = (int) (summaryNodeCode % (svgColorNames.length));
 			coloredSummaryNodes.put(summaryNodeCode, modulo);
-			//LOGGER.debug("-<-<-<-<-<-< Assigned " + svgColorNames[nextSummaryColorToGive] + " for " + summaryNodeCode);
+			//System.out.println("-<-<-<-<-<-< Assigned " + svgColorNames[modulo] + " for " + summaryNodeCode);
 			return svgColorNames[modulo];
 		}
-		else
-			//LOGGER.debug("-<-<-<-<-<-< Retrieved " + svgColorNames[colorForThisNode] + " for " + summaryNodeCode);
+		else{
+			//System.out.println("-<-<-<-<-<-< Retrieved " + svgColorNames[colorForThisNode] + " for " + summaryNodeCode);
 			return svgColorNames[colorForThisNode];
+		}
 	}
 
 	public boolean unknownSummaryNode(long summaryNodeCode) {
-		boolean b = !(coloredSummaryNodes.keySet().contains(summaryNodeCode));
-		//LOGGER.debug("-<-<-<-<-<-< " + summaryNodeCode + " unknown: " + b);
+		boolean b = (coloredSummaryNodes.get(summaryNodeCode) == null);
+		//System.out.println("-<-<-<-<-<-< " + summaryNodeCode + " unknown: " + b);
 		return b;
 	}
 
@@ -68,5 +77,14 @@ public class DOTAuxiliary {
 		coloredSummaryNodes = new HashMap<>();
 		coloredRDFNodes = new TreeSet<>();
 		nextSummaryColorToGive = -1;
+	}
+	public boolean unknownSchemaNode(long s) {
+		if (!schemaNodes.contains(s)){
+			schemaNodes.add(s);
+			return true;
+		}
+		else{
+			return false; 
+		}
 	}
 }
