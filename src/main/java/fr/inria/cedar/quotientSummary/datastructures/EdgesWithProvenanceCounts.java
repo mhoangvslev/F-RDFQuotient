@@ -30,7 +30,7 @@ public class EdgesWithProvenanceCounts {
 	 * @param o
 	 */
 	public final void addTriple(long s, long p, long o) {
-		//LOGGER.debug("ADDING SUMMARY TRIPLE: " + s + " " + p + " " + o);
+		//LOGGER.info("ADDING SUMMARY TRIPLE: " + s + " " + p + " " + o);
 		HashMap<Long, HashSet<Long>> triplesForThisSubject = edges.get(s);
 		HashMap<Long, HashMap<Long, Long>> countsForThisSubject = counts.get(s);
 

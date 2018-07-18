@@ -2,6 +2,8 @@ package fr.inria.cedar.quotientSummary.bisim;
 
 import fr.inria.cedar.quotientSummary.Summary;
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
+import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
+
 import java.util.HashMap;
 import java.util.TreeSet;
 import org.apache.log4j.Level;
@@ -90,7 +92,7 @@ public class OneBisimSummary extends Summary{
 	// and represents all data triples
 	@Override
 	protected void representDataTriple(Triple t) {
-		//LOGGER.debug("REPRESENTING DATA TRIPLE " + RDF2SQLEncoding.decode(t).toString());
+		//System.out.println("\nREPRESENTING DATA TRIPLE " + RDF2SQLEncoding.decode(t).toString());
 		Long repS = rep.get(t.s);
 		if (repS == null){
 			TreeSet<Long> sop = n2op.get(t.s);
@@ -113,7 +115,8 @@ public class OneBisimSummary extends Summary{
 			}
 			rep.put(t.o, repO);
 		}
-		this.edgesWithProv.addTriple(repS, t.p, repO);
+		// Commented this out since the Traverser (also) adds the triple. 
+		// this.edgesWithProv.addTriple(repS, t.p, repO);
 	}
 
 	private long createSummaryNode(TreeSet<Long> nop, TreeSet<Long> nip) {

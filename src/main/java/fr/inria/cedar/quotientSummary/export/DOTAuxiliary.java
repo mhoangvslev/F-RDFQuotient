@@ -1,4 +1,4 @@
-package fr.inria.cedar.quotientSummary.util;
+package fr.inria.cedar.quotientSummary.export;
 
 import java.util.HashMap;
 import java.util.HashSet;

@@ -21,7 +21,6 @@ import org.apache.log4j.Logger;
 
 import fr.inria.cedar.quotientSummary.Summary;
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
-import fr.inria.cedar.quotientSummary.util.DOTAuxiliary;
 import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 
 public class SummaryExport {
@@ -32,6 +31,8 @@ public class SummaryExport {
 	String triplesFileName; 
 	String summaryTablePrefix; 
 	String encodedTriplesTableName; 
+	
+	boolean gatherStatistics; 
 	
 	DOTAuxiliary dax;
 	
@@ -44,6 +45,17 @@ public class SummaryExport {
 		this.triplesFileName = triplesFileName;
 		this.summaryTablePrefix = s.getSummaryTablePrefix();
 		this.encodedTriplesTableName = encodedTriplesTableName; 
+		// by default statistics are not used
+		this.gatherStatistics = false; 
+		try{
+			this.gatherStatistics = properties.getProperty("gatherStatistics").toLowerCase().equals("true");
+		}
+		catch(Exception e){
+			LOGGER.info("Could not determine if I should output summarization statistics. Will not do it.");
+		}
+		if (gatherStatistics){
+			summary.gatherStatistics();
+		}
 	}
 	
 	//============= Saving in NT format ====
@@ -66,10 +78,6 @@ public class SummaryExport {
 
 		LOGGER.info("Decoding summary and writing it in .nt format to " + summaryNTFileName);
 
-		boolean gatherStatistics = properties.getProperty("gatherStatistics").toLowerCase().equals("true");
-		if (gatherStatistics){
-			summary.gatherStatistics();
-		}
 		ArrayList<Triple> summEdges = summary.getSummaryEdges();
 		try {
 			// write summary triples:
@@ -215,6 +223,9 @@ public class SummaryExport {
 						}
 						//subjectInDot = getVeryShortForDot(subject).replaceAll("\"", "");
 						subjectInDot = subject.replaceAll("\"", "");
+						if (gatherStatistics){
+							subjectInDot = subjectInDot + " (" + summary.getRepresentedNodeNumber(t.s) + ")"; 
+						}
 						if (dax.unknownSummaryNode(t.s)){
 							writeNodeToDot(bw, t.s, subjectInDot); 
 						}
@@ -226,6 +237,9 @@ public class SummaryExport {
 						}
 						//objectInDot = getVeryShortForDot(object).replaceAll("\"", "");
 						objectInDot = object.replaceAll("\"", "");
+						if (gatherStatistics){
+							objectInDot = objectInDot + " (" + summary.getRepresentedNodeNumber(t.o) + ")"; 
+						}
 						if (dax.unknownSummaryNode(t.o)){
 							writeNodeToDot(bw, t.o, objectInDot); 
 						}
@@ -234,6 +248,9 @@ public class SummaryExport {
 						//subject = getVeryShortForDot(RDF2SQLEncoding.dictionaryDecode(t.s));
 						subject = RDF2SQLEncoding.dictionaryDecode(t.s); 
 						subjectInDot = subject.replaceAll("\"", "");
+						if (gatherStatistics){
+							subjectInDot = subjectInDot + " (" + summary.getRepresentedNodeNumber(t.s) + ")"; 
+						}
 //						if (t.p == RDF2SQLEncoding.getSubClassCode()){
 //							propertyInDot = "rdfs:subClass";
 //						}
@@ -249,6 +266,9 @@ public class SummaryExport {
 						//object = getVeryShortForDot(RDF2SQLEncoding.dictionaryDecode(t.o));
 						object = RDF2SQLEncoding.dictionaryDecode(t.o);
 						objectInDot = object.replaceAll("\"", "");
+						if (gatherStatistics){
+							objectInDot = objectInDot + " (" + summary.getRepresentedNodeNumber(t.o) + ")"; 
+						}
 						if (dax.unknownSchemaNode(t.s)){
 							bw.write("\"" + subjectInDot + "\" [fontcolor=white, style = filled, color=black];\n");
 						}
@@ -265,9 +285,15 @@ public class SummaryExport {
 						}
 						//subjectInDot = getVeryShortForDot(subject).replaceAll("\"", "");
 						subjectInDot = subject.replaceAll("\"", ""); 
+						if (gatherStatistics){
+							subjectInDot = subjectInDot + " (" + summary.getRepresentedNodeNumber(t.s) + ")"; 
+						}
 						//object = getVeryShortForDot(RDF2SQLEncoding.dictionaryDecode(t.o));
 						object = RDF2SQLEncoding.dictionaryDecode(t.o); 
 						objectInDot = object.replaceAll("\"", "");
+						if (gatherStatistics){
+							objectInDot = objectInDot + " (" + summary.getRepresentedNodeNumber(t.o) + ")"; 
+						}
 						//propertyInDot = "rdf:type";
 						if (sn.contains(t.s)){
 							if (dax.unknownSchemaNode(t.s)){
@@ -291,7 +317,11 @@ public class SummaryExport {
 						}
 					}
 					// write the triple in all cases:
-					bw.write("\"" + subjectInDot + "\"" + " -> \"" + objectInDot + "\" [label=\"" + propertyInDot + "\"];\n");
+					bw.write("\"" + subjectInDot + "\"" + " -> \"" + objectInDot + "\" [label=\"" + propertyInDot);
+					if (gatherStatistics){
+						bw.write(" (" + summary.getRepresentedTripleNumber(t) + ")"); 
+					}
+					bw.write("\"];\n");
 				}
 				bw.write("}\n");
 			}
@@ -315,7 +345,8 @@ public class SummaryExport {
 	private void writeNodeToDot(BufferedWriter bw, long node, String label) {
 		try{
 			String nColor = dax.getSummaryNodeColor(node);
-			bw.write("\"" + label + "\" [style = filled, color=" + 
+			bw.write("\"" + label);
+			bw.write("\" [style = filled, color=" + 
 					nColor +
 					(dax.isDarkColor(nColor)?", fontcolor=white ":"")
 					+ "];\n");

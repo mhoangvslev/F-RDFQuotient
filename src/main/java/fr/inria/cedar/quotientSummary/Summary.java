@@ -24,8 +24,8 @@ import fr.inria.cedar.quotientSummary.datastructures.EdgesWithProvenanceCounts;
 import fr.inria.cedar.quotientSummary.datastructures.Long2Long;
 import fr.inria.cedar.quotientSummary.datastructures.Long2LongSet;
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
+import fr.inria.cedar.quotientSummary.export.DOTAuxiliary;
 import fr.inria.cedar.quotientSummary.export.SummaryExport;
-import fr.inria.cedar.quotientSummary.util.DOTAuxiliary;
 import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 
 public class Summary {
@@ -53,7 +53,10 @@ public class Summary {
 
 	protected long maxSummaryNode;
 	protected Properties properties;
+	protected SummarizationProperties summProperties;
+	protected LoadingProperties loadingProperties; 
 	protected static String SUMMARY_CONFIG_FILE = "conf/summarization.properties";
+	protected static String LOADING_CONFIG_FILE = "conf/dataLoading.properties";
 
 	// repTablePrefix must be instantiated with a specific string for each summary type, so that each summary is saved as separated Postgres tables
 	protected String summaryTablePrefix;
@@ -91,7 +94,6 @@ public class Summary {
 	protected long typeTriplesSummarizationTime;
 	protected long nonTypeTriplesSummarizationTime;
 	protected long allTriplesSummarizationTime;
-	// TODO possibly rewrite code gathering these
 	// for each summary node, the number of graph nodes it represents
 	protected HashMap<Long, Long> summaryNodeStatistics;
 	// for each summary edge, the number of graph edge it represents
@@ -111,14 +113,22 @@ public class Summary {
 		rep = new Long2Long();
 		edgesWithProv = new EdgesWithProvenanceCounts();
 
-		//summaryNodeStatistics = new HashMap<>();
-		//summaryEdgeStatistics = new HashMap<>();
+		summaryNodeStatistics = new HashMap<>();
+		summaryEdgeStatistics = new HashMap<>();
 		properties = new Properties();
+		// initialize properties with default values from code
+		properties.putAll((new LoadingProperties()).prop);
+		properties.putAll((new SummarizationProperties()).prop); 
 		try {
 			properties.load(new FileReader(SUMMARY_CONFIG_FILE));
+		}
+		catch(IOException e){
+			LOGGER.info("Was not able to load configuration file " + SUMMARY_CONFIG_FILE);
+		}
+		try{
 			checkConsistency = properties.getProperty("consistencyChecks").toLowerCase().equals("true");
-		} catch (IOException e) {
-			throw new IllegalStateException("Unable to initialize summary properties");
+		} catch (Exception e) {
+			throw new IllegalStateException("Unable to determine if consistency checks are needed");
 		}
 		dax = new DOTAuxiliary();
 	}
@@ -356,17 +366,36 @@ public class Summary {
 	}
 
 	/**
-	 * May 24, 2018: these should be taken directly from rep
+	 * write in summaryNodeStatistics the number of 
+	 * data nodes each summary node represents
 	 */
 	protected void gatherNodeStatistics() {
-		// TODO
+		for (Long l: rep.getKeys()){
+			Long sn = rep.get(l);
+			Long existingSnCount = summaryNodeStatistics.get(sn);
+			if (existingSnCount == null){
+				existingSnCount = 1L; 
+			}
+			else{
+				existingSnCount = (existingSnCount + 1L);
+			}
+			summaryNodeStatistics.put(sn, existingSnCount); 
+		}
 	}
 
 	/**
 	 * May 24, 2018: these statistics should be picked directly from the edgesWithCounter.
 	 */
 	protected void gatherEdgeStatistics() {
-		//TODO
+		long totalRepresentedEdges = 0; 
+		for (Triple t: this.edgesWithProv.getSummaryEdges()){
+			long represents = edgesWithProv.getCounter(t.s,t.p, t.o); 
+			//System.out.println("Summary edge " + t.toString() + " represented: " + 
+			//		represents); 
+			summaryEdgeStatistics.put(t, represents); 
+			totalRepresentedEdges += represents; 
+		}
+		//System.out.println("Total number of represented edges: " + totalRepresentedEdges);
 	}
 
 	/**
@@ -811,5 +840,12 @@ public class Summary {
 	public String getNTSummaryFileName(String summarizationTechnique) {
 		ensureExporter();
 		return exporter.getNTSummaryFileName(summarizationTechnique);
+	}
+
+	public Long getRepresentedNodeNumber(Long s) {
+		return summaryNodeStatistics.get(s);
+	}
+	public Long getRepresentedTripleNumber(Triple t){
+		return summaryEdgeStatistics.get(t);
 	}
 }
