@@ -54,7 +54,9 @@ public class SummaryExport {
 			LOGGER.info("Could not determine if I should output summarization statistics. Will not do it.");
 		}
 		if (gatherStatistics){
-			summary.gatherStatistics();
+			if (summary.getSummaryEdgeStatistics().size() == 0){
+				summary.gatherStatistics();
+			}
 		}
 	}
 	

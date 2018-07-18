@@ -383,19 +383,13 @@ public class Summary {
 		}
 	}
 
-	/**
-	 * May 24, 2018: these statistics should be picked directly from the edgesWithCounter.
-	 */
 	protected void gatherEdgeStatistics() {
-		long totalRepresentedEdges = 0; 
 		for (Triple t: this.edgesWithProv.getSummaryEdges()){
 			long represents = edgesWithProv.getCounter(t.s,t.p, t.o); 
 			//System.out.println("Summary edge " + t.toString() + " represented: " + 
 			//		represents); 
 			summaryEdgeStatistics.put(t, represents); 
-			totalRepresentedEdges += represents; 
 		}
-		//System.out.println("Total number of represented edges: " + totalRepresentedEdges);
 	}
 
 	/**
@@ -679,17 +673,15 @@ public class Summary {
 	}
 
 	public void drawSummaryAndGraph(Connection conn, String suffix) {
-		SummaryExport exporter = new SummaryExport(this, properties, dax, 
-				dictionaryTableName, triplesFileName, encodedTriplesTableName); 
+		ensureExporter();
 		String summaryDotFileName = exporter.getDotFileName(suffix);
-		exporter.writeSummaryToDotFile(conn, summaryDotFileName);
+		this.exporter.writeSummaryToDotFile(conn, summaryDotFileName);
 		String graphDotFileName = exporter.getRDFDotFileName(suffix);
-		exporter.writeRDFGraphToDotFile(conn, graphDotFileName);
+		this.exporter.writeRDFGraphToDotFile(conn, graphDotFileName);
 	}
 
 	public void writeToFileAndDraw() {
-		SummaryExport exporter = new SummaryExport(this, properties, dax, 
-				dictionaryTableName, triplesFileName, encodedTriplesTableName); 
+		ensureExporter(); 
 		exporter.writeEncodedSummaryToFile(exporter.getNTSummaryFileName(""));
 		exporter.writeEncodedSummaryToDotFile(exporter.getDotFileName(""));
 	}
