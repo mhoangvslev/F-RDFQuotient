@@ -101,10 +101,10 @@ public class Summary {
 
 	// helper class for multicolor printing to DOT
 	protected DOTAuxiliary dax; 
-	
+
 	// exporter utility
 	protected SummaryExport exporter; 
-	
+
 	public Summary() {
 		LOGGER.setLevel(Level.INFO);
 		summaryTablePrefix = ROOT_SUMMARY_PREFIX;
@@ -186,7 +186,7 @@ public class Summary {
 		try (
 				Statement getTriples = conn.createStatement();
 				ResultSet rs = getTriples.executeQuery(getSummaryTriples);
-		) {
+				) {
 			while (rs.next()) {
 				long s = rs.getLong(1);
 				long p = rs.getLong(2);
@@ -290,11 +290,11 @@ public class Summary {
 		long typeCode = RDF2SQLEncoding.getTypeCode();
 
 		String getTriplesString = "select distinct s from " + encodedTriplesTableName
-			+ " where p = " + subClassCode
-			+ " or p = " + subPropertyCode
-			+ " or p = " + domainCode
-			+ " or p = " + rangeCode
-			+ ";";
+				+ " where p = " + subClassCode
+				+ " or p = " + subPropertyCode
+				+ " or p = " + domainCode
+				+ " or p = " + rangeCode
+				+ ";";
 		try {
 			try (Statement getTriples = conn.createStatement()) {
 				getTriples.setFetchSize(10000);
@@ -312,12 +312,12 @@ public class Summary {
 		}
 
 		getTriplesString = "select distinct o from " + encodedTriplesTableName
-			+ " where p = " + subClassCode
-			+ " or p = " + subPropertyCode
-			+ " or p = " + domainCode
-			+ " or p = " + rangeCode
-			+ " or p = " + typeCode
-			+ ";";
+				+ " where p = " + subClassCode
+				+ " or p = " + subPropertyCode
+				+ " or p = " + domainCode
+				+ " or p = " + rangeCode
+				+ " or p = " + typeCode
+				+ ";";
 		try {
 			try (Statement getTriples = conn.createStatement()) {
 				getTriples.setFetchSize(10000);
@@ -487,7 +487,7 @@ public class Summary {
 			//}
 		}
 	}
-	
+
 	/**
 	 * This method adds the type triples in the summary, based on the structures previously filled in while traversing those triples.
 	 * It is called only once and will output all the type triples of the summary.
@@ -553,7 +553,7 @@ public class Summary {
 		}
 		String newSummaryTableNameRep = newTableName + "_rep";
 		String newSummaryTableNameEdges = newTableName + "_edges";
-
+		String newSummaryTableNameNodeStats = newTableName + "_nodeStats";
 		LOGGER.info("Saving " + this.getClass().getName() + " in Postgres in tables " + newSummaryTableNameRep + " and " + newSummaryTableNameEdges);
 
 		Statement stmt;
@@ -565,7 +565,7 @@ public class Summary {
 		}
 
 		if (!partialResult) {
-			// save representation function
+			// save representation function and also compute summary node statistics
 			try {
 				long start = System.currentTimeMillis();
 				// create the table (it may have existed)
@@ -588,6 +588,15 @@ public class Summary {
 						insertInRep.setLong(1, origNode);
 						insertInRep.setLong(2, sumNode);
 						insertInRep.executeUpdate();
+						// update the node statistics:
+						Long existingSnCount = summaryNodeStatistics.get(sumNode);
+						if (existingSnCount == null){
+							existingSnCount = 1L; 
+						}
+						else{
+							existingSnCount = (existingSnCount + 1L);
+						}
+						summaryNodeStatistics.put(sumNode, existingSnCount); 
 					}
 				}
 				// if (!hasIndex(conn, "encoded_rep"))
@@ -600,14 +609,49 @@ public class Summary {
 			catch (SQLException e) {
 				throw new IllegalStateException("Could not insert summary triples in " + newSummaryTableNameRep + ": " + e.toString());
 			}
-		}
 
+			// save summary node statistics
+			try {
+				long start = System.currentTimeMillis();
+				// create the table (it may have existed)
+				if (!existsTable(conn, newSummaryTableNameNodeStats)) {
+					stmt.execute("create table " + newSummaryTableNameNodeStats + "(snode int not null, count int not null);");
+					//LOGGER.debug("Table " + newSummaryTableNodeStats + " created");
+				}
+				else {
+					//LOGGER.debug("Did not create " + newSummaryTableNodeStats + " table as it was already there");
+				}
+				// empty it (even if the creation failed, e.g. because the table was already there)
+				stmt.executeUpdate("delete from " + newSummaryTableNameNodeStats + ";");
+				conn.commit();
+
+				// now insert all the summary node stats:
+				String insertIntoNodeStats = "insert into " + newSummaryTableNameNodeStats + " values(?, ?);";
+				try (PreparedStatement insertInNodeStats = conn.prepareStatement(insertIntoNodeStats)) {
+					for (Long sumNode: summaryNodeStatistics.keySet()){
+						Long nodeCount = summaryNodeStatistics.get(sumNode); 
+						//LOGGER.debug("Saving in Postgres node statistics for: " + sumNode);
+						insertInNodeStats.setLong(1, sumNode);
+						insertInNodeStats.setLong(2, nodeCount);
+						insertInNodeStats.executeUpdate(); 
+					}
+					// if (!hasIndex(conn, "encoded_summary"))
+					//	stmt.executeUpdate("create index indSummaryS on encoded_summary(s);");
+					conn.commit();
+					Long summaryNodeStatsSavingTime = System.currentTimeMillis() - start;
+					LOGGER.info("Saved " + summaryNodeStatistics.size() + " node statistics in " + summaryNodeStatsSavingTime + " ms");
+				}
+			}
+			catch (SQLException e) {
+				throw new IllegalStateException("Could not save node statistics in " + newSummaryTableNameNodeStats + ": " + e.toString());
+			}
+		}	
 		// save summary
 		try {
 			long start = System.currentTimeMillis();
 			// create the table (it may have existed)
 			if (!existsTable(conn, newSummaryTableNameEdges)) {
-				stmt.execute("create table " + newSummaryTableNameEdges + "(s int not null, p int not null, o int not null);");
+				stmt.execute("create table " + newSummaryTableNameEdges + "(s int not null, p int not null, o int not null, count int not null);");
 				//LOGGER.debug("Table " + newSummaryTableNameEdges + " created");
 			}
 			else {
@@ -618,7 +662,7 @@ public class Summary {
 			conn.commit();
 
 			// now insert all the summary edges:
-			String insertIntoSummary = "insert into " + newSummaryTableNameEdges + " values(?, ?, ?);";
+			String insertIntoSummary = "insert into " + newSummaryTableNameEdges + " values(?, ?, ?, ?);";
 			try (PreparedStatement insertInSummary = conn.prepareStatement(insertIntoSummary)) {
 				ArrayList<Triple> edges = edgesWithProv.getSummaryEdges();
 				for (Triple t : edges) {
@@ -626,6 +670,7 @@ public class Summary {
 					insertInSummary.setLong(1, t.s);
 					insertInSummary.setLong(2, t.p);
 					insertInSummary.setLong(3, t.o);
+					insertInSummary.setLong(4, edgesWithProv.getCounter(t.s, t.p, t.o)); 
 					insertInSummary.executeUpdate();
 				}
 				// if (!hasIndex(conn, "encoded_summary"))
@@ -647,6 +692,7 @@ public class Summary {
 			stmt.executeUpdate("insert into saved_summary_table_names values ('edges', '" + newSummaryTableNameEdges + "');" );
 			stmt.executeUpdate("insert into saved_summary_table_names values ('representation', '" + newSummaryTableNameRep + "');");
 			stmt.executeUpdate("insert into saved_summary_table_names values ('encoded_triples', '" + encodedTriplesTableName + "');");
+			stmt.executeUpdate("insert into saved_summary_table_names values ('summary_node_stats'" + newSummaryTableNameNodeStats + "');"); 
 			conn.commit();
 		}
 		catch (SQLException e) {
@@ -688,7 +734,7 @@ public class Summary {
 		exporter.writeEncodedSummaryToFile(exporter.getNTSummaryFileName(""));
 		exporter.writeEncodedSummaryToDotFile(exporter.getDotFileName(""));
 	}
-	
+
 
 	public void display() {
 		System.out.println("SUMMARY " + this.getClass().getName());
