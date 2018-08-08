@@ -76,7 +76,7 @@ public class BuilderCmd {
 		boolean saturate, exportLoadingStatistics, saturated, saveInPostgres, exportToDisk, exportSummarizationStatistics;
 		switch (args[0]) {
 		case "load":
-			if (args.length != 4) {
+			if (args.length != 4) { // accept 4 or 5 parameters, if there are 5, the one at position 2  is interpreted wrt layout
 				displayUsageInfo();
 				return;
 			}
@@ -135,7 +135,7 @@ public class BuilderCmd {
 			database.dictionary_table_name
 			database.encoded_saturated_triples_table_name
 	 */
-	private static void setUpConfiguration(String datasetName, boolean loadSaturated) {
+	private static void setUpConfiguration(String datasetName, boolean loadSaturated) { // add another boolean for layout, like saturation
 		properties = new Properties();
 		try {
 			properties.load(new FileReader(CONFIGURATION_FILE));
