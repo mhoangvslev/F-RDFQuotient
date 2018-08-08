@@ -10,7 +10,7 @@ import org.apache.log4j.Logger;
  * @author ioanamanolescu
  *
  */
-public class Triple {
+public class Triple implements Comparable {
 	private static final Logger LOGGER = Logger.getLogger(Triple.class.getName());
 
 	public final long s;
@@ -48,5 +48,34 @@ public class Triple {
 	@Override
 	public int hashCode() {
 		return Objects.hash(s, p, o);
+	}
+
+	@Override
+	public int compareTo(Object o) {
+		if (o.getClass() == this.getClass()){
+			Triple ot = (Triple)o; 
+			if (this.s < ot.s){
+				return -1; 
+			}
+			if (this.s > ot.s){
+				return 1; 
+			}
+			if (this.p < ot.p){
+				return -1; 
+			}
+			if (this.p > ot.p){
+				return 1; 
+			}
+			if (this.o < ot.o){
+				return -1; 
+			}
+			if (this.o > ot.o){
+				return 1; 
+			}
+			return 0; 
+		}
+		else{
+			return -1; 
+		}
 	}
 }
