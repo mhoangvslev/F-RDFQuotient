@@ -531,9 +531,6 @@ public class Summary {
 	 * @param partialResult
 	 * @param summarizationInput
 	 */
-	// add a column to the summary edges, including the edge count
-	// add a table with the numbers of graph nodes represented by each summary node
-	// update the catalog
 	public void saveSummaryInPostgres(Connection conn, boolean partialResult, String summarizationInput) {
 		try {
 			conn.setAutoCommit(false);
