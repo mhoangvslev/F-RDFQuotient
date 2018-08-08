@@ -56,6 +56,10 @@ public class BuilderCmd {
 		System.out.println("args[0]=load fileName opt1 opt2: loads a file fileName to the database fileName");
 		System.out.println("    if opt1 is true its saturation is computed and stored in the same database");
 		System.out.println("    if opt2 is true it exports loading statistics to disk");
+		System.out.println("args[0]=load fileName opt1 opt2 opt3: loads a file fileName to the database fileName");
+		System.out.println("    opt1 specifies the storage layout of the database: either TRIPLES_TABLE or TABLE_PER_ROLE_AND_CONCEPT");
+		System.out.println("    if opt2 is true its saturation is computed and stored in the same database");
+		System.out.println("    if opt3 is true it exports loading statistics to disk");
 		System.out.println("args[0]=summarize fileName summaryType opt1 opt2 opt3 opt4");
 		System.out.println("    summarizes a graph from the database fileName using summaryType algorithm and");
 		System.out.println("    if opt1 is true it uses the saturated version of the graph");
@@ -72,18 +76,30 @@ public class BuilderCmd {
 			return;
 		}
 
-		String fileName, summaryType;
+		String fileName, layout = "TRIPLES_TABLE", summaryType;
 		boolean saturate, exportLoadingStatistics, saturated, saveInPostgres, exportToDisk, exportSummarizationStatistics;
 		switch (args[0]) {
 		case "load":
-			if (args.length != 4) { // accept 4 or 5 parameters, if there are 5, the one at position 2  is interpreted wrt layout
-				displayUsageInfo();
-				return;
+			switch (args.length) {
+				case 4:
+					saturate = "true".equals(args[2]);
+					exportLoadingStatistics = "true".equals(args[3]);
+					break;
+				case 5:
+					layout = args[2];
+					if (!layout.equals("TRIPLES_TABLE") && !layout.equals("TABLE_PER_ROLE_AND_CONCEPT")) {
+						displayUsageInfo();
+						return;
+					}
+					saturate = "true".equals(args[3]);
+					exportLoadingStatistics = "true".equals(args[4]);
+					break;
+				default:
+					displayUsageInfo();
+					return;
 			}
 			fileName = args[1];
-			saturate = "true".equals(args[2]);
-			exportLoadingStatistics = "true".equals(args[3]);
-			setUpConfiguration(fileName, saturate);
+			setUpConfiguration(fileName, layout, saturate);
 			load(fileName, saturate);
 			if (exportLoadingStatistics) {
 				exportLoadingStatisticsToDisk(fileName);
@@ -100,7 +116,7 @@ public class BuilderCmd {
 			saveInPostgres = "true".equals(args[4]);
 			exportToDisk = "true".equals(args[5]);
 			exportSummarizationStatistics = "true".equals(args[6]);
-			setUpConfiguration(fileName, saturated);
+			setUpConfiguration(fileName, "TRIPLES_TABLE", saturated);
 			getConnection();
 			summarize(fileName, summaryType, saturated);
 			if (saveInPostgres) {
@@ -135,7 +151,7 @@ public class BuilderCmd {
 			database.dictionary_table_name
 			database.encoded_saturated_triples_table_name
 	 */
-	private static void setUpConfiguration(String datasetName, boolean loadSaturated) { // add another boolean for layout, like saturation
+	private static void setUpConfiguration(String datasetName, String layout, boolean loadSaturated) { // add another boolean for layout, like saturation
 		properties = new Properties();
 		try {
 			properties.load(new FileReader(CONFIGURATION_FILE));
@@ -143,6 +159,7 @@ public class BuilderCmd {
 			String databaseName = trimNT(datasetName, true);
 			properties.put("database.name", databaseName);
 
+			properties.put("database.storage_layout", layout);
 			if (loadSaturated) {
 				properties.put("saturation.enable", "true");
 			}
@@ -224,7 +241,13 @@ public class BuilderCmd {
 	private static void load(String datasetName, boolean loadSaturated) {
 		LOGGER.info("Loading graph to Postgres");
 		settings.getAllInFiles().add(datasetName);
-		DataLoading.process(settings);
+		try {
+			DataLoading.process(settings);
+		}
+		catch (IOException ex) {
+			LOGGER.error("Data loading failed: " + ex);
+			System.exit(1);
+		}
 		saturationTime = (loadSaturated) ? DataLoading.timeExecutionPerProcess.get("RDFGraphSaturator") : 0L;
 		LOGGER.info("Graph loaded to Postgres");
 	}
