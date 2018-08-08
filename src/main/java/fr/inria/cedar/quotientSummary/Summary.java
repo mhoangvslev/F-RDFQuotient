@@ -692,7 +692,7 @@ public class Summary {
 			stmt.executeUpdate("insert into saved_summary_table_names values ('edges', '" + newSummaryTableNameEdges + "');" );
 			stmt.executeUpdate("insert into saved_summary_table_names values ('representation', '" + newSummaryTableNameRep + "');");
 			stmt.executeUpdate("insert into saved_summary_table_names values ('encoded_triples', '" + encodedTriplesTableName + "');");
-			stmt.executeUpdate("insert into saved_summary_table_names values ('summary_node_stats'" + newSummaryTableNameNodeStats + "');"); 
+			stmt.executeUpdate("insert into saved_summary_table_names values ('summary_node_stats', '" + newSummaryTableNameNodeStats + "');"); 
 			conn.commit();
 		}
 		catch (SQLException e) {
