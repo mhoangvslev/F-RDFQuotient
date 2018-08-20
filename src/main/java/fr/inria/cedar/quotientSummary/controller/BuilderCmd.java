@@ -241,13 +241,7 @@ public class BuilderCmd {
 	private static void load(String datasetName, boolean loadSaturated) {
 		LOGGER.info("Loading graph to Postgres");
 		settings.getAllInFiles().add(datasetName);
-		try {
-			DataLoading.process(settings);
-		}
-		catch (IOException ex) {
-			LOGGER.error("Data loading failed: " + ex);
-			System.exit(1);
-		}
+		DataLoading.process(settings);
 		saturationTime = (loadSaturated) ? DataLoading.timeExecutionPerProcess.get("RDFGraphSaturator") : 0L;
 		LOGGER.info("Graph loaded to Postgres");
 	}
