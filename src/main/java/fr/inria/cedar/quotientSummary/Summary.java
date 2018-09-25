@@ -1,6 +1,8 @@
 package fr.inria.cedar.quotientSummary;
 
+import java.io.BufferedWriter;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -20,11 +22,13 @@ import java.util.TreeSet;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
+import fr.inria.cedar.quotientSummary.datastructures.DecodedTriple;
 import fr.inria.cedar.quotientSummary.datastructures.EdgesWithProvenanceCounts;
 import fr.inria.cedar.quotientSummary.datastructures.Long2Long;
 import fr.inria.cedar.quotientSummary.datastructures.Long2LongSet;
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
 import fr.inria.cedar.quotientSummary.export.DOTAuxiliary;
+import fr.inria.cedar.quotientSummary.export.RDFDotDrawing;
 import fr.inria.cedar.quotientSummary.export.SummaryExport;
 import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 
@@ -194,7 +198,7 @@ public class Summary {
 				edgesWithProv.addTriple(s, p, o);
 			}
 		}
-		LOGGER.info("Summary read from Postgres");
+		//LOGGER.info("Summary read from Postgres");
 	}
 
 	public void setSummaryConfigFile(String fileName) {
@@ -288,6 +292,7 @@ public class Summary {
 		long domainCode = RDF2SQLEncoding.getDomainCode();
 		long rangeCode = RDF2SQLEncoding.getRangeCode();
 		long typeCode = RDF2SQLEncoding.getTypeCode();
+		long classCode = RDF2SQLEncoding.getClassCode(); 
 
 		String getTriplesString = "select distinct s from " + encodedTriplesTableName
 				+ " where p = " + subClassCode
@@ -330,6 +335,27 @@ public class Summary {
 				}
 			}
 		}
+		catch (SQLException e) {
+			throw new IllegalStateException("Postgres error encountered while collecting schema nodes " + e.toString());
+		}
+		
+		getTriplesString = "select distinct s from " + encodedTriplesTableName
+				+ " where p = " + typeCode
+				+ " and o = " + classCode 
+				+ ";";
+		try {
+			try (Statement getTriples = conn.createStatement()) {
+				getTriples.setFetchSize(10000);
+				try (ResultSet rs = getTriples.executeQuery(getTriplesString)) {
+					while (rs.next()) {
+						long o = rs.getLong(1);
+						sn.add(o);
+						rep.put(o, o);
+					}
+				}
+			}
+		}
+		
 		catch (SQLException e) {
 			throw new IllegalStateException("Postgres error encountered while collecting schema nodes " + e.toString());
 		}
@@ -549,6 +575,9 @@ public class Summary {
 			newTableName = "sav_" + timestamp + "_" + newTableName + "_" + summarizationInput + "_" + getSummaryURIPrefix();
 		}
 		String newSummaryTableNameRep = newTableName + "_rep";
+		// Ioana, Sept 25, 2018: we need the following line in order for the drawing with split leaves
+		// to know where to look for the representation table
+		this.repTableName = newSummaryTableNameRep; 
 		String newSummaryTableNameEdges = newTableName + "_edges";
 		String newSummaryTableNameNodeStats = newTableName + "_nodeStats";
 		LOGGER.info("Saving " + this.getClass().getName() + " in Postgres in tables " + newSummaryTableNameRep + " and " + newSummaryTableNameEdges);
@@ -726,12 +755,27 @@ public class Summary {
 		this.exporter.writeRDFGraphToDotFile(conn, graphDotFileName);
 	}
 
-	public void writeToFileAndDraw() {
+	/**
+	 * Writes the summary in RDF (in .nt format) then also in DOT; also attempts to draw it using DOT.
+	 */
+	public void writeEncodedSummaryToFileAndDraw() {
 		ensureExporter(); 
 		exporter.writeEncodedSummaryToFile(exporter.getNTSummaryFileName(""));
 		exporter.writeEncodedSummaryToDotFile(exporter.getDotFileName(""));
 	}
 
+	/**
+	 * Writes the summary in RDF (in .nt format), then also in DOT by splitting each leaf data node
+	 * into one node per incoming edge. 
+	 * @param conn SQL connection
+	 * @param suffix
+	 */
+	public void writeDecodedSummaryToFileSplitLeavesAndDraw(Connection conn, String suffix) {
+		System.out.println("Drawing summary with split leaves");
+		ensureExporter(); 
+		String summaryDotFileName = exporter.getDotFileName(suffix);
+		exporter.writeSummaryToDotFileSplitLeaves(conn, summaryDotFileName);
+	}
 
 	public void display() {
 		System.out.println("SUMMARY " + this.getClass().getName());
@@ -852,6 +896,9 @@ public class Summary {
 	}
 	public String getEncodedTriplesTableName() {
 		return this.encodedTriplesTableName; 
+	}
+	public String getRepresentationTableName() {
+		return this.repTableName; 
 	}
 
 	public String getDictionaryTableName() {

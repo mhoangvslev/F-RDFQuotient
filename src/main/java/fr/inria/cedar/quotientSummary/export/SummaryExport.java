@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -20,6 +21,7 @@ import java.util.Properties;
 import org.apache.log4j.Logger;
 
 import fr.inria.cedar.quotientSummary.Summary;
+import fr.inria.cedar.quotientSummary.datastructures.DecodedTriple;
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
 import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 
@@ -35,6 +37,8 @@ public class SummaryExport {
 	boolean gatherStatistics; 
 	
 	DOTAuxiliary dax;
+	
+	private static PreparedStatement stmtSplitLeavesCount;
 	
 	public SummaryExport(Summary s, Properties properties, DOTAuxiliary dax, String dictionaryTableName,
 			String triplesFileName, String encodedTriplesTableName){
@@ -56,6 +60,18 @@ public class SummaryExport {
 		if (gatherStatistics){
 			if (summary.getSummaryEdgeStatistics().size() == 0){
 				summary.gatherStatistics();
+			}
+			String representationTableName = summary.getRepresentationTableName(); 
+			String getSplitLeafRepCountQuery = "select count(distinct et.o) from " + encodedTriplesTableName + " et, " + 
+					representationTableName + " reps, " + representationTableName + 
+					" repo where reps.summarynode=? and reps.graphnode=et.s and " + 
+					" et.p=? and repo.summarynode=? and repo.graphnode=et.o"; 
+			try{
+				stmtSplitLeavesCount =  RDF2SQLEncoding.getConnection().prepareStatement(getSplitLeafRepCountQuery); 
+			}
+			catch(SQLException e) {
+				e.printStackTrace();
+				throw new IllegalStateException("Unable to prepare statement for cardinality computation"); 
 			}
 		}
 	}
@@ -217,31 +233,11 @@ public class SummaryExport {
 					//System.out.println("Property: " + property);
 					if (RDF2SQLEncoding.isDataProperty(t.p)) { // data
 						//System.out.println("Data triple\n");
-						if (sn.contains(t.s)) {
-							subject = RDF2SQLEncoding.dictionaryDecode(t.s);
-						}
-						else {
-							subject = getSummaryNodeURI(URIprefix, t.s);
-						}
-						//subjectInDot = getVeryShortForDot(subject).replaceAll("\"", "");
-						subjectInDot = subject.replaceAll("\"", "");
-						if (gatherStatistics){
-							subjectInDot = subjectInDot + " (" + summary.getRepresentedNodeNumber(t.s) + ")"; 
-						}
+						subjectInDot = getSubjectOrObjectURIforSummaryDataNode(t.s, URIprefix, sn); 
 						if (dax.unknownSummaryNode(t.s)){
 							writeNodeToDot(bw, t.s, subjectInDot); 
 						}
-						if (sn.contains(t.o)) {
-							object = RDF2SQLEncoding.dictionaryDecode(t.o);
-						}
-						else {
-							object = getSummaryNodeURI(URIprefix, t.o);
-						}
-						//objectInDot = getVeryShortForDot(object).replaceAll("\"", "");
-						objectInDot = object.replaceAll("\"", "");
-						if (gatherStatistics){
-							objectInDot = objectInDot + " (" + summary.getRepresentedNodeNumber(t.o) + ")"; 
-						}
+						objectInDot = getSubjectOrObjectURIforSummaryDataNode(t.s, URIprefix, sn); 
 						if (dax.unknownSummaryNode(t.o)){
 							writeNodeToDot(bw, t.o, objectInDot); 
 						}
@@ -254,16 +250,16 @@ public class SummaryExport {
 							subjectInDot = subjectInDot + " (" + summary.getRepresentedNodeNumber(t.s) + ")"; 
 						}
 //						if (t.p == RDF2SQLEncoding.getSubClassCode()){
-//							propertyInDot = "rdfs:subClass";
+//							propertyInDot = "subClass";
 //						}
 //						if (t.p == RDF2SQLEncoding.getSubPropertyCode()){
-//							propertyInDot = "rdfs:subProperty";
+//							propertyInDot = "subProperty";
 //						}
 //						if (t.p == RDF2SQLEncoding.getDomainCode()){
-//							propertyInDot = "rdfs:domain";
+//							propertyInDot = "domain";
 //						}
 //						if (t.p == RDF2SQLEncoding.getRangeCode()){
-//							propertyInDot = "rdfs:range";
+//							propertyInDot = "range";
 //						}
 						//object = getVeryShortForDot(RDF2SQLEncoding.dictionaryDecode(t.o));
 						object = RDF2SQLEncoding.dictionaryDecode(t.o);
@@ -279,17 +275,7 @@ public class SummaryExport {
 						}
 					} else { // type triples 
 						//System.out.println("Type triple\n");
-						if (sn.contains(t.s)) {
-							subject = RDF2SQLEncoding.dictionaryDecode(t.s);
-						}
-						else {
-							subject = getSummaryNodeURI(URIprefix, t.s);
-						}
-						//subjectInDot = getVeryShortForDot(subject).replaceAll("\"", "");
-						subjectInDot = subject.replaceAll("\"", ""); 
-						if (gatherStatistics){
-							subjectInDot = subjectInDot + " (" + summary.getRepresentedNodeNumber(t.s) + ")"; 
-						}
+						subjectInDot = getSubjectOrObjectURIforSummaryDataNode(t.s, URIprefix, sn); 
 						//object = getVeryShortForDot(RDF2SQLEncoding.dictionaryDecode(t.o));
 						object = RDF2SQLEncoding.dictionaryDecode(t.o); 
 						objectInDot = object.replaceAll("\"", "");
@@ -344,6 +330,274 @@ public class SummaryExport {
 		}
 	}
 
+	/**
+	 * Computes the new URI of a summary node appearing in a data triple.
+	 * @param s the long-encoded subject or object
+	 * @param URIprefix the prefix to use for the URIs
+	 * @param sn the set of schema nodes (in which we must check if a schema node happens to also participate in a data node)
+	 * @return an URI of the summary node 
+	 */
+	String getSubjectOrObjectURIforSummaryDataNode(Long s, String URIprefix, HashSet<Long> sn) {
+		String subject, subjectInDot; 
+		if (sn.contains(s)) {
+			subject = RDF2SQLEncoding.dictionaryDecode(s);
+		}
+		else {
+			subject = getSummaryNodeURI(URIprefix, s);
+		}
+		//subjectInDot = getVeryShortForDot(subject).replaceAll("\"", "");
+		subjectInDot = subject.replaceAll("\"", "");
+		if (gatherStatistics){
+			subjectInDot = subjectInDot + " (" + summary.getRepresentedNodeNumber(s) + ")"; 
+		}
+		return subjectInDot; 
+	}
+	
+	/**
+	 * Similar to getSubjectOrObjectURIforSummaryDataNode but only in the case of objects, which may happen to be leave,
+	 * if we want to split the drawing of leaves into many distinct nodes, 
+	 * this computes URIs that have an "inserted suffix" to distinguish between several instances of the same thing
+	 * @param s the long-encoded subject or object
+	 * @param URIprefix the prefix to use for the URIs
+	 * @param sn the set of schema nodes (in which we must check if a schema node happens to also participate in a data node)
+	 * @return an URI of the summary node 
+	 * @param suffix the integer distinguishing between several copies of the same leaf
+	 * @return an URI for the summary (data, leaf) node
+	 */
+	String getObjectURIforSummaryDataNodeWithCountSuffix(Triple t, String URIprefix, HashSet<Long> sn, Integer suffix) {
+		String object, objectInDot; 
+		if (sn.contains(t.o)) {
+			object = RDF2SQLEncoding.dictionaryDecode(t.o);
+		}
+		else {
+			object = getSummaryNodeURI(URIprefix, t.o);
+		}
+		objectInDot = getVeryShortForDot(object).replaceAll("\"", "");
+		objectInDot = object.replaceAll("\"", ""); 
+		objectInDot = objectInDot.replaceAll(">", ("-" + suffix + ">")); 
+		if (gatherStatistics){
+			// in this case, the leaf representation count must be computed through an SQL query, 
+			// because the nodes represented by the mother leaf are now split across many representatives
+			objectInDot = objectInDot + " (" + getRepresentedByThisLeaf(t) + ")"; 
+		}
+		return objectInDot; 
+	}
+	
+	String getVeryShortLabelforSummaryDataObjectWithCountSuffix(Triple t, HashSet<Long> sn, Integer suffix) {
+		String object, objectInDot; 
+		if (sn.contains(t.o)) {
+			object = RDF2SQLEncoding.dictionaryDecode(t.o);
+		}
+		else {
+			object = getSummaryURIPrefix() + t.o;
+		}
+		objectInDot = object +  "-" + suffix; 
+		if (gatherStatistics){
+			// in this case, the leaf representation count must be computed through an SQL query, 
+			// because the nodes represented by the mother leaf are now split across many representatives
+			objectInDot = objectInDot + " (" + getRepresentedByThisLeaf(t) + ")"; 
+		}
+		return objectInDot; 
+	}
+	String getVeryShortLabelForSummaryDataSubject(Long s, HashSet<Long> sn) {
+		String subject, subjectInDot; 
+		if (sn.contains(s)) {
+			subject = RDF2SQLEncoding.dictionaryDecode(s);
+		}
+		else {
+			subject = getSummaryURIPrefix() + s;
+		}
+		subjectInDot = subject.replaceAll("\"", "");
+		if (gatherStatistics){
+			subjectInDot = subjectInDot + " (" + summary.getRepresentedNodeNumber(s) + ")"; 
+		}
+		return subjectInDot; 
+	}
+	
+	/**
+	 * Computes the number of nodes represented by t.o which are target of an edge labeled t.p
+	 * which comes from a node represented by t.s
+	 * @param t a summary triple
+	 * @return the number of nodes represented by t.o as above
+	 */
+	private Long getRepresentedByThisLeaf(Triple t) {
+		try {
+			stmtSplitLeavesCount.setLong(1, t.s);
+			stmtSplitLeavesCount.setLong(2, t.p);
+			stmtSplitLeavesCount.setLong(3, t.o);
+			ResultSet rs = stmtSplitLeavesCount.executeQuery();
+			while (rs.next()) {
+				Long n = rs.getLong(1); 
+				return n; 
+			}
+		}
+		catch(SQLException e) {
+			e.printStackTrace();
+			throw new IllegalStateException("Unable to get the representation counts"); 
+		}
+		return 0L; 
+	}
+	
+	/**
+	 * This decodes the summary (replaces property codes with the original URIs
+	 * or strings) based on a dictionary table in Postgres and draws it by making
+	 * a different node for every leaf
+	 *
+	 * @param conn
+	 * @param dotFileName
+	 */
+	public void writeSummaryToDotFileSplitLeaves(Connection conn, String dotFileName) {
+		// first, determine who is a leaf
+		HashSet<Long> leaves = new HashSet<Long>(); // tentative leaf nodes (until discovered to be subjects)
+		HashSet<Long> notLeaves = new HashSet<Long>(); // certain non-leaf nodes (subjects)
+		for (Triple t: this.summary.getSummaryEdges()) {
+			notLeaves.add(t.s); // for sure s is not a leaf
+			//LOGGER.info(t.s + " surely not a leaf"); 
+			if (leaves.contains(t.s)){ // if someone thought it was a leaf, fix this
+				leaves.remove(t.s); 
+			}
+			if (!(notLeaves.contains(t.o))){ // unless there was already evidence o is not a leaf, we assume it a leaf
+				leaves.add(t.o); 
+				//LOGGER.info(t.o + " is a leaf");
+			}
+		}
+		// now we know who the leaves are, we just have to draw all this		
+		HashSet<Long> sn = summary.getSchemaNodes(); 
+		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
+		dax.resetColors();
+		//LOGGER.debug("writeSummaryToDotFileSplitLeaves:");
+		
+		HashMap<Long, Integer> leafCounter  = new HashMap<Long, Integer>(); 
+		
+		try {
+			try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(dotFileName)))) {
+				bw.write("digraph g{\nratio=0.66;\n");
+
+				ArrayList<Triple> summEdges = summary.getSummaryEdges();
+				for (Triple t : summEdges) {
+					String subject, property, object, subjectInDot, propertyInDot, objectInDot;
+					int penWidth = 1; 
+					// in all cases, edge labels are preserved:
+					property = RDF2SQLEncoding.dictionaryDecode(t.p);
+					propertyInDot = getVeryShortForDot(property.replaceAll("\"", ""));
+					//propertyInDot = property.replaceAll("\"", "");
+					//System.out.println("Property: " + property);
+					if (RDF2SQLEncoding.isDataProperty(t.p)) { // data
+						//System.out.println("Data triple, property: " + propertyInDot);
+						subjectInDot = getVeryShortLabelForSummaryDataSubject(t.s, sn); 
+						if (sn.contains(t.s)) {// The subject is a schema node -- this can happen
+							if (dax.unknownSchemaNode(t.s)){
+								bw.write("\"" + subjectInDot + "\" [penwidth=2, fontcolor=white, style = filled, color=black];\n");
+							}
+						}
+						else { // the subject is a data node
+							if (dax.unknownSummaryNode(t.s)){
+								writeNodeToDot(bw, t.s, subjectInDot); 
+							}
+						}
+						if (leaves.contains(t.o)) { // if o is a leaf, print a new node for this occurrence			
+							Integer printedLeafCounter = leafCounter.get(t.o); // try to find what number to attach to it
+							if (printedLeafCounter == null) {
+								printedLeafCounter = 1;
+								leafCounter.put(t.o, 1);
+							}
+							else {
+								printedLeafCounter += 1; 
+								leafCounter.put(t.o, printedLeafCounter); 
+							}
+							objectInDot = getVeryShortLabelforSummaryDataObjectWithCountSuffix(t, sn, printedLeafCounter); 
+							//Logger.info("Writing leaf " + objectInDot + " at occurrence: " + printedLeafCounter);
+							writeNodeToDot(bw, t.o, objectInDot); 
+						}
+						else { // if o was not a leaf, print as before (iff we had not printed it already)
+							objectInDot = getVeryShortLabelForSummaryDataSubject(t.o, sn); 
+							if (dax.unknownSummaryNode(t.o)){
+								writeNodeToDot(bw, t.o, objectInDot); 
+							}
+						}
+					} else if (RDF2SQLEncoding.isSchemaProperty(t.p)) { // schema
+						//System.out.println("Schema triple" + RDF2SQLEncoding.decode(t).toString());
+						subject = RDF2SQLEncoding.dictionaryDecode(t.s); 
+						subjectInDot = subject.replaceAll("\"", "");
+						if (gatherStatistics){
+							subjectInDot = subjectInDot + " (" + summary.getRepresentedNodeNumber(t.s) + ")"; 
+						}
+						object = RDF2SQLEncoding.dictionaryDecode(t.o);
+						objectInDot = object.replaceAll("\"", "");
+						if (gatherStatistics){
+							objectInDot = objectInDot + " (" + summary.getRepresentedNodeNumber(t.o) + ")"; 
+						}
+						if (dax.unknownSchemaNode(t.s)){
+							bw.write("\"" + subjectInDot + "\" [penwidth=2, fontcolor=white, style = filled, color=black];\n");
+						}
+						if (dax.unknownSchemaNode(t.o)){
+							bw.write("\"" + objectInDot + "\" [penwidth=2, fontcolor=white, style = filled, color=black];\n");
+						}
+					} else { // type triples 
+						penWidth=2; 
+						subjectInDot = getVeryShortLabelForSummaryDataSubject(t.s, sn); 
+						//object
+						object = RDF2SQLEncoding.dictionaryDecode(t.o); 
+						objectInDot = object.replaceAll("\"", "");
+						//System.out.println("Type triple: " + subjectInDot + " " + propertyInDot + " " + objectInDot); 
+						propertyInDot = "rdf:type"; 
+						if (gatherStatistics){
+							objectInDot = objectInDot + " (" + summary.getRepresentedNodeNumber(t.o) + ")"; 
+						}
+						if (sn.contains(t.s)){// subject is schema node
+							//System.out.println("Subject is schema node");
+							if (dax.unknownSchemaNode(t.s)){
+								bw.write("\"" + subjectInDot + "\" [penwidth=2, fontcolor=white, style = filled, color=black];\n");
+							}
+						}
+						else{
+							//System.out.println("Subject is not schema node");
+							if (dax.unknownSummaryNode(t.s)){
+								writeNodeToDot(bw, t.s, subjectInDot);
+							}
+						}
+						if (sn.contains(t.o)){ // object is schema node
+							//System.out.println("Object is schema node");
+							if (dax.unknownSchemaNode(t.o)){
+								bw.write("\"" + objectInDot + "\" [penwidth=2, fontcolor=white, style = filled, color=black];\n");
+							}
+						}
+						else{ // object is not schema node yet this is a type triple?...
+							//System.out.println("Object is not schema node");
+							throw new IllegalStateException("The target of a type triple should be a schema node"); 
+						}
+					}
+					// write the triple in all cases:
+					bw.write("\"" + subjectInDot + "\"" + " -> \"" + objectInDot + "\" [weight=1, penwidth=" + penWidth +
+							" label=\"" + propertyInDot); 
+					if (gatherStatistics){
+						bw.write(" (" + summary.getRepresentedTripleNumber(t) + ")"); 
+						//System.out.println("Writing " + subjectInDot + " -> " + objectInDot + "[weight=1, penwidth=" + penWidth +
+						//		" label=" + propertyInDot + " (" + summary.getRepresentedTripleNumber(t) + ")"); 
+						
+					}
+					bw.write("\"];\n");
+				}
+				bw.write("}\n");
+			}
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Unable to open the DOT file to for the summary: " + e.toString());
+		}
+		LOGGER.info("Summary written to DOT file " + dotFileName);
+
+		String pathToDot = properties.getProperty("pathToDot");
+		try {
+			String pngFileName = dotFileName.substring(0, dotFileName.length() - 4) + ".png";
+			Runtime.getRuntime().exec(pathToDot + " -Tpng " + dotFileName + " -o " + pngFileName);
+			LOGGER.info("Summary drawn to PNG file " + pngFileName);
+		}
+		catch (IOException e) {
+			LOGGER.error("Could not turn .dot file into .png (check the pathToDot value in summarization.properties)" + e.toString());
+		}
+	}
+
+	
 	private void writeNodeToDot(BufferedWriter bw, long node, String label) {
 		try{
 			String nColor = dax.getSummaryNodeColor(node);

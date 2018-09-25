@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 
 import org.apache.log4j.Logger;
@@ -31,7 +32,6 @@ public class RDFDotDrawing {
 			drawTriple(bw, t); 
 		}
 	}
-	
 	
 	public void drawTriple(BufferedWriter bw, DecodedTriple t) throws IOException{
 		HashSet<String> printedNodes = new HashSet<String>();

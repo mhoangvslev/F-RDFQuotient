@@ -6,10 +6,13 @@ import fr.inria.cedar.ontosql.rdfdb.dataloading.DataLoading;
 import fr.inria.cedar.ontosql.rdfdb.dataloading.Parameters;
 import fr.inria.cedar.quotientSummary.Summary;
 import fr.inria.cedar.quotientSummary.bisim.OneBisimSummary;
+import fr.inria.cedar.quotientSummary.datastructures.DecodedTriple;
+import fr.inria.cedar.quotientSummary.datastructures.Triple;
 import fr.inria.cedar.quotientSummary.strong.StrongSummary;
 import fr.inria.cedar.quotientSummary.strong.TwoPassStrongSummary;
 import fr.inria.cedar.quotientSummary.strong.TwoPassTypedStrongSummary;
 import fr.inria.cedar.quotientSummary.strong.TypedStrongSummary;
+import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 import fr.inria.cedar.quotientSummary.weak.TwoPassTypedWeakSummary;
 import fr.inria.cedar.quotientSummary.weak.TwoPassWeakSummary;
 import fr.inria.cedar.quotientSummary.weak.TwoPassWeakSummaryWithUnionFind;
@@ -115,6 +118,9 @@ public class Builder {
 			return;
 		case "exportSummaryComputedWithoutSaturation":
 			exportSummary("noSaturation", arg1.equals("draw"));
+			return;
+		case "exportSummaryComputedWithoutSaturationSplitLeaves":
+			exportSummarySplitLeaves("noSaturation", arg1.equals("draw"));
 			return;
 		case "exportSummaryComputedClassicalWay":
 			exportSummary("classical", arg1.equals("draw"));
@@ -418,12 +424,23 @@ public class Builder {
 		LOGGER.info("Exporting summary to disk");
 
 		summaryInUse.writeDecodedSummaryToNTFile(connectionInUse, summarizationTechnique);
+		
 		if (draw)
-			summaryInUse.drawSummaryAndGraph(connectionInUse, summarizationTechnique);
-
+			summaryInUse.drawSummaryAndGraph(connectionInUse, summarizationTechnique);		
 		LOGGER.info("Summary exported to disk");
 	}
 
+	public static void exportSummarySplitLeaves(String summarizationTechnique, boolean draw) throws FileNotFoundException {
+		LOGGER.info("Exporting summary to disk");
+
+		summaryInUse.writeDecodedSummaryToNTFile(connectionInUse, summarizationTechnique);
+		
+		if (draw)
+			summaryInUse.writeDecodedSummaryToFileSplitLeavesAndDraw(connectionInUse, summarizationTechnique);
+			
+		LOGGER.info("Summary exported to disk");
+	}	
+	
 	private static void closeConnection() throws SQLException {
 		connectionInUse.close();
 		connectionInUse = null;
