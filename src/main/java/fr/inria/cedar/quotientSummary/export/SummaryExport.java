@@ -35,6 +35,7 @@ public class SummaryExport {
 	String encodedTriplesTableName; 
 	
 	boolean gatherStatistics; 
+	boolean drawOfTypeClassEdges = false; // whether or not to draw edges of the form C rdf:type rdfs:Class
 	
 	DOTAuxiliary dax;
 	
@@ -297,10 +298,13 @@ public class SummaryExport {
 							if (dax.unknownSchemaNode(t.o)){
 								bw.write("\"" + objectInDot + "\" [fontcolor=white, style = filled, color=black];\n");
 							}
+							else {
+								throw new IllegalStateException("Type not part of the schema nodes"); 
+							}
 						}
 						else{
 							if (dax.unknownSummaryNode(t.o)){
-								writeNodeToDot(bw, t.o, subjectInDot);
+								writeNodeToDot(bw, t.o, objectInDot);
 							}
 						}
 					}
@@ -534,6 +538,11 @@ public class SummaryExport {
 							bw.write("\"" + objectInDot + "\" [penwidth=2, fontcolor=white, style = filled, color=black];\n");
 						}
 					} else { // type triples 
+						if (!this.drawOfTypeClassEdges) { // if this was false
+							if (t.o == RDF2SQLEncoding.getClassCode()) { // if this is an edge "C type Class", do not draw it
+								continue; 
+							}
+						}
 						penWidth=2; 
 						subjectInDot = getVeryShortLabelForSummaryDataSubject(t.s, sn); 
 						//object
@@ -543,6 +552,7 @@ public class SummaryExport {
 						propertyInDot = "rdf:type"; 
 						if (gatherStatistics){
 							objectInDot = objectInDot + " (" + summary.getRepresentedNodeNumber(t.o) + ")"; 
+							//System.out.println(object + " represents " + summary.getRepresentedNodeNumber(t.o));
 						}
 						if (sn.contains(t.s)){// subject is schema node
 							//System.out.println("Subject is schema node");
