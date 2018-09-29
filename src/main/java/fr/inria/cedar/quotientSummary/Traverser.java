@@ -1,6 +1,7 @@
 package fr.inria.cedar.quotientSummary;
 
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
+import fr.inria.cedar.quotientSummary.util.PostgresIdentifier;
 import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -58,7 +59,7 @@ public abstract class Traverser {
 	// data and schema triples
 	protected void dataPass() {
 		long start = System.currentTimeMillis();
-		String getUntypedTriplesString = ("select *  from " + summ.encodedTriplesTableName + " where p <> " + typeConstantCode);
+		String getUntypedTriplesString = ("select *  from " + PostgresIdentifier.escapedQuotedId(summ.encodedTriplesTableName) + " where p <> " + typeConstantCode);
 		try {
 			try (Statement getUntypedTriples = conn.createStatement()) {
 				getUntypedTriples.setFetchSize(10000);
@@ -94,7 +95,7 @@ public abstract class Traverser {
 	// first pass
 	protected void dataTriplesClassification() {
 		long start = System.currentTimeMillis();
-		String getUntypedTriplesString = ("select *  from " + summ.encodedTriplesTableName + " where p <> " + typeConstantCode);
+		String getUntypedTriplesString = ("select *  from " + PostgresIdentifier.escapedQuotedId(summ.encodedTriplesTableName) + " where p <> " + typeConstantCode);
 		try {
 			try (Statement getUntypedTriples = conn.createStatement()) {
 				getUntypedTriples.setFetchSize(10000);
@@ -127,7 +128,7 @@ public abstract class Traverser {
 	// second pass
 	protected void dataTriplesRepresentation() {
 		long start = System.currentTimeMillis();
-		String getUntypedTriplesString = ("select *  from " + summ.encodedTriplesTableName + " where p <> " + typeConstantCode);
+		String getUntypedTriplesString = ("select *  from " + PostgresIdentifier.escapedQuotedId(summ.encodedTriplesTableName) + " where p <> " + typeConstantCode);
 		try {
 			try (Statement getUntypedTriples = conn.createStatement()) {
 				getUntypedTriples.setFetchSize(10000);

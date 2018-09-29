@@ -5,6 +5,10 @@
  */
 package fr.inria.cedar.quotientSummary.export;
 
+import fr.inria.cedar.quotientSummary.Summary;
+import fr.inria.cedar.quotientSummary.datastructures.Triple;
+import fr.inria.cedar.quotientSummary.util.PostgresIdentifier;
+import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -17,13 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Properties;
-
 import org.apache.log4j.Logger;
-
-import fr.inria.cedar.quotientSummary.Summary;
-import fr.inria.cedar.quotientSummary.datastructures.DecodedTriple;
-import fr.inria.cedar.quotientSummary.datastructures.Triple;
-import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 
 public class SummaryExport {
 	Properties properties; 
@@ -59,11 +57,11 @@ public class SummaryExport {
 			LOGGER.info("Could not determine if I should output summarization statistics. Will not do it.");
 		}
 		if (gatherStatistics){
-			if (summary.getSummaryEdgeStatistics().size() == 0){
+			if (summary.getSummaryEdgeStatistics().isEmpty()){
 				summary.gatherStatistics();
 			}
 			String representationTableName = summary.getRepresentationTableName(); 
-			String getSplitLeafRepCountQuery = "select count(distinct et.o) from " + encodedTriplesTableName + " et, " + 
+			String getSplitLeafRepCountQuery = "select count(distinct et.o) from " + PostgresIdentifier.escapedQuotedId(encodedTriplesTableName) + " et, " +
 					representationTableName + " reps, " + representationTableName + 
 					" repo where reps.summarynode=? and reps.graphnode=et.s and " + 
 					" et.p=? and repo.summarynode=? and repo.graphnode=et.o"; 

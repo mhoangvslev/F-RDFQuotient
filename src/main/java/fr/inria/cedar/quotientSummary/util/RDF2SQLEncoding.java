@@ -43,8 +43,8 @@ public class RDF2SQLEncoding {
 		LOGGER.setLevel(Level.INFO);
 		conn = givenConn;
 		try {
-			stmtDecode = conn.prepareStatement("select value from " + dictionaryTableName + " where key=?");
-			stmtEncode = conn.prepareStatement("select key from " + dictionaryTableName + " where value=?");
+			stmtDecode = conn.prepareStatement("select value from " + PostgresIdentifier.escapedQuotedId(dictionaryTableName) + " where key=?");
+			stmtEncode = conn.prepareStatement("select key from " + PostgresIdentifier.escapedQuotedId(dictionaryTableName) + " where value=?");
 		}
 		catch (SQLException e) {
 			throw new IllegalStateException("Could not prepare encode/decode statements " + e.toString());

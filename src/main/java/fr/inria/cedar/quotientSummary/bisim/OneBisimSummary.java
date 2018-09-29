@@ -2,8 +2,6 @@ package fr.inria.cedar.quotientSummary.bisim;
 
 import fr.inria.cedar.quotientSummary.Summary;
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
-import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
-
 import java.util.HashMap;
 import java.util.TreeSet;
 import org.apache.log4j.Level;
