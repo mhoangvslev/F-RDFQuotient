@@ -709,11 +709,11 @@ public class Summary {
 		// saving the table names in Postgres: 
 		try {
 			stmt.executeUpdate("create table if not exists saved_summary_table_names(role varchar, name varchar);");
-			stmt.executeUpdate("insert into saved_summary_table_names values ('dictionary', " + PostgresIdentifier.escapedQuotedId(dictionaryTableName) + ");" );
-			stmt.executeUpdate("insert into saved_summary_table_names values ('edges', " + PostgresIdentifier.escapedQuotedId(newSummaryTableNameEdges) + ");" );
-			stmt.executeUpdate("insert into saved_summary_table_names values ('representation', " + PostgresIdentifier.escapedQuotedId(newSummaryTableNameRep) + ");");
-			stmt.executeUpdate("insert into saved_summary_table_names values ('encoded_triples', " + PostgresIdentifier.escapedQuotedId(encodedTriplesTableName) + ");");
-			stmt.executeUpdate("insert into saved_summary_table_names values ('summary_node_stats', " + PostgresIdentifier.escapedQuotedId(newSummaryTableNameNodeStats) + ");"); 
+			stmt.executeUpdate("insert into saved_summary_table_names values ('dictionary', '" + dictionaryTableName + "');" );
+			stmt.executeUpdate("insert into saved_summary_table_names values ('edges', '" + newSummaryTableNameEdges + "');" );
+			stmt.executeUpdate("insert into saved_summary_table_names values ('representation', '" + newSummaryTableNameRep + "');");
+			stmt.executeUpdate("insert into saved_summary_table_names values ('encoded_triples', '" + encodedTriplesTableName + "');");
+			stmt.executeUpdate("insert into saved_summary_table_names values ('summary_node_stats', '" + newSummaryTableNameNodeStats + "');");
 			conn.commit();
 		}
 		catch (SQLException e) {
