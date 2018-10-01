@@ -381,16 +381,17 @@ public class Summary {
 		this.maxSummaryNode += n;
 	}
 
-	public void gatherStatistics() {
+	// needs to be refactored
+	/*public void gatherStatistics() {
 		gatherNodeStatistics();
 		gatherEdgeStatistics();
-	}
+	}*/
 
 	/**
 	 * write in summaryNodeStatistics the number of 
 	 * data nodes each summary node represents
 	 */
-	protected void gatherNodeStatistics() {
+	public void gatherNodeStatistics() {
 		for (Long l: rep.getKeys()){
 			Long sn = rep.get(l);
 			Long existingSnCount = summaryNodeStatistics.get(sn);
@@ -404,7 +405,7 @@ public class Summary {
 		}
 	}
 
-	protected void gatherEdgeStatistics() {
+	public void gatherEdgeStatistics() {
 		for (Triple t: this.edgesWithProv.getSummaryEdges()){
 			long represents = edgesWithProv.getCounter(t.s,t.p, t.o); 
 			//System.out.println("Summary edge " + t.toString() + " represented: " + 
