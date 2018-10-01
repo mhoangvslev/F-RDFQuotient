@@ -74,7 +74,7 @@ public class SummaryExport {
 			}
 			String representationTableName = summary.getRepresentationTableName(); 
 			String getSplitLeafRepCountQuery = "select count(distinct et.o) from " + PostgresIdentifier.escapedQuotedId(encodedTriplesTableName) + " et, " +
-					representationTableName + " reps, " + representationTableName + 
+					PostgresIdentifier.escapedQuotedId(representationTableName) + " reps, " + PostgresIdentifier.escapedQuotedId(representationTableName) + 
 					" repo where reps.summarynode=? and reps.graphnode=et.s and " + 
 					" et.p=? and repo.summarynode=? and repo.graphnode=et.o"; 
 			try{
