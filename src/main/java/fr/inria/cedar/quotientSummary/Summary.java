@@ -775,6 +775,19 @@ public class Summary {
 		String summaryDotFileName = exporter.getDotFileName(suffix);
 		exporter.writeSummaryToDotFileSplitLeaves(conn, summaryDotFileName);
 	}
+	
+	/**
+	 * Writes the summary in RDF (in .nt format), then also in DOT by splitting each leaf data node
+	 * into one node per incoming edge. 
+	 * @param conn SQL connection
+	 * @param suffix
+	 */
+	public void writeDecodedSummaryToFileSplitFoldLeavesAndDraw(Connection conn, String suffix) {
+		System.out.println("Drawing summary with split leaves");
+		ensureExporter(); 
+		String summaryDotFileName = exporter.getDotFileName(suffix);
+		exporter.writeSummaryToDotFileSplitAndFoldLeaves(conn, summaryDotFileName);
+	}
 
 	public void display() {
 		System.out.println("SUMMARY " + this.getClass().getName());

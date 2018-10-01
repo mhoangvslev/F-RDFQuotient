@@ -685,37 +685,48 @@ public class SummaryExport {
 		
 		try {
 			try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(dotFileName)))) {
-				bw.write("digraph g{\nratio=0.66;\n node[shape=box, color=black, style=filled];");
+				bw.write("digraph g{\nratio=0.66;\n node[shape=box, color=black, style=filled];\n");
 
 				ArrayList<Triple> summEdges = summary.getSummaryEdges();
 				
 				//first pass: build the entities, label all the nodes, print schema triples
-				
+				HashMap<Long, Integer> leafCounter = new HashMap<Long, Integer>(); 
 				for (Triple t : summEdges) {
 					String subject, property, object, subjectInDot, propertyInDot, objectInDot;
 					int penWidth = 1; 
 					// in all cases, edge labels are preserved:
 					property = RDF2SQLEncoding.dictionaryDecode(t.p);
 					propertyInDot = getVeryShortForDot(property.replaceAll("\"", ""));
-					//System.out.println("Property: " + property);
+					//LOGGER.info("Property: " + property);
 					if (RDF2SQLEncoding.isDataProperty(t.p)) { // data
-						//System.out.println("Data triple, property: " + propertyInDot);
+						//LOGGER.info("Data triple, property: " + propertyInDot);
 						subjectInDot = getVeryShortLabelForSummaryDataSubject(t.s, sn); 
-						if (!sn.contains(t.s)) {// The subject is a schema node -- this can happen
+						if (sn.contains(t.s)) {// The subject is a schema node -- this can happen
 							if (dax.unknownSchemaNode(t.s)){
-								bw.write("\"" + subjectInDot + "\" [penwidth=2, fontsize=40, fillcolor=white, color=black, fontcolor=black];\n");
+								//bw.write("\"" + subjectInDot + "\" [penwidth=2, fontsize=40, fillcolor=white, color=black, fontcolor=black];\n");
 							}
 						}
 						else { // the subject is a data node
 							if (!leaves.contains(t.s)) {// the subject is not a leaf, thus it is an entity
 								EntitySummaryNode esn = entities.get(t.s); 
 								if (esn == null) { // the entity did not exist yet --> create it
-									esn = new EntitySummaryNode(t.s, summary.getRepresentedNodeNumber(t.s), subjectInDot);
+									esn = new EntitySummaryNode(t.s, summary.getRepresentedNodeNumber(t.s), subjectInDot, this);
 									entities.put(t.s, esn); 
 								}
 								// if the object is a leaf, it needs to be wrapped in this entity: 
 								if (leaves.contains(t.o)) {
-									esn.addLeafChild(t.p, t.o, getRepresentedByThisLeaf(t), summary.getRepresentedNodeNumber(t.o));
+									Integer counterForThisSplitLeaf = leafCounter.get(t.o); // try to find what number to attach to it
+									if (counterForThisSplitLeaf == null) {
+										counterForThisSplitLeaf = 1;
+										leafCounter.put(t.o, 1);
+									}
+									else {
+										counterForThisSplitLeaf += 1; 
+										leafCounter.put(t.o, counterForThisSplitLeaf); 
+									}
+									objectInDot = getVeryShortLabelforSummaryDataObjectWithCountSuffix(t, sn, counterForThisSplitLeaf); 
+									
+									esn.addLeafChild(t.p, t.o, summary.getRepresentedTripleNumber(t), getRepresentedByThisLeaf(t));
 								}								
 								// we cannot write to DOT yet because the record of t.s is not complete
 							}
@@ -737,15 +748,15 @@ public class SummaryExport {
 							objectInDot = objectInDot + " (" + summary.getRepresentedNodeNumber(t.o) + ")"; 
 						}
 						if (dax.unknownSchemaNode(t.s)){
-							bw.write("\"" + subjectInDot + "\" [penwidth=2,  fontsize=40, fontcolor=black, fillcolor=white, color=black];\n");
+							//bw.write("\"" + subjectInDot + "\" [penwidth=2,  fontsize=40, fontcolor=black, fillcolor=white, color=black];\n");
 						}
 						if (dax.unknownSchemaNode(t.o)){
-							bw.write("\"" + objectInDot + "\" [penwidth=2,  fontsize=40, fontcolor=black, fillcolor=white, color=black];\n");
+							//bw.write("\"" + objectInDot + "\" [penwidth=2,  fontsize=40, fontcolor=black, fillcolor=white, color=black];\n");
 						}
-						bw.write("\"" + subjectInDot + "\"" + " -> \"" + objectInDot + "\" [weight=1, fontsize=40, penwidth=" + penWidth +
-								" label=\"" + propertyInDot); 
+						//bw.write("\"" + subjectInDot + "\"" + " -> \"" + objectInDot + "\" [weight=1, fontsize=40, penwidth=" + penWidth +
+						//		" label=\"" + propertyInDot); 
 						if (gatherStatistics){
-							bw.write(" (" + summary.getRepresentedTripleNumber(t) + ")"); 
+							//bw.write(" (" + summary.getRepresentedTripleNumber(t) + ")"); 
 							//System.out.println("Writing " + subjectInDot + " -> " + objectInDot + "[weight=1, penwidth=" + penWidth +
 							//		" label=" + propertyInDot + " (" + summary.getRepresentedTripleNumber(t) + ")"); 
 							
@@ -759,7 +770,7 @@ public class SummaryExport {
 						subjectInDot = getVeryShortLabelForSummaryDataSubject(t.s, sn); 
 						EntitySummaryNode esn = entities.get(t.s); 
 						if (esn == null) { // the entity did not exist yet --> create it
-							esn = new EntitySummaryNode(t.s, summary.getRepresentedNodeNumber(t.s), subjectInDot);
+							esn = new EntitySummaryNode(t.s, summary.getRepresentedNodeNumber(t.s), subjectInDot, this);
 							entities.put(t.s, esn); 
 						}
 						esn.addType(t.o);
@@ -775,23 +786,26 @@ public class SummaryExport {
 							if (dax.unknownSummaryNode(t.s)){ // print the subject in all cases
 								esn.addNodeDescriptionTo(bw, dax);
 							}
-							if (t.p != RDF2SQLEncoding.getTypeCode()) { // print data edge (not type edge)
+							if (t.p != RDF2SQLEncoding.getTypeCode() && (!leaves.contains(t.o))) { // print data edge (not type edge)
+								// if the object is not a leaf
 								String subjectInDot = getVeryShortLabelForSummaryDataSubject(t.s, sn); 
-								String objectInDot = getVeryShortLabelForSummaryDataSubject(t.s, sn); 
+								String objectInDot = getVeryShortLabelForSummaryDataSubject(t.o, sn); 
 								String property = RDF2SQLEncoding.dictionaryDecode(t.p);
 								String propertyInDot = getVeryShortForDot(property.replaceAll("\"", ""));
-								bw.write("\"" + subjectInDot + "\"" + " -> \"" + objectInDot + "\" [weight=1, fontsize=40, label=\"" + propertyInDot); 
+								bw.write("\"" + subjectInDot + "\"" + " -> \"" + objectInDot + "\" [weight=1, fontsize=20, label=\"" + propertyInDot); 
 								if (gatherStatistics){
 									bw.write(" (" + summary.getRepresentedTripleNumber(t) + ")"); 
 									//System.out.println("Writing " + subjectInDot + " -> " + objectInDot + "[weight=1, penwidth=" + penWidth +
 									//		" label=" + propertyInDot + " (" + summary.getRepresentedTripleNumber(t) + ")"); 
 									
 								}
+								bw.write("\"]\n"); 
 							}
 						}
 					}
 				}
-				
+				bw.write("}\n");
+				bw.close();
 			}
 		}
 		catch (IOException e) {

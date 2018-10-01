@@ -119,6 +119,9 @@ public class Builder {
 		case "exportSummaryComputedWithoutSaturationSplitLeaves":
 			exportSummarySplitLeaves("noSaturation", arg1.equals("draw"));
 			return;
+		case "exportSummaryComputedWithoutSaturationSplitFoldLeaves":
+			exportSummarySplitFoldLeaves("noSaturation", arg1.equals("draw"));
+			return;
 		case "exportSummaryComputedClassicalWay":
 			exportSummary("classical", arg1.equals("draw"));
 			return;
@@ -434,6 +437,17 @@ public class Builder {
 		
 		if (draw)
 			summaryInUse.writeDecodedSummaryToFileSplitLeavesAndDraw(connectionInUse, summarizationTechnique);
+			
+		LOGGER.info("Summary exported to disk");
+	}	
+	
+	public static void exportSummarySplitFoldLeaves(String summarizationTechnique, boolean draw) throws FileNotFoundException {
+		LOGGER.info("Exporting summary to disk");
+
+		summaryInUse.writeDecodedSummaryToNTFile(connectionInUse, summarizationTechnique);
+		
+		if (draw)
+			summaryInUse.writeDecodedSummaryToFileSplitFoldLeavesAndDraw(connectionInUse, summarizationTechnique);
 			
 		LOGGER.info("Summary exported to disk");
 	}	
