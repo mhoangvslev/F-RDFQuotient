@@ -63,8 +63,11 @@ public class SummaryExport {
 			LOGGER.info("Could not determine if I should output summarization statistics. Will not do it.");
 		}
 		if (gatherStatistics){
+			if (summary.getSummaryNodeStatistics().isEmpty()){
+				summary.gatherNodeStatistics();
+			}
 			if (summary.getSummaryEdgeStatistics().isEmpty()){
-				summary.gatherStatistics();
+				summary.gatherEdgeStatistics();
 			}
 			String representationTableName = summary.getRepresentationTableName(); 
 			String getSplitLeafRepCountQuery = "select count(distinct et.o) from " + PostgresIdentifier.escapedQuotedId(encodedTriplesTableName) + " et, " +
