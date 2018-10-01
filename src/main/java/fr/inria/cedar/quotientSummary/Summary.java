@@ -1,8 +1,14 @@
 package fr.inria.cedar.quotientSummary;
 
-import java.io.BufferedWriter;
+import fr.inria.cedar.quotientSummary.datastructures.EdgesWithProvenanceCounts;
+import fr.inria.cedar.quotientSummary.datastructures.Long2Long;
+import fr.inria.cedar.quotientSummary.datastructures.Long2LongSet;
+import fr.inria.cedar.quotientSummary.datastructures.Triple;
+import fr.inria.cedar.quotientSummary.export.DOTAuxiliary;
+import fr.inria.cedar.quotientSummary.export.SummaryExport;
+import fr.inria.cedar.quotientSummary.util.PostgresIdentifier;
+import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -18,19 +24,8 @@ import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
-
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-
-import fr.inria.cedar.quotientSummary.datastructures.DecodedTriple;
-import fr.inria.cedar.quotientSummary.datastructures.EdgesWithProvenanceCounts;
-import fr.inria.cedar.quotientSummary.datastructures.Long2Long;
-import fr.inria.cedar.quotientSummary.datastructures.Long2LongSet;
-import fr.inria.cedar.quotientSummary.datastructures.Triple;
-import fr.inria.cedar.quotientSummary.export.DOTAuxiliary;
-import fr.inria.cedar.quotientSummary.export.RDFDotDrawing;
-import fr.inria.cedar.quotientSummary.export.SummaryExport;
-import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 
 public class Summary {
 	private static final Logger LOGGER = Logger.getLogger(Summary.class.getName());
@@ -247,7 +242,7 @@ public class Summary {
 	}
 
 	protected long maxS(Connection conn, long property){
-		String jumpRepString = ("select max(s) from " + encodedTriplesTableName + " t1 where p = " + property);
+		String jumpRepString = ("select max(s) from " + PostgresIdentifier.escapedQuotedId(encodedTriplesTableName) + " t1 where p = " + property);
 		try (ResultSet rs = conn.createStatement().executeQuery(jumpRepString)) {
 			while (rs.next()) {
 				return rs.getLong(1); 
@@ -260,7 +255,7 @@ public class Summary {
 	}
 
 	protected long maxP(Connection conn, long property){
-		String jumpRepString = ("select max(p) from " + encodedTriplesTableName + " t1 where p = " + property);
+		String jumpRepString = ("select max(p) from " + PostgresIdentifier.escapedQuotedId(encodedTriplesTableName) + " t1 where p = " + property);
 		try (ResultSet rs = conn.createStatement().executeQuery(jumpRepString)) {
 			while (rs.next()) {
 				return rs.getLong(1); 
@@ -273,7 +268,7 @@ public class Summary {
 	}
 
 	protected long maxO(Connection conn, long property){
-		String jumpRepString = ("select max(o) from " + encodedTriplesTableName + " t1 where p = " + property);
+		String jumpRepString = ("select max(o) from " + PostgresIdentifier.escapedQuotedId(encodedTriplesTableName) + " t1 where p = " + property);
 		try (ResultSet rs = conn.createStatement().executeQuery(jumpRepString)) {
 			while (rs.next()) {
 				return rs.getLong(1); 
@@ -294,7 +289,7 @@ public class Summary {
 		long typeCode = RDF2SQLEncoding.getTypeCode();
 		long classCode = RDF2SQLEncoding.getClassCode(); 
 
-		String getTriplesString = "select distinct s from " + encodedTriplesTableName
+		String getTriplesString = "select distinct s from " + PostgresIdentifier.escapedQuotedId(encodedTriplesTableName)
 				+ " where p = " + subClassCode
 				+ " or p = " + subPropertyCode
 				+ " or p = " + domainCode
@@ -316,7 +311,7 @@ public class Summary {
 			throw new IllegalStateException("Postgres error encountered while collecting schema nodes " + e.toString());
 		}
 
-		getTriplesString = "select distinct o from " + encodedTriplesTableName
+		getTriplesString = "select distinct o from " + PostgresIdentifier.escapedQuotedId(encodedTriplesTableName)
 				+ " where p = " + subClassCode
 				+ " or p = " + subPropertyCode
 				+ " or p = " + domainCode
@@ -339,7 +334,7 @@ public class Summary {
 			throw new IllegalStateException("Postgres error encountered while collecting schema nodes " + e.toString());
 		}
 		
-		getTriplesString = "select distinct s from " + encodedTriplesTableName
+		getTriplesString = "select distinct s from " + PostgresIdentifier.escapedQuotedId(encodedTriplesTableName)
 				+ " where p = " + typeCode
 				+ " and o = " + classCode 
 				+ ";";
@@ -599,17 +594,17 @@ public class Summary {
 				long start = System.currentTimeMillis();
 				// create the table (it may have existed)
 				if (!existsTable(conn, newSummaryTableNameRep)) {
-					stmt.execute("create table " + newSummaryTableNameRep + "(graphNode int not null, summaryNode int not null);");
+					stmt.execute("create table " + PostgresIdentifier.escapedQuotedId(newSummaryTableNameRep) + "(graphNode int not null, summaryNode int not null);");
 					//LOGGER.debug("Table " + newSummaryTableNameRep + " created");
 				}
 				else {
 					//LOGGER.debug("Did not create " + newSummaryTableNameRep + " table as it was already there");
 				}
 				// empty it (even if the creation failed, e.g. because the table was already there)
-				stmt.executeUpdate("delete from " + newSummaryTableNameRep + ";");
+				stmt.executeUpdate("delete from " + PostgresIdentifier.escapedQuotedId(newSummaryTableNameRep) + ";");
 
 				// now insert all the rep entries:
-				String insertIntoRep = "insert into " + newSummaryTableNameRep + " values(?, ?);";
+				String insertIntoRep = "insert into " + PostgresIdentifier.escapedQuotedId(newSummaryTableNameRep) + " values(?, ?);";
 				try (PreparedStatement insertInRep = conn.prepareStatement(insertIntoRep)) {
 					Set<Long> origNodes = rep.getKeys();
 					for (long origNode : origNodes) {
@@ -644,18 +639,18 @@ public class Summary {
 				long start = System.currentTimeMillis();
 				// create the table (it may have existed)
 				if (!existsTable(conn, newSummaryTableNameNodeStats)) {
-					stmt.execute("create table " + newSummaryTableNameNodeStats + "(snode int not null, count int not null);");
+					stmt.execute("create table " + PostgresIdentifier.escapedQuotedId(newSummaryTableNameNodeStats) + "(snode int not null, count int not null);");
 					//LOGGER.debug("Table " + newSummaryTableNodeStats + " created");
 				}
 				else {
 					//LOGGER.debug("Did not create " + newSummaryTableNodeStats + " table as it was already there");
 				}
 				// empty it (even if the creation failed, e.g. because the table was already there)
-				stmt.executeUpdate("delete from " + newSummaryTableNameNodeStats + ";");
+				stmt.executeUpdate("delete from " + PostgresIdentifier.escapedQuotedId(newSummaryTableNameNodeStats) + ";");
 				conn.commit();
 
 				// now insert all the summary node stats:
-				String insertIntoNodeStats = "insert into " + newSummaryTableNameNodeStats + " values(?, ?);";
+				String insertIntoNodeStats = "insert into " + PostgresIdentifier.escapedQuotedId(newSummaryTableNameNodeStats) + " values(?, ?);";
 				try (PreparedStatement insertInNodeStats = conn.prepareStatement(insertIntoNodeStats)) {
 					for (Long sumNode: summaryNodeStatistics.keySet()){
 						Long nodeCount = summaryNodeStatistics.get(sumNode); 
@@ -680,18 +675,18 @@ public class Summary {
 			long start = System.currentTimeMillis();
 			// create the table (it may have existed)
 			if (!existsTable(conn, newSummaryTableNameEdges)) {
-				stmt.execute("create table " + newSummaryTableNameEdges + "(s int not null, p int not null, o int not null, count int not null);");
+				stmt.execute("create table " + PostgresIdentifier.escapedQuotedId(newSummaryTableNameEdges) + "(s int not null, p int not null, o int not null, count int not null);");
 				//LOGGER.debug("Table " + newSummaryTableNameEdges + " created");
 			}
 			else {
 				//LOGGER.debug("Did not create " + newSummaryTableNameEdges + " table as it was already there");
 			}
 			// empty it (even if the creation failed, e.g. because the table was already there)
-			stmt.executeUpdate("delete from " + newSummaryTableNameEdges + ";");
+			stmt.executeUpdate("delete from " + PostgresIdentifier.escapedQuotedId(newSummaryTableNameEdges) + ";");
 			conn.commit();
 
 			// now insert all the summary edges:
-			String insertIntoSummary = "insert into " + newSummaryTableNameEdges + " values(?, ?, ?, ?);";
+			String insertIntoSummary = "insert into " + PostgresIdentifier.escapedQuotedId(newSummaryTableNameEdges) + " values(?, ?, ?, ?);";
 			try (PreparedStatement insertInSummary = conn.prepareStatement(insertIntoSummary)) {
 				ArrayList<Triple> edges = edgesWithProv.getSummaryEdges();
 				for (Triple t : edges) {
@@ -717,11 +712,11 @@ public class Summary {
 		// saving the table names in Postgres: 
 		try {
 			stmt.executeUpdate("create table if not exists saved_summary_table_names(role varchar, name varchar);");
-			stmt.executeUpdate("insert into saved_summary_table_names values ('dictionary', '" + dictionaryTableName + "');" );
-			stmt.executeUpdate("insert into saved_summary_table_names values ('edges', '" + newSummaryTableNameEdges + "');" );
-			stmt.executeUpdate("insert into saved_summary_table_names values ('representation', '" + newSummaryTableNameRep + "');");
-			stmt.executeUpdate("insert into saved_summary_table_names values ('encoded_triples', '" + encodedTriplesTableName + "');");
-			stmt.executeUpdate("insert into saved_summary_table_names values ('summary_node_stats', '" + newSummaryTableNameNodeStats + "');"); 
+			stmt.executeUpdate("insert into saved_summary_table_names values ('dictionary', " + PostgresIdentifier.escapedQuotedId(dictionaryTableName) + ");" );
+			stmt.executeUpdate("insert into saved_summary_table_names values ('edges', " + PostgresIdentifier.escapedQuotedId(newSummaryTableNameEdges) + ");" );
+			stmt.executeUpdate("insert into saved_summary_table_names values ('representation', " + PostgresIdentifier.escapedQuotedId(newSummaryTableNameRep) + ");");
+			stmt.executeUpdate("insert into saved_summary_table_names values ('encoded_triples', " + PostgresIdentifier.escapedQuotedId(encodedTriplesTableName) + ");");
+			stmt.executeUpdate("insert into saved_summary_table_names values ('summary_node_stats', " + PostgresIdentifier.escapedQuotedId(newSummaryTableNameNodeStats) + ");"); 
 			conn.commit();
 		}
 		catch (SQLException e) {
@@ -731,7 +726,7 @@ public class Summary {
 
 	static protected boolean existsTable(Connection conn, String tableName) {
 		try {
-			ResultSet res = conn.getMetaData().getTables(null, null, tableName, new String[] { "TABLE" });
+			ResultSet res = conn.getMetaData().getTables(null, null, PostgresIdentifier.escapedQuotedId(tableName), new String[] { "TABLE" });
 			return res.next();
 		}
 		catch (SQLException e) {
@@ -742,7 +737,7 @@ public class Summary {
 	static protected boolean hasIndex(Connection conn, String tableName) {
 		try {
 			DatabaseMetaData meta = conn.getMetaData();
-			ResultSet res = meta.getIndexInfo(null, null, tableName, true, true);
+			ResultSet res = meta.getIndexInfo(null, null, PostgresIdentifier.escapedQuotedId(tableName), true, true);
 			return res.next();
 		}
 		catch (SQLException e) {
@@ -788,11 +783,11 @@ public class Summary {
 	}
 
 	protected final String getSummaryTriplesSQLQuery() {
-		return "select * from " + this.edgeTableName + ";"; 
+		return "select * from " + PostgresIdentifier.escapedQuotedId(edgeTableName) + ";";
 	}
 
 	public final String getEncodedRepSQLQuery() {
-		return "select summarynode from " + this.repTableName + " where graphnode=?;"; 
+		return "select summarynode from " + PostgresIdentifier.escapedQuotedId(repTableName) + " where graphnode=?;";
 	}
 
 	public static Summary readSummaryFromPostgres(Connection conn) {

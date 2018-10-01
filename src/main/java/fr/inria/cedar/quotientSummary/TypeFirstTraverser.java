@@ -1,6 +1,7 @@
 package fr.inria.cedar.quotientSummary;
 
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
+import fr.inria.cedar.quotientSummary.util.PostgresIdentifier;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -19,7 +20,7 @@ public class TypeFirstTraverser extends Traverser {
 	@Override
 	protected void typePass() {
 		long start = System.currentTimeMillis();
-		String getTypedTriplesString = ("select *  from " + summ.encodedTriplesTableName + " where p = " + typeConstantCode);
+		String getTypedTriplesString = ("select *  from " + PostgresIdentifier.escapedQuotedId(summ.encodedTriplesTableName) + " where p = " + typeConstantCode);
 		try {
 			try (Statement getTypedTriples = conn.createStatement()) {
 				getTypedTriples.setFetchSize(1000);

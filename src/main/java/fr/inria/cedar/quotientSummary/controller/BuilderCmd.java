@@ -9,6 +9,7 @@ import fr.inria.cedar.quotientSummary.strong.StrongSummary;
 import fr.inria.cedar.quotientSummary.strong.TwoPassStrongSummary;
 import fr.inria.cedar.quotientSummary.strong.TwoPassTypedStrongSummary;
 import fr.inria.cedar.quotientSummary.strong.TypedStrongSummary;
+import fr.inria.cedar.quotientSummary.util.PostgresIdentifier;
 import fr.inria.cedar.quotientSummary.weak.TwoPassTypedWeakSummary;
 import fr.inria.cedar.quotientSummary.weak.TwoPassWeakSummary;
 import fr.inria.cedar.quotientSummary.weak.TwoPassWeakSummaryWithUnionFind;
@@ -156,7 +157,7 @@ public class BuilderCmd {
 		try {
 			properties.load(new FileReader(CONFIGURATION_FILE));
 
-			String databaseName = trimNT(datasetName, true);
+			String databaseName = PostgresIdentifier.escapeQuotes(trimNT(datasetName, true));
 			properties.put("database.name", databaseName);
 
 			properties.put("database.storage_layout", layout);
