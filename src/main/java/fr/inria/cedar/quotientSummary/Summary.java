@@ -405,6 +405,9 @@ public class Summary {
 			else{
 				existingSnCount = (existingSnCount + 1L);
 			}
+			if (this.sn.contains(sn)) {
+				System.out.println("Schema node " + sn + " represents " + existingSnCount + " nodes");
+			}
 			summaryNodeStatistics.put(sn, existingSnCount); 
 		}
 	}

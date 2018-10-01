@@ -41,6 +41,10 @@ public class SummaryExport {
 	
 	private static PreparedStatement stmtSplitLeavesCount;
 	
+	private HashMap<Long, String> newNodeLabels; // we will plot the names of summary nodes shorter
+	// and more intelligible 
+	private long lastGivenLabel; 
+	
 	public SummaryExport(Summary s, Properties properties, DOTAuxiliary dax, String dictionaryTableName,
 			String triplesFileName, String encodedTriplesTableName){
 		this.summary = s;
@@ -50,6 +54,8 @@ public class SummaryExport {
 		this.triplesFileName = triplesFileName;
 		this.summaryTablePrefix = s.getSummaryTablePrefix();
 		this.encodedTriplesTableName = encodedTriplesTableName; 
+		this.newNodeLabels = new HashMap<Long, String>(); 
+		lastGivenLabel = 0; 
 		// by default statistics are not used
 		this.gatherStatistics = false; 
 		try{
@@ -393,9 +399,17 @@ public class SummaryExport {
 			object = RDF2SQLEncoding.dictionaryDecode(t.o);
 		}
 		else {
-			object = getSummaryURIPrefix() + t.o;
+			String existing = this.newNodeLabels.get(t.o);
+			if (existing != null) {
+				object=existing; 
+			}
+			else {
+				String label = makeNewLabel(); 
+				this.newNodeLabels.put(t.o,  label); 
+				object = label; 
+			}
 		}
-		objectInDot = object +  "-" + suffix; 
+		objectInDot = object +  "." + suffix; 
 		if (gatherStatistics){
 			// in this case, the leaf representation count must be computed through an SQL query, 
 			// because the nodes represented by the mother leaf are now split across many representatives
@@ -409,13 +423,30 @@ public class SummaryExport {
 			subject = RDF2SQLEncoding.dictionaryDecode(s);
 		}
 		else {
-			subject = getSummaryURIPrefix() + s;
+			String existing = this.newNodeLabels.get(s);
+			if (existing != null) {
+				subject=existing; 
+			}
+			else {
+				String label = makeNewLabel(); 
+				this.newNodeLabels.put(s,  label); 
+				subject = label; 
+			}
+			//subject = getSummaryURIPrefix() + s;
 		}
 		subjectInDot = subject.replaceAll("\"", "");
 		if (gatherStatistics){
 			subjectInDot = subjectInDot + " (" + summary.getRepresentedNodeNumber(s) + ")"; 
 		}
 		return subjectInDot; 
+	}
+	/**
+	 * Creates 
+	 * @return
+	 */
+	private String makeNewLabel() {
+		lastGivenLabel++;
+		return ("N" + lastGivenLabel); 
 	}
 	
 	/**
@@ -475,7 +506,7 @@ public class SummaryExport {
 		
 		try {
 			try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(dotFileName)))) {
-				bw.write("digraph g{\nratio=0.66;\n");
+				bw.write("digraph g{\nratio=0.66;\n node[shape=box, color=black, style=filled];");
 
 				ArrayList<Triple> summEdges = summary.getSummaryEdges();
 				for (Triple t : summEdges) {
@@ -491,7 +522,7 @@ public class SummaryExport {
 						subjectInDot = getVeryShortLabelForSummaryDataSubject(t.s, sn); 
 						if (sn.contains(t.s)) {// The subject is a schema node -- this can happen
 							if (dax.unknownSchemaNode(t.s)){
-								bw.write("\"" + subjectInDot + "\" [penwidth=2, fontcolor=white, style = filled, color=black];\n");
+								bw.write("\"" + subjectInDot + "\" [penwidth=2, fontsize=40, fillcolor=white, color=black, fontcolor=black];\n");
 							}
 						}
 						else { // the subject is a data node
@@ -532,10 +563,10 @@ public class SummaryExport {
 							objectInDot = objectInDot + " (" + summary.getRepresentedNodeNumber(t.o) + ")"; 
 						}
 						if (dax.unknownSchemaNode(t.s)){
-							bw.write("\"" + subjectInDot + "\" [penwidth=2, fontcolor=white, style = filled, color=black];\n");
+							bw.write("\"" + subjectInDot + "\" [penwidth=2,  fontsize=40, fontcolor=black, fillcolor=white, color=black];\n");
 						}
 						if (dax.unknownSchemaNode(t.o)){
-							bw.write("\"" + objectInDot + "\" [penwidth=2, fontcolor=white, style = filled, color=black];\n");
+							bw.write("\"" + objectInDot + "\" [penwidth=2,  fontsize=40, fontcolor=black, fillcolor=white, color=black];\n");
 						}
 					} else { // type triples 
 						if (!this.drawOfTypeClassEdges) { // if this was false
@@ -557,7 +588,7 @@ public class SummaryExport {
 						if (sn.contains(t.s)){// subject is schema node
 							//System.out.println("Subject is schema node");
 							if (dax.unknownSchemaNode(t.s)){
-								bw.write("\"" + subjectInDot + "\" [penwidth=2, fontcolor=white, style = filled, color=black];\n");
+								bw.write("\"" + subjectInDot + "\" [penwidth=2,  fontsize=40, fontcolor=black, color=black, fillcolor=white];\n");
 							}
 						}
 						else{
@@ -569,7 +600,7 @@ public class SummaryExport {
 						if (sn.contains(t.o)){ // object is schema node
 							//System.out.println("Object is schema node");
 							if (dax.unknownSchemaNode(t.o)){
-								bw.write("\"" + objectInDot + "\" [penwidth=2, fontcolor=white, style = filled, color=black];\n");
+								bw.write("\"" + objectInDot + "\" [penwidth=2,  fontsize=40, fontcolor=black, color=black, fillcolor=white];\n");
 							}
 						}
 						else{ // object is not schema node yet this is a type triple?...
@@ -578,7 +609,7 @@ public class SummaryExport {
 						}
 					}
 					// write the triple in all cases:
-					bw.write("\"" + subjectInDot + "\"" + " -> \"" + objectInDot + "\" [weight=1, penwidth=" + penWidth +
+					bw.write("\"" + subjectInDot + "\"" + " -> \"" + objectInDot + "\" [weight=1, fontsize=40, penwidth=" + penWidth +
 							" label=\"" + propertyInDot); 
 					if (gatherStatistics){
 						bw.write(" (" + summary.getRepresentedTripleNumber(t) + ")"); 
@@ -612,7 +643,7 @@ public class SummaryExport {
 		try{
 			String nColor = dax.getSummaryNodeColor(node);
 			bw.write("\"" + label);
-			bw.write("\" [style = filled, color=" + 
+			bw.write("\" [fontsize=40, color=black, fillcolor=" + // Fontsize=40, shape=box added on Sept 26
 					nColor +
 					(dax.isDarkColor(nColor)?", fontcolor=white ":"")
 					+ "];\n");
