@@ -98,7 +98,7 @@ public class Builder {
 			connectionInUse = loadGraphInPostgres(false, false, filesToLoad);
 			summaryInUse = summarizeGraphFromPostgres(arg1, false, filesToLoad);
 			saveSummary(true, "shortcut");
-			exportSummary("noSaturation", false);
+			exportSummary("noSaturation", "none");
 			closeConnection();
 			String[] files = {filesToLoad[0].substring(0, filesToLoad[0].length() - 3) + "_" + prefix(arg1) + "noSaturation.nt"};
 			connectionInUse = loadGraphInPostgres(true, true, files);
@@ -114,19 +114,13 @@ public class Builder {
 			saveSummary(false, "shortcut");
 			return;
 		case "exportSummaryComputedWithoutSaturation":
-			exportSummary("noSaturation", arg1.equals("draw"));
-			return;
-		case "exportSummaryComputedWithoutSaturationSplitLeaves":
-			exportSummarySplitLeaves("noSaturation", arg1.equals("draw"));
-			return;
-		case "exportSummaryComputedWithoutSaturationSplitFoldLeaves":
-			exportSummarySplitFoldLeaves("noSaturation", arg1.equals("draw"));
+			exportSummary("noSaturation", arg1); 
 			return;
 		case "exportSummaryComputedClassicalWay":
-			exportSummary("classical", arg1.equals("draw"));
+			exportSummary("classical", arg1); 
 			return;
 		case "exportSummaryComputedUsingShortcut":
-			exportSummary("shortcut", arg1.equals("draw"));
+			exportSummary("shortcut", arg1); 
 			return;
 		case "dropPartialResultsTables":
 			dropPartialResultsTables();
@@ -187,11 +181,16 @@ public class Builder {
 		System.out.println("args[0]=saveSummaryComputedClassicalWay: saves summary computed classical way to Postgres");
 		System.out.println("args[0]=saveSummaryComputedUsingShortcut: saves summary computed using shortcut to Postgres");
 		System.out.println("args[0]=exportSummaryComputedWithoutSaturation: saves summary computed using only saturation to the disk in nt, dot and png formats");
-		System.out.println("args[0]=exportSummaryComputedClassicalWay: saves summaryy computed classical way to the disk in nt, dot and png formats");
+		System.out.println("args[0]=exportSummaryComputedClassicalWay: saves summary computed classical way to the disk in nt, dot and png formats");
 		System.out.println("args[0]=exportSummaryComputedUsingShortcut: saves summary summary computed using only saturation to the disk in nt, dot and png formats");
 		System.out.println("args[0]=dropPartialResultsTables: drops partial results tables in Postgres");
 		System.out.println("args[0]=closeConnection: closes connection to Postgres");
 		System.out.println("args[0]=setCustomConfig: set the custom config filename");
+		System.out.println("When drawing summaries, args[1] interpreted as:");
+		System.out.println("plain -> the quotient summary is drawn as is;");
+		System.out.println("splitleaves -> the quotient summary is drawn so that the leaf nodes with several incoming edges are split/duplicated;");
+		System.out.println("foldleaves -> the quotient summary is drawn with leaf nodes folded into their parents.");
+		
 	}
 
 	/**
@@ -420,35 +419,17 @@ public class Builder {
 		summaryInUse.saveSummaryInPostgres(connectionInUse, partialResult, summarizationTechnique);
 	}
 
-	private static void exportSummary(String summarizationTechnique, boolean draw) throws FileNotFoundException {
+	private static void exportSummary(String summarizationTechnique, String draw) throws FileNotFoundException {
 		LOGGER.info("Exporting summary to disk");
 
 		summaryInUse.writeDecodedSummaryToNTFile(connectionInUse, summarizationTechnique);
 		
-		if (draw)
+		if (draw.toLowerCase().equals("plain"))
 			summaryInUse.drawSummaryAndGraph(connectionInUse, summarizationTechnique);		
-		LOGGER.info("Summary exported to disk");
-	}
-
-	public static void exportSummarySplitLeaves(String summarizationTechnique, boolean draw) throws FileNotFoundException {
-		LOGGER.info("Exporting summary to disk");
-
-		summaryInUse.writeDecodedSummaryToNTFile(connectionInUse, summarizationTechnique);
-		
-		if (draw)
+		if (draw.toLowerCase().equals("splitleaves"))
 			summaryInUse.writeDecodedSummaryToFileSplitLeavesAndDraw(connectionInUse, summarizationTechnique);
-			
-		LOGGER.info("Summary exported to disk");
-	}	
-	
-	public static void exportSummarySplitFoldLeaves(String summarizationTechnique, boolean draw) throws FileNotFoundException {
-		LOGGER.info("Exporting summary to disk");
-
-		summaryInUse.writeDecodedSummaryToNTFile(connectionInUse, summarizationTechnique);
-		
-		if (draw)
+		if (draw.toLowerCase().equals("foldleaves"))
 			summaryInUse.writeDecodedSummaryToFileSplitFoldLeavesAndDraw(connectionInUse, summarizationTechnique);
-			
 		LOGGER.info("Summary exported to disk");
 	}	
 	
