@@ -770,7 +770,7 @@ public class Summary {
 	 * @param suffix
 	 */
 	public void writeDecodedSummaryToFileSplitLeavesAndDraw(Connection conn, String suffix) {
-		System.out.println("Drawing summary with split leaves");
+		LOGGER.info("Drawing summary with split leaves");
 		ensureExporter(); 
 		String summaryDotFileName = exporter.getDotFileName(suffix);
 		exporter.writeSummaryToDotFileSplitLeaves(conn, summaryDotFileName);
@@ -783,7 +783,7 @@ public class Summary {
 	 * @param suffix
 	 */
 	public void writeDecodedSummaryToFileSplitFoldLeavesAndDraw(Connection conn, String suffix) {
-		System.out.println("Drawing summary with split leaves");
+		LOGGER.info("Drawing summary with split and folded leaves");
 		ensureExporter(); 
 		String summaryDotFileName = exporter.getDotFileName(suffix);
 		exporter.writeSummaryToDotFileSplitAndFoldLeaves(conn, summaryDotFileName);

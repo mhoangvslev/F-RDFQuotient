@@ -428,7 +428,7 @@ public class Builder {
 			summaryInUse.drawSummaryAndGraph(connectionInUse, summarizationTechnique);		
 		if (draw.toLowerCase().equals("splitleaves"))
 			summaryInUse.writeDecodedSummaryToFileSplitLeavesAndDraw(connectionInUse, summarizationTechnique);
-		if (draw.toLowerCase().equals("foldleaves"))
+		if (draw.toLowerCase().equals("foldleaves") || draw.toLowerCase().equals("draw"))
 			summaryInUse.writeDecodedSummaryToFileSplitFoldLeavesAndDraw(connectionInUse, summarizationTechnique);
 		LOGGER.info("Summary exported to disk");
 	}	
