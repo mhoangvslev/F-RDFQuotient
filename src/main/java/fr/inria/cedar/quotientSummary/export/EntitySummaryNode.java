@@ -60,7 +60,7 @@ public class EntitySummaryNode {
 			for (int i = 0; i < outgoingProperties.size(); i ++) {
 				String propName =  RDF2SQLEncoding.dictionaryDecode(outgoingProperties.get(i));
 				String propertyInDot = exporter.getVeryShortForDot(propName); 
-				bw.write(" <TR><TD><FONT color=\"" + fontColor + "\" POINT-SIZE=\"14.0\"> " + propertyInDot + " (" + propCardinalities.get(i) + " &rarr; " + childCardinalities.get(i) + ") </FONT></TD></TR> ");
+				bw.write(" <TR><TD><FONT color=\"" + fontColor + "\" POINT-SIZE=\"14.0\"> " + propertyInDot + " (" + propCardinalities.get(i) + " &rarr; " + childCardinalities.get(i) + ") </FONT></TD></TR>\n");
 			}
 			bw.write("</TABLE>> ]\n");
 		}

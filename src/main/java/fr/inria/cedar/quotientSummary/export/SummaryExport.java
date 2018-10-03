@@ -682,11 +682,12 @@ public class SummaryExport {
 		//LOGGER.debug("writeSummaryToDotFileSplitLeaves:");
 			
 		HashMap<Long, EntitySummaryNode> entities = new HashMap<Long, EntitySummaryNode>();
+		long entityEdgeCount = 0; 
 		
 		try {
 			try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(dotFileName)))) {
 				bw.write("digraph g{\nratio=0.66;\n node[shape=box, color=black, style=filled];\n");
-
+				
 				ArrayList<Triple> summEdges = summary.getSummaryEdges();
 				
 				//first pass: build the entities, label all the nodes, print schema triples
@@ -793,6 +794,7 @@ public class SummaryExport {
 								String property = RDF2SQLEncoding.dictionaryDecode(t.p);
 								String propertyInDot = getVeryShortForDot(property.replaceAll("\"", ""));
 								bw.write("\"" + subjectInDot + "\"" + " -> \"" + objectInDot + "\" [weight=1, fontsize=20, label=\"" + propertyInDot); 
+								entityEdgeCount ++; 
 								if (gatherStatistics){
 									bw.write(" (" + summary.getRepresentedTripleNumber(t) + ")"); 
 									//System.out.println("Writing " + subjectInDot + " -> " + objectInDot + "[weight=1, penwidth=" + penWidth +
@@ -804,9 +806,16 @@ public class SummaryExport {
 						}
 					}
 				}
+				bw.write("label=\"" + summary.getClass().getSimpleName() + " summary of " +
+						triplesFileName + " (" + 
+						summary.triplesSummarizedSoFar + " triples): " +
+						entities.size() + " summary entity nodes, " + entityEdgeCount + " inter-entity edges\"\n"); 
+				bw.write("labelloc=top; labeljust=right;\n"); 
+				
 				bw.write("}\n");
 				bw.close();
 			}
+			LOGGER.info(entities.size() + " entity nodes, " + entityEdgeCount + " entity edges");
 		}
 		catch (IOException e) {
 			throw new IllegalStateException("Unable to open the DOT file to for the summary: " + e.toString());
@@ -1067,13 +1076,21 @@ public class SummaryExport {
 			throw new IllegalStateException("The method should not be called on an instance of the root Summary type");
 		return summaryTablePrefix.substring(0, summaryTablePrefix.length() - 1);
 	}
-
+//	/**
+//	 * Given a path to an .nt RDF data file, computes a file name by inserting
+//	 * the prefix encoding the summary type before the main file name, and
+//	 * replacing the trailing .nt with .dot
+//	 */
+//	private String extractShortFileName() {
+//		int lastDotPosition = Math.max(0, triplesFileName.lastIndexOf("."));
+//		int lastSlashPosition = Math.max(0, triplesFileName.lastIndexOf("/"));
+//		if (lastDotPosition - lastSlashPosition < 1)
+//			throw new IllegalStateException("Was not able to extract a core component of the file name " + triplesFileName);
+//		return triplesFileName.substring(0, lastDotPosition); 
+//		
+//	}
 	/**
-	 * Given a path to an .nt RDF data file, computes a file name by inserting
-	 * the prefix encoding the summary type before the main file name, and
-	 * replacing the trailing .nt with .dot
-	 *
-	 * It also inserts the suffix before the ".".
+	 * Takes the short file name and inserts the suffix before the ".".
 	 *
 	 * @param suffix
 	 *

@@ -57,7 +57,7 @@ public class Summary {
 	protected static String SUMMARY_CONFIG_FILE = "conf/summarization.properties";
 	protected static String LOADING_CONFIG_FILE = "conf/dataLoading.properties";
 
-	// repTablePrefix must be instantiated with a specific string for each summary type, so that each summary is saved as separated Postgres tables
+	// summaryTablePrefix must be instantiated with a specific string for each summary type, so that each summary is saved as separated Postgres tables
 	protected String summaryTablePrefix;
 	protected boolean isTypeFirst = false;
 	protected boolean isTwoPass = false;
@@ -72,6 +72,7 @@ public class Summary {
 	protected static String TWO_PASS_TYPED_WEAK_SUMMARY_PREFIX = "2ptw_";
 	protected static String TWO_PASS_TYPED_STRONG_SUMMARY_PREFIX = "2pts_";
 	protected static String ONEFB_SUMMARY_PREFIX = "1fb_"; 
+	protected static String ONEFW_SUMMARY_PREFIX = "1fw_"; 
 
 	protected String triplesFileName = "";
 	protected String triplesTableName = "";

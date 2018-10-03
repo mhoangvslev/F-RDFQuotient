@@ -6,6 +6,7 @@ import fr.inria.cedar.ontosql.rdfdb.dataloading.DataLoading;
 import fr.inria.cedar.ontosql.rdfdb.dataloading.Parameters;
 import fr.inria.cedar.quotientSummary.Summary;
 import fr.inria.cedar.quotientSummary.bisim.OneBisimSummary;
+import fr.inria.cedar.quotientSummary.bisim.OneFWSummary;
 import fr.inria.cedar.quotientSummary.strong.StrongSummary;
 import fr.inria.cedar.quotientSummary.strong.TwoPassStrongSummary;
 import fr.inria.cedar.quotientSummary.strong.TwoPassTypedStrongSummary;
@@ -162,6 +163,8 @@ public class Builder {
 			return "2pts_";
 		case "onefb":
 			return "1fb_"; 
+		case "onefw":
+			return "1fw_"; 
 		}
 		return null;
 	}
@@ -366,6 +369,9 @@ public class Builder {
 			return new TwoPassTypedStrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 		case "onefb":
 			return new OneBisimSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName); 
+		case "onefw":
+			return new OneFWSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName); 
+		
 		}
 		return null;
 	}
