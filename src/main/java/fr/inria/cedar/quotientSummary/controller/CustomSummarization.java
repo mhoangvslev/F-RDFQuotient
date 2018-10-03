@@ -21,12 +21,12 @@ public class CustomSummarization {
 		String inputFileName =  fileName;
 		String outputFileName = fileName.substring(0, fileName.length() - 3)  + "_" + summarizationMethod + "_noSaturation.nt";
 		try {
-			String[] argsSum = {"loadAndSummarize", summarizationMethod, inputFileName};
+			String[] argsSum = {"loadWithSaturationAndSummarize", summarizationMethod, inputFileName};
 			try {
 				Builder.main(argsSum);
-				String[] argsSave = {"saveSummaryComputedWithoutSaturation"};
+				String[] argsSave = {"saveSummaryComputedClassicalWay"};
 				Builder.main(argsSave);
-				String[] argsExport = {"exportSummaryComputedWithoutSaturation", "foldleaves", inputFileName};
+				String[] argsExport = {"exportSummaryComputedClassicalWay", "foldleaves", inputFileName};
 				Builder.main(argsExport);
 			}
 			catch (UnsupportedDatabaseEngineException ex) {
