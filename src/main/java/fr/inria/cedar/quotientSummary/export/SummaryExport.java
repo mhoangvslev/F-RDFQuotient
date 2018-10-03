@@ -228,7 +228,7 @@ public class SummaryExport {
 		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
 		dax.resetColors();
 		String URIprefix = properties.getProperty("prefixURIForSummaryNodes");
-		//LOGGER.debug("writeSummaryToDotFile:");
+		//LOGGER.info("writeSummaryToDotFile:");
 
 		try {
 			try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(dotFileName)))) {
@@ -239,41 +239,43 @@ public class SummaryExport {
 					String subject, property, object, subjectInDot, propertyInDot, objectInDot;
 					// in all cases, edge labels are preserved:
 					property = RDF2SQLEncoding.dictionaryDecode(t.p);
-					//propertyInDot = getVeryShortForDot(property.replaceAll("\"", ""));
-					propertyInDot = property.replaceAll("\"", "");
+					propertyInDot = getVeryShortForDot(property.replaceAll("\"", ""));
+					//propertyInDot = property.replaceAll("\"", "");
 					//System.out.println("Property: " + property);
 					if (RDF2SQLEncoding.isDataProperty(t.p)) { // data
-						//System.out.println("Data triple\n");
+						//System.out.println("Data triple " + t.toString() + "\n");
 						subjectInDot = getSubjectOrObjectURIforSummaryDataNode(t.s, URIprefix, sn); 
 						if (dax.unknownSummaryNode(t.s)){
+							//System.out.println("Writing subject not seen so far: " + t.s);
 							writeNodeToDot(bw, t.s, subjectInDot); 
 						}
-						objectInDot = getSubjectOrObjectURIforSummaryDataNode(t.s, URIprefix, sn); 
+						objectInDot = getSubjectOrObjectURIforSummaryDataNode(t.o, URIprefix, sn); 
 						if (dax.unknownSummaryNode(t.o)){
+							//System.out.println("Writing object not seen so far: " + t.s);
 							writeNodeToDot(bw, t.o, objectInDot); 
 						}
 					} else if (RDF2SQLEncoding.isSchemaProperty(t.p)) { // schema
 						//System.out.println("Schema triple\n");
-						//subject = getVeryShortForDot(RDF2SQLEncoding.dictionaryDecode(t.s));
-						subject = RDF2SQLEncoding.dictionaryDecode(t.s); 
+						subject = getVeryShortForDot(RDF2SQLEncoding.dictionaryDecode(t.s));
+						//subject = RDF2SQLEncoding.dictionaryDecode(t.s); 
 						subjectInDot = subject.replaceAll("\"", "");
 						if (gatherStatistics){
 							subjectInDot = subjectInDot + " (" + summary.getRepresentedNodeNumber(t.s) + ")"; 
 						}
-//						if (t.p == RDF2SQLEncoding.getSubClassCode()){
-//							propertyInDot = "subClass";
-//						}
-//						if (t.p == RDF2SQLEncoding.getSubPropertyCode()){
-//							propertyInDot = "subProperty";
-//						}
-//						if (t.p == RDF2SQLEncoding.getDomainCode()){
-//							propertyInDot = "domain";
-//						}
-//						if (t.p == RDF2SQLEncoding.getRangeCode()){
-//							propertyInDot = "range";
-//						}
-						//object = getVeryShortForDot(RDF2SQLEncoding.dictionaryDecode(t.o));
-						object = RDF2SQLEncoding.dictionaryDecode(t.o);
+						if (t.p == RDF2SQLEncoding.getSubClassCode()){
+							propertyInDot = "subClass";
+						}
+						if (t.p == RDF2SQLEncoding.getSubPropertyCode()){
+							propertyInDot = "subProperty";
+						}
+						if (t.p == RDF2SQLEncoding.getDomainCode()){
+							propertyInDot = "domain";
+						}
+						if (t.p == RDF2SQLEncoding.getRangeCode()){
+							propertyInDot = "range";
+						}
+						object = getVeryShortForDot(RDF2SQLEncoding.dictionaryDecode(t.o));
+						//object = RDF2SQLEncoding.dictionaryDecode(t.o);
 						objectInDot = object.replaceAll("\"", "");
 						if (gatherStatistics){
 							objectInDot = objectInDot + " (" + summary.getRepresentedNodeNumber(t.o) + ")"; 
@@ -285,18 +287,18 @@ public class SummaryExport {
 							bw.write("\"" + objectInDot + "\" [fontcolor=white, style = filled, color=black];\n");
 						}
 					} else { // type triples 
-						//System.out.println("Type triple\n");
+						System.out.println("Type triple\n");
 						subjectInDot = getSubjectOrObjectURIforSummaryDataNode(t.s, URIprefix, sn); 
-						//object = getVeryShortForDot(RDF2SQLEncoding.dictionaryDecode(t.o));
-						object = RDF2SQLEncoding.dictionaryDecode(t.o); 
+						object = getVeryShortForDot(RDF2SQLEncoding.dictionaryDecode(t.o));
+						//object = RDF2SQLEncoding.dictionaryDecode(t.o); 
 						objectInDot = object.replaceAll("\"", "");
 						if (gatherStatistics){
 							objectInDot = objectInDot + " (" + summary.getRepresentedNodeNumber(t.o) + ")"; 
 						}
-						//propertyInDot = "rdf:type";
+						propertyInDot = "rdf:type";
 						if (sn.contains(t.s)){
 							if (dax.unknownSchemaNode(t.s)){
-								bw.write("\"" + subjectInDot + "\" [fontcolor=white, style = filled, color=black];\n");
+								bw.write("\"" + subjectInDot + "\" [fontsize=40, fontcolor=white, style = filled, color=black];\n");
 							}
 						}
 						else{
@@ -306,20 +308,16 @@ public class SummaryExport {
 						}
 						if (sn.contains(t.o)){
 							if (dax.unknownSchemaNode(t.o)){
-								bw.write("\"" + objectInDot + "\" [fontcolor=white, style = filled, color=black];\n");
-							}
-							else {
-								throw new IllegalStateException("Type not part of the schema nodes"); 
+								bw.write("\"" + objectInDot + "\" [fontsize=40, fontcolor=white, style = filled, color=black];\n");
 							}
 						}
-						else{
-							if (dax.unknownSummaryNode(t.o)){
-								writeNodeToDot(bw, t.o, objectInDot);
-							}
+						else {
+							throw new IllegalStateException("Type not part of the schema nodes: "); 
 						}
 					}
 					// write the triple in all cases:
-					bw.write("\"" + subjectInDot + "\"" + " -> \"" + objectInDot + "\" [label=\"" + propertyInDot);
+					//System.out.println("Writing " + subjectInDot + " -> " + objectInDot);
+					bw.write("\"" + subjectInDot + "\"" + " -> \"" + objectInDot + "\" [fontsize=40, label=\"" + propertyInDot);
 					if (gatherStatistics){
 						bw.write(" (" + summary.getRepresentedTripleNumber(t) + ")"); 
 					}

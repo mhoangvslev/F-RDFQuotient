@@ -3,6 +3,7 @@ package fr.inria.cedar.quotientSummary.controller;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.ArrayList;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -51,10 +52,21 @@ public class CustomSummarization {
 			throw new IllegalStateException("SQL error while summarizing " + e.toString());
 		}
 	}
-	
+
 	public static void main(String[] argv) {
-		String fileName = argv[0]; 
-		String summarizationMethod = argv[1]; 
-		File f = summarize(fileName, summarizationMethod); 
+		//String fileName = argv[0]; 
+		//String summarizationMethod = argv[1]; 
+		//File f = summarize(fileName, summarizationMethod); 
+		String[] fileNames = new String[] 
+				//{ "conference", "enelshops", "foodista", "frenchpolitics",
+				//"lubm1m", "mondial", "nasa", "nobelprizes", {"pokedex"}; {"bsbm1m"}; 
+				{"watdiv10m"}; 
+		String directory = "src/test/resources/rdf-nt-files/"; 
+		String [] summarizationMethods = new String[] {"weak", "strong", "typedweak", "typedstrong", "onefb", "onefw"}; 
+		for (String fileName: fileNames) {
+			for (String summarizationMethod: summarizationMethods) {
+				summarize(directory + fileName + ".nt", summarizationMethod); 
+			}
+		}
 	}
 }
