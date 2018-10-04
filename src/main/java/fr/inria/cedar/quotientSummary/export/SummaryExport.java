@@ -1099,7 +1099,35 @@ public class SummaryExport {
 		int lastSlashPosition = Math.max(0, triplesFileName.lastIndexOf("/"));
 		if (lastDotPosition - lastSlashPosition < 1)
 			throw new IllegalStateException("Was not able to extract a core component of the file name " + triplesFileName);
-		return triplesFileName.substring(0, lastDotPosition) + "_" + summaryTablePrefix + suffix + ".dot"; // replace .nt with .dot
+		return triplesFileName.substring(0, lastDotPosition) + "_" + summaryTablePrefix + suffix + "_plain.dot"; // replace .nt with .dot
+	}
+	/**
+	 * Takes the short file name and inserts the suffix before the ".".
+	 *
+	 * @param suffix
+	 *
+	 * @return
+	 */
+	public String getDotFileNameSplitLeaves(String suffix) {
+		int lastDotPosition = Math.max(0, triplesFileName.lastIndexOf("."));
+		int lastSlashPosition = Math.max(0, triplesFileName.lastIndexOf("/"));
+		if (lastDotPosition - lastSlashPosition < 1)
+			throw new IllegalStateException("Was not able to extract a core component of the file name " + triplesFileName);
+		return triplesFileName.substring(0, lastDotPosition) + "_" + summaryTablePrefix + suffix + "_split.dot"; // replace .nt with .dot
+	}
+	/**
+	 * Takes the short file name and inserts the suffix before the ".".
+	 *
+	 * @param suffix
+	 *
+	 * @return
+	 */
+	public String getDotFileNameFoldLeaves(String suffix) {
+		int lastDotPosition = Math.max(0, triplesFileName.lastIndexOf("."));
+		int lastSlashPosition = Math.max(0, triplesFileName.lastIndexOf("/"));
+		if (lastDotPosition - lastSlashPosition < 1)
+			throw new IllegalStateException("Was not able to extract a core component of the file name " + triplesFileName);
+		return triplesFileName.substring(0, lastDotPosition) + "_" + summaryTablePrefix + suffix + "_fold.dot"; // replace .nt with .dot
 	}
 
 	/**

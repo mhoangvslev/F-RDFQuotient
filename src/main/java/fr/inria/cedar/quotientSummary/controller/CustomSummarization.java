@@ -27,7 +27,7 @@ public class CustomSummarization {
 				Builder.main(argsSum);
 				String[] argsSave = {"saveSummaryComputedWithoutSaturation"};
 				Builder.main(argsSave);
-				String[] argsExport = {"exportSummaryComputedWithoutSaturation", "plain", inputFileName};
+				String[] argsExport = {"exportSummaryComputedWithoutSaturation", "foldleaves", inputFileName};
 				Builder.main(argsExport);
 			}
 			catch (UnsupportedDatabaseEngineException ex) {

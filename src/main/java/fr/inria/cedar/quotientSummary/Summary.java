@@ -773,7 +773,7 @@ public class Summary {
 	public void writeDecodedSummaryToFileSplitLeavesAndDraw(Connection conn, String suffix) {
 		LOGGER.info("Drawing summary with split leaves");
 		ensureExporter(); 
-		String summaryDotFileName = exporter.getDotFileName(suffix);
+		String summaryDotFileName = exporter.getDotFileNameSplitLeaves(suffix);
 		exporter.writeSummaryToDotFileSplitLeaves(conn, summaryDotFileName);
 	}
 	
@@ -786,7 +786,7 @@ public class Summary {
 	public void writeDecodedSummaryToFileSplitFoldLeavesAndDraw(Connection conn, String suffix) {
 		LOGGER.info("Drawing summary with split and folded leaves");
 		ensureExporter(); 
-		String summaryDotFileName = exporter.getDotFileName(suffix);
+		String summaryDotFileName = exporter.getDotFileNameFoldLeaves(suffix);
 		exporter.writeSummaryToDotFileSplitAndFoldLeaves(conn, summaryDotFileName);
 	}
 
