@@ -1,6 +1,7 @@
 package fr.inria.cedar.quotientSummary.bisim;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.TreeSet;
 
 import org.apache.log4j.Level;
@@ -8,13 +9,15 @@ import org.apache.log4j.Logger;
 
 import fr.inria.cedar.quotientSummary.Summary;
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
+import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 
 public class OneFWSummary extends Summary {
 	private static final Logger LOGGER = Logger.getLogger(OneFWSummary.class.getName());
 
 	private final HashMap<Long, TreeSet<Long>> n2op; // node to outgoing property set
 	private final HashMap<TreeSet<Long>, Long> op2sn; // outgoing property set to summary node
-
+	HashSet<Long> leaves; 
+	
 	public OneFWSummary(String triplesFileName, String triplesTableName, String encodedTriplesTableName, String dictionaryTableName) {
 		super();
 		LOGGER.setLevel(Level.INFO);
@@ -27,6 +30,7 @@ public class OneFWSummary extends Summary {
 		this.isTwoPass = true;
 		this.n2op = new HashMap<>();
 		this.op2sn = new HashMap<>();
+		this.leaves = new HashSet<Long>(); 
 	}
 
 	@Override
@@ -36,12 +40,28 @@ public class OneFWSummary extends Summary {
 
 	@Override
 	protected void classifyDataTriple(Triple t) {
-		TreeSet<Long> previousSOP = n2op.get(t.s);
-		if (previousSOP == null){
-			previousSOP = new TreeSet<>();
-			n2op.put(t.s, previousSOP);
+		leaves.remove(t.s);  // s is certainly not a leaf
+		//LOGGER.info(t.s + " " + RDF2SQLEncoding.dictionaryDecode(t.s) + " not a leaf");
+		TreeSet<Long> previousPOS = n2op.get(t.s);
+		if (previousPOS == null){
+			previousPOS = new TreeSet<>();
+			n2op.put(t.s, previousPOS);
 		}
-		previousSOP.add(t.p);
+		previousPOS.add(t.p);
+		//LOGGER.info(t.s + " " + RDF2SQLEncoding.dictionaryDecode(t.s) + " has property " + t.p + " " + RDF2SQLEncoding.dictionaryDecode(t.p)); 
+		//LOGGER.info("Properties of " + t.s + " are: " + previousPOS);
+		
+		//add o as a leaf unless it is known to have triples
+		if (n2op.get(t.o) == null) {
+			leaves.add(t.o);
+			//LOGGER.info(t.o + " " + RDF2SQLEncoding.dictionaryDecode(t.o) +  " is a leaf");
+		}
+		else {
+			if (n2op.get(t.o).size() == 0) {
+				leaves.add(t.o); 
+				//LOGGER.info(t.o + " " + RDF2SQLEncoding.dictionaryDecode(t.o) + " is a leaf"); 
+			}
+		}
 	}
 
 	@Override
@@ -58,25 +78,16 @@ public class OneFWSummary extends Summary {
 				if (summaryNode == null){
 					summaryNode = createSummaryNode(nop);
 				}
-				//LOGGER.debug("REPRESENTED NODE (1) " + RDF2SQLEncoding.dictionaryDecode(n) + " BY " + sn);
+				//LOGGER.info("REPRESENTED NON-LEAF NODE " + n + " " + RDF2SQLEncoding.dictionaryDecode(n) + " BY THE PROPERTY SET " + nop);
 				rep.put(n, summaryNode);
 			}
 		}
 //		// all nodes with incoming but not outgoing edges (those with both are covered above):
-//		for (long n: n2ip.keySet()){
-//			if (n2op.get(n) == null) {
-//				if (!sn.contains(n)) { // not a schema node
-//					TreeSet<Long> nop = n2op.get(n);
-//					TreeSet<Long> nip = n2ip.get(n);
-//					Long summaryNode = getSummaryNode(nop, nip);
-//					if (summaryNode == null){
-//						summaryNode = createSummaryNode(nop, nip);
-//					}
-//					//LOGGER.debug("REPRESENTED NODE (2) " + RDF2SQLEncoding.dictionaryDecode(n) + " BY " + sn);
-//					rep.put(n, summaryNode);
-//				}
-//			}
-//		}
+		Long leafSummaryNode = createSummaryNode(new TreeSet<Long>()); 
+		for (Long n: leaves) {
+			// LOGGER.info("REPRESENTED LEAF NODE " + RDF2SQLEncoding.dictionaryDecode(n) + " BY " + leafSummaryNode);
+			rep.put(n, leafSummaryNode);
+		}
 	}
 
 	// creates the last data node representatives (those not already represented above)
