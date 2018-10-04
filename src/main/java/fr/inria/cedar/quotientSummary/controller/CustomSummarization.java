@@ -27,7 +27,7 @@ public class CustomSummarization {
 				Builder.main(argsSum);
 				String[] argsSave = {"saveSummaryComputedWithoutSaturation"};
 				Builder.main(argsSave);
-				String[] argsExport = {"exportSummaryComputedWithoutSaturation", "foldleaves", inputFileName};
+				String[] argsExport = {"exportSummaryComputedWithoutSaturation", "plain", inputFileName};
 				Builder.main(argsExport);
 			}
 			catch (UnsupportedDatabaseEngineException ex) {
@@ -59,8 +59,8 @@ public class CustomSummarization {
 //		File f = summarize(fileName, summarizationMethod); 
 		String[] fileNames = new String[] 
 //				//{ "conference", "enelshops", "foodista", "frenchpolitics",
-//				//"lubm1m", "mondial", "nasa", "nobelprizes", {"pokedex"}; {"bsbm1m"}; {"watdiv10m"}; 
-				{"department"}; 
+//				//"lubm1m", "mondial", "nasa", "nobelprizes", {"pokedex"}; {"bsbm1m"}; {"watdiv10m"}; {"department"}; {"untypdepartment"}; 
+				{"untypcoursedept"}; 
 		String directory = "src/test/resources/rdf-nt-files/"; 
 		String [] summarizationMethods = new String[] {"weak", "strong", "typedweak", "typedstrong", "onefb", "onefw"}; 
 		for (String fileName: fileNames) {

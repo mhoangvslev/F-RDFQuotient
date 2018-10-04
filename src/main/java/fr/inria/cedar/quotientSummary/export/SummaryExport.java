@@ -317,7 +317,7 @@ public class SummaryExport {
 					}
 					// write the triple in all cases:
 					//System.out.println("Writing " + subjectInDot + " -> " + objectInDot);
-					bw.write("\"" + subjectInDot + "\"" + " -> \"" + objectInDot + "\" [fontsize=40, label=\"" + propertyInDot);
+					bw.write("\"" + subjectInDot + "\"" + " -> \"" + objectInDot + "\" [arrowsize=3.0, fontsize=40, label=\"" + propertyInDot);
 					if (gatherStatistics){
 						bw.write(" (" + summary.getRepresentedTripleNumber(t) + ")"); 
 					}
@@ -611,7 +611,7 @@ public class SummaryExport {
 						}
 					}
 					// write the triple in all cases:
-					bw.write("\"" + subjectInDot + "\"" + " -> \"" + objectInDot + "\" [weight=1, fontsize=40, penwidth=" + penWidth +
+					bw.write("\"" + subjectInDot + "\"" + " -> \"" + objectInDot + "\" [arrowsize=3.0, weight=1, fontsize=40, penwidth=" + penWidth +
 							" label=\"" + propertyInDot); 
 					if (gatherStatistics){
 						bw.write(" (" + summary.getRepresentedTripleNumber(t) + ")"); 
@@ -791,7 +791,7 @@ public class SummaryExport {
 								String objectInDot = getVeryShortLabelForSummaryDataSubject(t.o, sn); 
 								String property = RDF2SQLEncoding.dictionaryDecode(t.p);
 								String propertyInDot = getVeryShortForDot(property.replaceAll("\"", ""));
-								bw.write("\"" + subjectInDot + "\"" + " -> \"" + objectInDot + "\" [weight=1, fontsize=20, label=\"" + propertyInDot); 
+								bw.write("\"" + subjectInDot + "\"" + " -> \"" + objectInDot + "\" [weight=1, arrowsize=3.0, fontsize=20, label=\"" + propertyInDot); 
 								entityEdgeCount ++; 
 								if (gatherStatistics){
 									bw.write(" (" + summary.getRepresentedTripleNumber(t) + ")"); 
@@ -853,7 +853,7 @@ public class SummaryExport {
 			try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(dotFile)))) {
 				bw.write("digraph g{\nratio=0.66;\n");
 				for (Triple t : summary.getSummaryEdges())
-					bw.write(t.s + " -> " + t.o + " [label=\"" + t.p + "\"];\n");
+					bw.write(t.s + " -> " + t.o + " [arrowsize=3.0, label=\"" + t.p + "\"];\n");
 				bw.write("}\n");
 			}
 		}
@@ -1045,7 +1045,7 @@ public class SummaryExport {
 				//LOGGER.debug("TYP2 " + o + " (" + object + ") represented by  " + oRep);
 				bw.write("\"" + objectForDot + "\" [fontcolor=white, style = filled, color=black];\n");
 			}
-			bw.write("\"" + subjectForDot + "\"" + " -> \"" + objectForDot + "\" [label=\"" + propertyForDot + "\"];\n");
+			bw.write("\"" + subjectForDot + "\"" + " -> \"" + objectForDot + "\" [arrowsize=2.0, label=\"" + propertyForDot + "\"];\n");
 		}
 		catch (IOException e) {
 			throw new IllegalStateException("Unable to open the DOT file to for the summary: " + e.toString());
