@@ -1,7 +1,9 @@
 #!/bin/bash
 
-for SUMMARY_TYPE in weak strong typedweak typedstrong; do
-	for DATASET in dbpedia/dbpedia_persondata_en_uniq.nt springer/conference.nt nobel/nobel.nt insee/insee_geo.nt; do
-		./scripts/loadAndSummarizeSplitFoldLeaves.sh $DATASET $SUMMARY_TYPE
+for DATASET in abuse/abuse.nt clean_energy/clean_energy_data.nt ctgovdata/ctgovdata.nt enelshops/enelshops.nt foodista/foodista.nt insee/insee_geo.nt nasa/nasa.nt nobel/nobel.nt nobelprizes/nobelprizes.nt springer/conference.nt; do
+	for SATURATED in "true" "false" do;
+		for SUMMARY_TYPE in weak strong typedweak typedstrong onefb onefw; do
+			./scripts/summarizeSplitFoldLeaves.sh $DATASET $SUMMARY_TYPE $SATURATED foldleaves
+		done
 	done
 done
