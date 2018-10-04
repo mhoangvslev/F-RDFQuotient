@@ -62,6 +62,14 @@ conf/nobel_2pwuf.properties
 conf/nobel.properties
 conf/nobel_s.properties
 conf/nobel_w.properties
+conf/abuse.properties
+conf/clean_energy_data_uniq.properties
+conf/ctgovdata.properties
+conf/enelshops.properties
+conf/foodista.properties
+conf/nobelprizes_uniq.properties
+conf/nasa.properties
+conf/watdiv100m.properties
 src/test/resources/test*/*_noSaturation.nt
 src/test/resources/test*/*_classical.nt
 src/test/resources/test*/*_shortcut.nt

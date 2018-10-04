@@ -1,14 +1,11 @@
 package fr.inria.cedar.quotientSummary.controller;
 
+import fr.inria.cedar.ontosql.db.UnsupportedDatabaseEngineException;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.ArrayList;
-
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-
-import fr.inria.cedar.ontosql.db.UnsupportedDatabaseEngineException;
 
 public class CustomSummarization {
 	private static final Logger LOGGER = Logger.getLogger(CustomSummarization.class.getName());
@@ -22,12 +19,12 @@ public class CustomSummarization {
 		String inputFileName =  fileName;
 		String outputFileName = fileName.substring(0, fileName.length() - 3)  + "_" + summarizationMethod + "_noSaturation.nt";
 		try {
-			String[] argsSum = {"loadAndSummarize", summarizationMethod, inputFileName};
+			String[] argsSum = {"loadWithSaturationAndSummarize", summarizationMethod, inputFileName};
 			try {
 				Builder.main(argsSum);
-				String[] argsSave = {"saveSummaryComputedWithoutSaturation"};
+				String[] argsSave = {"saveSummaryComputedClassicalWay"};
 				Builder.main(argsSave);
-				String[] argsExport = {"exportSummaryComputedWithoutSaturation", "plain", inputFileName};
+				String[] argsExport = {"exportSummaryComputedClassicalWay", "foldleaves", inputFileName};
 				Builder.main(argsExport);
 			}
 			catch (UnsupportedDatabaseEngineException ex) {

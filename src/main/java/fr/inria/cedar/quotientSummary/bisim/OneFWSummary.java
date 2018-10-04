@@ -1,15 +1,12 @@
 package fr.inria.cedar.quotientSummary.bisim;
 
+import fr.inria.cedar.quotientSummary.Summary;
+import fr.inria.cedar.quotientSummary.datastructures.Triple;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.TreeSet;
-
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-
-import fr.inria.cedar.quotientSummary.Summary;
-import fr.inria.cedar.quotientSummary.datastructures.Triple;
-import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 
 public class OneFWSummary extends Summary {
 	private static final Logger LOGGER = Logger.getLogger(OneFWSummary.class.getName());
@@ -30,7 +27,7 @@ public class OneFWSummary extends Summary {
 		this.isTwoPass = true;
 		this.n2op = new HashMap<>();
 		this.op2sn = new HashMap<>();
-		this.leaves = new HashSet<Long>(); 
+		this.leaves = new HashSet<>(); 
 	}
 
 	@Override
@@ -57,7 +54,7 @@ public class OneFWSummary extends Summary {
 			//LOGGER.info(t.o + " " + RDF2SQLEncoding.dictionaryDecode(t.o) +  " is a leaf");
 		}
 		else {
-			if (n2op.get(t.o).size() == 0) {
+			if (n2op.get(t.o).isEmpty()) {
 				leaves.add(t.o); 
 				//LOGGER.info(t.o + " " + RDF2SQLEncoding.dictionaryDecode(t.o) + " is a leaf"); 
 			}
@@ -83,7 +80,7 @@ public class OneFWSummary extends Summary {
 			}
 		}
 //		// all nodes with incoming but not outgoing edges (those with both are covered above):
-		Long leafSummaryNode = createSummaryNode(new TreeSet<Long>()); 
+		Long leafSummaryNode = createSummaryNode(new TreeSet<>()); 
 		for (Long n: leaves) {
 			// LOGGER.info("REPRESENTED LEAF NODE " + RDF2SQLEncoding.dictionaryDecode(n) + " BY " + leafSummaryNode);
 			rep.put(n, leafSummaryNode);
