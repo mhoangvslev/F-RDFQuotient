@@ -61,12 +61,13 @@ public class BuilderCmd {
 		System.out.println("    opt1 specifies the storage layout of the database: either TRIPLES_TABLE or TABLE_PER_ROLE_AND_CONCEPT");
 		System.out.println("    if opt2 is true its saturation is computed and stored in the same database");
 		System.out.println("    if opt3 is true it exports loading statistics to disk");
-		System.out.println("args[0]=summarize fileName summaryType opt1 opt2 opt3 opt4");
+		System.out.println("args[0]=summarize fileName summaryType opt1 opt2 opt3 opt4 opt5");
 		System.out.println("    summarizes a graph from the database fileName using summaryType algorithm and");
 		System.out.println("    if opt1 is true it uses the saturated version of the graph");
 		System.out.println("    if opt2 is true it saves the summary to Postgres");
 		System.out.println("    if opt3 is true it exports the summary to disk");
 		System.out.println("    if opt4 is true it exports summarization statistics to disk");
+		System.out.println("    if opt5 is false then it doesn't draw with DOT, if set to plain draws a graph with default layout, if set to splitleaves it draws splitting leaves, and if set to foldleaves it uses folded layout");
 	}
 
 	public static void main(String[] args) {
@@ -107,7 +108,7 @@ public class BuilderCmd {
 			}
 			return;
 		case "summarize":
-			if (args.length != 7) {
+			if (args.length != 8) {
 				displayUsageInfo();
 				return;
 			}
@@ -124,7 +125,7 @@ public class BuilderCmd {
 				saveSummaryInPostgres(saturated);
 			}
 			if (exportToDisk) {
-				exportSummaryToDisk(saturated);
+				exportSummaryToDisk(saturated, args[7]);
 			}
 			if (exportSummarizationStatistics) {
 				exportSummarizationStatisticsToDisk(saturated);
@@ -303,12 +304,21 @@ public class BuilderCmd {
 		summarySavingInPostgresTime = System.currentTimeMillis() - start;
 	}
 
-	private static void exportSummaryToDisk(boolean summarizeSaturated) {
-		LOGGER.info("Exporting summary to disk");
+	private static void exportSummaryToDisk(boolean summarizeSaturated, String draw) {
+		LOGGER.info("Exporting summary NT file to disk");
 		long start = System.currentTimeMillis();
 		summaryInUse.writeDecodedSummaryToNTFile(connectionInUse, summarizeSaturated ? "sat" : "");
 		summarySavingToDiskTime = System.currentTimeMillis() - start;
-		LOGGER.info("Summary exported to disk");
+		LOGGER.info("Summary NT file exported to disk");
+
+		LOGGER.info("Exporting summary DOT drawing to disk");
+		if (draw.toLowerCase().equals("plain"))
+			summaryInUse.drawSummaryAndGraph(connectionInUse, "BuilderCmd");
+		if (draw.toLowerCase().equals("splitleaves"))
+			summaryInUse.writeDecodedSummaryToFileSplitLeavesAndDraw(connectionInUse, "BuilderCmd");
+		if (draw.toLowerCase().equals("foldleaves") || draw.toLowerCase().equals("draw"))
+			summaryInUse.writeDecodedSummaryToFileSplitFoldLeavesAndDraw(connectionInUse, "BuilderCmd");
+		LOGGER.info("Summary DOT drawing exported to disk");
 	}
 
 	private static void exportSummarizationStatisticsToDisk(boolean summarizeSaturated) {

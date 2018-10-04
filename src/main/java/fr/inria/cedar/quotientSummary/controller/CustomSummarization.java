@@ -1,14 +1,11 @@
 package fr.inria.cedar.quotientSummary.controller;
 
+import fr.inria.cedar.ontosql.db.UnsupportedDatabaseEngineException;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.ArrayList;
-
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-
-import fr.inria.cedar.ontosql.db.UnsupportedDatabaseEngineException;
 
 public class CustomSummarization {
 	private static final Logger LOGGER = Logger.getLogger(CustomSummarization.class.getName());
