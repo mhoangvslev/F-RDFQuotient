@@ -70,18 +70,18 @@ public class SummaryExport {
 			if (summary.getSummaryEdgeStatistics().isEmpty()){
 				summary.gatherEdgeStatistics();
 			}
-			String representationTableName = summary.getRepresentationTableName(); 
-			String getSplitLeafRepCountQuery = "select count(distinct et.o) from " + PostgresIdentifier.escapedQuotedId(encodedTriplesTableName) + " et, " +
-					PostgresIdentifier.escapedQuotedId(representationTableName) + " reps, " + PostgresIdentifier.escapedQuotedId(representationTableName) + 
-					" repo where reps.summarynode=? and reps.graphnode=et.s and " + 
-					" et.p=? and repo.summarynode=? and repo.graphnode=et.o"; 
-			try{
-				stmtSplitLeavesCount =  RDF2SQLEncoding.getConnection().prepareStatement(getSplitLeafRepCountQuery); 
-			}
-			catch(SQLException e) {
-				e.printStackTrace();
-				throw new IllegalStateException("Unable to prepare statement for cardinality computation"); 
-			}
+		}
+		String representationTableName = summary.getRepresentationTableName(); 
+		String getSplitLeafRepCountQuery = "select count(distinct et.o) from " + PostgresIdentifier.escapedQuotedId(encodedTriplesTableName) + " et, " +
+				PostgresIdentifier.escapedQuotedId(representationTableName) + " reps, " + PostgresIdentifier.escapedQuotedId(representationTableName) + 
+				" repo where reps.summarynode=? and reps.graphnode=et.s and " + 
+				" et.p=? and repo.summarynode=? and repo.graphnode=et.o"; 
+		try{
+			stmtSplitLeavesCount =  RDF2SQLEncoding.getConnection().prepareStatement(getSplitLeafRepCountQuery); 
+		}
+		catch(SQLException e) {
+			e.printStackTrace();
+			throw new IllegalStateException("Unable to prepare statement for cardinality computation");
 		}
 	}
 	

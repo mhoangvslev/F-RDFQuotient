@@ -24,7 +24,7 @@ public class CustomSummarization {
 				Builder.main(argsSum);
 				String[] argsSave = {"saveSummaryComputedClassicalWay"};
 				Builder.main(argsSave);
-				String[] argsExport = {"exportSummaryComputedClassicalWay", "foldleaves", inputFileName};
+				String[] argsExport = {"exportSummaryComputedClassicalWay", "splitleaves", inputFileName};
 				Builder.main(argsExport);
 			}
 			catch (UnsupportedDatabaseEngineException ex) {

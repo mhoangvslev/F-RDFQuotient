@@ -941,9 +941,21 @@ public class Summary {
 	}
 
 	public Long getRepresentedNodeNumber(Long s) {
-		return summaryNodeStatistics.get(s);
+		Long res =  summaryNodeStatistics.get(s);
+		if (res != null) {
+			return res;
+		}
+		else {
+			return 0L; 
+		}
 	}
 	public Long getRepresentedTripleNumber(Triple t){
-		return summaryEdgeStatistics.get(t);
+		Long res = summaryEdgeStatistics.get(t);
+		if (res != null) {
+			return res;
+		}
+		else {
+			return 0L; 
+		}
 	}
 }
