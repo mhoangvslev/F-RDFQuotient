@@ -287,7 +287,7 @@ public class SummaryExport {
 							bw.write("\"" + objectInDot + "\" [fontcolor=white, style = filled, color=black];\n");
 						}
 					} else { // type triples 
-						System.out.println("Type triple\n");
+						//System.out.println("Type triple\n");
 						subjectInDot = getSubjectOrObjectURIforSummaryDataNode(t.s, URIprefix, sn); 
 						object = getVeryShortForDot(RDF2SQLEncoding.dictionaryDecode(t.o));
 						//object = RDF2SQLEncoding.dictionaryDecode(t.o); 
