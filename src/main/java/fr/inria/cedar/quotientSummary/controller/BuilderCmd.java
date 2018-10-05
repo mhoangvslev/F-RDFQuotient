@@ -316,11 +316,11 @@ public class BuilderCmd {
 
 		LOGGER.info("Exporting summary DOT drawing to disk");
 		if (draw.toLowerCase().equals("plain"))
-			summaryInUse.drawSummaryAndGraph(connectionInUse, "BuilderCmd");
+			summaryInUse.drawSummaryAndGraph(connectionInUse, summarizeSaturated ? "sat" : "no_sat");
 		if (draw.toLowerCase().equals("splitleaves"))
-			summaryInUse.writeDecodedSummaryToFileSplitLeavesAndDraw(connectionInUse, "BuilderCmd");
+			summaryInUse.writeDecodedSummaryToFileSplitLeavesAndDraw(connectionInUse, summarizeSaturated ? "sat" : "no_sat");
 		if (draw.toLowerCase().equals("foldleaves") || draw.toLowerCase().equals("draw"))
-			summaryInUse.writeDecodedSummaryToFileSplitFoldLeavesAndDraw(connectionInUse, "BuilderCmd");
+			summaryInUse.writeDecodedSummaryToFileSplitFoldLeavesAndDraw(connectionInUse, summarizeSaturated ? "sat" : "no_sat");
 		LOGGER.info("Summary DOT drawing exported to disk");
 	}
 
