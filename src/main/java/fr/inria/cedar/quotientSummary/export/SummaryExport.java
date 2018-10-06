@@ -35,6 +35,7 @@ public class SummaryExport {
 	
 	boolean gatherStatistics; 
 	boolean drawOfTypeClassEdges = false; // whether or not to draw edges of the form C rdf:type rdfs:Class
+	boolean drawGraphLabel = false; // when drawing with entities, we may include a label of the graph, or not
 	
 	DOTAuxiliary dax;
 	
@@ -43,6 +44,11 @@ public class SummaryExport {
 	private HashMap<Long, String> newNodeLabels; // we will plot the names of summary nodes shorter
 	// and more intelligible 
 	private long lastGivenLabel; 
+	
+	// one size fits all attribute for drawing
+	double arrowsize=0.0; 	
+	String schemaNodeLineSuffix = "\" [penwidth=2, fontsize=40, fillcolor=white, fontcolor=black];\n"; 
+
 	
 	public SummaryExport(Summary s, Properties properties, DOTAuxiliary dax, String dictionaryTableName,
 			String triplesFileName, String encodedTriplesTableName){
@@ -57,8 +63,10 @@ public class SummaryExport {
 		lastGivenLabel = 0; 
 		// by default statistics are not used
 		this.gatherStatistics = false; 
+		this.drawGraphLabel = false; 
 		try{
 			this.gatherStatistics = properties.getProperty("gatherStatistics").toLowerCase().equals("true");
+			this.drawGraphLabel = properties.getProperty("drawGraphLabel").toLowerCase().equals("true"); 
 		}
 		catch(Exception e){
 			LOGGER.info("Could not determine if I should output summarization statistics. Will not do it.");
@@ -227,31 +235,43 @@ public class SummaryExport {
 		dax.resetColors();
 		String URIprefix = properties.getProperty("prefixURIForSummaryNodes");
 		//LOGGER.info("writeSummaryToDotFile:");
-
+	
 		try {
 			try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(dotFileName)))) {
-				bw.write("digraph g{\nratio=0.66;\n");
-
+				bw.write("digraph g{\nratio=0.66;\n node[shape=box, color=black, style=filled];\n");
+				
 				ArrayList<Triple> summEdges = summary.getSummaryEdges();
 				for (Triple t : summEdges) {
 					String subject, property, object, subjectInDot, propertyInDot, objectInDot;
 					// in all cases, edge labels are preserved:
 					property = RDF2SQLEncoding.dictionaryDecode(t.p);
 					propertyInDot = getVeryShortForDot(property.replaceAll("\"", ""));
-					//propertyInDot = property.replaceAll("\"", "");
 					//System.out.println("Property: " + property);
 					if (RDF2SQLEncoding.isDataProperty(t.p)) { // data
-						//System.out.println("Data triple " + t.toString() + "\n");
-						subjectInDot = getSubjectOrObjectURIforSummaryDataNode(t.s, URIprefix, sn); 
-						if (dax.unknownSummaryNode(t.s)){
-							//System.out.println("Writing subject not seen so far: " + t.s);
-							writeNodeToDot(bw, t.s, subjectInDot); 
+						
+						subjectInDot = getVeryShortLabelForSummaryDataSubject(t.s, sn); 
+						if (sn.contains(t.s)) {// The subject is a schema node -- this can happen
+							if (dax.unknownSchemaNode(t.s)){
+								bw.write("\"" + subjectInDot + schemaNodeLineSuffix);
+							}
 						}
-						objectInDot = getSubjectOrObjectURIforSummaryDataNode(t.o, URIprefix, sn); 
-						if (dax.unknownSummaryNode(t.o)){
-							//System.out.println("Writing object not seen so far: " + t.s);
-							writeNodeToDot(bw, t.o, objectInDot); 
+						else { // the subject is a data node
+							if (dax.unknownSummaryNode(t.s)){
+								writeNodeToDot(bw, t.s, subjectInDot); 
+							}
 						}
+						objectInDot = getVeryShortLabelForSummaryDataSubject(t.o, sn); 
+						if (sn.contains(t.o)) {// The subject is a schema node -- this can happen
+							if (dax.unknownSchemaNode(t.o)){
+								bw.write("\"" + objectInDot + schemaNodeLineSuffix);
+							}
+						}
+						else { // the object is a data node
+							if (dax.unknownSummaryNode(t.o)){
+								writeNodeToDot(bw, t.o, objectInDot); 
+							}
+						}
+						
 					} else if (RDF2SQLEncoding.isSchemaProperty(t.p)) { // schema
 						//System.out.println("Schema triple\n");
 						subject = getVeryShortForDot(RDF2SQLEncoding.dictionaryDecode(t.s));
@@ -279,14 +299,24 @@ public class SummaryExport {
 							objectInDot = objectInDot + " (" + summary.getRepresentedNodeNumber(t.o) + ")"; 
 						}
 						if (dax.unknownSchemaNode(t.s)){
-							bw.write("\"" + subjectInDot + "\" [fontcolor=white, style = filled, color=black];\n");
+							bw.write("\"" + subjectInDot + schemaNodeLineSuffix);
 						}
 						if (dax.unknownSchemaNode(t.o)){
-							bw.write("\"" + objectInDot + "\" [fontcolor=white, style = filled, color=black];\n");
+							bw.write("\"" + objectInDot + schemaNodeLineSuffix);
 						}
 					} else { // type triples 
 						//System.out.println("Type triple\n");
-						subjectInDot = getSubjectOrObjectURIforSummaryDataNode(t.s, URIprefix, sn); 
+						subjectInDot = getVeryShortLabelForSummaryDataSubject(t.s, sn); 
+						if (sn.contains(t.s)) {// The subject is a schema node -- this can happen
+							if (dax.unknownSchemaNode(t.s)){
+								bw.write("\"" + subjectInDot + schemaNodeLineSuffix);
+							}
+						}
+						else { // the subject is a data node
+							if (dax.unknownSummaryNode(t.s)){
+								writeNodeToDot(bw, t.s, subjectInDot); 
+							}
+						}
 						object = getVeryShortForDot(RDF2SQLEncoding.dictionaryDecode(t.o));
 						//object = RDF2SQLEncoding.dictionaryDecode(t.o); 
 						objectInDot = object.replaceAll("\"", "");
@@ -296,7 +326,7 @@ public class SummaryExport {
 						propertyInDot = "rdf:type";
 						if (sn.contains(t.s)){
 							if (dax.unknownSchemaNode(t.s)){
-								bw.write("\"" + subjectInDot + "\" [fontsize=40, fontcolor=white, style = filled, color=black];\n");
+								bw.write("\"" + subjectInDot + schemaNodeLineSuffix);
 							}
 						}
 						else{
@@ -306,7 +336,7 @@ public class SummaryExport {
 						}
 						if (sn.contains(t.o)){
 							if (dax.unknownSchemaNode(t.o)){
-								bw.write("\"" + objectInDot + "\" [fontsize=40, fontcolor=white, style = filled, color=black];\n");
+								bw.write("\"" + objectInDot + schemaNodeLineSuffix);
 							}
 						}
 						else {
@@ -315,7 +345,7 @@ public class SummaryExport {
 					}
 					// write the triple in all cases:
 					//System.out.println("Writing " + subjectInDot + " -> " + objectInDot);
-					bw.write("\"" + subjectInDot + "\"" + " -> \"" + objectInDot + "\" [arrowsize=3.0, fontsize=40, label=\"" + propertyInDot);
+					bw.write("\"" + subjectInDot + "\"" + " -> \"" + objectInDot + "\" [arrowsize=" + arrowsize +", penwidth=2, fontsize=40, label=\"" + propertyInDot);
 					if (gatherStatistics){
 						bw.write(" (" + summary.getRepresentedTripleNumber(t) + ")"); 
 					}
@@ -506,12 +536,13 @@ public class SummaryExport {
 		
 		try {
 			try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(dotFileName)))) {
-				bw.write("digraph g{\nratio=0.66;\n node[shape=box, color=black, style=filled];");
+				bw.write("digraph g{\nratio=0.66;\n node[shape=box, color=black, style=filled];\n");
 
+				int penWidth=2; 
 				ArrayList<Triple> summEdges = summary.getSummaryEdges();
 				for (Triple t : summEdges) {
-					String subject, property, object, subjectInDot, propertyInDot, objectInDot;
-					int penWidth = 1; 
+					String property, subjectInDot, propertyInDot, objectInDot;
+				
 					// in all cases, edge labels are preserved:
 					property = RDF2SQLEncoding.dictionaryDecode(t.p);
 					propertyInDot = getVeryShortForDot(property.replaceAll("\"", ""));
@@ -521,8 +552,9 @@ public class SummaryExport {
 						//System.out.println("Data triple, property: " + propertyInDot);
 						subjectInDot = getVeryShortLabelForSummaryDataSubject(t.s, sn); 
 						if (sn.contains(t.s)) {// The subject is a schema node -- this can happen
+							subjectInDot = getVeryShortForDot(RDF2SQLEncoding.dictionaryDecode(t.s)); 
 							if (dax.unknownSchemaNode(t.s)){
-								bw.write("\"" + subjectInDot + "\" [penwidth=2, fontsize=40, fillcolor=white, color=black, fontcolor=black];\n");
+								bw.write("\"" + subjectInDot + schemaNodeLineSuffix); 
 							}
 						}
 						else { // the subject is a data node
@@ -552,21 +584,20 @@ public class SummaryExport {
 						}
 					} else if (RDF2SQLEncoding.isSchemaProperty(t.p)) { // schema
 						//System.out.println("Schema triple" + RDF2SQLEncoding.decode(t).toString());
-						subject = RDF2SQLEncoding.dictionaryDecode(t.s); 
-						subjectInDot = subject.replaceAll("\"", "");
+						subjectInDot = getVeryShortForDot(RDF2SQLEncoding.dictionaryDecode(t.s)); 
+						
 						if (gatherStatistics){
 							subjectInDot = subjectInDot + " (" + summary.getRepresentedNodeNumber(t.s) + ")"; 
 						}
-						object = RDF2SQLEncoding.dictionaryDecode(t.o);
-						objectInDot = object.replaceAll("\"", "");
+						objectInDot = getVeryShortForDot(RDF2SQLEncoding.dictionaryDecode(t.o)); 
 						if (gatherStatistics){
 							objectInDot = objectInDot + " (" + summary.getRepresentedNodeNumber(t.o) + ")"; 
 						}
 						if (dax.unknownSchemaNode(t.s)){
-							bw.write("\"" + subjectInDot + "\" [penwidth=2,  fontsize=40, fontcolor=black, fillcolor=white, color=black];\n");
+							bw.write("\"" + subjectInDot + schemaNodeLineSuffix);
 						}
 						if (dax.unknownSchemaNode(t.o)){
-							bw.write("\"" + objectInDot + "\" [penwidth=2,  fontsize=40, fontcolor=black, fillcolor=white, color=black];\n");
+							bw.write("\"" + objectInDot + schemaNodeLineSuffix);
 						}
 					} else { // type triples 
 						if (!this.drawOfTypeClassEdges) { // if this was false
@@ -574,11 +605,9 @@ public class SummaryExport {
 								continue; 
 							}
 						}
-						penWidth=2; 
 						subjectInDot = getVeryShortLabelForSummaryDataSubject(t.s, sn); 
 						//object
-						object = RDF2SQLEncoding.dictionaryDecode(t.o); 
-						objectInDot = object.replaceAll("\"", "");
+						objectInDot = getVeryShortForDot(RDF2SQLEncoding.dictionaryDecode(t.o)); 
 						//System.out.println("Type triple: " + subjectInDot + " " + propertyInDot + " " + objectInDot); 
 						propertyInDot = "rdf:type"; 
 						if (gatherStatistics){
@@ -588,7 +617,7 @@ public class SummaryExport {
 						if (sn.contains(t.s)){// subject is schema node
 							//System.out.println("Subject is schema node");
 							if (dax.unknownSchemaNode(t.s)){
-								bw.write("\"" + subjectInDot + "\" [penwidth=2,  fontsize=40, fontcolor=black, color=black, fillcolor=white];\n");
+								bw.write("\"" + subjectInDot + schemaNodeLineSuffix);
 							}
 						}
 						else{
@@ -600,7 +629,7 @@ public class SummaryExport {
 						if (sn.contains(t.o)){ // object is schema node
 							//System.out.println("Object is schema node");
 							if (dax.unknownSchemaNode(t.o)){
-								bw.write("\"" + objectInDot + "\" [penwidth=2,  fontsize=40, fontcolor=black, color=black, fillcolor=white];\n");
+								bw.write("\"" + objectInDot + schemaNodeLineSuffix);
 							}
 						}
 						else{ // object is not schema node yet this is a type triple?...
@@ -609,8 +638,8 @@ public class SummaryExport {
 						}
 					}
 					// write the triple in all cases:
-					bw.write("\"" + subjectInDot + "\"" + " -> \"" + objectInDot + "\" [arrowsize=3.0, weight=1, fontsize=40, penwidth=" + penWidth +
-							" label=\"" + propertyInDot); 
+					bw.write("\"" + subjectInDot + "\"" + " -> \"" + objectInDot + "\" [arrowsize=" + arrowsize +"\", weight=1, fontsize=40, penwidth=" + penWidth +
+							", label=\"" + propertyInDot); 
 					if (gatherStatistics){
 						bw.write(" (" + summary.getRepresentedTripleNumber(t) + ")"); 
 						//System.out.println("Writing " + subjectInDot + " -> " + objectInDot + "[weight=1, penwidth=" + penWidth +
@@ -745,17 +774,10 @@ public class SummaryExport {
 							objectInDot = objectInDot + " (" + summary.getRepresentedNodeNumber(t.o) + ")"; 
 						}
 						if (dax.unknownSchemaNode(t.s)){
-							//bw.write("\"" + subjectInDot + "\" [penwidth=2,  fontsize=40, fontcolor=black, fillcolor=white, color=black];\n");
 						}
 						if (dax.unknownSchemaNode(t.o)){
-							//bw.write("\"" + objectInDot + "\" [penwidth=2,  fontsize=40, fontcolor=black, fillcolor=white, color=black];\n");
 						}
-						//bw.write("\"" + subjectInDot + "\"" + " -> \"" + objectInDot + "\" [weight=1, fontsize=40, penwidth=" + penWidth +
-						//		" label=\"" + propertyInDot); 
 						if (gatherStatistics){
-							//bw.write(" (" + summary.getRepresentedTripleNumber(t) + ")"); 
-							//System.out.println("Writing " + subjectInDot + " -> " + objectInDot + "[weight=1, penwidth=" + penWidth +
-							//		" label=" + propertyInDot + " (" + summary.getRepresentedTripleNumber(t) + ")"); 
 							
 						}
 					} else { // type triples 
@@ -802,10 +824,12 @@ public class SummaryExport {
 						}
 					}
 				}
-				bw.write("label=\"" + summary.getClass().getSimpleName() + " summary of " +
+				if (drawGraphLabel) {
+						bw.write("label=\"" + summary.getClass().getSimpleName() + " summary of " +
 						triplesFileName + " (" + 
 						summary.triplesSummarizedSoFar + " triples): " +
 						entities.size() + " summary entity nodes, " + entityEdgeCount + " inter-entity edges\"\n"); 
+				}
 				bw.write("labelloc=top; labeljust=right;\n"); 
 				
 				bw.write("}\n");
@@ -835,9 +859,9 @@ public class SummaryExport {
 		try{
 			String nColor = dax.getSummaryNodeColor(node);
 			bw.write("\"" + label);
-			bw.write("\" [fontsize=40, color=black, fillcolor=" + // Fontsize=40, shape=box added on Sept 26
+			bw.write("\" [fontsize=40, color=black, style=filled, fillcolor=" + // Fontsize=40, shape=box added on Sept 26
 					nColor +
-					(dax.isDarkColor(nColor)?", fontcolor=white ":"")
+					(dax.isDarkColor(nColor)?", fontcolor=white":"")
 					+ "];\n");
 		}
 		catch (IOException e) {
