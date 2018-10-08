@@ -6,3 +6,6 @@ select count(distinct p) from triples where p <> '<http://www.w3.org/2000/01/rdf
 
 -- number of distinct classes
 select count(distinct n) from (select o as n from triples where p = '<http://www.w3.org/2000/01/rdf-schema#domain>' or p = '<http://www.w3.org/2000/01/rdf-schema#range>' or p = '<http://www.w3.org/2000/01/rdf-schema#subClassOf>' or p = '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' union select s as n from triples where p = '<http://www.w3.org/2000/01/rdf-schema#subClassOf>') as q;
+
+-- ratio of typed nodes wrt. all nodes
+select (cast((with typed as (select distinct s as n from triples where triples.p = '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>') select count(*) from (select distinct n from (select s as n from typed right outer join triples on typed.n = triples.s where typed.n is null union select o as n from typed right outer join triples on typed.n = triples.o where typed.n is null) as untyped) as distinct_untyped) as float) / cast((select count(*) from (select distinct n from (select s as n from triples union select o as n from triples) as subsubquery) as subquery) as float)) as result;
