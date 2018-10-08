@@ -821,13 +821,15 @@ public class SummaryExport {
 								continue; 
 							}
 						}
-						subjectInDot = getVeryShortLabelForSummaryDataSubject(t.s, sn); 
-						EntitySummaryNode esn = entities.get(t.s); 
-						if (esn == null) { // the entity did not exist yet --> create it
-							esn = new EntitySummaryNode(t.s, summary.getRepresentedNodeNumber(t.s), subjectInDot, this);
-							entities.put(t.s, esn); 
+						if (!sn.contains(t.s)) { // if the subject is not a class itself, create an entity
+							subjectInDot = getVeryShortLabelForSummaryDataSubject(t.s, sn); 
+							EntitySummaryNode esn = entities.get(t.s); 
+							if (esn == null) { // the entity did not exist yet --> create it
+								esn = new EntitySummaryNode(t.s, summary.getRepresentedNodeNumber(t.s), subjectInDot, this);
+								entities.put(t.s, esn); 
+							}
+							esn.addType(t.o);
 						}
-						esn.addType(t.o);
 					}
 				}
 				// now we print
