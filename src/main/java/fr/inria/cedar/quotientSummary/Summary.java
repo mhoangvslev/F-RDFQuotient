@@ -98,6 +98,7 @@ public class Summary {
 	protected HashMap<Long, Long> summaryNodeStatistics;
 	// for each summary edge, the number of graph edge it represents
 	protected HashMap<Triple, Long> summaryEdgeStatistics;
+	public long numberOfLeaves;
 
 	// helper class for multicolor printing to DOT
 	protected DOTAuxiliary dax; 
@@ -850,6 +851,8 @@ public class Summary {
 
 		stats.put("inputGraphNumberOfNodes", Long.toString(rep.numberOfKeys()));
 		stats.put("outputGraphNumberOfNodes", Long.toString(rep.numberOfDistinctValues()));
+
+		stats.put("outputGraphNumberOfLeaves", Long.toString(numberOfLeaves));
 
 		return stats;
 	}

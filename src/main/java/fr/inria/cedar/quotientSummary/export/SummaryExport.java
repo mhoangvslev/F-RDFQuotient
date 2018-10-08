@@ -545,6 +545,7 @@ public class SummaryExport {
 				//LOGGER.info(t.o + " is a leaf");
 			}
 		}
+		summary.numberOfLeaves = leaves.size();
 		// now we know who the leaves are, we just have to draw all this		
 		HashSet<Long> sn = summary.getSchemaNodes(); 
 		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
@@ -726,6 +727,7 @@ public class SummaryExport {
 				//LOGGER.info(t.o + " is a leaf");
 			}
 		}
+		summary.numberOfLeaves = leaves.size();
 		Long2LongSet children = new Long2LongSet(); // for each parent of a leaf node, all its leaf children
 		for (Triple t: this.summary.getSummaryEdges()) {
 			if (leaves.contains(t.o)) {
