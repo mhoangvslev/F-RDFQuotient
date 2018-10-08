@@ -871,7 +871,7 @@ public class SummaryExport {
 						bw.write("fontsize=20; label=\"" + summary.getClass().getSimpleName() + " of " +
 						triplesFileName + " (" + 
 						summary.triplesSummarizedSoFar + " triples): " +
-						entities.size() + " summary entity nodes, " + entityEdgeCount + " inter-entity edges\"\n"); 
+						entities.size() + " nodes, " + entityEdgeCount + " edges\"\n"); 
 				}
 				bw.write("labelloc=top; labeljust=center;\n"); 			
 				bw.write("}\n");
