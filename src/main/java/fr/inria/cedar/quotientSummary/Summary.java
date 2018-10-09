@@ -105,6 +105,11 @@ public class Summary {
 
 	// exporter utility
 	protected SummaryExport exporter; 
+	
+	// properties to ignore when building cliques
+	protected HashSet<Long> dataPropsNotInCliques; 
+	protected HashMap<Long, Long> sourcesOfDataPropsNotInCliques; 
+	protected HashMap<Long, Long> targetsOfDataPropsNotInCliques; 
 
 	public Summary() {
 		LOGGER.setLevel(Level.INFO);
@@ -126,14 +131,26 @@ public class Summary {
 		catch(IOException e){
 			LOGGER.info("Was not able to load configuration file " + SUMMARY_CONFIG_FILE);
 		}
-		try{
+		try{	
 			checkConsistency = properties.getProperty("consistencyChecks").toLowerCase().equals("true");
 		} catch (Exception e) {
-			throw new IllegalStateException("Unable to determine if consistency checks are needed");
+			throw new IllegalStateException("Unable to extract property information: " +
+					e.toString());
 		}
+		this.dataPropsNotInCliques = new HashSet<>();
+		targetsOfDataPropsNotInCliques = new HashMap<Long, Long>(); 
+		sourcesOfDataPropsNotInCliques = new HashMap<Long, Long>(); 
 		dax = new DOTAuxiliary();
 	}
-
+	public void setGenericProperties(Connection conn) {
+		if (properties.getProperty("omitGenericPropertiesFromCliques").toLowerCase().equals("true")) {
+			String[] props  = properties.getProperty("genericProperties").split(",");
+			for (String nonCliqueP: props) {
+				this.dataPropsNotInCliques.add(RDF2SQLEncoding.dictionaryEncode(nonCliqueP));
+			}
+		}
+	}	
+	
 	public Summary(Connection conn) throws SQLException {
 		this.rep = new Long2Long();
 		this.edgesWithProv = new EdgesWithProvenanceCounts();
@@ -438,7 +455,10 @@ public class Summary {
 		}
 		else {
 			if (isTwoPass) {
-				traverser = new DataFirstTwoPassTraverser(this, conn);
+				// TODO this is a hack, fix me!
+				//traverser = new DataFirstTwoPassTraverser(this, conn);
+				// Ioana, Oct 9, 2018
+				traverser = new DataFirstThreePassTraverser(this, conn); 
 			}
 			else {
 				traverser = new DataFirstTraverser(this, conn);
@@ -470,6 +490,41 @@ public class Summary {
 			rep.put(t.s, typeOnlyNodeID);
 		}
 		// o already represented in collectSchemaNodes
+	}
+	
+	/**
+	 * For special properties we do not want to have in cliques
+	 * Ioana, Oct 9, 2018
+	 * 
+	 * Assigns a new summary node as target of each special data property
+	 */
+	public void prepareRepresentationOfSpecialDataTriples() {
+		for (Long l: dataPropsNotInCliques) {
+			this.sourcesOfDataPropsNotInCliques.put(l, getNextSummaryNode());
+			this.targetsOfDataPropsNotInCliques.put(l, getNextSummaryNode());
+		}
+	}
+	/**
+	 * For special properties we do not want to have in cliques
+	 * Ioana, Oct 9, 2018
+	 * 
+	 * Represents each special data triple by the (existing or not) representative
+	 * of its subject, and by the (for sure existing) representative of its object
+	 */
+	protected void representSpecialDataTriple(Triple t) {
+		Long repS = rep.get(t.s);
+		if (repS == null) {// the node has not been seen before
+			// therefore we must create its representative
+			//LOGGER.info("Created new subject for " + t.p);
+			repS = sourcesOfDataPropsNotInCliques.get(t.p); 
+			rep.put(t.s,  repS); 
+		}
+		Long repO = rep.get(t.o);
+		if (repO == null) {// the node has not been seen before
+			repO = targetsOfDataPropsNotInCliques.get(t.p); 
+			rep.put(t.o,  repO); 
+		}
+		edgesWithProv.addTriple(repS, t.p, repO);
 	}
 
 	protected void handleTypeTripleBeforeData(Triple t) {
@@ -964,4 +1019,7 @@ public class Summary {
 			return 0L; 
 		}
 	}
+
+	
+
 }

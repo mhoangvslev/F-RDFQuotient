@@ -42,7 +42,9 @@ public class EntitySummaryNode {
 	}
 	
 	public void addLeafChild(long prop, long leafChild, long propCard, long childCard) {
-		//LOGGER.info("Adding to ESN " + node + " child " + leafChild + " (" + childCard + ") on property " + prop + " (" + propCard + ")"); 
+		//LOGGER.info("Adding to ESN " + node + " child " + leafChild + " (" + childCard + 
+		//		") on property " + prop + " " + RDF2SQLEncoding.dictionaryDecode(prop) + 
+		//		" (" + propCard + ")"); 
 		this.outgoingProperties.add(prop);
 		this.leafChildren.add(leafChild);
 		this.propCardinalities.add(propCard);

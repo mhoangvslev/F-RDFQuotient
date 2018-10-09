@@ -56,4 +56,5 @@ public class DataFirstTraverser extends Traverser {
 		LOGGER.info("Summarized " + summ.triplesSummarizedSoFar + " input triples, created summary of size " + summ.edgesWithProv.getSummaryEdges().size()
 			+ " triples overall in " + summ.allTriplesSummarizationTime + " ms");
 	}
+	
 }

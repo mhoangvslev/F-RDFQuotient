@@ -512,6 +512,7 @@ public class SummaryExport {
 			ResultSet rs = stmtSplitLeavesCount.executeQuery();
 			while (rs.next()) {
 				Long n = rs.getLong(1); 
+				//LOGGER.info("Represented by leaf " + t.toString() + ": " + n);
 				return n; 
 			}
 		}
@@ -773,8 +774,8 @@ public class SummaryExport {
 								}
 								// if the object is a leaf, it needs to be wrapped in this entity: 
 								if (leaves.contains(t.o)) {
-									// Oct 9: maybe we don't need this? 
-									esn.addLeafChild(t.p, t.o, summary.getRepresentedTripleNumber(t), getRepresentedByThisLeaf(t));
+									esn.addLeafChild(t.p, t.o, summary.getRepresentedTripleNumber(t), 
+											getRepresentedByThisLeaf(t));
 								}								
 								// we cannot write to DOT yet because the record of t.s is not complete
 							}

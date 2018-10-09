@@ -7,6 +7,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.HashSet;
+
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
@@ -25,8 +27,9 @@ public class RDF2SQLEncoding {
 	private static long rangeCode = -1;
 	private static long classCode = -1; 
 	private static long propertyCode = -1; 
-	private static HashMap<Long, String> codeToURIOrLiteral;
-	private static HashMap<String, Long> uriOrLiteralToCode;
+	// Ioana: initialized these two
+	private static HashMap<Long, String> codeToURIOrLiteral = new HashMap<>();
+	private static HashMap<String, Long> uriOrLiteralToCode = new HashMap<>();
 	private static Connection conn;
 	private static PreparedStatement stmtDecode;
 	private static PreparedStatement stmtEncode;
@@ -206,6 +209,5 @@ public class RDF2SQLEncoding {
 	public static DecodedTriple decode(Triple t) {
 		return new DecodedTriple(dictionaryDecode(t.s), dictionaryDecode(t.p), dictionaryDecode(t.o));
 	}
-
 
 }
