@@ -290,6 +290,7 @@ public class Summary {
 		long rangeCode = RDF2SQLEncoding.getRangeCode();
 		long typeCode = RDF2SQLEncoding.getTypeCode();
 		long classCode = RDF2SQLEncoding.getClassCode(); 
+		long propertyCode = RDF2SQLEncoding.getPropertyCode(); 
 
 		String getTriplesString = "select distinct s from " + PostgresIdentifier.escapedQuotedId(encodedTriplesTableName)
 				+ " where p = " + subClassCode
@@ -336,18 +337,20 @@ public class Summary {
 			throw new IllegalStateException("Postgres error encountered while collecting schema nodes " + e.toString());
 		}
 		
+		// add nodes declared to be of type rdf:Class or rdf:Property
 		getTriplesString = "select distinct s from " + PostgresIdentifier.escapedQuotedId(encodedTriplesTableName)
 				+ " where p = " + typeCode
-				+ " and o = " + classCode 
+				+ " and o = " + classCode + " or o = " + propertyCode 
 				+ ";";
 		try {
 			try (Statement getTriples = conn.createStatement()) {
 				getTriples.setFetchSize(10000);
 				try (ResultSet rs = getTriples.executeQuery(getTriplesString)) {
 					while (rs.next()) {
-						long o = rs.getLong(1);
-						sn.add(o);
-						rep.put(o, o);
+						long s = rs.getLong(1);
+						sn.add(s);
+						rep.put(s, s);
+						//LOGGER.info(s + " " + RDF2SQLEncoding.dictionaryDecode(s) + " is a schema node");
 					}
 				}
 			}

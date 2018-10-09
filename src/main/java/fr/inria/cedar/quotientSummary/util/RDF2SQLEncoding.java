@@ -24,6 +24,7 @@ public class RDF2SQLEncoding {
 	private static long domainCode = -1;
 	private static long rangeCode = -1;
 	private static long classCode = -1; 
+	private static long propertyCode = -1; 
 	private static HashMap<Long, String> codeToURIOrLiteral;
 	private static HashMap<String, Long> uriOrLiteralToCode;
 	private static Connection conn;
@@ -86,6 +87,10 @@ public class RDF2SQLEncoding {
 		return classCode; 
 	}
 
+	public static long getPropertyCode() {
+		return propertyCode; 
+	}
+
 	public static void setRDFBuiltInPropertyCodes() {
 		setTypeCode();
 		//LOGGER.debug("rdf:type code is " + typeCode);
@@ -98,6 +103,7 @@ public class RDF2SQLEncoding {
 		setRangeCode();
 		//LOGGER.debug("rdfs:range code is: " + rangeCode);
 		setClassCode(); 
+		setPropertyCode(); 
 	}
 
 	private static void setTypeCode() {
@@ -123,6 +129,11 @@ public class RDF2SQLEncoding {
 	private static void setClassCode() {
 		classCode = dictionaryEncode("<http://www.w3.org/2000/01/rdf-schema#Class>"); 
 	}
+
+	public static void setPropertyCode() {
+		propertyCode = dictionaryEncode("<http://www.w3.org/2000/01/rdf-schema#Property>"); 
+	}
+
 	/**
 	 * Gets the dictionary code for a specific URI. Returns -1 if URI not found in the dictionary.
 	 *
@@ -195,5 +206,6 @@ public class RDF2SQLEncoding {
 	public static DecodedTriple decode(Triple t) {
 		return new DecodedTriple(dictionaryDecode(t.s), dictionaryDecode(t.p), dictionaryDecode(t.o));
 	}
+
 
 }

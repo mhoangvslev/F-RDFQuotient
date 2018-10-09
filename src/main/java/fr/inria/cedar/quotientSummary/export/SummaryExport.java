@@ -716,6 +716,7 @@ public class SummaryExport {
 		// first, determine who is a leaf
 		HashSet<Long> leaves = new HashSet<Long>(); // tentative leaf nodes (until discovered to be subjects)
 		HashSet<Long> notLeaves = new HashSet<Long>(); // certain non-leaf nodes (subjects)
+		
 		for (Triple t: this.summary.getSummaryEdges()) {
 			notLeaves.add(t.s); // for sure s is not a leaf
 			//LOGGER.info(t.s + " surely not a leaf"); 
@@ -754,7 +755,6 @@ public class SummaryExport {
 				HashMap<Long, Integer> leafCounter = new HashMap<Long, Integer>(); 
 				for (Triple t : summEdges) {
 					String subject, property, object, subjectInDot, propertyInDot, objectInDot;
-					int penWidth = 1; 
 					// in all cases, edge labels are preserved:
 					property = RDF2SQLEncoding.dictionaryDecode(t.p);
 					propertyInDot = getVeryShortForDot(property.replaceAll("\"", ""));
@@ -762,13 +762,10 @@ public class SummaryExport {
 					if (RDF2SQLEncoding.isDataProperty(t.p)) { // data
 						//LOGGER.info("Data triple, property: " + propertyInDot);
 						subjectInDot = getVeryShortLabelForSummaryDataSubject(t.s, sn); 
-						if (sn.contains(t.s)) {// The subject is a schema node -- this can happen
-							if (dax.unknownSchemaNode(t.s)){
-								// this method has side effect, so leave it like this
-							}
-						}
-						else { // the subject is a data node
+						if (!sn.contains(t.s)) { // the subject is a data node
+							//LOGGER.info("Data subject: " + t.s); 
 							if (!leaves.contains(t.s)) {// the subject is not a leaf, thus it is an entity
+								//LOGGER.info("Not leaf"); 
 								EntitySummaryNode esn = entities.get(t.s); 
 								if (esn == null) { // the entity did not exist yet --> create it
 									esn = new EntitySummaryNode(t.s, summary.getRepresentedNodeNumber(t.s), subjectInDot, this);
@@ -776,17 +773,7 @@ public class SummaryExport {
 								}
 								// if the object is a leaf, it needs to be wrapped in this entity: 
 								if (leaves.contains(t.o)) {
-									Integer counterForThisSplitLeaf = leafCounter.get(t.o); // try to find what number to attach to it
-									if (counterForThisSplitLeaf == null) {
-										counterForThisSplitLeaf = 1;
-										leafCounter.put(t.o, 1);
-									}
-									else {
-										counterForThisSplitLeaf += 1; 
-										leafCounter.put(t.o, counterForThisSplitLeaf); 
-									}
-									objectInDot = getVeryShortLabelforSummaryDataObjectWithCountSuffix(t, sn, counterForThisSplitLeaf); 
-									
+									// Oct 9: maybe we don't need this? 
 									esn.addLeafChild(t.p, t.o, summary.getRepresentedTripleNumber(t), getRepresentedByThisLeaf(t));
 								}								
 								// we cannot write to DOT yet because the record of t.s is not complete
@@ -797,31 +784,10 @@ public class SummaryExport {
 						}
 			
 					} else if (RDF2SQLEncoding.isSchemaProperty(t.p)) { // schema
-						//System.out.println("Schema triple" + RDF2SQLEncoding.decode(t).toString());
-						subject = RDF2SQLEncoding.dictionaryDecode(t.s); 
-						subjectInDot = subject.replaceAll("\"", "");
-						if (gatherStatistics){
-							subjectInDot = subjectInDot + " (" + summary.getRepresentedNodeNumber(t.s) + ")"; 
-						}
-						object = RDF2SQLEncoding.dictionaryDecode(t.o);
-						objectInDot = object.replaceAll("\"", "");
-						if (gatherStatistics){
-							objectInDot = objectInDot + " (" + summary.getRepresentedNodeNumber(t.o) + ")"; 
-						}
-						if (dax.unknownSchemaNode(t.s)){
-						}
-						if (dax.unknownSchemaNode(t.o)){
-						}
-						if (gatherStatistics){
-							
-						}
+						// nothing
 					} else { // type triples 
-						if (!this.drawOfTypeClassEdges) { // if this was false
-							if (t.o == RDF2SQLEncoding.getClassCode()) { // if this is an edge "C type Class", do not draw it
-								continue; 
-							}
-						}
-						if (!sn.contains(t.s)) { // if the subject is not a class itself, create an entity
+						if (!sn.contains(t.s)) { // if the subject is not a schema node itself, create an entity
+							//LOGGER.info("Type triple subject not part of the schema: " + t.s + ", creating entity:");
 							subjectInDot = getVeryShortLabelForSummaryDataSubject(t.s, sn); 
 							EntitySummaryNode esn = entities.get(t.s); 
 							if (esn == null) { // the entity did not exist yet --> create it
@@ -842,6 +808,7 @@ public class SummaryExport {
 					}
 					if (RDF2SQLEncoding.isDataProperty(t.p) || (RDF2SQLEncoding.getTypeCode() == t.p)) { // type or data triple
 						if (!sn.contains(t.s)) { // data subject
+							//LOGGER.info(t.s + " is a data node");
 							EntitySummaryNode esn = entities.get(t.s); 
 							if (esn == null) {
 								throw new IllegalStateException("No entity for: " + t.s);
