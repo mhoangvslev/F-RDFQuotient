@@ -173,8 +173,8 @@ public class SummaryExport {
 							reifiedEdgeNumber);
 						bw.write(reifEdgeURI + " <" + properties.getProperty("reifiedEdgeHasSubject") + "> "
 							+ getSummaryNodeURI(URIprefix, ts.s) + " .\n");
-						bw.write(reifEdgeURI + " <" + properties.getProperty("reifiedEdgeHasProperty") + "> <"
-							+ RDF2SQLEncoding.dictionaryDecode(ts.p) + "> .\n");
+						bw.write(reifEdgeURI + " <" + properties.getProperty("reifiedEdgeHasProperty") + "> "
+							+ RDF2SQLEncoding.dictionaryDecode(ts.p) + " .\n");
 						bw.write(reifEdgeURI + " <" + properties.getProperty("reifiedEdgeHasObject") + "> "
 							+ getSummaryNodeURI(URIprefix, ts.o) + " .\n");
 						bw.write(reifEdgeURI + " <" + properties.getProperty("summaryEdgeSupportURI") + "> \""
