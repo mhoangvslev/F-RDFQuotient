@@ -15,7 +15,7 @@ import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 import java.util.HashSet;
 
 public class DataFirstThreePassTraverser extends DataFirstTraverser {
-	HashSet<Triple> triplesForThirdPass; 
+	HashSet<Triple> triplesForThirdPass; // TODO move to the summary so that it stores the data (not here!)
 	
 	private static final Logger LOGGER = Logger.getLogger(DataFirstThreePassTraverser.class.getName());
 
@@ -46,7 +46,7 @@ public class DataFirstThreePassTraverser extends DataFirstTraverser {
 						}
 						else { // data triple
 							if (summ.dataPropsNotInCliques.contains(t.p)) {
-								triplesForThirdPass.add(t); 
+								triplesForThirdPass.add(t); // the summary should do this
 							}
 							else {
 								summ.classifyDataTriple(t);

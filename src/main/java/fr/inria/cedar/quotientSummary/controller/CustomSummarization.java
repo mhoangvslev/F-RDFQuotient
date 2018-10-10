@@ -10,21 +10,20 @@ import org.apache.log4j.Logger;
 public class CustomSummarization {
 	private static final Logger LOGGER = Logger.getLogger(CustomSummarization.class.getName());
 
-	public static File summarize(String fileName, String summarizationMethod){
+	public static void summarize(String fileName, String summarizationMethod){
 		LOGGER.setLevel(Level.INFO);
 		System.out.println("############################################");
 		System.out.println("Custom " + summarizationMethod + " summarization of " + fileName);
 		System.out.println("#############################################");
 
 		String inputFileName =  fileName;
-		String outputFileName = fileName.substring(0, fileName.length() - 3)  + "_" + summarizationMethod + "_noSaturation.nt";
 		try {
-			String[] argsSum = {"loadWithSaturationAndSummarize", summarizationMethod, inputFileName};
+			String[] argsSum = {"loadAndSummarize", summarizationMethod, inputFileName};
 			try {
 				Builder.main(argsSum);
-				String[] argsSave = {"saveSummaryComputedClassicalWay"};
+				String[] argsSave = {"saveSummaryComputedWithoutSaturation"};
 				Builder.main(argsSave);
-				String[] argsExport = {"exportSummaryComputedClassicalWay", "splitleaves", inputFileName};
+				String[] argsExport = {"exportSummaryComputedWithoutSaturation", "foldleaves", inputFileName};
 				Builder.main(argsExport);
 			}
 			catch (UnsupportedDatabaseEngineException ex) {
@@ -39,7 +38,6 @@ public class CustomSummarization {
 					LOGGER.error(ex1);
 				}
 			}
-			return new File(outputFileName);
 		}
 		catch (IOException e) {
 			throw new IllegalStateException("Unable to open .nt files in " + summarizationMethod + 
@@ -54,12 +52,10 @@ public class CustomSummarization {
 //		String fileName = argv[0]; 
 //		String summarizationMethod = argv[1]; 
 //		File f = summarize(fileName, summarizationMethod); 
-		String[] fileNames = new String[] 
-//				//{ "conference", "enelshops", "foodista", "frenchpolitics",
-//				//"lubm1m", "mondial", "nasa", "nobelprizes", {"pokedex"}; {"bsbm1m"}; {"watdiv10m"}; {"department"}; {"untypdepartment"}; 
-				{"untypcoursedept"}; 
+		String[] fileNames = new String[] { "conference", "enelshops", "foodista", "frenchpolitics",
+"lubm1m", "mondial", "nasa", "nobelprizes", "pokedex", "bsbm1m", "watdiv10m"};   
 		String directory = "src/test/resources/rdf-nt-files/"; 
-		String [] summarizationMethods = new String[] {"weak", "strong", "typedweak", "typedstrong", "onefb", "onefw"}; 
+		String [] summarizationMethods = new String[] {"2pweak"}; // "strong", "typedweak", "typedstrong", "onefb", "onefw"}; 
 		for (String fileName: fileNames) {
 			for (String summarizationMethod: summarizationMethods) {
 				summarize(directory + fileName + ".nt", summarizationMethod); 
