@@ -19,6 +19,7 @@ public class DataFirstTwoPassTraverser extends DataFirstTraverser {
 		dataTriplesClassification();
 		dataTriplesRepresentation();
 		typePass();
+		genericPropertyTriplesPass();
 
 		summ.allTriplesSummarizationTime = setupTime + summ.schemaNodesCollectionTime /*+ summ.classSetCreationTime*/ + summ.nonTypeTriplesSummarizationTime + summ.typeTriplesSummarizationTime;
 		LOGGER.info("Summarized " + summ.triplesSummarizedSoFar + " input triples, created summary of size " + summ.edgesWithProv.getSummaryEdges().size()

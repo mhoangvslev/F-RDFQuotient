@@ -74,7 +74,12 @@ public abstract class Traverser {
 							// s, o represented in collectSchemaNodes
 						}
 						else { // data triple
-							summ.handleDataTriple(t);
+							if (summ.genericPropertiesIgnoredInCliques.contains(t.p)) {
+								summ.genericPropertyTriples.add(t);
+							}
+							else {
+								summ.handleDataTriple(t);
+							}
 						}
 						summ.triplesSummarizedSoFar++;
 						summ.nonTypeTriplesSummarizedSoFar++;
@@ -110,7 +115,12 @@ public abstract class Traverser {
 							// s, o represented in collectSchemaNodes
 						}
 						else { // data triple
-							summ.classifyDataTriple(t);
+							if (summ.genericPropertiesIgnoredInCliques.contains(t.p)) {
+								summ.genericPropertyTriples.add(t);
+							}
+							else {
+								summ.classifyDataTriple(t);
+							}
 						}
 					}
 				}
@@ -135,6 +145,9 @@ public abstract class Traverser {
 				try (ResultSet rs = getUntypedTriples.executeQuery(getUntypedTriplesString)) {
 					while (rs.next()) {
 						Triple t = new Triple(rs.getLong(1), rs.getLong(2), rs.getLong(3));
+						if (summ.genericPropertiesIgnoredInCliques.contains(t.p)) { // avoid generic property triples
+							continue;
+						}
 						if ((t.p != subClassCode)
 						&& (t.p != subPropertyCode)
 						&& (t.p != domainCode)
@@ -156,6 +169,20 @@ public abstract class Traverser {
 			throw new IllegalStateException("Postgres error encountered while summarizing data triples " + e.toString());
 		}
 		summ.nonTypeTriplesSummarizationTime += System.currentTimeMillis() - start;
+	}
+
+	// ommitted generic proprty triples
+	public void genericPropertyTriplesPass() {
+		summ.setGenericProperties(conn);
+		summ.prepareRepresentationOfGenericPropertyTriples();
+		for (Triple t: summ.genericPropertyTriples) {
+			summ.representGenericPropertyTriple(t);
+			summ.triplesSummarizedSoFar++;
+			summ.typeTriplesSummarizedSoFar++;
+			if (summ.checkConsistency) {
+				summ.consistencyChecks();
+			}
+		}
 	}
 
 	// type triples
