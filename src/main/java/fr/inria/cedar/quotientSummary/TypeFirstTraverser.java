@@ -56,6 +56,7 @@ public class TypeFirstTraverser extends Traverser {
 		setUp();
 		typePass();
 		dataPass();
+		genericPropertyTriplesPass();
 
 		summ.allTriplesSummarizationTime = setupTime + summ.schemaNodesCollectionTime + summ.classSetCreationTime + summ.nonTypeTriplesSummarizationTime + summ.typeTriplesSummarizationTime;
 		LOGGER.info("Summarized " + summ.triplesSummarizedSoFar + " input triples, created summary of size " + summ.edgesWithProv.getSummaryEdges().size()

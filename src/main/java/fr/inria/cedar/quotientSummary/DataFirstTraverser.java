@@ -51,10 +51,10 @@ public class DataFirstTraverser extends Traverser {
 		setUp();
 		dataPass();
 		typePass();
+		genericPropertyTriplesPass();
 
 		summ.allTriplesSummarizationTime = setupTime + summ.schemaNodesCollectionTime /*+ summ.classSetCreationTime*/ + summ.nonTypeTriplesSummarizationTime + summ.typeTriplesSummarizationTime;
 		LOGGER.info("Summarized " + summ.triplesSummarizedSoFar + " input triples, created summary of size " + summ.edgesWithProv.getSummaryEdges().size()
 			+ " triples overall in " + summ.allTriplesSummarizationTime + " ms");
 	}
-	
 }
