@@ -358,8 +358,8 @@ public class Summary {
 		// add nodes declared to be of type rdf:Class or rdf:Property
 		getTriplesString = "select distinct s from " + PostgresIdentifier.escapedQuotedId(encodedTriplesTableName)
 				+ " where p = " + typeCode
-				+ " and o = " + classCode + " or o = " + propertyCode
-				+ ";";
+				+ " and (o = " + classCode + " or o = " + propertyCode
+				+ ");";
 		try {
 			try (Statement getTriples = conn.createStatement()) {
 				getTriples.setFetchSize(10000);

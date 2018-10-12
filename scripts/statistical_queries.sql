@@ -36,3 +36,34 @@ as result;
 
 -- ratio of untyped nodes wrt. all nodes: less efficient version
 select (cast((with typed as (select distinct s as n from triples where triples.p = '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>') select count(*) from (select distinct n from (select s as n from typed right outer join triples on typed.n = triples.s where typed.n is null union select o as n from typed right outer join triples on typed.n = triples.o where typed.n is null) as untyped) as distinct_untyped) as float) / cast((select count(*) from (select distinct n from (select s as n from triples union select o as n from triples) as subsubquery) as subquery) as float)) as result;
+
+-- number of only data triples in the summary (pretty)
+with schema_nodes as (
+	select distinct s as sn
+	from summary_edges
+	where p = (select key from dictionary where value = '<http://www.w3.org/2000/01/rdf-schema#subClassOf>')
+		or p = (select key from dictionary where value = '<http://www.w3.org/2000/01/rdf-schema#subPropertyOf>')
+		or p = (select key from dictionary where value = '<http://www.w3.org/2000/01/rdf-schema#domain>')
+		or p = (select key from dictionary where value = '<http://www.w3.org/2000/01/rdf-schema#range>')
+	union
+	select distinct o as sn
+	from summary_edges
+	where p = (select key from dictionary where value = '<http://www.w3.org/2000/01/rdf-schema#subClassOf>')
+		or p = (select key from dictionary where value = '<http://www.w3.org/2000/01/rdf-schema#subPropertyOf>')
+		or p = (select key from dictionary where value = '<http://www.w3.org/2000/01/rdf-schema#domain>')
+		or p = (select key from dictionary where value = '<http://www.w3.org/2000/01/rdf-schema#range>')
+		or p = (select key from dictionary where value = '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>')
+	union
+	select distinct s as sn
+	from summary_edges
+	where p = (select key from dictionary where value = '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>')
+		and (o = (select key from dictionary where value = '<http://www.w3.org/2000/01/rdf-schema#Class>')
+			or o = (select key from dictionary where value = '<http://www.w3.org/2000/01/rdf-schema#Property>'))
+)
+select count(*)
+from summary_edges
+where s not in (select * from schema_nodes)
+	and o not in (select * from schema_nodes);
+
+-- number of only data triples in the summary
+with schema_nodes as (select distinct s as sn from summary_edges where p = (select key from dictionary where value = '<http://www.w3.org/2000/01/rdf-schema#subClassOf>') or p = (select key from dictionary where value = '<http://www.w3.org/2000/01/rdf-schema#subPropertyOf>') or p = (select key from dictionary where value = '<http://www.w3.org/2000/01/rdf-schema#domain>') or p = (select key from dictionary where value = '<http://www.w3.org/2000/01/rdf-schema#range>') union select distinct o as sn from summary_edges where p = (select key from dictionary where value = '<http://www.w3.org/2000/01/rdf-schema#subClassOf>') or p = (select key from dictionary where value = '<http://www.w3.org/2000/01/rdf-schema#subPropertyOf>') or p = (select key from dictionary where value = '<http://www.w3.org/2000/01/rdf-schema#domain>') or p = (select key from dictionary where value = '<http://www.w3.org/2000/01/rdf-schema#range>') or p = (select key from dictionary where value = '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>') union select distinct s as sn from summary_edges where p = (select key from dictionary where value = '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>') and (o = (select key from dictionary where value = '<http://www.w3.org/2000/01/rdf-schema#Class>') or o = (select key from dictionary where value = '<http://www.w3.org/2000/01/rdf-schema#Property>'))) select count(*) from summary_edges where s not in (select * from schema_nodes) and o not in (select * from schema_nodes);
