@@ -25,10 +25,6 @@ public abstract class Traverser {
 	public Traverser(Summary summ, Connection conn) {
 		this.summ = summ;
 		this.conn = conn;
-		// Next 2 lines: Ioana, Oct 15, 2018
-		RDF2SQLEncoding.setUp(conn, summ.dictionaryTableName);
-		summ.setGenericProperties(conn);
-		// end of Ioana's fix, Oct 15, 2018
 		LOGGER.setLevel(Level.INFO);
 	}
 
@@ -37,12 +33,12 @@ public abstract class Traverser {
 		summ.collectSchemaNodes(conn);
 		summ.schemaNodesCollectionTime = System.currentTimeMillis() - start;
 
-		start = System.currentTimeMillis();
 		summ.avoidCollisionsWhenAssigningSummaryNodes(conn);
-		summ.schemaNodesCollectionTime -= (System.currentTimeMillis() - start);
 	}
 
 	protected void setUp() {
+		schemaNodesCollection();
+
 		long start = System.currentTimeMillis();
 		try {
 			conn.setAutoCommit(false);
@@ -57,6 +53,8 @@ public abstract class Traverser {
 		subPropertyCode = RDF2SQLEncoding.getSubPropertyCode();
 		domainCode = RDF2SQLEncoding.getDomainCode();
 		rangeCode = RDF2SQLEncoding.getRangeCode();
+
+		summ.setGenericProperties(conn);
 		setupTime = System.currentTimeMillis() - start;
 	}
 
@@ -177,9 +175,8 @@ public abstract class Traverser {
 
 	// ommitted generic property triples
 	public void genericPropertyTriplesPass() {
-		summ.setGenericProperties(conn);
 		summ.prepareRepresentationOfGenericPropertyTriples();
-		LOGGER.info("Starting third pass on " + summ.genericPropertyTriples.size() + " generic triples");
+		LOGGER.info("Starting final pass on " + summ.genericPropertyTriples.size() + " generic property triples");
 		for (Triple t: summ.genericPropertyTriples) {
 			//LOGGER.info("Generic triple: " + t.toString());
 			summ.representGenericPropertyTriple(t);

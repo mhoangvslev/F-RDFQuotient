@@ -14,7 +14,6 @@ public class DataFirstTwoPassTraverser extends DataFirstTraverser {
 
 	@Override
 	public void traverseAllTriples() {
-		schemaNodesCollection();
 		setUp();
 		dataTriplesClassification();
 		dataTriplesRepresentation();
