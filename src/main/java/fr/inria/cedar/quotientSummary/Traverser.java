@@ -33,12 +33,12 @@ public abstract class Traverser {
 		summ.collectSchemaNodes(conn);
 		summ.schemaNodesCollectionTime = System.currentTimeMillis() - start;
 
-		start = System.currentTimeMillis();
 		summ.avoidCollisionsWhenAssigningSummaryNodes(conn);
-		summ.schemaNodesCollectionTime -= (System.currentTimeMillis() - start);
 	}
 
 	protected void setUp() {
+		schemaNodesCollection();
+
 		long start = System.currentTimeMillis();
 		try {
 			conn.setAutoCommit(false);
@@ -53,6 +53,8 @@ public abstract class Traverser {
 		subPropertyCode = RDF2SQLEncoding.getSubPropertyCode();
 		domainCode = RDF2SQLEncoding.getDomainCode();
 		rangeCode = RDF2SQLEncoding.getRangeCode();
+
+		summ.setGenericProperties(conn);
 		setupTime = System.currentTimeMillis() - start;
 	}
 
@@ -171,11 +173,12 @@ public abstract class Traverser {
 		summ.nonTypeTriplesSummarizationTime += System.currentTimeMillis() - start;
 	}
 
-	// ommitted generic proprty triples
+	// ommitted generic property triples
 	public void genericPropertyTriplesPass() {
-		summ.setGenericProperties(conn);
 		summ.prepareRepresentationOfGenericPropertyTriples();
+		LOGGER.info("Starting final pass on " + summ.genericPropertyTriples.size() + " generic property triples");
 		for (Triple t: summ.genericPropertyTriples) {
+			//LOGGER.info("Generic triple: " + t.toString());
 			summ.representGenericPropertyTriple(t);
 			summ.triplesSummarizedSoFar++;
 			summ.typeTriplesSummarizedSoFar++;

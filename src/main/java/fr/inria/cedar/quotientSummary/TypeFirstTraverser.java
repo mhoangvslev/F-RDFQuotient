@@ -52,7 +52,6 @@ public class TypeFirstTraverser extends Traverser {
 
 	@Override
 	public void traverseAllTriples() {
-		schemaNodesCollection();
 		setUp();
 		typePass();
 		dataPass();
