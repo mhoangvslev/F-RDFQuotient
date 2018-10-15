@@ -25,6 +25,10 @@ public abstract class Traverser {
 	public Traverser(Summary summ, Connection conn) {
 		this.summ = summ;
 		this.conn = conn;
+		// Next 2 lines: Ioana, Oct 15, 2018
+		RDF2SQLEncoding.setUp(conn, summ.dictionaryTableName);
+		summ.setGenericProperties(conn);
+		// end of Ioana's fix, Oct 15, 2018
 		LOGGER.setLevel(Level.INFO);
 	}
 
