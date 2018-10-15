@@ -147,11 +147,12 @@ public class Summary {
 		if (properties.getProperty("omitGenericPropertiesFromCliques").toLowerCase().equals("true")) {
 			String[] props  = properties.getProperty("genericProperties").split(",");
 			for (String nonCliqueP: props) {
+				LOGGER.info("Generic property: " + nonCliqueP);
 				this.genericPropertiesIgnoredInCliques.add(RDF2SQLEncoding.dictionaryEncode(nonCliqueP));
 			}
 		}
 	}
-
+	
 	public Summary(Connection conn) throws SQLException {
 		this.rep = new Long2Long();
 		this.edgesWithProv = new EdgesWithProvenanceCounts();
@@ -884,7 +885,10 @@ public class Summary {
 			throw new IllegalStateException("The method should not be called on an instance of the root Summary type");
 		return this.summaryTablePrefix.substring(0, this.summaryTablePrefix.length() - 1);
 	}
-
+	// whether or not a certain property is generic 
+	public boolean isGeneric(Long p) {
+			return this.genericPropertiesIgnoredInCliques.contains(p); 
+	}
 	public HashMap<String, String> getRunStatistics() {
 		HashMap<String, String> stats = new HashMap<>();
 

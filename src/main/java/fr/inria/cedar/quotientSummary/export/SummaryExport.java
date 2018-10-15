@@ -795,7 +795,7 @@ public class SummaryExport {
 								esn = new EntitySummaryNode(t.s, summary.getRepresentedNodeNumber(t.s), subjectInDot, this);
 								entities.put(t.s, esn); 
 							}
-							esn.addType(t.o);
+							esn.addType(t.o, summary.getRepresentedTripleNumber(t)); 
 						}
 					}
 				}

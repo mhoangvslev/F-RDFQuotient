@@ -171,11 +171,13 @@ public abstract class Traverser {
 		summ.nonTypeTriplesSummarizationTime += System.currentTimeMillis() - start;
 	}
 
-	// ommitted generic proprty triples
+	// ommitted generic property triples
 	public void genericPropertyTriplesPass() {
 		summ.setGenericProperties(conn);
 		summ.prepareRepresentationOfGenericPropertyTriples();
+		LOGGER.info("Starting third pass on " + summ.genericPropertyTriples.size() + " generic triples");
 		for (Triple t: summ.genericPropertyTriples) {
+			//LOGGER.info("Generic triple: " + t.toString());
 			summ.representGenericPropertyTriple(t);
 			summ.triplesSummarizedSoFar++;
 			summ.typeTriplesSummarizedSoFar++;
