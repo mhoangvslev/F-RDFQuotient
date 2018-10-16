@@ -1,5 +1,7 @@
 package fr.inria.cedar.quotientSummary;
 
+import com.sun.tools.doclets.formats.html.markup.HtmlStyle;
+import fr.inria.cedar.ontosql.rdfdb.dictionaryencoder.PostgresDatabaseHandler;
 import fr.inria.cedar.quotientSummary.datastructures.EdgesWithProvenanceCounts;
 import fr.inria.cedar.quotientSummary.datastructures.Long2Long;
 import fr.inria.cedar.quotientSummary.datastructures.Long2LongSet;
@@ -21,6 +23,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
@@ -152,7 +155,7 @@ public class Summary {
 			}
 		}
 	}
-	
+
 	public Summary(Connection conn) throws SQLException {
 		this.rep = new Long2Long();
 		this.edgesWithProv = new EdgesWithProvenanceCounts();
@@ -226,10 +229,43 @@ public class Summary {
 	 */
 	protected void ensureExporter(){
 		if (exporter == null){
-			exporter = new SummaryExport(this, properties, dax,
-					dictionaryTableName, triplesFileName, encodedTriplesTableName);
+			exporter = new SummaryExport(this, properties, dax, dictionaryTableName, triplesFileName, encodedTriplesTableName);
 		}
 	}
+
+	/*
+	 * Creates indexes on rep table
+	 * @param conn
+	 */
+	protected void addIndexesToRepTable(Connection conn) {
+		LOGGER.info("Building indexes on repTable");
+		// create indexes on rep table
+		final PostgresDatabaseHandler databaseHandler = new PostgresDatabaseHandler(conn, triplesTableName, encodedTriplesTableName, dictionaryTableName);
+		final List<String> attrs = new ArrayList<>();
+		String indexName = repTableName + "_i_gs";
+		attrs.add("graphnode");
+		attrs.add("summarynode");
+		try {
+			databaseHandler.createIndex(repTableName, indexName, attrs);
+		}
+		catch (SQLException ex) {
+			LOGGER.error("Couldn't create index " + indexName + " on " + repTableName + " " + ex);
+			return;
+		}
+		attrs.clear();
+		indexName = repTableName + "_i_sg";
+		attrs.add("summarynode");
+		attrs.add("graphnode");
+		try {
+			databaseHandler.createIndex(repTableName, indexName, attrs);
+		}
+		catch (SQLException ex) {
+			LOGGER.error("Couldn't create index " + indexName + " on " + repTableName + " " + ex);
+			return;
+		}
+		LOGGER.info("Indexes built successfully");
+	}
+
 	// we need to be sure that integers which we invent to represent nodes
 	// will not collide with the codes already given to classes and properties
 	// (which, in this implementation, for simplicity, are preserved).
@@ -509,6 +545,7 @@ public class Summary {
 	 *
 	 * Represents each special data triple by the (existing or not) representative
 	 * of its subject, and by the (for sure existing) representative of its object
+	 * @param t
 	 */
 	protected void representGenericPropertyTriple(Triple t) {
 		Long repS = rep.get(t.s);
@@ -807,6 +844,7 @@ public class Summary {
 
 	public void drawSummaryAndGraph(Connection conn, String suffix) {
 		ensureExporter();
+		addIndexesToRepTable(conn);
 		String summaryDotFileName = exporter.getDotFileName(suffix);
 		this.exporter.writeSummaryToDotFile(conn, summaryDotFileName);
 		String graphDotFileName = exporter.getRDFDotFileName(suffix);
@@ -816,8 +854,9 @@ public class Summary {
 	/**
 	 * Writes the summary in RDF (in .nt format) then also in DOT; also attempts to draw it using DOT.
 	 */
-	public void writeEncodedSummaryToFileAndDraw() {
+	public void writeEncodedSummaryToFileAndDraw(Connection conn) {
 		ensureExporter();
+		addIndexesToRepTable(conn);
 		exporter.writeEncodedSummaryToFile(exporter.getNTSummaryFileName(""));
 		exporter.writeEncodedSummaryToDotFile(exporter.getDotFileName(""));
 	}
@@ -831,6 +870,7 @@ public class Summary {
 	public void writeDecodedSummaryToFileSplitLeavesAndDraw(Connection conn, String suffix) {
 		LOGGER.info("Drawing summary with split leaves");
 		ensureExporter();
+		addIndexesToRepTable(conn);
 		String summaryDotFileName = exporter.getDotFileNameSplitLeaves(suffix);
 		exporter.writeSummaryToDotFileSplitLeaves(conn, summaryDotFileName);
 	}
@@ -844,6 +884,7 @@ public class Summary {
 	public void writeDecodedSummaryToFileSplitFoldLeavesAndDraw(Connection conn, String suffix) {
 		LOGGER.info("Drawing summary with split and folded leaves");
 		ensureExporter();
+		addIndexesToRepTable(conn);
 		String summaryDotFileName = exporter.getDotFileNameFoldLeaves(suffix);
 		exporter.writeSummaryToDotFileSplitAndFoldLeaves(conn, summaryDotFileName);
 	}
@@ -885,9 +926,9 @@ public class Summary {
 			throw new IllegalStateException("The method should not be called on an instance of the root Summary type");
 		return this.summaryTablePrefix.substring(0, this.summaryTablePrefix.length() - 1);
 	}
-	// whether or not a certain property is generic 
+	// whether or not a certain property is generic
 	public boolean isGeneric(Long p) {
-			return this.genericPropertiesIgnoredInCliques.contains(p); 
+			return this.genericPropertiesIgnoredInCliques.contains(p);
 	}
 	public HashMap<String, String> getRunStatistics() {
 		HashMap<String, String> stats = new HashMap<>();
