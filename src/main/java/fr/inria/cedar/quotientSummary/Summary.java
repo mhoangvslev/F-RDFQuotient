@@ -1,6 +1,5 @@
 package fr.inria.cedar.quotientSummary;
 
-import com.sun.tools.doclets.formats.html.markup.HtmlStyle;
 import fr.inria.cedar.ontosql.rdfdb.dictionaryencoder.PostgresDatabaseHandler;
 import fr.inria.cedar.quotientSummary.datastructures.EdgesWithProvenanceCounts;
 import fr.inria.cedar.quotientSummary.datastructures.Long2Long;
