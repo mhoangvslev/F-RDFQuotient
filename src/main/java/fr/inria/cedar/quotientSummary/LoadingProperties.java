@@ -1,6 +1,7 @@
 package fr.inria.cedar.quotientSummary;
 
 import java.util.Enumeration;
+import java.util.Map;
 import java.util.Properties;
 
 public class LoadingProperties {
@@ -39,5 +40,9 @@ public class LoadingProperties {
 			String value = otherProps.getProperty(name);
 			prop.put(name,  value); 
 		}
+	}
+
+	public Properties getProperties() {
+		return prop; 
 	}
 }
