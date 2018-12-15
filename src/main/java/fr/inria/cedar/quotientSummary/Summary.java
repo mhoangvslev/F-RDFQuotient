@@ -248,8 +248,9 @@ public class Summary {
 			databaseHandler.createIndex(repTableName, indexName, attrs);
 		}
 		catch (SQLException ex) {
+			//TODO fix me
 			LOGGER.error("Couldn't create index " + indexName + " on " + repTableName + " " + ex);
-			return;
+			//return; TODO this used to return
 		}
 		attrs.clear();
 		indexName = repTableName + "_i_sg";
