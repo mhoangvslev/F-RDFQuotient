@@ -245,7 +245,7 @@ public class Summary {
 		attrs.add("graphnode");
 		attrs.add("summarynode");
 		try {
-			databaseHandler.createIndex(repTableName, indexName, attrs);
+			databaseHandler.createIndex(PostgresIdentifier.escapedQuotedId(repTableName), PostgresIdentifier.escapedQuotedId(indexName), attrs);
 		}
 		catch (SQLException ex) {
 			//TODO fix me
@@ -257,7 +257,7 @@ public class Summary {
 		attrs.add("summarynode");
 		attrs.add("graphnode");
 		try {
-			databaseHandler.createIndex(repTableName, indexName, attrs);
+			databaseHandler.createIndex(PostgresIdentifier.escapedQuotedId(repTableName), PostgresIdentifier.escapedQuotedId(indexName), attrs);
 		}
 		catch (SQLException ex) {
 			LOGGER.error("Couldn't create index " + indexName + " on " + repTableName + " " + ex);
