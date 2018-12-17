@@ -27,9 +27,8 @@ public class TypeFirstTraverser extends Traverser {
 				try (ResultSet rs = getTypedTriples.executeQuery(getTypedTriplesString)) {
 					while (rs.next()) {
 						// type triple
-						Triple t = new Triple(rs.getLong(1), rs.getLong(2), rs.getLong(3));
+						Triple t = new Triple(rs.getLong(1), rs.getLong(2), summ.rep.get(rs.getLong(3)));
 						summ.handleTypeTripleBeforeData(t);
-						summ.rep.put(t.o, t.o);
 						summ.triplesSummarizedSoFar++;
 						summ.typeTriplesSummarizedSoFar++;
 						if (summ.checkConsistency) {
@@ -43,16 +42,20 @@ public class TypeFirstTraverser extends Traverser {
 		catch (SQLException e) {
 			throw new IllegalStateException("Postgres error encountered while summarizing type triples: " + e.toString());
 		}
-		summ.classSetCreationTime = System.currentTimeMillis() - start;
+		summ.classSetCreationTime += System.currentTimeMillis() - start;
 
 		start = System.currentTimeMillis();
 		summ.representTypeTriplesBeforeData();
-		summ.typeTriplesSummarizationTime = System.currentTimeMillis() - start;
+		summ.typeTriplesSummarizationTime += System.currentTimeMillis() - start;
 	}
 
 	@Override
 	public void traverseAllTriples() {
 		setUp();
+
+		if (summ.replaceTypeWithMostGeneralType) {
+			mostGeneralTypePass();
+		}
 		typePass();
 		dataPass();
 		genericPropertyTriplesPass();

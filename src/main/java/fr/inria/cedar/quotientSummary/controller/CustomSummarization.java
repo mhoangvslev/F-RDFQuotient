@@ -1,7 +1,6 @@
 package fr.inria.cedar.quotientSummary.controller;
 
 import fr.inria.cedar.ontosql.db.UnsupportedDatabaseEngineException;
-import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import org.apache.log4j.Level;
@@ -40,7 +39,7 @@ public class CustomSummarization {
 			}
 		}
 		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in " + summarizationMethod + 
+			throw new IllegalStateException("Unable to open .nt files in " + summarizationMethod +
 					" "+ fileName + " " + e.toString());
 		}
 		catch (SQLException e) {
@@ -49,15 +48,15 @@ public class CustomSummarization {
 	}
 
 	public static void main(String[] argv) {
-//		String fileName = argv[0]; 
-//		String summarizationMethod = argv[1]; 
-//		File f = summarize(fileName, summarizationMethod); 
-		String[] fileNames = new String[] {"suspicious"}; //{ "conference", "enelshops", "foodista", "frenchpolitics","lubm1m", "mondial", "nasa", "nobelprizes", "pokedex", "bsbm1m", "watdiv10m"};   
-		String directory = "src/test/resources/rdf-nt-files/"; 
-		String [] summarizationMethods = new String[] {"strong"}; //, "strong", "typedweak", "typedstrong", "onefb", "onefw"}; 
+//		String fileName = argv[0];
+//		String summarizationMethod = argv[1];
+//		File f = summarize(fileName, summarizationMethod);
+		String[] fileNames = new String[] {"test-1"}; //{ "conference", "enelshops", "foodista", "frenchpolitics","lubm1m", "mondial", "nasa", "nobelprizes", "pokedex", "bsbm1m", "watdiv10m"};
+		String directory = "src/test/resources/rdf-nt-files/";
+		String [] summarizationMethods = new String[] {"strong"}; //, "strong", "typedweak", "typedstrong", "onefb", "onefw"};
 		for (String fileName: fileNames) {
 			for (String summarizationMethod: summarizationMethods) {
-				summarize(directory + fileName + ".nt", summarizationMethod); 
+				summarize(directory + fileName + ".nt", summarizationMethod);
 			}
 		}
 	}

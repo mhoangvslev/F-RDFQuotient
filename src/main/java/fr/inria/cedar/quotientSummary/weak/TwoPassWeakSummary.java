@@ -111,15 +111,14 @@ public class TwoPassWeakSummary extends WeakOrTypedWeakSummary {
 
 	@Override
 	protected void representDataTriple(Triple t) {
-		repS = ps.get(t.p);
-		repO = pt.get(t.p);
-		if (sn.contains(t.s)) {
-			repS = t.s;
+		// schema nodes already represented in collectSchemaNodes
+		if (!sn.contains(t.s)) {
+			repS = ps.get(t.p);
+			rep.put(t.s, repS);
 		}
-		if (sn.contains(t.o)) {
-			repO = t.o;
+		if (!sn.contains(t.o)) {
+			repO = pt.get(t.p);
+			rep.put(t.o, repO);
 		}
-		rep.put(t.s, repS);
-		rep.put(t.o, repO);
 	}
 }

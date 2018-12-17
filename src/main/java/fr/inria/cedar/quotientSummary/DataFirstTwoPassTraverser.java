@@ -15,6 +15,10 @@ public class DataFirstTwoPassTraverser extends DataFirstTraverser {
 	@Override
 	public void traverseAllTriples() {
 		setUp();
+
+		if (summ.replaceTypeWithMostGeneralType) {
+			mostGeneralTypePass();
+		}
 		dataTriplesClassification();
 		dataTriplesRepresentation();
 		typePass();
