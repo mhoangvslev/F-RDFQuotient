@@ -462,7 +462,7 @@ public class Summary {
 		for (Long s: subClassOf.keySet()) {
 			// determine the most general type
 			mostGeneralType = s;
-			while (subClassOf.containsKey(subClassOf.get(mostGeneralType))) {
+			while (subClassOf.containsKey(mostGeneralType)) {
 				mostGeneralType = subClassOf.get(mostGeneralType);
 				if (mostGeneralType.equals(s)) {
 					throw new IllegalStateException("Found a cycle in the types hierarchy");
@@ -649,12 +649,12 @@ public class Summary {
 				// n is moving from classSetOfThisNode to newClassSetOfThisNode.
 				// TODO Check if classSetOfThisNode is deserted and if yes, maybe remove it.
 				// (We can also keep it there to reuse it later...)
-				if (replaceTypeWithMostGeneralType == true) {
+				/*if (replaceTypeWithMostGeneralType == true) {
 					throw new IllegalStateException("Resource node "
 					+ RDF2SQLEncoding.dictionaryDecode(t.s) + " with more than one type: "
 					+ RDF2SQLEncoding.dictionaryDecode(classSetOfThisNode.first()) + " and "
 					+ RDF2SQLEncoding.dictionaryDecode(t.o));
-				}
+				}*/
 				TreeSet<Long> newClassSetOfThisNode = new TreeSet<>();
 				newClassSetOfThisNode.addAll(classSetOfThisNode);
 				newClassSetOfThisNode.add(t.o);
