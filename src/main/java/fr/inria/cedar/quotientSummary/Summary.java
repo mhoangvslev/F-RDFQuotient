@@ -426,6 +426,53 @@ public class Summary {
 		}
 	}
 
+	void computeMostGeneralType(Connection conn) {
+		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
+		long subClassCode = RDF2SQLEncoding.getSubClassCode();
+
+		HashMap<Long, Long> subClassOf = new HashMap<>();
+		String getTriplesString = "select s, o from " + PostgresIdentifier.escapedQuotedId(encodedTriplesTableName)
+				+ " where p = " + subClassCode
+				+ ";";
+		try {
+			try (Statement getTriples = conn.createStatement()) {
+				getTriples.setFetchSize(10000);
+				try (ResultSet rs = getTriples.executeQuery(getTriplesString)) {
+					while (rs.next()) {
+						Long s = rs.getLong(1);
+						Long o = rs.getLong(2);
+						if (subClassOf.containsKey(s)) {
+							throw new IllegalStateException("Type " + RDF2SQLEncoding.dictionaryDecode(s)
+							+ " has more than one supertype: "
+							+ RDF2SQLEncoding.dictionaryDecode(subClassOf.get(s)) + " and "
+							+ RDF2SQLEncoding.dictionaryDecode(subClassOf.get(o)));
+						}
+						else {
+							subClassOf.put(s, o);
+						}
+					}
+				}
+			}
+		}
+		catch (SQLException e) {
+			throw new IllegalStateException("Postgres error encountered while collecting schema nodes " + e.toString());
+		}
+
+		Long mostGeneralType;
+		for (Long s: subClassOf.keySet()) {
+			// determine the most general type
+			mostGeneralType = s;
+			while (subClassOf.containsKey(subClassOf.get(mostGeneralType))) {
+				mostGeneralType = subClassOf.get(mostGeneralType);
+				if (mostGeneralType.equals(s)) {
+					throw new IllegalStateException("Found a cycle in the types hierarchy");
+				}
+			}
+			// update the representative of the type
+			rep.put(s, mostGeneralType);
+		}
+	}
+
 	protected String showRep() {
 		StringBuilder sb = new StringBuilder();
 		for (long node : this.rep.getKeys()) {
@@ -602,6 +649,12 @@ public class Summary {
 				// n is moving from classSetOfThisNode to newClassSetOfThisNode.
 				// TODO Check if classSetOfThisNode is deserted and if yes, maybe remove it.
 				// (We can also keep it there to reuse it later...)
+				if (replaceTypeWithMostGeneralType == true) {
+					throw new IllegalStateException("Resource node "
+					+ RDF2SQLEncoding.dictionaryDecode(t.s) + " with more than one type: "
+					+ RDF2SQLEncoding.dictionaryDecode(classSetOfThisNode.first()) + " and "
+					+ RDF2SQLEncoding.dictionaryDecode(t.o));
+				}
 				TreeSet<Long> newClassSetOfThisNode = new TreeSet<>();
 				newClassSetOfThisNode.addAll(classSetOfThisNode);
 				newClassSetOfThisNode.add(t.o);

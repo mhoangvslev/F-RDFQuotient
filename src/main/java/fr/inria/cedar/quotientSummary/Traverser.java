@@ -61,7 +61,12 @@ public abstract class Traverser {
 
 	protected void mostGeneralTypePass() {
 		long start = System.currentTimeMillis();
-		// TODO
+		try {
+			summ.computeMostGeneralType(conn);
+		}
+		catch (IllegalStateException ex) {
+			LOGGER.error(ex);
+		}
 		summ.typeTriplesSummarizationTime += System.currentTimeMillis() - start;
 	}
 
