@@ -125,25 +125,19 @@ public class TwoPassTypedWeakSummary extends WeakOrTypedWeakSummary {
 		Long classSetO = n2cs.get(t.o);
 		boolean sTyped = (classSetS != null);
 		boolean oTyped = (classSetO != null);
-		if (!sTyped) {
+		if (!sTyped && !sn.contains(t.s)) {
 			repS = ps.get(t.p);
-			if (sn.contains(t.s)) {
-				repS = t.s;
-			}
 			rep.put(t.s, repS);
 		}
 		//else {
-		// typed node already represented
+		// typed or schema node already represented
 		//}
-		if (!oTyped) {
+		if (!oTyped && !sn.contains(t.o)) {
 			repO = pt.get(t.p);
-			if (sn.contains(t.o)) {
-				repO = t.o;
-			}
 			rep.put(t.o, repO);
 		}
 		//else {
-		// typed node already represented
+		// typed or schema node already represented
 		//}
 	}
 }

@@ -31,7 +31,7 @@ public abstract class Traverser {
 	protected void schemaNodesCollection() {
 		long start = System.currentTimeMillis();
 		summ.collectSchemaNodes(conn);
-		summ.schemaNodesCollectionTime = System.currentTimeMillis() - start;
+		summ.schemaNodesCollectionTime += System.currentTimeMillis() - start;
 
 		summ.avoidCollisionsWhenAssigningSummaryNodes(conn);
 	}
@@ -54,8 +54,15 @@ public abstract class Traverser {
 		domainCode = RDF2SQLEncoding.getDomainCode();
 		rangeCode = RDF2SQLEncoding.getRangeCode();
 
-		summ.setGenericProperties(conn);
+		summ.setGenericProperties();
+		summ.setMostGeneralType();
 		setupTime = System.currentTimeMillis() - start;
+	}
+
+	protected void mostGeneralTypePass() {
+		long start = System.currentTimeMillis();
+		// TODO
+		summ.typeTriplesSummarizationTime += System.currentTimeMillis() - start;
 	}
 
 	// data and schema triples
@@ -72,8 +79,8 @@ public abstract class Traverser {
 						|| (t.p == subPropertyCode)
 						|| (t.p == domainCode)
 						|| (t.p == rangeCode)) { // schema triple
-							summ.edgesWithProv.addTriple(t.s, t.p, t.o);
 							// s, o represented in collectSchemaNodes
+							summ.edgesWithProv.addTriple(summ.rep.get(t.s), t.p, summ.rep.get(t.o));
 						}
 						else { // data triple
 							if (summ.genericPropertiesIgnoredInCliques.contains(t.p)) {
@@ -113,8 +120,8 @@ public abstract class Traverser {
 						|| (t.p == subPropertyCode)
 						|| (t.p == domainCode)
 						|| (t.p == rangeCode)) { // schema triple
-							summ.edgesWithProv.addTriple(t.s, t.p, t.o);
 							// s, o represented in collectSchemaNodes
+							summ.edgesWithProv.addTriple(summ.rep.get(t.s), t.p, summ.rep.get(t.o));
 						}
 						else { // data triple
 							if (summ.genericPropertiesIgnoredInCliques.contains(t.p)) {
@@ -147,7 +154,7 @@ public abstract class Traverser {
 				try (ResultSet rs = getUntypedTriples.executeQuery(getUntypedTriplesString)) {
 					while (rs.next()) {
 						Triple t = new Triple(rs.getLong(1), rs.getLong(2), rs.getLong(3));
-						if (summ.genericPropertiesIgnoredInCliques.contains(t.p)) { // avoid generic property triples
+						if (summ.genericPropertiesIgnoredInCliques.contains(t.p)) { // avoid generic property triples, they will be represented later
 							continue;
 						}
 						if ((t.p != subClassCode)
@@ -175,6 +182,7 @@ public abstract class Traverser {
 
 	// ommitted generic property triples
 	public void genericPropertyTriplesPass() {
+		long start = System.currentTimeMillis();
 		summ.prepareRepresentationOfGenericPropertyTriples();
 		LOGGER.info("Starting final pass on " + summ.genericPropertyTriples.size() + " generic property triples");
 		for (Triple t: summ.genericPropertyTriples) {
@@ -186,6 +194,7 @@ public abstract class Traverser {
 				summ.consistencyChecks();
 			}
 		}
+		summ.nonTypeTriplesSummarizationTime += System.currentTimeMillis() - start;
 	}
 
 	// type triples

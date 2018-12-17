@@ -122,17 +122,17 @@ public class TwoPassTypedStrongSummary extends StrongOrTypedStrongSummary {
 		if (param == SOURCE){
 			if (!clique1.equals(this.getEmptySourceCliqueID()) && (!clique1.equals(cliqueNew))){
 				//LOGGER.debug("CLIQUE REPLACE IN UNTYPED, P2, N2 SOURCE: we'll replace " + clique1 + " with " + cliqueNew);
-				toBeReplaced.add(clique1); 
+				toBeReplaced.add(clique1);
 			}
 			if (!clique2.equals(this.getEmptySourceCliqueID()) && (!clique2.equals(cliqueNew))){
 				//LOGGER.debug("CLIQUE REPLACE IN UNTYPED, P2, N2 SOURCE: we'll replace " + clique2 + " with " + cliqueNew);
-				toBeReplaced.add(clique2); 
+				toBeReplaced.add(clique2);
 			}
 		}
 		else if (param == TARGET){
 			if (!clique1.equals(this.getEmptyTargetCliqueID()) && (!clique1.equals(cliqueNew))){
 				//LOGGER.debug("CLIQUE REPLACE IN UNTYPED, P2, N2 TARGET: we'll replace " + clique1 +  " with " + cliqueNew);
-				//LOGGER.debug("CLIQUE REPLACE IN UNTYPED, P2, N2 TARGET: that is " + this.showCliqueAsString(tc.get(clique1)) + " with " + this.showCliqueAsString(tc.get(clique2))); 
+				//LOGGER.debug("CLIQUE REPLACE IN UNTYPED, P2, N2 TARGET: that is " + this.showCliqueAsString(tc.get(clique1)) + " with " + this.showCliqueAsString(tc.get(clique2)));
 				toBeReplaced.add(clique1);
 			}
 			if (!clique2.equals(this.getEmptyTargetCliqueID()) && (!clique2.equals(cliqueNew))){
@@ -140,7 +140,7 @@ public class TwoPassTypedStrongSummary extends StrongOrTypedStrongSummary {
 				toBeReplaced.add(clique2);
 			}
 		}
-		// apply: 
+		// apply:
 		for (Long oldClique: toBeReplaced) {
 			replaceCliqueInP2(oldClique, cliqueNew, param);
 			replaceCliqueInN2(oldClique, cliqueNew, param);
@@ -153,31 +153,21 @@ public class TwoPassTypedStrongSummary extends StrongOrTypedStrongSummary {
 		Long classSetO = n2cs.get(t.o);
 		boolean sTyped = (classSetS != null);
 		boolean oTyped = (classSetO != null);
-		if (!sTyped) {
-			if (sn.contains(t.s)) {
-				rep.put(t.s, t.s);
-			}
-			else {
-				sourceCliqueS = n2sc.get(t.s) != null ? n2sc.get(t.s) : getEmptySourceCliqueID();
-				targetCliqueS = n2tc.get(t.s) != null ? n2tc.get(t.s) : getEmptyTargetCliqueID();
-				rep.put(t.s, getOrCreateSummaryNode(sourceCliqueS, targetCliqueS));
-			}
+		if (!sTyped && !sn.contains(t.s)) {
+			sourceCliqueS = n2sc.get(t.s) != null ? n2sc.get(t.s) : getEmptySourceCliqueID();
+			targetCliqueS = n2tc.get(t.s) != null ? n2tc.get(t.s) : getEmptyTargetCliqueID();
+			rep.put(t.s, getOrCreateSummaryNode(sourceCliqueS, targetCliqueS));
 		}
 		//else {
-		// typed node already represented
+		// typed or schema node already represented
 		//}
-		if (!oTyped) {
-			if (sn.contains(t.o)) {
-				rep.put(t.o, t.o);
-			}
-			else {
-				sourceCliqueO = n2sc.get(t.o) != null ? n2sc.get(t.o) : getEmptySourceCliqueID();
-				targetCliqueO = n2tc.get(t.o) != null ? n2tc.get(t.o) : getEmptyTargetCliqueID();
-				rep.put(t.o, getOrCreateSummaryNode(sourceCliqueO, targetCliqueO));
-			}
+		if (!oTyped && !sn.contains(t.o)) {
+			sourceCliqueO = n2sc.get(t.o) != null ? n2sc.get(t.o) : getEmptySourceCliqueID();
+			targetCliqueO = n2tc.get(t.o) != null ? n2tc.get(t.o) : getEmptyTargetCliqueID();
+			rep.put(t.o, getOrCreateSummaryNode(sourceCliqueO, targetCliqueO));
 		}
 		//else {
-		// typed node already represented
+		// typed or schema node already represented
 		//}
 	}
 }

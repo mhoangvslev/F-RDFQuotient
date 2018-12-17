@@ -91,13 +91,13 @@ public class Summary {
 	protected long nonTypeTriplesSummarizedSoFar = 0;
 
 	// statistics
-	protected long schemaNodesCollectionTime;
-	protected long summaryEdgesSavingTime;
-	protected long representationFunctionSavingTime;
-	protected long classSetCreationTime;
-	protected long typeTriplesSummarizationTime;
-	protected long nonTypeTriplesSummarizationTime;
-	protected long allTriplesSummarizationTime;
+	protected long schemaNodesCollectionTime = 0;
+	protected long summaryEdgesSavingTime = 0;
+	protected long representationFunctionSavingTime = 0;
+	protected long classSetCreationTime = 0;
+	protected long typeTriplesSummarizationTime = 0;
+	protected long nonTypeTriplesSummarizationTime = 0;
+	protected long allTriplesSummarizationTime = 0;
 	// for each summary node, the number of graph nodes it represents
 	protected HashMap<Long, Long> summaryNodeStatistics;
 	// for each summary edge, the number of graph edge it represents
@@ -114,6 +114,9 @@ public class Summary {
 	protected HashSet<Long> genericPropertiesIgnoredInCliques;
 	protected HashMap<Long, Long> sourcesOfGenericPropertiesIgnoredInCliques;
 	protected HashMap<Long, Long> targetsOfGenericPropertiesIgnoredInCliques;
+
+	// in type triples, whether to replace the type with the most general type
+	protected boolean replaceTypeWithMostGeneralType = false;
 
 	public Summary() {
 		LOGGER.setLevel(Level.INFO);
@@ -146,7 +149,7 @@ public class Summary {
 		sourcesOfGenericPropertiesIgnoredInCliques = new HashMap<>();
 		dax = new DOTAuxiliary();
 	}
-	public void setGenericProperties(Connection conn) {
+	public void setGenericProperties() {
 		if (properties.getProperty("omitGenericPropertiesFromCliques").toLowerCase().equals("true")) {
 			String[] props  = properties.getProperty("genericProperties").split(",");
 			for (String nonCliqueP: props) {
@@ -154,6 +157,12 @@ public class Summary {
 				this.genericPropertiesIgnoredInCliques.add(RDF2SQLEncoding.dictionaryEncode(nonCliqueP));
 			}
 		}
+	}
+
+	public void setMostGeneralType() {
+		boolean replace = properties.getProperty("replaceTypeWithMostGeneralType").toLowerCase().equals("true");
+		LOGGER.info("Replace types with the most general type: " + (replace ? "true" : "false"));
+		replaceTypeWithMostGeneralType = replace;
 	}
 
 	public Summary(Connection conn) throws SQLException {
@@ -462,9 +471,9 @@ public class Summary {
 			else{
 				existingSnCount = (existingSnCount + 1L);
 			}
-			if (this.sn.contains(sn)) {
-				System.out.println("Schema node " + sn + " represents " + existingSnCount + " nodes");
-			}
+			//if (this.sn.contains(sn)) {
+			//	System.out.println("Schema node " + sn + " represents " + existingSnCount + " nodes");
+			//}
 			summaryNodeStatistics.put(sn, existingSnCount);
 		}
 	}
@@ -554,20 +563,20 @@ public class Summary {
 			// therefore we must create its representative
 			//LOGGER.info("Created new subject for " + t.p);
 			repS = sourcesOfGenericPropertiesIgnoredInCliques.get(t.p);
-			rep.put(t.s,  repS);
+			rep.put(t.s, repS);
 		}
 		Long repO = rep.get(t.o);
 		if (repO == null) {// the node has not been seen before
 			repO = targetsOfGenericPropertiesIgnoredInCliques.get(t.p);
-			rep.put(t.o,  repO);
+			rep.put(t.o, repO);
 		}
 		edgesWithProv.addTriple(repS, t.p, repO);
 	}
 
 	protected void handleTypeTripleBeforeData(Triple t) {
 		if (sn.contains(t.s)) { // schemaNode rdf:type classNode, represent right away
-			edgesWithProv.addTriple(t.s, t.p, t.o);
 			// s, o already represented in collectSchemaNodes
+			edgesWithProv.addTriple(rep.get(t.s), t.p, rep.get(t.o));
 		}
 		else {
 			Long classSetIDOfThisNode = n2cs.get(t.s);
@@ -725,7 +734,7 @@ public class Summary {
 				//	stmt.executeUpdate("create index indRepS on encoded_rep(graphNode);");
 				// This gives some erros in the JDBC driver, perhaps it is not implemented properly.
 				conn.commit();
-				representationFunctionSavingTime = System.currentTimeMillis() - start;
+				representationFunctionSavingTime += System.currentTimeMillis() - start;
 				LOGGER.info("Representation function saved in " + representationFunctionSavingTime + " ms");
 			}
 			catch (SQLException e) {
@@ -798,7 +807,7 @@ public class Summary {
 				// if (!hasIndex(conn, "encoded_summary"))
 				//	stmt.executeUpdate("create index indSummaryS on encoded_summary(s);");
 				conn.commit();
-				summaryEdgesSavingTime = System.currentTimeMillis() - start;
+				summaryEdgesSavingTime += System.currentTimeMillis() - start;
 				LOGGER.info("Saved " + edges.size() + " summary edges in " + summaryEdgesSavingTime + " ms");
 				LOGGER.info("Summary saved in Postgres");
 			}
