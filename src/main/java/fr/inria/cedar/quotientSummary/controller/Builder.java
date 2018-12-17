@@ -77,9 +77,11 @@ public class Builder {
 
 		switch (arg0) {
 		case "loadWithoutSaturation":
+			filesToLoad = extractArguments(args, 1);
 			connectionInUse = loadGraphInPostgres(false, false, filesToLoad);
 			return;
 		case "loadWithSaturation":
+			filesToLoad = extractArguments(args, 1);
 			connectionInUse = loadGraphInPostgres(true, false, filesToLoad);
 			return;
 		case "summarizeUnsaturated":
