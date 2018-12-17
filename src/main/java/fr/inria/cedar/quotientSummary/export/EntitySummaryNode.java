@@ -93,6 +93,14 @@ public class EntitySummaryNode {
 			throw new IllegalStateException(ioe.toString());
 		}
 	}
+	
+	/**
+	 * This should be used to modify the types used for displaying
+	 * @param typeToCard
+	 */
+	void setTypes(HashMap<Long, Long> typeToCard) {
+		this.types = typeToCard;
+	}
 	// if a node has very many types, show at most five, then write "... X more types from this namespace"
 	void addTypeDescriptionTo(BufferedWriter bw) {
 		try {

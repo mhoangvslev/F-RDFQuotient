@@ -34,6 +34,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		isTypeFirst = true;
 		this.isTwoPass = false;
 		cs = new Long2LongSet();
+		acs = new Long2LongSet(); 
 		n2sc = new Long2Long();
 		n2cs = new Long2Long();
 		cs2csID = new HashMap<>();

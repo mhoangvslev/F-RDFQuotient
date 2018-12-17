@@ -34,6 +34,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		this.isTypeFirst = true;
 		this.isTwoPass = false;
 		cs = new Long2LongSet();
+		acs = new Long2LongSet(); 
 		n2cs = new Long2Long();
 		cs2csID = new HashMap<>();
 		this.summaryTablePrefix = TYPED_WEAK_SUMMARY_PREFIX;

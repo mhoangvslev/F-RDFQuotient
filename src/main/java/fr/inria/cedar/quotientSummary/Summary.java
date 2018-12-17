@@ -43,7 +43,11 @@ public class Summary {
 	protected EdgesWithProvenanceCounts edgesWithProv;
 
 	// The following three attribute serve to identify and store the class sets for RDF resources
-	protected Long2LongSet cs; // for each class set ID, a class set
+	protected Long2LongSet cs; // for each class set ID, a class set. This is the class set that will be used to 
+	// decide node equivalence. 
+	// It can be the exact set of types of a node; or it can be the set of their generalization (if parameter replaceTypeWithMostGeneralType is true).
+	protected Long2LongSet acs; // for each class set ID, a set of actual types encountered on nodes which fall in this
+	// class set. This is used only if parameter replaceTypeWithMostGeneralType is true.
 	protected Long2Long n2cs; // for each data node, its class set ID. This is also the rep function for typed nodes
 	protected HashMap<TreeSet<Long>, Long> cs2csID; // for each set of types known so far, the ID of that set
 
@@ -117,6 +121,8 @@ public class Summary {
 
 	// in type triples, whether to replace the type with the most general type
 	protected boolean replaceTypeWithMostGeneralType = false;
+	HashMap<Long, Long> mostGeneralSuperClass; //for each class, its most general superclass (or itself if nothing else is found) 
+	HashMap<Long, HashMap<Long, Long>> summaryNodeToActualTypeToCardinality; 
 
 	public Summary() {
 		LOGGER.setLevel(Level.INFO);
@@ -163,6 +169,9 @@ public class Summary {
 		boolean replace = properties.getProperty("replaceTypeWithMostGeneralType").toLowerCase().equals("true");
 		LOGGER.info("Replace types with the most general type: " + (replace ? "true" : "false"));
 		replaceTypeWithMostGeneralType = replace;
+		if (replace) {
+			this.summaryNodeToActualTypeToCardinality = new HashMap<Long, HashMap<Long, Long>>(); 
+		}
 	}
 
 	public Summary(Connection conn) throws SQLException {
@@ -358,11 +367,11 @@ public class Summary {
 		long propertyCode = RDF2SQLEncoding.getPropertyCode();
 
 		String getTriplesString = "select distinct s from " + PostgresIdentifier.escapedQuotedId(encodedTriplesTableName)
-				+ " where p = " + subClassCode
-				+ " or p = " + subPropertyCode
-				+ " or p = " + domainCode
-				+ " or p = " + rangeCode
-				+ ";";
+		+ " where p = " + subClassCode
+		+ " or p = " + subPropertyCode
+		+ " or p = " + domainCode
+		+ " or p = " + rangeCode
+		+ ";";
 		try {
 			try (Statement getTriples = conn.createStatement()) {
 				getTriples.setFetchSize(10000);
@@ -380,12 +389,12 @@ public class Summary {
 		}
 
 		getTriplesString = "select distinct o from " + PostgresIdentifier.escapedQuotedId(encodedTriplesTableName)
-				+ " where p = " + subClassCode
-				+ " or p = " + subPropertyCode
-				+ " or p = " + domainCode
-				+ " or p = " + rangeCode
-				+ " or p = " + typeCode
-				+ ";";
+		+ " where p = " + subClassCode
+		+ " or p = " + subPropertyCode
+		+ " or p = " + domainCode
+		+ " or p = " + rangeCode
+		+ " or p = " + typeCode
+		+ ";";
 		try {
 			try (Statement getTriples = conn.createStatement()) {
 				getTriples.setFetchSize(10000);
@@ -404,9 +413,9 @@ public class Summary {
 
 		// add nodes declared to be of type rdf:Class or rdf:Property
 		getTriplesString = "select distinct s from " + PostgresIdentifier.escapedQuotedId(encodedTriplesTableName)
-				+ " where p = " + typeCode
-				+ " and (o = " + classCode + " or o = " + propertyCode
-				+ ");";
+		+ " where p = " + typeCode
+		+ " and (o = " + classCode + " or o = " + propertyCode
+		+ ");";
 		try {
 			try (Statement getTriples = conn.createStatement()) {
 				getTriples.setFetchSize(10000);
@@ -430,10 +439,11 @@ public class Summary {
 		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
 		long subClassCode = RDF2SQLEncoding.getSubClassCode();
 
-		HashMap<Long, Long> subClassOf = new HashMap<>();
+		// traverse all the subClassOf triples and gather who is the most general superclass of every class (according to the schema) 
+		this.mostGeneralSuperClass = new HashMap<Long, Long>();
 		String getTriplesString = "select s, o from " + PostgresIdentifier.escapedQuotedId(encodedTriplesTableName)
-				+ " where p = " + subClassCode
-				+ ";";
+		+ " where p = " + subClassCode
+		+ ";";
 		try {
 			try (Statement getTriples = conn.createStatement()) {
 				getTriples.setFetchSize(10000);
@@ -441,14 +451,14 @@ public class Summary {
 					while (rs.next()) {
 						Long s = rs.getLong(1);
 						Long o = rs.getLong(2);
-						if (subClassOf.containsKey(s)) {
+						if (mostGeneralSuperClass.containsKey(s)) {
 							throw new IllegalStateException("Type " + RDF2SQLEncoding.dictionaryDecode(s)
 							+ " has more than one supertype: "
-							+ RDF2SQLEncoding.dictionaryDecode(subClassOf.get(s)) + " and "
-							+ RDF2SQLEncoding.dictionaryDecode(subClassOf.get(o)));
+							+ RDF2SQLEncoding.dictionaryDecode(mostGeneralSuperClass.get(s)) + " and "
+							+ RDF2SQLEncoding.dictionaryDecode(mostGeneralSuperClass.get(o)));
 						}
 						else {
-							subClassOf.put(s, o);
+							mostGeneralSuperClass.put(s, o);
 						}
 					}
 				}
@@ -458,18 +468,28 @@ public class Summary {
 			throw new IllegalStateException("Postgres error encountered while collecting schema nodes " + e.toString());
 		}
 
+		// this block represents each class by its most general superclass
 		Long mostGeneralType;
-		for (Long s: subClassOf.keySet()) {
+		// for each class that is a subclass of someone else
+		for (Long s: mostGeneralSuperClass.keySet()) {
 			// determine the most general type
 			mostGeneralType = s;
-			while (subClassOf.containsKey(mostGeneralType)) {
-				mostGeneralType = subClassOf.get(mostGeneralType);
+			while (mostGeneralSuperClass.containsKey(mostGeneralType)) {
+				mostGeneralType = mostGeneralSuperClass.get(mostGeneralType);
 				if (mostGeneralType.equals(s)) {
 					throw new IllegalStateException("Found a cycle in the types hierarchy");
 				}
 			}
 			// update the representative of the type
-			rep.put(s, mostGeneralType);
+			// rep.put(s, mostGeneralType); IM, Dec 17, 2018: don't do this
+		}
+		for (Long c1: mostGeneralSuperClass.keySet()) {
+			Long c2 = mostGeneralSuperClass.get(c1); 
+			LOGGER.info("Most general superclass of " + c1 + " (" + 
+					RDF2SQLEncoding.dictionaryDecode(c1) + ") is " + 
+					c2 + " (" + 
+					RDF2SQLEncoding.dictionaryDecode(c2) + ")");
+					
 		}
 	}
 
@@ -620,51 +640,107 @@ public class Summary {
 		edgesWithProv.addTriple(repS, t.p, repO);
 	}
 
+	/**
+	 * This method takes into account the contribution of a type triple, to type-first summarization.
+	 * Notably, it:
+	 * - records the triple's consequences in the class set (creates the class set if it did not exist, adds the class to it etc.)
+	 * - if type generalization is used, it adds the most general supertype of the type in the class set, but also records the actual type
+	 * in the actual class set
+	 * 
+	 * @param t
+	 */
 	protected void handleTypeTripleBeforeData(Triple t) {
 		if (sn.contains(t.s)) { // schemaNode rdf:type classNode, represent right away
 			// s, o already represented in collectSchemaNodes
 			edgesWithProv.addTriple(rep.get(t.s), t.p, rep.get(t.o));
 		}
 		else {
+			Long mostGeneralSuperClassOfO = this.mostGeneralSuperClass.get(t.o);
+			if (mostGeneralSuperClassOfO == null) {
+				mostGeneralSuperClassOfO = t.o; 
+			}
+			Long typeToUseInCS = (replaceTypeWithMostGeneralType?mostGeneralSuperClassOfO:t.o); 
+			//LOGGER.info("For type " + t.o + " (" +RDF2SQLEncoding.dictionaryDecode(t.o) +
+			//		") we use: " + typeToUseInCS + " (" + RDF2SQLEncoding.dictionaryDecode(typeToUseInCS) + ")");
 			Long classSetIDOfThisNode = n2cs.get(t.s);
-			TreeSet<Long> classSetOfThisNode = null;
-			if (classSetIDOfThisNode != null){
-				classSetOfThisNode = cs.get(classSetIDOfThisNode);
+
+			TreeSet<Long> classSetOfThisNode = null; // the types according to which t.s will be represented
+			if (classSetIDOfThisNode != null){ // a representative is already known for this node
+				classSetOfThisNode = cs.get(classSetIDOfThisNode); // then let's look for its class set
 			}
 			if (classSetOfThisNode == null) { // this is the first time we encounter the node: create a class set with exactly this type
 				classSetOfThisNode = new TreeSet<>();
-				classSetOfThisNode.add(t.o);
+				classSetOfThisNode.add(typeToUseInCS); // here we initialize the class set with the type to use to determine equivalence
 				Long thisNodeClassSetID = cs2csID.get(classSetOfThisNode);
 				// comparison between sets uses equals and compares the structures of the sets
 				if (thisNodeClassSetID == null) {
 					// this class set was not already known so we create it
 					thisNodeClassSetID = getNextSummaryNode();
+					LOGGER.info("Created type representative " + thisNodeClassSetID + " for top-level class: " + typeToUseInCS + " (" + RDF2SQLEncoding.dictionaryDecode(typeToUseInCS) + ")");
 					cs.put(thisNodeClassSetID, classSetOfThisNode); // installs the new class set
 					cs2csID.put(classSetOfThisNode, thisNodeClassSetID); // installs the new class set
-				}
+				}	
+				// now thisNodeClassSetID is known
+				if (this.replaceTypeWithMostGeneralType) { // if we have to handle actual class sets also
+					HashMap<Long, Long> typesOfThisNodesRep = this.summaryNodeToActualTypeToCardinality.get(thisNodeClassSetID);
+					if (typesOfThisNodesRep == null) {
+						typesOfThisNodesRep = new HashMap<Long, Long>(); // also create actual class set
+						this.summaryNodeToActualTypeToCardinality.put(thisNodeClassSetID, typesOfThisNodesRep); 
+						//LOGGER.info("Created actual type-to-card set for " + classSetIDOfThisNode);
+					}
+					// keep a count of this type: 
+					Long cardinalityForO = typesOfThisNodesRep.get(t.o); // here use the actual type 
+					if (cardinalityForO == null) {
+						typesOfThisNodesRep.put(t.o, 1L);
+					}
+					else {
+						typesOfThisNodesRep.put(t.o, (cardinalityForO + 1L));
+					}
+				}	
 				// whether or not newClassSetID was known:
 				n2cs.put(t.s, thisNodeClassSetID); // erases/replaces previously known class set ID
 			}
-			else if (!classSetOfThisNode.contains(t.o)) { // we already had some types for t.s but not this one so we need to add new type
-				// n is moving from classSetOfThisNode to newClassSetOfThisNode.
-				// TODO Check if classSetOfThisNode is deserted and if yes, maybe remove it.
-				// (We can also keep it there to reuse it later...)
-				/*if (replaceTypeWithMostGeneralType == true) {
+			else { // not the first time we encounter the node
+				if (!classSetOfThisNode.contains(typeToUseInCS)) { // we already had some types for t.s but not the one we consider this time 
+					// n is moving from classSetOfThisNode to newClassSetOfThisNode.
+					// TODO Check if classSetOfThisNode is deserted and if yes, maybe remove it.
+					// (We can also keep it there to reuse it later...)
+					/*if (replaceTypeWithMostGeneralType == true) {
 					throw new IllegalStateException("Resource node "
 					+ RDF2SQLEncoding.dictionaryDecode(t.s) + " with more than one type: "
 					+ RDF2SQLEncoding.dictionaryDecode(classSetOfThisNode.first()) + " and "
 					+ RDF2SQLEncoding.dictionaryDecode(t.o));
-				}*/
-				TreeSet<Long> newClassSetOfThisNode = new TreeSet<>();
-				newClassSetOfThisNode.addAll(classSetOfThisNode);
-				newClassSetOfThisNode.add(t.o);
-				Long newClassSetID = cs2csID.get(newClassSetOfThisNode);
-				if (newClassSetID == null) {
-					newClassSetID = getNextSummaryNode();
-					cs.put(newClassSetID, newClassSetOfThisNode);
-					cs2csID.put(newClassSetOfThisNode, newClassSetID);
+			    	}*/
+					TreeSet<Long> newClassSetOfThisNode = new TreeSet<>();
+					newClassSetOfThisNode.addAll(classSetOfThisNode);
+					newClassSetOfThisNode.add(typeToUseInCS); // add the appropriate type in 
+					Long newClassSetID = cs2csID.get(newClassSetOfThisNode);
+					if (newClassSetID == null) {
+						newClassSetID = getNextSummaryNode();
+						cs.put(newClassSetID, newClassSetOfThisNode);
+						cs2csID.put(newClassSetOfThisNode, newClassSetID);
+					}
+					LOGGER.info("Added to class set of node " + newClassSetID + " " + typeToUseInCS +
+							" (" + RDF2SQLEncoding.dictionaryDecode(typeToUseInCS) + ")"); 
+					n2cs.put(t.s, newClassSetID);		
 				}
-				n2cs.put(t.s, newClassSetID);
+				// if we have to handle actual class sets
+				if (this.replaceTypeWithMostGeneralType) {
+					Long ncs = n2cs.get(t.s); // whomever the class representative of n.s is, one must exist by now 
+					HashMap<Long, Long> typesOfThisNodesRep = this.summaryNodeToActualTypeToCardinality.get(ncs);
+					if (typesOfThisNodesRep == null) {
+						typesOfThisNodesRep = new HashMap<Long, Long>(); // also create actual class set
+						this.summaryNodeToActualTypeToCardinality.put(ncs, typesOfThisNodesRep); 
+					}
+					// keep a count of this type: 
+					Long cardinalityForO = typesOfThisNodesRep.get(t.o);
+					if (cardinalityForO == null) {
+						typesOfThisNodesRep.put(t.o, 1L);
+					}
+					else {
+						typesOfThisNodesRep.put(t.o, (cardinalityForO + 1L));
+					}
+				}	
 			}
 			//else {
 			// do nothing
@@ -678,15 +754,34 @@ public class Summary {
 	 */
 	protected void representTypeTriplesBeforeData() {
 		//LOGGER.debug("POST HANDLE TYPE TRIPLES");
+		// Dec 17, 2018: the block below allows to represent all the type triples correctly.
+		// However, there are bad interactions with some strong summarization code that assumes that
+		// the "class set" data structures are correlated with the represented type triples.
+		// TODO decide if we want to enforce this (debug the NPEs thrown by TypedStrong summarization)
+		// or if we fix the representation of type triples differently. 
+		//		if (this.replaceTypeWithMostGeneralType) {
+		//			for (Long classSetID: this.summaryNodeToActualTypeToCardinality.keySet()) {
+		//				HashMap<Long, Long> typesWithCardOfThisNode = this.summaryNodeToActualTypeToCardinality.get(classSetID);
+		//				for (Long actualType: typesWithCardOfThisNode.keySet()) {
+		//					long card = typesWithCardOfThisNode.get(actualType); 
+		//					for (int i = 0; i < card; i ++) {
+		//						// we do it the right number of times in order for the counts to be correct
+		//						edgesWithProv.addTriple(classSetID, RDF2SQLEncoding.getTypeCode(), actualType);
+		//					}
+		//				}
+		//			}
+		//		}
+		//		else {// classical summarization, using the types from classSet
 		for (long node: n2cs.getKeys()) {
 			long thisClassSetID = n2cs.get(node);
+			rep.put(node, thisClassSetID); // Dec 17, 2018
 			TreeSet<Long> thisClassSet = cs.get(thisClassSetID); // the class set IS the representative
 			for (long thisClass: thisClassSet) {
 				edgesWithProv.addTriple(thisClassSetID, RDF2SQLEncoding.getTypeCode(), thisClass);
-				rep.put(node, thisClassSetID);
-				// o already represenated in collectSchemaNodes
+				// o already represented in collectSchemaNodes
 			}
 		}
+		//}
 	}
 
 	protected void classifyDataTriple(Triple t) {
@@ -991,7 +1086,7 @@ public class Summary {
 	}
 	// whether or not a certain property is generic
 	public boolean isGeneric(Long p) {
-			return this.genericPropertiesIgnoredInCliques.contains(p);
+		return this.genericPropertiesIgnoredInCliques.contains(p);
 	}
 	public HashMap<String, String> getRunStatistics() {
 		HashMap<String, String> stats = new HashMap<>();
@@ -1096,7 +1191,9 @@ public class Summary {
 	public HashSet<Long> getSchemaNodes() {
 		return sn;
 	}
-
+	public boolean generalizeTypes() {
+		return this.replaceTypeWithMostGeneralType; 
+	}
 	public void writeDecodedSummaryToNTFile(Connection conn, String summarizationTechnique) {
 		ensureExporter();
 		exporter.writeDecodedSummaryToNTFile(conn, summarizationTechnique);
@@ -1124,5 +1221,8 @@ public class Summary {
 		else {
 			return 0L;
 		}
+	}
+	public HashMap<Long, Long> getActualTypesWithStatistics(long s) {
+		return this.summaryNodeToActualTypeToCardinality.get(s); 
 	}
 }

@@ -815,6 +815,9 @@ public class SummaryExport {
 								throw new IllegalStateException("No entity for: " + t.s);
 							}
 							if (dax.unknownSummaryNode(t.s)){ // print the subject in all cases
+								if (summary.generalizeTypes()) {
+									esn.setTypes(summary.getActualTypesWithStatistics(t.s));
+								}
 								esn.addNodeDescriptionTo(bw, dax);
 								dotLinesPrinted++;
 							}
@@ -842,7 +845,9 @@ public class SummaryExport {
 					}
 				}
 				if (drawGraphLabel) {
-						bw.write("fontsize=20; label=\"" + summary.getClass().getSimpleName() + " of " +
+						bw.write("fontsize=20; label=\"" + summary.getClass().getSimpleName() + 
+						(summary.generalizeTypes()?" (generalize types) ":"") + 
+								" of " +
 						triplesFileName + " (" + 
 						summary.triplesSummarizedSoFar + " triples): " +
 						entities.size() + " nodes, " + entityEdgeCount + " edges\"\n"); 
