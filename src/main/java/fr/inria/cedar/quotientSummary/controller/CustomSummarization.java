@@ -23,7 +23,7 @@ public class CustomSummarization {
 				Builder.main(argsSum);
 				String[] argsSave = {"saveSummaryComputedWithoutSaturation"};
 				Builder.main(argsSave);
-				String[] argsExport = {"exportSummaryComputedClassicalWay", "plain", inputFileName};
+				String[] argsExport = {"exportSummaryComputedClassicalWay", "foldLeaves", inputFileName}; // plain or foldLeaves 
 				Builder.main(argsExport);
 			}
 			catch (UnsupportedDatabaseEngineException ex) {
@@ -52,9 +52,9 @@ public class CustomSummarization {
 //		String fileName = argv[0]; 
 //		String summarizationMethod = argv[1]; 
 //		File f = summarize(fileName, summarizationMethod); 
-		String[] fileNames = new String[] {"suspicious"}; //{ "conference", "enelshops", "foodista", "frenchpolitics","lubm1m", "mondial", "nasa", "nobelprizes", "pokedex", "bsbm1m", "watdiv10m"};   
+		String[] fileNames = new String[] {"lubm1m"}; //{ "conference", "enelshops", "foodista", "frenchpolitics","lubm1m", "mondial", "nasa", "nobelprizes", "pokedex", "bsbm1m", "watdiv10m"};   
 		String directory = "src/test/resources/rdf-nt-files/"; 
-		String [] summarizationMethods = new String[] {"strong"}; //, "strong", "typedweak", "typedstrong", "onefb", "onefw"}; 
+		String [] summarizationMethods = new String[] {"2psource"}; //, "strong", "typedweak", "typedstrong", "onefb", "onefw"}; 
 		for (String fileName: fileNames) {
 			for (String summarizationMethod: summarizationMethods) {
 				summarize(directory + fileName + ".nt", summarizationMethod); 

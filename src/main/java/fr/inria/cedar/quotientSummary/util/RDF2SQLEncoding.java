@@ -27,7 +27,6 @@ public class RDF2SQLEncoding {
 	private static long rangeCode = -1;
 	private static long classCode = -1; 
 	private static long propertyCode = -1; 
-	// Ioana: initialized these two
 	private static HashMap<Long, String> codeToURIOrLiteral = new HashMap<>();
 	private static HashMap<String, Long> uriOrLiteralToCode = new HashMap<>();
 	private static Connection conn;
@@ -145,7 +144,6 @@ public class RDF2SQLEncoding {
 	 * @return
 	 */
 	public static long dictionaryEncode(String URI) {
-		//LOGGER.debug("DictionaryEncode will ask query: " + stmtEncode); 
 		// try to use the cache if possible
 		Long alreadyKnownCode = uriOrLiteralToCode.get(URI);
 		if (alreadyKnownCode != null)
@@ -153,11 +151,11 @@ public class RDF2SQLEncoding {
 		long code = -1;
 		try {
 			stmtEncode.setString(1, URI);
+			//LOGGER.info("Asking query: |" + stmtEncode + " with " + URI + "|");
 			try (ResultSet rs = stmtEncode.executeQuery()) {
-				//LOGGER.debug("Asked query: " + learnCodeQueryString);
 				if (rs.next()) {
 					code = rs.getLong(1);
-					//LOGGER.debug("The code of " + URI + " is: " + constantCode);
+					//LOGGER.info("The code of " + URI + " is: " + code);
 				}
 			}
 		}
@@ -179,6 +177,7 @@ public class RDF2SQLEncoding {
 			ResultSet rs = stmtDecode.executeQuery();
 			if (rs.next()) {
 				String s = rs.getString(1);
+				//LOGGER.info("We got #" + s + "#"); 
 				// feed the cache: 
 				codeToURIOrLiteral.put(URL, s);
 				return s;

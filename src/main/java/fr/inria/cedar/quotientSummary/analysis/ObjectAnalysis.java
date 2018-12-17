@@ -18,6 +18,7 @@ import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 public class ObjectAnalysis {
 	private static final Logger LOGGER = Logger.getLogger(ObjectAnalysis.class.getName());
 
+	
 	long objectNo; // the number of distinct subjects of data triples
 	long typedNo; // the number of distinct subjects of type triples
 	long typedObjectNo; // the number of distinct subjects of data triples and typed triple 
@@ -32,7 +33,8 @@ public class ObjectAnalysis {
 	private static long classCode = -1; 
 	private static long propertyCode = -1; 
 
-
+	Connection conn; 
+	
 	public ObjectAnalysis() {
 
 	}
@@ -42,10 +44,9 @@ public class ObjectAnalysis {
 		System.out.println("############################################");
 		System.out.println("Analysis of " + fileName);
 		System.out.println("#############################################");
-		Connection conn = null; 
 		String inputFileName =  fileName;
 		try {
-			String[] argsSum = {"loadWithoutSaturation", inputFileName};
+			String[] argsSum = {"loadWithSaturationAndSummarize", "weak", inputFileName};
 			Builder.main(argsSum);
 			conn = Builder.getConnection(); 
 			RDF2SQLEncoding.setUp(conn, "dictionary"); // fingers crossed
@@ -53,7 +54,7 @@ public class ObjectAnalysis {
 		catch(Exception e) {
 			LOGGER.info("Error: " + e);
 		}
-		String typedSubjectsStmt = "create table typed as select distinct s from tmp_encoded ";
+		String typedSubjectsStmt = "create table typed as select distinct s from tmp_encoded_sat ";
 		boolean hasWhere = false; 
 
 		// typed subjects
@@ -67,30 +68,14 @@ public class ObjectAnalysis {
 		else {
 			typedSubjectsStmt = "create table typed (s long)"; 
 		}
-		LOGGER.info("TypedSubjectsStatement is: " + typedSubjectsStmt);
+		//LOGGER.info("TypedSubjectsStatement is: " + typedSubjectsStmt);
 		
-		Statement stat = null;
-		try{
-			stat = conn.createStatement();
-			stat.executeUpdate(typedSubjectsStmt);
-		}
-		catch(SQLException e) {
-			if (e.toString().indexOf("already exists") >= 0) {
-				try {
-					stat.executeUpdate("drop table typed");
-					stat.executeUpdate(typedSubjectsStmt);
-				}
-				catch(SQLException e2) {
-					LOGGER.error("Could still not create typed subjects: " + e2.toString());
-				}
-			}
-			else{
-				LOGGER.info("Could not create hasdataprops: " + e);
-			}
-		}
+		this.createAndIndexOneColTable("typed", typedSubjectsStmt);
+		LOGGER.info("Typed table done.");
+
 		// data subjects
 		hasWhere = false; 
-		String dataSubjectsStmt = "create table hasdataprops as select distinct s from tmp_encoded ";
+		String dataSubjectsStmt = "create table hasdataprops as select distinct s from tmp_encoded_sat ";
 		if (RDF2SQLEncoding.getTypeCode() >= 0) {
 			if (!hasWhere) {
 				dataSubjectsStmt = dataSubjectsStmt + " where ";
@@ -129,26 +114,24 @@ public class ObjectAnalysis {
 		if (hasWhere) {
 			dataSubjectsStmt = dataSubjectsStmt.substring(0, dataSubjectsStmt.length() - 4);
 		}
-		LOGGER.info("DataSubjectsStatement is: " + dataSubjectsStmt);
+		
+		
+		this.createAndIndexOneColTable("hasdataprops", dataSubjectsStmt);
+		//LOGGER.info("DataSubjectsStatement is: " + dataSubjectsStmt);
+		LOGGER.info("HasDataProps done.");
 
-		ResultSet rs = null; 
-		try {
-			stat.executeUpdate(dataSubjectsStmt);
+		
+		this.createAndIndexOneColTable("datatyped", "create table datatyped as (select * from typed natural join hasdataprops);");
+		LOGGER.info("DataTyped done.");
+		
+		Statement stat = null;
+		try{
+			stat = conn.createStatement();
 		}
 		catch(SQLException e) {
-			if (e.toString().indexOf("already exists") >= 0) {
-				try {
-					stat.executeUpdate("drop table hasdataprops");
-					stat.executeUpdate(dataSubjectsStmt);
-				}
-				catch(SQLException e2) {
-					LOGGER.error("Still an error: " + e2.toString());
-				}
-			}
-			else{
-				LOGGER.info("Could not create hasdataprops: " + e);
-			}
+			LOGGER.error("Could not create statement " + e);
 		}
+		ResultSet rs; 
 		String countTyped = "select count(*) from typed";
 		try {
 			rs = stat.executeQuery(countTyped);
@@ -170,7 +153,34 @@ public class ObjectAnalysis {
 		catch(SQLException e) {
 			LOGGER.info("Could not count data property subjects");
 		}
-		System.out.println("Typed: " + this.typedNo + " objects: " + this.objectNo);
+		
+		String countDataUntyped = "with aux as (select * from hasdataprops except select * from datatyped) select count(*) from aux";
+		try {
+			rs = stat.executeQuery(countDataUntyped);
+			if (rs.next()) {
+				this.untypedObjectNo = rs.getLong(1);
+			}
+		}
+		catch(SQLException e) {
+			LOGGER.info("Could not count untyped data property subjects");
+		}
+		
+		String countTypedNoData = "with aux as (select * from typed except select * from datatyped) select count(*) from aux";
+		try {
+			rs = stat.executeQuery(countTypedNoData);
+			if (rs.next()) {
+				this.typedNoData = rs.getLong(1);
+			}
+		}
+		catch(SQLException e) {
+			LOGGER.info("Could not count typed objects without any data");
+		}
+		
+		System.out.println("Typed: " + this.typedNo + 
+				" objects: " + this.objectNo +
+				" untypedObjects: " + this.untypedObjectNo + 
+				" typedNoData: " + this.typedNoData); 
+				
 		String[] argsCloseConnection = {"closeConnection"};
 		try {
 			Builder.main(argsCloseConnection);
@@ -180,9 +190,37 @@ public class ObjectAnalysis {
 		}
 	}
 
+	void createAndIndexOneColTable(String tableName, String createStatement) {
+		Statement stat = null;
+		try{
+			stat = conn.createStatement();
+			stat.executeUpdate(createStatement);
+		}
+		catch(SQLException e) {
+			if (e.toString().indexOf("already exists") >= 0) {
+				try {
+					stat.executeUpdate("drop table " + tableName); 
+					stat.executeUpdate(createStatement);
+				}
+				catch(SQLException e2) {
+					LOGGER.error("Could still not create " + tableName + e2.toString());
+				}
+			}
+			else{
+				LOGGER.info("Could not create " + tableName + " " + e); 
+			}
+		}
+		try {
+			stat.executeUpdate("create index idx"+tableName + " on " + tableName + "(s)");
+		}
+		catch(SQLException e) {
+			LOGGER.error("Could not create index " + e);
+		}
+	}
+	
 	public static void main(String[] argv) throws IOException {
 		ObjectAnalysis o = new ObjectAnalysis();
-		String[] fileNames = new String[] {"test-1"}; //, "enelshops", "foodista", "frenchpolitics","lubm1m", "mondial", "nasa", "nobelprizes", "pokedex", "bsbm1m", "watdiv10m"};   
+		String[] fileNames = new String[] {"lubm10m"}; //, "frenchpolitics","lubm1m", "mondial", "nasa", "nobelprizes", "pokedex", "bsbm1m", "watdiv10m"};   
 		String directory = "src/test/resources/rdf-nt-files/"; 
 		for (String fileName: fileNames) {
 			o.analyze(directory + fileName + ".nt"); 

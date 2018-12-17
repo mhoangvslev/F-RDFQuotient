@@ -825,7 +825,9 @@ public class SummaryExport {
 								String property = RDF2SQLEncoding.dictionaryDecode(t.p);
 								String propertyInDot = getVeryShortForDot(property.replaceAll("\"", ""));
 								bw.write("\"" + subjectInDot + "\"" + " -> \"" + objectInDot + "\" [weight=1, arrowsize=" + 
-										arrowsize + ", fontsize=20, label=\"" + propertyInDot); 
+										arrowsize + ", fontsize=20, " +
+										(summary.isGeneric(t.p)?" fontname=\"times italic\", ":"") + 
+										"label=\"" + propertyInDot); 
 								entityEdgeCount ++; 
 								if (gatherStatistics){
 									bw.write(" (" + summary.getRepresentedTripleNumber(t) + ")"); 

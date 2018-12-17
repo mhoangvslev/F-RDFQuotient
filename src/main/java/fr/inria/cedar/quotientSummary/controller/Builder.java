@@ -7,6 +7,7 @@ import fr.inria.cedar.ontosql.rdfdb.dataloading.Parameters;
 import fr.inria.cedar.quotientSummary.Summary;
 import fr.inria.cedar.quotientSummary.bisim.OneBisimSummary;
 import fr.inria.cedar.quotientSummary.bisim.OneFWSummary;
+import fr.inria.cedar.quotientSummary.sourceclique.TwoPassSourceCliqueSummary;
 import fr.inria.cedar.quotientSummary.strong.StrongSummary;
 import fr.inria.cedar.quotientSummary.strong.TwoPassStrongSummary;
 import fr.inria.cedar.quotientSummary.strong.TwoPassTypedStrongSummary;
@@ -93,7 +94,7 @@ public class Builder {
 			return;
 		case "loadWithSaturationAndSummarize":
 			connectionInUse = loadGraphInPostgres(true, false, filesToLoad);
-			summaryInUse = summarizeGraphFromPostgres(arg1, true, filesToLoad);
+			//summaryInUse = summarizeGraphFromPostgres(arg1, true, filesToLoad);
 			return;
 		case "loadAndSummarizeUsingShortcut":
 			connectionInUse = loadGraphInPostgres(false, false, filesToLoad);
@@ -153,6 +154,8 @@ public class Builder {
 			return "s_";
 		case "2pstrong":
 			return "2ps_";
+		case "2psourceclique":
+			return "2sc_"; 
 		case "typedweak":
 			return "tw_";
 		case "2ptypedweak":
@@ -336,7 +339,7 @@ public class Builder {
 	 * @throws SQLException
 	 */
 	private static Summary summarizeGraphFromPostgres(String summaryType, boolean summarizeSaturated, String[] files) throws SQLException, IOException {
-		LOGGER.info("Summarizing graph from Postgres");
+		LOGGER.info("Summarizing graph from Postgres with method: " + files[0]);
 		Summary sum = createNewSummary(summaryType, files[0], triplesTableName, tableName(summarizeSaturated), dictionaryTableName);
 		if (!SUMMARY_CONFIG_FILE.equals("")) {
 			sum.setSummaryConfigFile(SUMMARY_CONFIG_FILE);
@@ -359,6 +362,8 @@ public class Builder {
 			return new StrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 		case "2pstrong":
 			return new TwoPassStrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
+		case "2psource":
+			return new TwoPassSourceCliqueSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 		case "typedweak":
 			return new TypedWeakSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 		case "2ptypedweak":
@@ -544,6 +549,7 @@ public class Builder {
 		if (cPassword != null && cPassword.length() > 1) {
 			connectionProps.put("password", cPassword); 
 			password = cPassword; 
+			LOGGER.info("PASSWORD: " + password); 
 		}
 		String connectionURL = "jdbc:postgresql://" + host + ":" + 	port + "/" + databaseName;
 		try {
@@ -555,7 +561,8 @@ public class Builder {
 			LOGGER.info("Connection to Postgres established with URL: " + connectionURL  + " and " +  connectionProps.toString());
 		}
 		catch(SQLException e) {
-			throw new IllegalStateException("Could not open connection to " + connectionURL + " and " + connectionProps.toString()); 
+			throw new IllegalStateException("Could not open connection to " + connectionURL + 
+					" and " + connectionProps.toString() + " " + e.toString()); 
 		}
 	}
 

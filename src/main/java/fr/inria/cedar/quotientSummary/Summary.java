@@ -72,6 +72,7 @@ public class Summary {
 	protected static String TWO_PASS_WEAK_SUMMARY_PREFIX = "2pw_";
 	protected static String TWO_PASS_WEAK_SUMMARY_WITH_UNION_FIND_PREFIX = "2pwuf_";
 	protected static String TWO_PASS_STRONG_SUMMARY_PREFIX = "2ps_";
+	protected static String TWO_PASS_SOURCE_SUMMARY_PREFIX = "2sc_";
 	protected static String TWO_PASS_TYPED_WEAK_SUMMARY_PREFIX = "2ptw_";
 	protected static String TWO_PASS_TYPED_STRONG_SUMMARY_PREFIX = "2pts_";
 	protected static String ONEFB_SUMMARY_PREFIX = "1fb_";
