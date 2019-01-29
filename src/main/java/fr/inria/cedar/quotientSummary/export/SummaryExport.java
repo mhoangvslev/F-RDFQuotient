@@ -46,8 +46,8 @@ public class SummaryExport {
 	private long lastGivenLabel; 
 	
 	// one size fits all attribute for drawing
-	double arrowsize=2.0; 	
-	String schemaNodeLineSuffix = "\" [penwidth=2, fontsize=40, fillcolor=white, fontcolor=black];\n"; 
+	double arrowsize=0.8; 	
+	String schemaNodeLineSuffix = "\" [penwidth=2, fontsize=12, fillcolor=white, fontcolor=black];\n"; 
 	int maxDotLinesPrinted = 1000; 
 	
 	
@@ -258,9 +258,17 @@ public class SummaryExport {
 		String dotFile = getNTSummaryFileName(""); 
 		try {
 			try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(dotFile)))) {
-				bw.write("digraph g{\nratio=0.66;\n");
+				bw.write("digraph g{\nsplines=polyline;\n");
 				for (Triple t : summary.getSummaryEdges())
 					bw.write(t.s + " -> " + t.o + " [label=\"" + t.p + "\"];\n");
+				if (drawGraphLabel) {
+					bw.write("fontsize=12; label=\"" + summary.getClass().getSimpleName() + 
+					(summary.generalizeTypes()?" (generalize types) ":"") + 
+							" of " +
+					triplesFileName + " (" + 
+					summary.triplesSummarizedSoFar + " triples)\"\n"); 
+					bw.write("labelloc=top; labeljust=center;\n"); 		
+			}
 				bw.write("}\n");
 			}
 		}
@@ -287,7 +295,7 @@ public class SummaryExport {
 		
 		try {
 			try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(dotFileName)))) {
-				bw.write("digraph g{\nratio=0.66;\n node[shape=box, color=black, style=filled];\n");
+				bw.write("digraph g{\nsplines=polyline;\n node[shape=box, color=black, style=filled];\n");
 				
 				ArrayList<Triple> summEdges = summary.getSummaryEdges();
 				for (Triple t : summEdges) {
@@ -409,12 +417,20 @@ public class SummaryExport {
 					}
 					// write the triple in all cases:
 					//System.out.println("Writing " + subjectInDot + " -> " + objectInDot);
-					bw.write("\"" + subjectInDot + "\"" + " -> \"" + objectInDot + "\" [arrowsize=" + arrowsize +", penwidth=2, fontsize=40, label=\"" + propertyInDot);
+					bw.write("\"" + subjectInDot + "\"" + " -> \"" + objectInDot + "\" [arrowsize=" + arrowsize +", arrowhead=vee, fontsize=12, label=\"" + propertyInDot);
 					if (gatherStatistics){
 						bw.write(" (" + summary.getRepresentedTripleNumber(t) + ")"); 
 					}
 					bw.write("\"];\n");
 					dotLinesPrinted++;
+				}
+				if (drawGraphLabel) {
+					bw.write("fontsize=12; label=\"" + summary.getClass().getSimpleName() + 
+					(summary.generalizeTypes()?" (generalize types) ":"") + 
+							" of " +
+					triplesFileName + " (" + 
+					summary.triplesSummarizedSoFar + " triples)\"\n"); 
+					bw.write("labelloc=top; labeljust=center;\n"); 		
 				}
 				bw.write("}\n");
 			}
@@ -603,7 +619,7 @@ public class SummaryExport {
 		int dotLinesPrinted = 0; 
 		try {
 			try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(dotFileName)))) {
-				bw.write("digraph g{\nratio=0.66;\n node[shape=box, color=black, style=filled];\n");
+				bw.write("digraph g{\nsplines=polyline;\n node[shape=box, color=black, style=filled];\n");
 
 				int penWidth=2; 
 				ArrayList<Triple> summEdges = summary.getSummaryEdges();
@@ -718,7 +734,7 @@ public class SummaryExport {
 						}
 					}
 					// write the triple in all cases:
-					bw.write("\"" + subjectInDot + "\"" + " -> \"" + objectInDot + "\" [arrowsize=" + arrowsize +", weight=1, fontsize=40, penwidth=" + penWidth +
+					bw.write("\"" + subjectInDot + "\"" + " -> \"" + objectInDot + "\" [arrowsize=" + arrowsize +", weight=1, arrowhead=vee, fontsize=12, penwidth=" + penWidth +
 							", label=\"" + propertyInDot); 
 					if (gatherStatistics){
 						bw.write(" (" + summary.getRepresentedTripleNumber(t) + ")"); 
@@ -728,6 +744,14 @@ public class SummaryExport {
 					}
 					bw.write("\"];\n");
 					dotLinesPrinted++;
+				}
+				if (drawGraphLabel) {
+					bw.write("fontsize=12; label=\"" + summary.getClass().getSimpleName() + 
+					(summary.generalizeTypes()?" (generalize types) ":"") + 
+							" (split leaves) of " +
+					triplesFileName + " (" + 
+					summary.triplesSummarizedSoFar + " triples)\"\n"); 
+					bw.write("labelloc=top; labeljust=center;\n"); 		
 				}
 				bw.write("}\n");
 			}
@@ -794,7 +818,7 @@ public class SummaryExport {
 		
 		try {
 			try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(dotFileName)))) {
-				bw.write("digraph g{\nratio=0.66;\n node[shape=box, color=black, style=filled];\n");
+				bw.write("digraph g{\nsplines=polyline;\n nodesep=0.15;\n ranksep=0.2;\n node[shape=box, color=black, style=filled];\n");
 				
 				ArrayList<Triple> summEdges = summary.getSummaryEdges();
 				
@@ -879,7 +903,7 @@ public class SummaryExport {
 								String property = RDF2SQLEncoding.dictionaryDecode(t.p);
 								String propertyInDot = getVeryShortForDot(property.replaceAll("\"", ""));
 								bw.write("\"" + subjectInDot + "\"" + " -> \"" + objectInDot + "\" [weight=1, arrowsize=" + 
-										arrowsize + ", fontsize=20, " +
+										arrowsize + ", fontsize=12, arrowhead=vee, " +
 										(summary.isGeneric(t.p)?" fontname=\"times italic\", ":"") + 
 										"label=\"" + propertyInDot); 
 								entityEdgeCount ++; 
@@ -896,14 +920,14 @@ public class SummaryExport {
 					}
 				}
 				if (drawGraphLabel) {
-						bw.write("fontsize=20; label=\"" + summary.getClass().getSimpleName() + 
+						bw.write("fontsize=12; label=\"" + summary.getClass().getSimpleName() + 
 						(summary.generalizeTypes()?" (generalize types) ":"") + 
 								" of " +
 						triplesFileName + " (" + 
 						summary.triplesSummarizedSoFar + " triples): " +
 						entities.size() + " nodes, " + entityEdgeCount + " edges\"\n"); 
+						bw.write("labelloc=top; labeljust=center;\n"); 		
 				}
-				bw.write("labelloc=top; labeljust=center;\n"); 			
 				bw.write("}\n");
 				bw.close();
 			}
@@ -931,7 +955,7 @@ public class SummaryExport {
 		try{
 			String nColor = dax.getSummaryNodeColor(node);
 			bw.write("\"" + label);
-			bw.write("\" [fontsize=40, color=black, style=filled, fillcolor=" + // Fontsize=40, shape=box added on Sept 26
+			bw.write("\" [fontsize=12, color=black, style=filled, fillcolor=" + 
 					nColor +
 					(dax.isDarkColor(nColor)?", fontcolor=white":"")
 					+ "];\n");
@@ -945,9 +969,17 @@ public class SummaryExport {
 	public void writeEncodedSummaryToDotFile(String dotFile) {
 		try {
 			try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(dotFile)))) {
-				bw.write("digraph g{\nratio=0.66;\n");
+				bw.write("digraph g{\nsplines=polyline;");
 				for (Triple t : summary.getSummaryEdges())
-					bw.write(t.s + " -> " + t.o + " [arrowsize=" + arrowsize + ", label=\"" + t.p + "\"];\n");
+					bw.write(t.s + " -> " + t.o + " [arrowsize=" + arrowsize + ", arrowhead=vee, label=\"" + t.p + "\"];\n");
+				if (drawGraphLabel) {
+					bw.write("fontsize=12; label=\"" + summary.getClass().getSimpleName() + 
+					(summary.generalizeTypes()?" (generalize types) ":"") + 
+							" of " +
+					triplesFileName + " (" + 
+					summary.triplesSummarizedSoFar + " triples)\"\n"); 
+					bw.write("labelloc=top; labeljust=center;\n"); 		
+				}
 				bw.write("}\n");
 			}
 		}
@@ -963,7 +995,7 @@ public class SummaryExport {
 	public void writeRDFGraphToDotFile(Connection conn, String dotFileName) {
 		try {
 			try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(dotFileName)))) {
-				bw.write("digraph g{\nratio=0.66;\n");
+				bw.write("digraph g{\nsplines=polyline;\n");
 				long triplesToDraw = Math.min(100, summary.triplesSummarizedSoFar);
 				//LOGGER.debug("Writing " + triplesToDraw + " RDF graph triples to DOT");
 				long triplesDrawn;
@@ -986,6 +1018,12 @@ public class SummaryExport {
 							drawTriples(rs2, bw);
 						}
 					}
+				}
+				if (drawGraphLabel) {
+					bw.write("fontsize=12; label=\"RDF graph " + 
+					triplesFileName + " (" + 
+					summary.triplesSummarizedSoFar + " triples)\"\n"); 
+					bw.write("labelloc=top; labeljust=center;\n"); 		
 				}
 				bw.write("}\n");
 			}
@@ -1139,7 +1177,7 @@ public class SummaryExport {
 				//LOGGER.debug("TYP2 " + o + " (" + object + ") represented by  " + oRep);
 				bw.write("\"" + objectForDot + "\" [fontcolor=white, style = filled, color=black];\n");
 			}
-			bw.write("\"" + subjectForDot + "\"" + " -> \"" + objectForDot + "\" [arrowsize=" + arrowsize + ", label=\"" + propertyForDot + "\"];\n");
+			bw.write("\"" + subjectForDot + "\"" + " -> \"" + objectForDot + "\" [arrowsize=" + arrowsize + ", arrowhead=vee, label=\"" + propertyForDot + "\"];\n");
 		}
 		catch (IOException e) {
 			throw new IllegalStateException("Unable to open the DOT file to for the summary: " + e.toString());

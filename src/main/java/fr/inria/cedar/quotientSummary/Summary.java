@@ -733,7 +733,6 @@ public class Summary {
 			// comparison between sets uses equals and compares the structures of the sets
 			if (repS == null) { // we create it
 				repS = getNextSummaryNode();
-				LOGGER.debug("Created class set repr. " + repS + " for top types: " + decodeTopTypes(oTopClasses));
 				cs.put(repS, sClassSet); // installs the new class set
 				cs2csID.put(sClassSet, repS); // installs the new class set
 			}	

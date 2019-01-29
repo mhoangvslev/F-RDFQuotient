@@ -79,14 +79,14 @@ public class EntitySummaryNode {
 			String nColor = dax.getSummaryNodeColor(node);
 			String fontColor = (dax.isDarkColor(nColor)?"white":"black"); 
 			bw.write("\"" + hiddenDotName + "\" [ label=< <TABLE BGCOLOR=\"" + nColor + "\"> <TR><TD><FONT color=\"" + fontColor  +
-					"\" POINT-SIZE=\"24.0\" FACE=\"Times-Bold\"> " + hiddenDotName);
+					"\" POINT-SIZE=\"12.0\" FACE=\"Times-Bold\"> " + hiddenDotName);
 			addTypeDescriptionTo(bw, fontColor); 
 			bw.write(" </FONT> </TD> </TR>");
 			for (String propertyInDot: outgoingPropertiesMap.keySet()) {
 				boolean genericProperty = genericProperties.contains(propertyInDot); 
 				bw.write(" <TR><TD><FONT color=\"" + fontColor + "\" " +
 						(genericProperty?" FACE=\"Times-Italic\"":"") + 
-						" POINT-SIZE=\"14.0\"> " + 	propertyInDot +
+						" POINT-SIZE=\"12.0\"> " + 	propertyInDot +
 						( (propCardinalitiesMap.get(propertyInDot) >=0)?(" (" + propCardinalitiesMap.get(propertyInDot) + 
 								" &rarr; " + childCardinalitiesMap.get(propertyInDot) + ") "):"") +
 						"</FONT></TD></TR>\n");
@@ -130,7 +130,7 @@ public class EntitySummaryNode {
 					bw.write("<BR/>" + s);
 					//LOGGER.info("PRINTING ENTITY OF TYPE " + s);
 				}
-				bw.write("</FONT></TD></TR><TR><TD><FONT color=\"" + fontColor + "\" POINT-SIZE=\"24.0\">");
+				bw.write("</FONT></TD></TR><TR><TD><FONT color=\"" + fontColor + "\" POINT-SIZE=\"12.0\">");
 			}
 			for (long nodeType: actualTypes.keySet()) {
 				String s = (RDF2SQLEncoding.dictionaryDecode(nodeType)).replaceAll(">", "").replaceAll("<", "");
