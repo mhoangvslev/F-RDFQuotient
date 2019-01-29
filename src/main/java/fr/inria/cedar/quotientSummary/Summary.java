@@ -156,7 +156,7 @@ public class Summary {
 		genericPropertiesIgnoredInCliques = new HashSet<>();
 		targetsOfGenericPropertiesIgnoredInCliques = new HashMap<>();
 		sourcesOfGenericPropertiesIgnoredInCliques = new HashMap<>();
-		dax = new DOTAuxiliary();
+		dax = new DOTAuxiliary(properties.getProperty("colorScheme"));
 	}
 	public void setGenericProperties() {
 		if (properties.getProperty("omitGenericPropertiesFromCliques").toLowerCase().equals("true")) {
@@ -444,7 +444,7 @@ public class Summary {
 	void computeMostGeneralType(Connection conn) {
 		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
 		long subClassCode = RDF2SQLEncoding.getSubClassCode();
-
+		LOGGER.info("Computing most general types");
 		// traverse all the subClassOf triples and gather the most general superclasses of every class (according to the schema) 
 		generalizers = new HashMap<Long, HashSet<Long>>();
 		String getTriplesString = "select s, o from " + PostgresIdentifier.escapedQuotedId(encodedTriplesTableName)

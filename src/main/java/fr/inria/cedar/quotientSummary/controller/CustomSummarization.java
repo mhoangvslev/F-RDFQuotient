@@ -55,7 +55,7 @@ public class CustomSummarization {
 		//File f = summarize(fileName, summarizationMethod);
 		String[] fileNames = new String[] {"test-15"};//{"test-15", "conference", "enelshops", "foodista", "frenchpolitics","lubm1m", "mondial", "nasa", "nobelprizes", "pokedex", "bsbm1m", "watdiv10m"};
 		String directory = "src/test/resources/rdf-nt-files/";
-		String [] summarizationMethods = new String[] {"strong"}; //, "strong", "typedweak", "typedstrong", "onefb", "onefw"};
+		String [] summarizationMethods = new String[] {"typedstrong"}; //, "strong", "typedweak", "typedstrong", "onefb", "onefw"};
 		for (String fileName: fileNames) {
 			for (String summarizationMethod: summarizationMethods) {
 				summarize(directory + fileName + ".nt", summarizationMethod);
