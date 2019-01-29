@@ -115,11 +115,22 @@ public class SummaryExport {
 		LOGGER.info("Decoding summary and writing it in .nt format to " + summaryNTFileName);
 
 		ArrayList<Triple> summEdges = summary.getSummaryEdges();
+		// if we generalize types, we will output the type edges of the summary not from the summary
+		// (where they are not all present, as the node only has edges to the types in its most general set)
+		// but from the actual type set stored in the summary.
+		//
+		// This means the type summary edges will be output "for each typed summary node", which is not
+		// "for a summary triple". 
+		// Therefore, we need to remember which typed summary node has already had its type edges output, and
+		// which has not. 
+		HashSet<Long> typedSummaryNodesCovered = new HashSet<Long>();
+		
 		try {
 			// write summary triples:
 			try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(summaryNTFileName)))) {
 				// write summary triples:
 				for (Triple t : summEdges) {
+					boolean isTypeTriple = false; 
 					//LOGGER.debug("Summary triple: " + t.toString() );
 					String subject, property, object;
 					if (RDF2SQLEncoding.isDataProperty(t.p)) { // data
@@ -140,7 +151,7 @@ public class SummaryExport {
 						subject = RDF2SQLEncoding.dictionaryDecode(t.s);
 						property = RDF2SQLEncoding.dictionaryDecode(t.p);
 						object = RDF2SQLEncoding.dictionaryDecode(t.o);
-					} else { // type
+					} else { // type triple 
 						if (sn.contains(t.s)) {
 							subject = RDF2SQLEncoding.dictionaryDecode(t.s);
 						}
@@ -148,11 +159,45 @@ public class SummaryExport {
 							subject = getSummaryNodeURI(URIprefix, t.s);
 						}
 						property = RDF2SQLEncoding.dictionaryDecode(t.p);
-						object = RDF2SQLEncoding.dictionaryDecode(t.o);
+						
+						if (summary.generalizeTypes() && (!sn.contains(t.s))) { // handle all the type triples of this node
+							// (unless already done, and unless it is a schema node) 
+							object = null; // initialization to escape static analysis paranoia
+							isTypeTriple = true; 
+							if (typedSummaryNodesCovered.contains(t.s)) { // this typed summary node already exported
+								// do nothing
+							}
+							else {
+								// write the type triples from the actual type map, not from the summary
+								HashMap<Long, Long> actualTypesOfThisNode = summary.getActualTypesWithStatistics(t.s);
+								if (actualTypesOfThisNode == null) {
+									//LOGGER.info("Summary type triple: " + RDF2SQLEncoding.decode(t).toString());
+									//LOGGER.info("For typed summary node " + t.s + " there are no actual types");
+								}
+								else{
+									for (Long actualType: actualTypesOfThisNode.keySet()) {
+										object = RDF2SQLEncoding.dictionaryDecode(actualType); 
+										bw.write(subject + " " + property + " " + object + " .\n"); 
+									}
+								}
+								typedSummaryNodesCovered.add(t.s); 
+							}
+						}
+						else {
+							object = RDF2SQLEncoding.dictionaryDecode(t.o);
+						}
 					}
 					//LOGGER.debug(subject + " " + property + " " + object);
-					bw.write(subject + " " + property + " " + object + " .\n");
+					// if EITHER we are not generalizing types (which means the summary triples are not correct)
+					// OR this is not a type triple (non-type triples are always correct) 
+					if (!(summary.generalizeTypes()) || (!isTypeTriple)) {
+						// if we group on generalized types and this is a type triple, we should not
+						// output it, because it goes to one of the most general types, and not
+						// necessarily to an actual type that occurred in the data.
+						bw.write(subject + " " + property + " " + object + " .\n");
+					}
 				}
+				
 				if (gatherStatistics) {
 					HashMap<Long, Long> summaryNodeStats = summary.getSummaryNodeStatistics(); 
 					// write node cardinality statistics:
@@ -168,6 +213,7 @@ public class SummaryExport {
 					// write edge cardinality statistics:
 					int reifiedEdgeNumber = 0;
 					for (Triple ts : summaryEdgeStats.keySet()) {
+						// TODO: fix this too so that the edge cardinalities refer to actual edges (not the case now)
 						long numberOfRepresentedEdges = summaryEdgeStats.get(ts);
 						String reifEdgeURI = getSummaryNodeURI(properties.getProperty("reifiedSummaryEdgeURIPrefix"),
 							reifiedEdgeNumber);
@@ -741,7 +787,7 @@ public class SummaryExport {
 		HashSet<Long> sn = summary.getSchemaNodes(); 
 		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
 		dax.resetColors();
-		//LOGGER.debug("writeSummaryToDotFileSplitLeaves:");
+		LOGGER.debug("writeSummaryToDotFileSplitLeaves:");
 			
 		HashMap<Long, EntitySummaryNode> entities = new HashMap<Long, EntitySummaryNode>();
 		long entityEdgeCount = 0; 
@@ -753,11 +799,14 @@ public class SummaryExport {
 				ArrayList<Triple> summEdges = summary.getSummaryEdges();
 				
 				//first pass: build the entities, label all the nodes, print schema triples
-				HashMap<Long, Integer> leafCounter = new HashMap<Long, Integer>(); 
 				for (Triple t : summEdges) {
+					//LOGGER.debug("First pass over " + t.toString());
 					String subject, property, object, subjectInDot, propertyInDot, objectInDot;
 					// in all cases, edge labels are preserved:
 					property = RDF2SQLEncoding.dictionaryDecode(t.p);
+					//object = RDF2SQLEncoding.dictionaryDecode(t.o); Don't do this: the object may be a new node
+					// thus it may lack a code in the dictionary
+					//LOGGER.debug("Trying to write " + t.p + " edge, decoded into: |" + property + "|"); 
 					propertyInDot = getVeryShortForDot(property.replaceAll("\"", ""));
 					//LOGGER.info("Property: " + property);
 					if (RDF2SQLEncoding.isDataProperty(t.p)) { // data
@@ -788,10 +837,10 @@ public class SummaryExport {
 						// nothing
 					} else { // type triples 
 						if (!sn.contains(t.s)) { // if the subject is not a schema node itself, create an entity
-							//LOGGER.info("Type triple subject not part of the schema: " + t.s + ", creating entity:");
 							subjectInDot = getVeryShortLabelForSummaryDataSubject(t.s, sn); 
 							EntitySummaryNode esn = entities.get(t.s); 
 							if (esn == null) { // the entity did not exist yet --> create it
+								//LOGGER.info("Creating new entity for subject " + t.s + " of type " + object);
 								esn = new EntitySummaryNode(t.s, summary.getRepresentedNodeNumber(t.s), subjectInDot, this);
 								entities.put(t.s, esn); 
 							}
@@ -801,12 +850,14 @@ public class SummaryExport {
 				}
 				// now we print
 				
+				//LOGGER.info("PRINTING");
 				long dotLinesPrinted = 0; 
 				for (Triple t: summary.getSummaryEdges()) {
 					if (dotLinesPrinted == this.maxDotLinesPrinted) {
 						LOGGER.info("Cut summary split DOT drawing to " + maxDotLinesPrinted);
 						break; 
 					}
+					//LOGGER.info("Second pass over " + t.toString());
 					if (RDF2SQLEncoding.isDataProperty(t.p) || (RDF2SQLEncoding.getTypeCode() == t.p)) { // type or data triple
 						if (!sn.contains(t.s)) { // data subject
 							//LOGGER.info(t.s + " is a data node");
@@ -816,7 +867,7 @@ public class SummaryExport {
 							}
 							if (dax.unknownSummaryNode(t.s)){ // print the subject in all cases
 								if (summary.generalizeTypes()) {
-									esn.setTypes(summary.getActualTypesWithStatistics(t.s));
+									esn.setActualTypes(summary.getActualTypesWithStatistics(t.s));
 								}
 								esn.addNodeDescriptionTo(bw, dax);
 								dotLinesPrinted++;
@@ -834,7 +885,7 @@ public class SummaryExport {
 								entityEdgeCount ++; 
 								if (gatherStatistics){
 									bw.write(" (" + summary.getRepresentedTripleNumber(t) + ")"); 
-									//System.out.println("Writing " + subjectInDot + " -> " + objectInDot + "[weight=1, penwidth=" + penWidth +
+									//LOGGER.debug("Writing " + subjectInDot + " -> " + objectInDot + "[weight=1, penwidth=" + penWidth +
 									//		" label=" + propertyInDot + " (" + summary.getRepresentedTripleNumber(t) + ")"); 
 									
 								}

@@ -38,7 +38,8 @@ public class BuilderCmd {
 	private static final String CONFIGURATION_FILE = System.getProperty("user.dir") + "/conf/dataLoadingCmd.properties";
 
 	private static Properties properties;
-	private static Parameters settings;
+	private static Parameters settings; // Parameters is an OntoSQL class encapsulating the information that the loader needs
+	// in order to know what to load where
 	private static String triplesTableName;
 	private static String dictionaryTableName;
 	private static String encodedTriplesTableName;
@@ -138,8 +139,12 @@ public class BuilderCmd {
 		}
 	}
 
-	/*
-		The configuration file must specify values for the following attributes:
+	/**
+	 * The method loads the properties (parameters) of the file designated by CONFIGURATION_FILE, then:
+	 * - overrides the database name, layout, and saturation flag with the specific values given as arguments, then
+	 * - it writes the resulting properties into a conf/datasetprefix.properties file ("custom properties file")
+	 * - in the settings, it saves the name of the custom properties file
+		The file designated by CONFIGURATION_FILE must specify values for the following attributes:
 			database.engine
 			database.host
 			database.port

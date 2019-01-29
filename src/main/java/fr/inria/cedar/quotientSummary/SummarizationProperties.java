@@ -32,10 +32,11 @@ public class SummarizationProperties {
 		prop.put("reifiedEdgeHasObject", "http://quotientsummary.org/reifiedEdgeObject");
 		// Path to dot executable. If this is not found, it is not an error, just drawing won't work
 		prop.put("pathToDot", "/usr/local/bin/dot"); 
-
+		prop.put("maxTypesDrawnPerNameSpace", "20"); 
 	}
 	
 	public void put(String name, String value){
 		prop.put(name, value); 
 	}
+
 }

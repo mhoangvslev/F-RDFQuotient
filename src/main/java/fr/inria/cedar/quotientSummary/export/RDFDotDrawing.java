@@ -1,9 +1,13 @@
 package fr.inria.cedar.quotientSummary.export;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -86,7 +90,30 @@ public class RDFDotDrawing {
 			
 		}
 		catch(Exception e){
-			LOGGER.info("Unable to produce DOT drawing, check Dot path in RDFDotDrawing"); 
+			LOGGER.info("Unable to produce DOT drawing, check Dot path in RDFDotDrawing " + e); 
+		}
+	}
+	/**
+	 * Top method which can be called from anywhere to obtain just a simple plot.
+	 * @param pathToNt
+	 * @param pathToDot
+	 */
+	public static void printRDFFromFile(String pathToNt, String pathToDot) {
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(pathToNt)); 
+			ArrayList<DecodedTriple> triples = new ArrayList<DecodedTriple>();
+			while (br.ready()) {
+				String line = br.readLine();
+				String[] components = line.split(" ");
+				DecodedTriple dt = new DecodedTriple(components[0], components[1], components[2]);
+				triples.add(dt);
+			}
+			br.close();
+			RDFDotDrawing rdd = new RDFDotDrawing(pathToDot);
+			rdd.printRDFTriples(triples);
+		}
+		catch(Exception e) {
+			LOGGER.info("Unable to plot RDF file using DOT: " + e);
 		}
 	}
 }

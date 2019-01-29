@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
@@ -18,7 +19,8 @@ public class EntitySummaryNode {
 	
 	SummaryExport exporter; 
 	
-	HashMap<Long, Long> types; 
+	HashMap<Long, Long> actualTypes; // for each actual type of a resource represented by this entity, how many times that happened
+	HashSet<Long> groupByTypes; // each of the top types corresponding to this node's class set (or actual types)
 	
 	// properties in sorted order
 	TreeMap<String, Long> outgoingPropertiesMap;
@@ -30,7 +32,7 @@ public class EntitySummaryNode {
 	TreeSet<String> genericProperties;
 	
 	ArrayList<String> fullTypes; // for each type, how many subjects of this entity have this type
-	int maxTypesDisplayedPerNameSpace = 5; 
+	int maxTypesDrawnPerNameSpace;  
 			
 	private static final Logger LOGGER = Logger.getLogger(EntitySummaryNode.class.getName());
 	
@@ -45,8 +47,10 @@ public class EntitySummaryNode {
 		propCardinalitiesMap = new TreeMap<String, Long>();
 		childCardinalitiesMap = new TreeMap<String, Long>();	
 		genericProperties = new TreeSet<String>(); 
-		types = new HashMap<Long, Long>(); 
+		actualTypes = new HashMap<Long, Long>(); 
+		groupByTypes = new HashSet<Long>(); 
 		fullTypes = new ArrayList<String>(); 
+		maxTypesDrawnPerNameSpace = exporter.summary.getMaxTypesDisplayedPerNameSpace();
 	}
 	
 	public void addLeafChild(long prop, long leafChild, long propCard, long childCard) {
@@ -67,7 +71,7 @@ public class EntitySummaryNode {
 	}
 	
 	public void addType(long newType, long typeCardinality) {
-		types.put(newType, typeCardinality); 
+		actualTypes.put(newType, typeCardinality); 
 	}
 
 	public void addNodeDescriptionTo(BufferedWriter bw, DOTAuxiliary dax) {
@@ -75,8 +79,8 @@ public class EntitySummaryNode {
 			String nColor = dax.getSummaryNodeColor(node);
 			String fontColor = (dax.isDarkColor(nColor)?"white":"black"); 
 			bw.write("\"" + hiddenDotName + "\" [ label=< <TABLE BGCOLOR=\"" + nColor + "\"> <TR><TD><FONT color=\"" + fontColor  +
-					"\" POINT-SIZE=\"24.0\" > " + hiddenDotName);
-			addTypeDescriptionTo(bw); 
+					"\" POINT-SIZE=\"24.0\" FACE=\"Times-Bold\"> " + hiddenDotName);
+			addTypeDescriptionTo(bw, fontColor); 
 			bw.write(" </FONT> </TD> </TR>");
 			for (String propertyInDot: outgoingPropertiesMap.keySet()) {
 				boolean genericProperty = genericProperties.contains(propertyInDot); 
@@ -95,30 +99,56 @@ public class EntitySummaryNode {
 	}
 	
 	/**
-	 * This should be used to modify the types used for displaying
-	 * @param typeToCard
+	 * This:
+	 * - takes the actualTypes and makes them groupByTypes
+	 * - sets the groupByTypes to the newly given map typeToCard.
+	 * This assumes that before it's called, actualTypes has been filled in with all the type triples from the summary.
+	 * When we group by generalized class sets, the type triples in the summary are not the correct ones, instead they go to the generalized class set types.
+	 * Thus, this call opportunistically recycles the "previous actual types" (which were not actual types at all; instead, they were GCS types)
+	 * into the group by types that they really are.
+	 * @param typeToCard A type-to-cardinality map.
 	 */
-	void setTypes(HashMap<Long, Long> typeToCard) {
-		this.types = typeToCard;
+	void setActualTypes(HashMap<Long, Long> typeToCard) {
+		this.groupByTypes.addAll(this.actualTypes.keySet());
+		this.actualTypes = typeToCard;
+		if (this.actualTypes == null) {
+			this.actualTypes = new HashMap<Long, Long>(); 
+			//LOGGER.info("Currently no actual types");
+		}
+		else {
+			//LOGGER.info("Now " + actualTypes.size() + " actual types");
+		}
 	}
-	// if a node has very many types, show at most five, then write "... X more types from this namespace"
-	void addTypeDescriptionTo(BufferedWriter bw) {
+	// if a node has very many actual types, show at most five, then write "... X more types from this namespace"
+	void addTypeDescriptionTo(BufferedWriter bw, String fontColor) {
 		try {
-			for (long nodeType: types.keySet()) {
-				String s = (RDF2SQLEncoding.dictionaryDecode(nodeType)).replaceAll(">", "").replaceAll("<", "");
-				fullTypes.add(s + ": " + types.get(nodeType)); 
+			// start by writing the group-by types: these should be non-empty iff
+			// the summarization has generalized the class set
+			if (groupByTypes.size() > 0) {
+				for (long groupByType: groupByTypes) {
+					String s = (RDF2SQLEncoding.dictionaryDecode(groupByType)).replaceAll(">", "").replaceAll("<", "");
+					bw.write("<BR/>" + s);
+					//LOGGER.info("PRINTING ENTITY OF TYPE " + s);
+				}
+				bw.write("</FONT></TD></TR><TR><TD><FONT color=\"" + fontColor + "\" POINT-SIZE=\"24.0\">");
 			}
+			for (long nodeType: actualTypes.keySet()) {
+				String s = (RDF2SQLEncoding.dictionaryDecode(nodeType)).replaceAll(">", "").replaceAll("<", "");
+				fullTypes.add(s + ": " + actualTypes.get(nodeType)); 
+			}
+			//LOGGER.info(actualTypes.size() + " actual types, " + fullTypes.size() + " full types");
 			String prevNameSpace = "";
 			String crtNameSpace = "";
 			int ommittedFromCrtNameSpace = 0; 
 			int typesInCurrentNameSpace = 0; 
+			boolean firstType = true; 
 			for (String fullType: fullTypes) {
 				crtNameSpace = fullType.substring(0, fullType.lastIndexOf('/'));
 				if (!prevNameSpace.equals(crtNameSpace)) {
-					// we just entered in this namespace; let's first finish with the previous one: 
+					// we just entered in this namespace; acknowledge ommissions if any before moving to new namespace: 
 					if (ommittedFromCrtNameSpace > 0) {
 						bw.write("<BR/>..." + ommittedFromCrtNameSpace + " more type" +
-								((ommittedFromCrtNameSpace > 1)?"s":"") + " from " + prevNameSpace);
+								((ommittedFromCrtNameSpace > 1)?"s":"") + " from " + crtNameSpace);
 					}
 					// now reset the counter
 					typesInCurrentNameSpace = 1; 
@@ -127,13 +157,29 @@ public class EntitySummaryNode {
 				else {
 					typesInCurrentNameSpace ++; 
 				}
-				if (typesInCurrentNameSpace < this.maxTypesDisplayedPerNameSpace) {					
-					bw.write("<BR/>" + fullType);
+				if (typesInCurrentNameSpace < this.maxTypesDrawnPerNameSpace) {		
+					if (firstType) {
+						if (groupByTypes.size()==0) {
+							// if there are no group-by types, this is the first type
+							// after the node name
+							bw.write("<BR/>");
+						}
+						firstType = false; 
+					}
+					else {
+						bw.write("<BR/>");
+					}
+					bw.write(fullType);
 				}
 				else { // we had to cut the tail
 					ommittedFromCrtNameSpace ++; 
 				}
 				prevNameSpace = crtNameSpace; 
+			}
+			//if there were some ommissions in the last traversed namespace, we need to acknowledge them here: 
+			if (ommittedFromCrtNameSpace > 0) {
+				bw.write("<BR/>..." + ommittedFromCrtNameSpace + " more type" +
+						((ommittedFromCrtNameSpace > 1)?"s":"") + " from " + crtNameSpace);
 			}
 		}
 		catch(IOException ioe) {
