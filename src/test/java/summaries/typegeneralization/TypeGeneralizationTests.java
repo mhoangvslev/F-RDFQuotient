@@ -51,7 +51,7 @@ public class TypeGeneralizationTests {
 		LOGGER.setLevel(Level.INFO);
 		String inputFileName =  "src/test/resources/test" + i + "-typegen/test-" + i + ".nt";
 		String outputFileName = "src/test/resources/test" + i + "-typegen/test-" + i + "_" + 
-				((summarizationMethod.equals("typedstrong"))?"ts":"tw") + "_typegen_classical.nt";
+				((summarizationMethod.equals("typedstrong"))?"ts":"tw") + "-reference.nt";
 		
 		System.out.println("############################################");
 		System.out.println("Type generalization test: " + summarizationMethod + " summarization of " + inputFileName);
@@ -96,21 +96,18 @@ public class TypeGeneralizationTests {
 	}
 
 	@Test
-	public void summarizeTypeGenTest1() {
-		String referenceFileName = expectedOutput(1, "noSaturation");
+	public void summarizeTypeGenTest15() {
+		String referenceFileName = expectedOutput(15, "typedstrong");
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarize(15, "typedstrong");
 			if (!testOutput.exists()) {
-				fail("Test output not found ");
+				fail("Test output not found at " + referenceFileName);
 			}
-			if (!expectedOutput.exists()) {
-				fail("Expected output not found " + referenceFileName);
-			}
-			assertTrue("Different ts type-generalization summary 1", FileUtils.contentEquals(testOutput, expectedOutput));
+			assertTrue("Different ts type-generalization summary 15", FileUtils.contentEquals(testOutput, expectedOutput));
 		}
 		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in type-gen test 1 " + e.toString());
+			throw new IllegalStateException("Unable to open .nt files in test15-typegen " + e.toString());
 		}
 	}
 }
