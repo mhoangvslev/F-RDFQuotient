@@ -7,6 +7,10 @@
 *.png
 *.dot
 .DS_Store
+conf/documentation.aux
+conf/documentation.log
+conf/documentation.pdf
+conf/documentation.synctex.gz
 conf/bsbm100m_1fb.properties
 conf/bsbm100m_2ps.properties
 conf/bsbm100m_2pw.properties
