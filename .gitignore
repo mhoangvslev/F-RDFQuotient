@@ -83,4 +83,3 @@ src/test/resources/test*/*_tw_.nt
 src/test/resources/test*/*_s_.nt
 src/test/resources/test*/*_ts_.nt
 .ipynb_checkpoints
-conf/documentation.tex
