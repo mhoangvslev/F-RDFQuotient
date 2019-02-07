@@ -781,8 +781,7 @@ public class Summary {
 							addStatistics(summaryNodeToActualTypeToCardinality.get(newSRep),
 									summaryNodeToActualTypeToCardinality.get(oldSRep));
 					this.summaryNodeToActualTypeToCardinality.put(newSRep, reconciled);
-					//this.summaryNodeToActualTypeToCardinality.remove(oldClassSetID); 
-
+					//this.summaryNodeToActualTypeToCardinality.remove(oldSRep);
 				}
 				n2cs.put(t.s, newSRep);		
 			}	
@@ -820,6 +819,15 @@ public class Summary {
 	 * @return hm a map summing the two input maps (count absent key for 0)
 	 */
 	private HashMap<Long, Long> addStatistics(HashMap<Long, Long> hm1, HashMap<Long, Long> hm2) {
+		if (hm1 == null && hm2 == null) {
+			throw new IllegalStateException("Two empty lists");
+		}
+		if (hm1 == null) {
+			return hm2;
+		}
+		if (hm2 == null) {
+			return hm1;
+		}
 		HashMap<Long, Long> res = new HashMap<Long, Long>();
 		// first, add all the values on keys from hm1:
 		for (Long l1: hm1.keySet()) {
