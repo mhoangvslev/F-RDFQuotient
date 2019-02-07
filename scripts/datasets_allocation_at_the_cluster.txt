@@ -1,31 +1,49 @@
 cedar001
-DBPedia person
-Springer LOD conferences
-Nobel prizes
-INSEE Geo
+	clean_energy_data_uniq
+	conference
+	ctgovdata
+	dbpedia_persondata_en_uniq
+	enelshops
+	foodista
+	insee_geo
+	nasa
+	nobel
+	nobelprizes_uniq
 
 cedar002
-LUBM1M
+	lubm1m
 
 cedar003
-LUBM10M
+	bsbm1m
+	bsbm10m
+	dbpedia_persondata_en_uniq
+	lubm1m
+	lubm10m
+	watdiv10m
 
 cedar004
-LUBM100M
-DBPedia person
-Springer LOD conferences
-Nobel prizes
-INSEE Geo
+	conference
+	dbpedia_persondata_en_uniq
+	insee_geo
+	lubm100m
+	nobel
+	watdiv100m
 
 cedar005
-BSBM1M
+	bsbm1m
+	dblp_large_uniq
+	lubm100m
 
 cedar006
-BSBM10M
-BSBM138M
+	bsbm10m
+	bsbm100m
+	bsbm138m
+	lubm1m
+	lubm10m
 
 cedar007
-BSBM100M
+	bsbm100m
 
 cedar008
-DBLP
+	conference
+	dblp_large_uniq
