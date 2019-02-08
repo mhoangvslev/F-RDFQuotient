@@ -1,1 +1,123 @@
-Software licence of quotientSummary project
+RDFQUOTIENTS SOFTWARE LICENSE
+Preamble
+RDFQuotients v 1.7 has been developed within the context of academic research.
+Mrs Ioana Manolescu-Goujot, Mr. François Goasdoué and Mr. Pawel Guzewicz are the authors of the software.
+RDFQuotients is a software that automatically computes the summary of an RDF graph.
+It relies on the concept of quotient graph, which is based on the notion of node equivalence. For every node equivalence class of the input graph, RDFQuotients creates a node in the summary; the edges of the input graph lead to the edges between the representatives of those nodes in the summary. 
+RDFQuotient implements four different summary types, based on equivalence relations defined in research publications of our team. 
+These summaries have a great compression potential: the size of the summary graph is often orders of magnitude smaller than the size of the input graph. These summaries can be computed either in a single pass on the input graph or in an incremental manner upon the new addition (new triple) to the RDF graph. 
+Finally, RDFQuotients provides visualizations of computed summaries.
+For the storage and data processing, RDFQuotients relies on Postgres and OntoSQL (http://ontosql.inria.fr). 
+For visualizations, it uses GraphViz (http://www.graphviz.org).
+
+Article 1 - Definitions:
+Executable code: refers to the RDFQuotients software in machine language that can be executed on a computer. 
+Source code: refers to the RDFQuotients software in programming language that can be understood by a human being.
+Licensor: refers to the Owners, Contributors or any other person or organization that distributes the Software according to the Contract. 
+Contract: refers to this license.
+Contributor: refers to License Holders who make at least one Contribution to the Software. 
+Contribution(s): refers to any modification, correction, translation, adaptation and/or new functionality integrated in the Software by any Contributor.
+License Holder: refers to any person who uses the Software and accepts the terms and conditions of this Contract. 
+Software: refers to the RDFQuotients v 1.7 computer program and its documentation, its design and preparation hardware, the Source Code, the Executable Code and any Contributions.
+Owners: refers to the owners of the property rights of the Software. These owners are the Institut national de la recherche en informatique et en automatique (Inria), and Rennes 1 University.
+Article 2 - Purpose:
+The purpose of this Contract is to define the rights and obligations of the License Holder on the Software. 
+Article 3 – Acceptance:
+The License Holder agrees that downloading the Software implies that he/she has read and understood the terms and conditions of this Contract.
+Downloading of the Software, modified or otherwise, by the License Holder from any remote server or any other physical medium implies that he/she accepts the terms and conditions of the Contract. 
+Article 4 – Intellectual property:
+Article 4.1 – Rights granted:
+Under the terms of this Contract, the Owners grant the following property rights to the License Holder:
+the right to freely study the Software;
+the right to use and reproduce the Software on any medium, including in particular any electronic or digital medium;
+the right to modify, correct, translate and adapt the Software and/or to add new functionality;
+the right to redistribute the Software. This includes the right to represent the Software on any medium, including in particular any electronic or digital medium;
+The License Holder is expressly forbidden from redistributing the Software under any terms other than those stipulated in this Contract. 
+These rights are granted for the legal term of the protection of the intellectual property rights, as stipulated in the French intellectual property code, for the whole world, and for research and educational purposes only. 
+Article 4.2 – Commercial use of the Software:
+Any use, other than those expressly authorized in article 4.2 of this Contract, is forbidden. 
+This excludes any use of the Software for commercial purposes, including for example, the redistribution of the Software in return for a fee, the sale of services related to the Software or the internal use of the Software to obtain a commercial advantage. 
+However, the License Holders are free to propose this type of license for commercial purposes. In this case, the terms and conditions of such a license will be determined in a separate contract.
+Article 4.3 – Contributions made by a License Holder:
+As stated above, License Holders are entitled to make Contributions to the Software. However, the redistribution of one or more Contributions will be subject to the terms of this Contract. 
+Article 5 – Liability:
+Provided that it can prove that the Licensor is in breach, the License Holder can demand compensation for any proven and direct prejudice that it suffers as a result of the Software.
+The contractual liability of the Licensor is limited to its engagements made by applying the Contract and shall not be engaged as the result of:
+damages suffered if the License Holder fails, in part or in full, to honor its obligations under the terms of this Contract;
+direct damages resulting from the use or the performance of the Software.
+Article 6 – Guarantee:
+The Licensor declares that it is acting in good faith and, consequently, is entitled to grant all the rights to the Software stipulated in article 4.1 of this Contract. 
+As the Software has been developed within the context of academic research, it is supplied by the Licensor “as is” and without any express or tacit guarantee, and in particular without any guarantee of the security of the Software or its suitability to a particular use.
+Moreover, the Licensor does not guarantee that the Software is free of errors, that it functions uninterruptedly, that it is compatible with the License Holder’s hardware or that it meets the License Holder’s specific needs.
+Furthermore, the Licensor does not guarantee that the Software does not infringe any intellectual property rights of a third party to a patent, software or any other property rights. 
+Article 7 – Effect and term:
+The Contract comes into effect on the date when it is accepted by the License Holder, as stipulated in 3.1.
+The Contract remains in effect for the entire legal duration of the protection of the rights of ownership applying to the Software. 
+Article 9 – Applicable law and disputes:
+This license is governed by French law. 
+The License Holder and the Licensor shall attempt to settle any dispute regarding the execution or the interpretation of this License amicably. If the dispute cannot be settled amicably, it will be referred to the French competent court. 
+Article 10 – Language:
+This Contract exists in French and English. If the two versions contradict one another, then the version in French shall prevail. 
+
+
+
+Licence logiciel RDFQuotients
+Préambule
+Le logiciel RDFQuotients version 1.7 a été développé dans le cadre de recherches académiques.
+Mme Ioana Manolescu-Goujot, M. François Goasdoué et M. Pawel Guzewicz sont les auteurs de ce logiciel.
+RDFQuotients est un logiciel capable de construire automatiquement un résumé structurel d'un graphe RDF.
+Pour cela, il s'appuie sur le formalisme de graphes quotient, à la base duquel se trouve une notion d'équivalence de noeuds. Pour chaque groupe de noeuds équivalents dans le graphe en entrée, RDFQuotients construit un nœud dans le graphe quotient (le résumé); les arêtes du graphe d'entrée conduisent à des arêtes entre les représentants de ses noeuds, dans le résumé.
+RDFQuotients implémente quatre résumés différents, s'appuyant sur des relations d'équivalence issues de la recherche de notre équipe. 
+Ces résumés ont un grand pouvoir de compression: la taille du graphe résumé est souvent plusieurs ordres de grandeurs plus petite que la taille du graphe d'entrée. Ces résumés peuvent être construits soit dans une seule passe sur le graphe d'entrée, soit de façon incrémentale, pour refléter l'ajout d'une nouvelle arête (nouveau triple) dans le graphe RDF.
+Enfin, RDFQuotient fournit des visualisations des résumés construits. 
+Pour le stockage et le traitement de données, RDFQuotients s'appuie sur Postgres et sur la suite OntoSQL (http://ontosql.inria.fr).
+Pour les visualisations, il utilise GraphViz (http://www.graphviz.org).
+
+Article 1 - Définitions :
+Code Exécutable : désigne le Logiciel RDFQuotients exprimé en langage machine et exécutable à partir d’un ordinateur. 
+Code source : désigne le Logiciel RDFQuotients exprimé dans un langage de programmation compréhensible par un être humain.
+Concédant : désigne les Titulaires, les Contributeurs ou toute personne physique ou morale distribuant le Logiciel sous le Contrat. 
+Contrat : désigne la présente licence.
+Contributeur : désigne le Licencié auteur d’au moins une Contribution sur le Logiciel. 
+Contribution(s) : désigne toute modification, correction, traduction, adaptation et/ou nouvelles fonctionnalités intégrées au Logiciel par tout Contributeur.
+Licencié : désigne toute personne qui utilise le Logiciel et ayant accepté les termes du présent Contrat. 
+Logiciel : désigne le programme d’ordinateur RDFQuotients dans sa version 1.7 ainsi que sa documentation associée et son matériel de conception préparation, son Code Source, son Code Exécutable, ainsi que les éventuelles Contributions.
+Titulaires : désigne les détenteurs des droits patrimoniaux sur le Logiciel. Ces titulaires sont l’Institut national de recherche en informatique et en automatique (Inria) et l’Université Rennes 1. 
+Article 2 - Objet :
+Ce Contrat a pour objet de définir les droits et obligations du Licencié sur le Logiciel. 
+Article 3 – Acceptation :
+Le Licencié reconnaît, du fait du téléchargement, avoir pris connaissance des termes et conditions du présent Contrat.
+L’acceptation par le Licencié des termes du Contrat est réputée acquise du fait du téléchargement par ce dernier du Logiciel, modifié ou non, à partir de tout serveur distant ou de tout support physique. 
+Article 4 – Propriété intellectuelle :
+Article 4.1 – Droits concédés :
+Par le présent Contrat, les Titulaires concèdent au Licencié les droits patrimoniaux suivants :
+Le droit d’étudier librement le Logiciel ;
+le droit d’utiliser et de reproduire le Logiciel, sur tout support, notamment, sans que cette liste soit exhaustive, sur support électronique ou numérique ;
+Le droit de modifier le Logiciel, de le corriger, de le traduire, de l’adapter et/ou d’y apporter de nouvelles fonctionnalités ;
+Le droit de redistribuer le Logiciel. Ce droit comprend le droit de représenter le Logiciel, sur tout support, notamment, sans que cette liste soit exhaustive, sur support électronique ou numérique.
+Il est expressément interdit au Licencié de redistribuer le Logiciel sous d’autres termes que ceux prévus au présent Contrat. 
+Ces droits sont concédés pour la durée légale de protection des droits de propriété intellectuelle, telle que prévue par le code la propriété intellectuelle, pour le monde entier, et aux seules fins de recherche et d’enseignement. 
+Article 4.2 – Usage commercial du Logiciel :
+Toute utilisation pour un autre usage que celui expressément autorisé à l’article 4.2 du présent Contrat ci-dessus est interdit. 
+Ceci exclut toute utilisation/exploitation à des fins commerciales du Logiciel comme par exemple, et sans que cette liste soit limitative, toute redistribution payante du Logiciel, toute commercialisation de services autour du Logiciel ou encore tout usage interne du Logiciel afin d’obtenir un avantage commercial. 
+Cependant les Titulaires restent libres de proposer ce type de licence à des fins commerciales. Les termes et conditions d’une telle licence seront alors déterminés dans un acte séparé.
+Article 4.3 – Contribution(s) d’un Licencié :
+Comme indiqué ci-dessus, tout Licencié a le droit d’apporter des Contribution(s) au Logiciel. Toute redistribution d’une ou plusieurs Contribution(s) sera, toutefois, soumises aux termes du présent Contrat. 
+Article 5 – Responsabilité :
+Le Licencié a la faculté, sous réserve de prouver la faute du Concédant concerné, de demander la réparation du préjudice direct, dont il apporterait la preuve, qu’il aurait subi du fait du Logiciel.
+La responsabilité contractuelle du Concédant est limitée aux engagements pris en application du Contrat et ne saurait être engagée en raison :
+Des dommages survenus dans le cadre de l’inexécution, totale ou partielle, par le Licencié de ses obligations au titre du présent Contrat ;
+Des dommages directs découlant de l’utilisation ou des performances du Logiciel ;
+Article 6 – Garantie :
+Le Concédant déclare être de bonne foi et, ainsi, être en droit de concéder l'ensemble des droits attachés au Logiciel, tel que prévu à l’article 4.1 du présent Contrat. 
+Le Logiciel étant un logiciel réalisé dans le cadre de recherches académiques, il est fourni « en l’état » par le Concédant sans aucune garantie, expresse ou tacite et notamment sans aucune garantie sur son caractère sécurisé ou adapté à une utilisation particulière.
+De plus, le Concédant ne garantit pas que le Logiciel soit vierge d'erreur, qu'il fonctionne sans interruption, qu'il soit compatible avec l'équipement du Licencié ou qu'il remplisse les besoins propres du Licencié.
+Enfin, le Concédant ne garantit pas que le Logiciel ne porte pas atteinte à un quelconque droit de propriété intellectuelle d'un tiers portant sur un brevet, un logiciel ou sur tout autre droit de propriété. 
+Article 7 – Entrée en vigueur et durée :
+Le Contrat entre en vigueur à la date de son acceptation par le Licencié telle que définie en 3.1.
+Il produira ses effets pendant toute la durée légale de protection des droits patrimoniaux portant sur le Logiciel. 
+Article 9 – Droit applicable et litiges:
+Ce Contrat est soumis au droit français. 
+En cas de litige né de l’exécution ou de l’interprétation du Contrat, le Licencié et le Concédant s’efforceront de le résoudre à l’amiable. En cas de désaccord persistant, le litige sera porté devant le tribunal français compétent. 
+Article 10 – Langue :
+Ce Contrat est rédigé en langue française et en langue anglaise. En cas de contradiction entre les deux versions, la version en langue française prévaudra. 
