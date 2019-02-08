@@ -1,3 +1,5 @@
+//Initial software, [Manolescu-Goujot, Goasdoué, Guzewicz], Copyright C Inria and Rennes 1 University, see the license available at https://gitlab.inria.fr/cedar/quotientSummary/blob/master/LICENCE.txt
+
 package fr.inria.cedar.quotientSummary;
 
 import java.sql.Connection;

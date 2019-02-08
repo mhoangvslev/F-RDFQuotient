@@ -1,3 +1,5 @@
+//Initial software, [Manolescu-Goujot, Goasdoué, Guzewicz], Copyright C Inria and Rennes 1 University, see the license available at https://gitlab.inria.fr/cedar/quotientSummary/blob/master/LICENCE.txt
+
 /**
  * This class comprises code to save the summary and a limited size of the input graph, in DOT format, 
  * in order to draw them. 
