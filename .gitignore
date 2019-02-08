@@ -75,6 +75,8 @@ conf/nobelprizes_uniq.properties
 conf/nasa.properties
 conf/watdiv10m.properties
 conf/watdiv100m.properties
+conf/watdiv10m_onto.properties
+conf/watdiv100m_onto.properties
 src/test/resources/test*/*_noSaturation.nt
 src/test/resources/test*/*_classical.nt
 src/test/resources/test*/*_shortcut.nt
