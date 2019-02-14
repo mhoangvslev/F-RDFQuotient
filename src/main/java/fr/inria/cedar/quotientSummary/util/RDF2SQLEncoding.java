@@ -9,8 +9,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.HashSet;
-
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
@@ -22,13 +20,13 @@ import org.apache.log4j.Logger;
  */
 public class RDF2SQLEncoding {
 	private static final Logger LOGGER = Logger.getLogger(RDF2SQLEncoding.class.getName());
-	private static long typeCode = -1; // this is the long associated by OntoSQL to rdf:type. 
+	private static long typeCode = -1; // this is the long associated by OntoSQL to rdf:type.
 	private static long subClassCode = -1;
 	private static long subPropertyCode = -1;
 	private static long domainCode = -1;
 	private static long rangeCode = -1;
-	private static long classCode = -1; 
-	private static long propertyCode = -1; 
+	private static long classCode = -1;
+	private static long propertyCode = -1;
 	private static HashMap<Long, String> codeToURIOrLiteral = new HashMap<>();
 	private static HashMap<String, Long> uriOrLiteralToCode = new HashMap<>();
 	private static Connection conn;
@@ -86,13 +84,13 @@ public class RDF2SQLEncoding {
 	public static long getRangeCode() {
 		return rangeCode;
 	}
-	
+
 	public static long getClassCode() {
-		return classCode; 
+		return classCode;
 	}
 
 	public static long getPropertyCode() {
-		return propertyCode; 
+		return propertyCode;
 	}
 
 	public static void setRDFBuiltInPropertyCodes() {
@@ -106,8 +104,8 @@ public class RDF2SQLEncoding {
 		//LOGGER.debug("rdfs:domain code is: " + domainCode);
 		setRangeCode();
 		//LOGGER.debug("rdfs:range code is: " + rangeCode);
-		setClassCode(); 
-		setPropertyCode(); 
+		setClassCode();
+		setPropertyCode();
 	}
 
 	private static void setTypeCode() {
@@ -131,11 +129,11 @@ public class RDF2SQLEncoding {
 	}
 
 	private static void setClassCode() {
-		classCode = dictionaryEncode("<http://www.w3.org/2000/01/rdf-schema#Class>"); 
+		classCode = dictionaryEncode("<http://www.w3.org/1999/02/22-rdf-syntax-ns#Class>");
 	}
 
 	public static void setPropertyCode() {
-		propertyCode = dictionaryEncode("<http://www.w3.org/2000/01/rdf-schema#Property>"); 
+		propertyCode = dictionaryEncode("<http://www.w3.org/1999/02/22-rdf-syntax-ns#Property>");
 	}
 
 	/**
@@ -164,7 +162,7 @@ public class RDF2SQLEncoding {
 		catch (SQLException e) {
 			throw new IllegalStateException("Not able to encode " + e.toString());
 		}
-		// feed the cache: 
+		// feed the cache:
 		uriOrLiteralToCode.put(URI, code);
 		return code;
 	}
@@ -179,8 +177,8 @@ public class RDF2SQLEncoding {
 			ResultSet rs = stmtDecode.executeQuery();
 			if (rs.next()) {
 				String s = rs.getString(1);
-				//LOGGER.info("We got #" + s + "#"); 
-				// feed the cache: 
+				//LOGGER.info("We got #" + s + "#");
+				// feed the cache:
 				codeToURIOrLiteral.put(URL, s);
 				return s;
 			}
