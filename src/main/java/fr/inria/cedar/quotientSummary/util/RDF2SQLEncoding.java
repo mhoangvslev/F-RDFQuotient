@@ -129,7 +129,7 @@ public class RDF2SQLEncoding {
 	}
 
 	private static void setClassCode() {
-		classCode = dictionaryEncode("<http://www.w3.org/1999/02/22-rdf-syntax-ns#Class>");
+		classCode = dictionaryEncode("<http://www.w3.org/2000/01/rdf-schema#Class>");
 	}
 
 	public static void setPropertyCode() {
