@@ -2,6 +2,8 @@
 
 package fr.inria.cedar.quotientSummary;
 
+import fr.inria.cedar.quotientSummary.controller.SummarizationProperties;
+import fr.inria.cedar.quotientSummary.controller.LoadingProperties;
 import fr.inria.cedar.ontosql.rdfdb.dictionaryencoder.PostgresDatabaseHandler;
 import fr.inria.cedar.quotientSummary.datastructures.EdgesWithProvenanceCounts;
 import fr.inria.cedar.quotientSummary.datastructures.Long2Long;

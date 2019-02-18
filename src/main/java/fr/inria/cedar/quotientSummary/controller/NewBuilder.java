@@ -1,7 +1,10 @@
+//Initial software, [Manolescu-Goujot, Goasdoué, Guzewicz], Copyright C Inria and Rennes 1 University, see the license available at https://gitlab.inria.fr/cedar/quotientSummary/blob/master/LICENCE.txt
+
 package fr.inria.cedar.quotientSummary.controller;
 
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Properties;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -27,6 +30,8 @@ public class NewBuilder {
 	private static Option dryRunOption;
 	private static Option loadingPropertiesOption;
 	private static Option summarizationPropertiesOption;
+	private static final String DEFAULT_LOADING_PROPERTIES_FILE_NAME = "conf/loading.properties";
+	private static final String DEFAULT_SUMMARIZATION_PROPERTIES_FILE_NAME = "conf/summarization.properties";
 
 	public NewBuilder() {
 	}
@@ -139,7 +144,7 @@ public class NewBuilder {
 		}
 
 		final CommandLineParser parser = new DefaultParser();
-        try {
+		try {
 			final CommandLine arguments = parser.parse(options, args);
 
 			if (arguments.hasOption(helpOption.getArgName())) {
@@ -161,16 +166,18 @@ public class NewBuilder {
 				return;
 			}
 
+			String loadingPropertiesFileName = DEFAULT_LOADING_PROPERTIES_FILE_NAME;
 			if (arguments.hasOption(loadingPropertiesOption.getArgName())) {
-				//TODO
+				loadingPropertiesFileName = arguments.getOptionValue(loadingPropertiesOption.getArgName());
 			}
 
+			String summarizationPropertiesFileName = DEFAULT_SUMMARIZATION_PROPERTIES_FILE_NAME;
 			if (arguments.hasOption(summarizationPropertiesOption.getArgName())) {
-				//TODO
+				summarizationPropertiesFileName = arguments.getOptionValue(summarizationPropertiesOption.getArgName());
 			}
 
 			if (arguments.hasOption(loadOption.getArgName())) {
-				//TODO: prepare configuration
+				Properties loadingProperties = LoadingProperties.reconcileProperties(loadingPropertiesFileName, arguments.getOptionValue(loadOption.getArgName()));
 				if (arguments.hasOption(dryRunOption.getArgName())) {
 					//TODO
 				}
@@ -181,7 +188,7 @@ public class NewBuilder {
 			}
 
 			if (arguments.hasOption(summarizeOption.getArgName())) {
-				//TODO: prepare configuration
+				Properties summarizationProperties = SummarizationProperties.reconcileProperties(loadingPropertiesFileName, arguments.getOptionValue(loadOption.getArgName()));
 				if (arguments.hasOption(dryRunOption.getArgName())) {
 					//TODO
 				}
@@ -192,7 +199,7 @@ public class NewBuilder {
 			}
 
 			if (arguments.hasOption(readOption.getArgName())) {
-				//TODO: prepare configuration
+				Properties readProperties = LoadingProperties.reconcileProperties(loadingPropertiesFileName, arguments.getOptionValue(loadOption.getArgName()));
 				if (arguments.hasOption(dryRunOption.getArgName())) {
 					//TODO
 				}
