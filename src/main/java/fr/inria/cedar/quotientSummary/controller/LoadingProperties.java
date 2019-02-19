@@ -6,6 +6,8 @@ import java.util.Enumeration;
 import java.util.Properties;
 
 public class LoadingProperties {
+	static final String DEFAULT_LOADING_PROPERTIES_FILE_NAME = "conf/loading.properties";
+
 	static Properties reconcileProperties(String loadingPropertiesFileName, String optionValue) {
 		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
 	}

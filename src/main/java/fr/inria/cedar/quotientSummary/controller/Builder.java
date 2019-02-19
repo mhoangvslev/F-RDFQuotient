@@ -120,13 +120,13 @@ public class Builder {
 			saveSummary(false, "shortcut");
 			return;
 		case "exportSummaryComputedWithoutSaturation":
-			exportSummary("noSaturation", arg1); 
+			exportSummary("noSaturation", arg1);
 			return;
 		case "exportSummaryComputedClassicalWay":
-			exportSummary("classical", arg1); 
+			exportSummary("classical", arg1);
 			return;
 		case "exportSummaryComputedUsingShortcut":
-			exportSummary("shortcut", arg1); 
+			exportSummary("shortcut", arg1);
 			return;
 		case "dropPartialResultsTables":
 			dropPartialResultsTables();
@@ -135,7 +135,7 @@ public class Builder {
 			closeConnection();
 			return;
 		case "readSummaryComputedWithoutSaturation":
-			Summary s = readSummaryFromPostgres(); 
+			Summary s = readSummaryFromPostgres();
 			return;
 		case "setCustomConfig":
 			if (filesToLoad.length != 0) customPropFile = filesToLoad[0];
@@ -159,7 +159,7 @@ public class Builder {
 		case "2pstrong":
 			return "2ps_";
 		case "2psourceclique":
-			return "2sc_"; 
+			return "2sc_";
 		case "typedweak":
 			return "tw_";
 		case "2ptypedweak":
@@ -169,9 +169,9 @@ public class Builder {
 		case "2ptypedstrong":
 			return "2pts_";
 		case "onefb":
-			return "1fb_"; 
+			return "1fb_";
 		case "onefw":
-			return "1fw_"; 
+			return "1fw_";
 		}
 		return null;
 	}
@@ -200,7 +200,7 @@ public class Builder {
 		System.out.println("plain -> the quotient summary is drawn as is;");
 		System.out.println("splitleaves -> the quotient summary is drawn so that the leaf nodes with several incoming edges are split/duplicated;");
 		System.out.println("foldleaves -> the quotient summary is drawn with leaf nodes folded into their parents.");
-		
+
 	}
 
 	/**
@@ -319,11 +319,11 @@ public class Builder {
 		connectionProps.put("user", properties.getProperty("database.user"));
 		connectionProps.put("password", properties.getProperty("database.password"));
 
-		String connectionURL = "jdbc:postgresql://" + properties.getProperty("database.host") + ":" + 
+		String connectionURL = "jdbc:postgresql://" + properties.getProperty("database.host") + ":" +
 				properties.getProperty("database.port") + "/" + properties.getProperty("database.name");
 		Connection conn = DriverManager.getConnection(connectionURL, connectionProps);
-		LOGGER.info("Connection to Postgres established with URL: " + connectionURL + " with user " + 
-				properties.getProperty("database.user") + " and password " + properties.getProperty("database.password")); 
+		LOGGER.info("Connection to Postgres established with URL: " + connectionURL + " with user " +
+				properties.getProperty("database.user") + " and password " + properties.getProperty("database.password"));
 		Preconditions.checkState(conn != null, "No connection for " + connectionURL);
 
 		return conn;
@@ -345,9 +345,9 @@ public class Builder {
 	private static Summary summarizeGraphFromPostgres(String summaryType, boolean summarizeSaturated, String[] files) throws SQLException, IOException {
 		LOGGER.info("Summarizing graph from Postgres with method: " + files[0]);
 		Summary sum = createNewSummary(summaryType, files[0], triplesTableName, tableName(summarizeSaturated), dictionaryTableName);
-		if (!SUMMARY_CONFIG_FILE.equals("")) {
+		/*if (!SUMMARY_CONFIG_FILE.equals("")) {
 			sum.setSummaryConfigFile(SUMMARY_CONFIG_FILE);
-		}
+		}*/
 		sum.summarizeFromPostgres(connectionInUse);
 		LOGGER.info("Graph from Postgres summarized");
 		return sum;
@@ -377,10 +377,10 @@ public class Builder {
 		case "2ptypedstrong":
 			return new TwoPassTypedStrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 		case "onefb":
-			return new OneBisimSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName); 
+			return new OneBisimSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 		case "onefw":
-			return new OneFWSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName); 
-		
+			return new OneFWSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
+
 		}
 		return null;
 	}
@@ -416,9 +416,9 @@ public class Builder {
 		}
 	}
 
-	// prop allows to override the properties that the Builder may already have, 
-	// in particular to dictate it some connection parameters. 
-	// TODO 
+	// prop allows to override the properties that the Builder may already have,
+	// in particular to dictate it some connection parameters.
+	// TODO
 	public static Summary readSummaryFromPostgres(Properties prop) {
 		try {
 			Summary s = new Summary(getConnection()); // leave it like this (call getConnection to ensure it is opened)
@@ -438,16 +438,16 @@ public class Builder {
 		LOGGER.info("Exporting summary to disk");
 
 		summaryInUse.writeDecodedSummaryToNTFile(connectionInUse, summarizationTechnique);
-		
+
 		if (draw.toLowerCase().equals("plain"))
-			summaryInUse.drawSummaryAndGraph(connectionInUse, summarizationTechnique);		
+			summaryInUse.drawSummaryAndGraph(connectionInUse, summarizationTechnique);
 		if (draw.toLowerCase().equals("splitleaves"))
 			summaryInUse.writeDecodedSummaryToFileSplitLeavesAndDraw(connectionInUse, summarizationTechnique);
 		if (draw.toLowerCase().equals("foldleaves") || draw.toLowerCase().equals("draw"))
 			summaryInUse.writeDecodedSummaryToFileSplitFoldLeavesAndDraw(connectionInUse, summarizationTechnique);
 		LOGGER.info("Summary exported to disk");
-	}	
-	
+	}
+
 	private static void closeConnection() throws SQLException {
 		connectionInUse.close();
 		connectionInUse = null;
@@ -461,7 +461,7 @@ public class Builder {
 	 */
 	public static Connection getConnection() {
 		if (connectionInUse == null){
-			getConnection(DEFAULT_CONFIG_FILE); 
+			getConnection(DEFAULT_CONFIG_FILE);
 		}
 		return connectionInUse;
 	}
@@ -469,7 +469,7 @@ public class Builder {
 	// encapsulates the work to get a connection
 	// based on the properties specified in configfile
 	// call it with different config files to control which set of
-	// properties to use 
+	// properties to use
 	private static void getConnection(String configFile) {
 		Properties properties = new Properties();
 		try {
@@ -482,18 +482,18 @@ public class Builder {
 		connectionProps.put("user", properties.getProperty("database.user").trim());
 		connectionProps.put("password", properties.getProperty("database.password").trim());
 
-		String connectionURL = "jdbc:postgresql://" + properties.getProperty("database.host") + ":" + 
+		String connectionURL = "jdbc:postgresql://" + properties.getProperty("database.host") + ":" +
 				properties.getProperty("database.port") + "/" + properties.getProperty("database.name");
 		try {
 			connectionInUse = DriverManager.getConnection(connectionURL, connectionProps);
 			// https://docs.oracle.com/javase/8/docs/api/java/sql/DriverManager.html#getConnection-java.lang.String-java.util.Properties-
 			// states that if connectionURL and connectionProps disagree on the host, port or database name,
-			// the one actually considered is implementation (driver) dependent. 
-			// It is important not to allow the values of the two parameters to diverge. 
+			// the one actually considered is implementation (driver) dependent.
+			// It is important not to allow the values of the two parameters to diverge.
 			LOGGER.info("Connection to Postgres established with URL: " + connectionURL);
 		}
 		catch(SQLException e) {
-			throw new IllegalStateException("Could not open connection to " + connectionURL); 
+			throw new IllegalStateException("Could not open connection to " + connectionURL);
 		}
 	}
 
@@ -532,46 +532,46 @@ public class Builder {
 		}
 		String cPassword = customProp.getProperty("database.password");
 		if (cPassword != null){
-			cPassword = cPassword.trim(); 
+			cPassword = cPassword.trim();
 		}
 		if (cDatabaseName != null && cDatabaseName.length() > 0) {
-			connectionProps.put("database", cDatabaseName);  
-			databaseName = cDatabaseName; 
+			connectionProps.put("database", cDatabaseName);
+			databaseName = cDatabaseName;
 		}
 		if (cHost != null && cHost.length() > 0) {
-			connectionProps.put("host", cHost); 
-			host = cHost; 
+			connectionProps.put("host", cHost);
+			host = cHost;
 		}
 		if (cPort != null && cPort.length() > 0) {
-			connectionProps.put("port", cPort); 
-			port = cPort; 
+			connectionProps.put("port", cPort);
+			port = cPort;
 		}
 		if (cUser != null && cUser.length() > 0) {
-			connectionProps.put("user", cUser); 
-			user = cUser; 
+			connectionProps.put("user", cUser);
+			user = cUser;
 		}
 		if (cPassword != null && cPassword.length() > 1) {
-			connectionProps.put("password", cPassword); 
-			password = cPassword; 
-			LOGGER.info("PASSWORD: " + password); 
+			connectionProps.put("password", cPassword);
+			password = cPassword;
+			LOGGER.info("PASSWORD: " + password);
 		}
 		String connectionURL = "jdbc:postgresql://" + host + ":" + 	port + "/" + databaseName;
 		try {
 			// https://docs.oracle.com/javase/8/docs/api/java/sql/DriverManager.html#getConnection-java.lang.String-java.util.Properties-
 			// states that if connectionURL and connectionProps disagree on the host, port or database name,
-			// the one actually considered is implementation (driver) dependent. 
-			// It is important not to allow the values of the two parameters to diverge. 
+			// the one actually considered is implementation (driver) dependent.
+			// It is important not to allow the values of the two parameters to diverge.
 			connectionInUse = DriverManager.getConnection(connectionURL, connectionProps);
 			LOGGER.info("Connection to Postgres established with URL: " + connectionURL  + " and " +  connectionProps.toString());
 		}
 		catch(SQLException e) {
-			throw new IllegalStateException("Could not open connection to " + connectionURL + 
-					" and " + connectionProps.toString() + " " + e.toString()); 
+			throw new IllegalStateException("Could not open connection to " + connectionURL +
+					" and " + connectionProps.toString() + " " + e.toString());
 		}
 	}
 
 	public static void getConnection(Properties customProp){
-		getConnection(DEFAULT_CONFIG_FILE, customProp); 
+		getConnection(DEFAULT_CONFIG_FILE, customProp);
 	}
 
 	private static void dropPartialResultsTables() throws IllegalStateException {

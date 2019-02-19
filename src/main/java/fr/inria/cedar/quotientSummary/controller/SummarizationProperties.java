@@ -5,6 +5,15 @@ package fr.inria.cedar.quotientSummary.controller;
 import java.util.Properties;
 
 public class SummarizationProperties {
+	static final String DEFAULT_SUMMARIZATION_PROPERTIES_FILE_NAME = "conf/summarization.properties";
+
+	public static Properties reconcileProperties(Properties summarizationProperties, Properties newProperties) {
+		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+	}
+
+	public static Properties getDefaultProperties() {
+		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+	}
 	static Properties reconcileProperties(String loadingPropertiesFileName, String optionValue) {
 		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
 	}
