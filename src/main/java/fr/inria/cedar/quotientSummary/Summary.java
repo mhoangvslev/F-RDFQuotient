@@ -32,7 +32,7 @@ import org.apache.log4j.Logger;
 
 public class Summary {
 	private static final Logger LOGGER = Logger.getLogger(Summary.class.getName());
-	protected static final SimpleDateFormat SD_FORMAT = new SimpleDateFormat("yyyyMMdd_HHmmssSSS");
+	protected static final SimpleDateFormat SD_FORMAT = new SimpleDateFormat("yyyyMMdd_HHmmss");
 
 	protected HashSet<Triple> genericPropertyTriples = new HashSet<>();
 	protected Long2Long rep; // representation function
@@ -139,7 +139,7 @@ public class Summary {
 		summarizationProperties = SummarizationProperties.getDefaultProperties();
 
 		try{
-			checkConsistency = summarizationProperties.getProperty("consistencyChecks").toLowerCase().equals("true");
+			checkConsistency = summarizationProperties.getProperty("summary.consistency_checks").toLowerCase().equals("true");
 		} catch (Exception e) {
 			throw new IllegalStateException("Unable to extract property information: " +
 					e.toString());
@@ -147,7 +147,7 @@ public class Summary {
 		genericPropertiesIgnoredInCliques = new HashSet<>();
 		targetsOfGenericPropertiesIgnoredInCliques = new HashMap<>();
 		sourcesOfGenericPropertiesIgnoredInCliques = new HashMap<>();
-		dax = new DOTAuxiliary(summarizationProperties.getProperty("colorScheme"));
+		dax = new DOTAuxiliary(summarizationProperties.getProperty("drawing.color_scheme"));
 	}
 
 	public void setSummarizationProperties(Properties newProperties) {
@@ -160,8 +160,8 @@ public class Summary {
 	}
 
 	public void setGenericProperties() {
-		if (summarizationProperties.getProperty("omitGenericPropertiesFromCliques").toLowerCase().equals("true")) {
-			String[] props  = summarizationProperties.getProperty("genericProperties").split(",");
+		if (summarizationProperties.getProperty("summary.omit_generic_properties_from_cliques").toLowerCase().equals("true")) {
+			String[] props  = summarizationProperties.getProperty("summary.generic_properties").split(",");
 			for (String nonCliqueP: props) {
 				//LOGGER.info("Generic property: " + nonCliqueP);
 				this.genericPropertiesIgnoredInCliques.add(RDF2SQLEncoding.dictionaryEncode(nonCliqueP));
@@ -170,14 +170,14 @@ public class Summary {
 	}
 
 	public void setMostGeneralType() {
-		boolean replace = summarizationProperties.getProperty("replaceTypeWithMostGeneralType").toLowerCase().equals("true");
+		boolean replace = summarizationProperties.getProperty("summary.replace_type_with_most_general_type").toLowerCase().equals("true");
 		//LOGGER.debug("Replace types with the most general type: " + (replace ? "true" : "false"));
 		replaceTypeWithMostGeneralType = replace;
 		if (replace) {
-			this.summaryNodeToActualTypeToCardinality = new HashMap<Long, HashMap<Long, Long>>();
-			this.generalizers = new HashMap<Long, HashSet<Long>>();
-			this.topClass = new HashMap<Long, Long>();
-			this.topClasses = new HashMap<Long, HashSet<Long>>();
+			this.summaryNodeToActualTypeToCardinality = new HashMap<>();
+			this.generalizers = new HashMap<>();
+			this.topClass = new HashMap<>();
+			this.topClasses = new HashMap<>();
 		}
 	}
 
@@ -443,7 +443,7 @@ public class Summary {
 		long subClassCode = RDF2SQLEncoding.getSubClassCode();
 		LOGGER.info("Computing most general types");
 		// traverse all the subClassOf triples and gather the most general superclasses of every class (according to the schema)
-		generalizers = new HashMap<Long, HashSet<Long>>();
+		generalizers = new HashMap<>();
 		String getTriplesString = "select s, o from " + PostgresIdentifier.escapedQuotedId(encodedTriplesTableName)
 		+ " where p = " + subClassCode
 		+ ";";
@@ -457,7 +457,7 @@ public class Summary {
 
 						HashSet<Long> generalizersOfS  = generalizers.get(s);
 						if (generalizersOfS == null) {
-							generalizersOfS = new HashSet<Long>();
+							generalizersOfS = new HashSet<>();
 							generalizers.put(s,  generalizersOfS);
 						}
 						generalizersOfS.add(o);
@@ -504,13 +504,13 @@ public class Summary {
 	 * @return
 	 */
 	private HashSet<Long> gatherAllSuperTypes(Long s){
-		HashSet<Long> res = new HashSet<Long>();
+		HashSet<Long> res = new HashSet<>();
 		res.add(s);
 		recGatherAllSuperTypes(s, res);
 		return res;
 	}
 	private void recGatherAllSuperTypes(Long s, HashSet<Long> res) {
-		HashSet<Long> res2 = new HashSet<Long>();
+		HashSet<Long> res2 = new HashSet<>();
 		res2.addAll(res);
 		int nres = res.size();
 		for (Long superS: res) { // add to res2 all the generalizers of any type in res
@@ -655,7 +655,7 @@ public class Summary {
 	 * For special properties we do not want to have in cliques
 	 * Ioana, Oct 9, 2018
 	 *
-     * Assigns a new summary node as source and target of each special data property
+	 * Assigns a new summary node as source and target of each special data property
 	 */
 	public void prepareRepresentationOfGenericPropertyTriples() {
 		for (Long l: genericPropertiesIgnoredInCliques) {
@@ -665,8 +665,8 @@ public class Summary {
 	}
 	/**
 	 * For special properties we do not want to have in cliques
-     * Ioana, Oct 9, 2018
-     *
+	 * Ioana, Oct 9, 2018
+	 *
 	 * Represents each special data triple by the (existing or not) representative
 	 * of its subject, and by the (for sure existing) representative of its object
 	 * @param t
@@ -708,7 +708,7 @@ public class Summary {
 		if (this.replaceTypeWithMostGeneralType) {
 			oTopClasses = this.topClasses.get(t.o);
 			if (oTopClasses == null) {
-				oTopClasses = new HashSet<Long>();
+				oTopClasses = new HashSet<>();
 				oTopClasses.add(t.o);
 				topClasses.put(t.o, oTopClasses);
 			}
@@ -788,7 +788,7 @@ public class Summary {
 			Long sRep = n2cs.get(t.s); // n.s has a class set representative by now
 			HashMap<Long, Long> actualTypeCountSRep = this.summaryNodeToActualTypeToCardinality.get(sRep);
 			if (actualTypeCountSRep == null) {
-				actualTypeCountSRep = new HashMap<Long, Long>(); // also create actual class set
+				actualTypeCountSRep = new HashMap<>(); // also create actual class set
 				this.summaryNodeToActualTypeToCardinality.put(sRep, actualTypeCountSRep);
 			}
 			// keep a count of this type:
@@ -805,7 +805,7 @@ public class Summary {
 	private String decodeTopTypes(HashSet<Long> topClassesOfO) {
 		StringBuffer sb = new StringBuffer();
 		for (Long l: topClassesOfO) {
-			sb.append(RDF2SQLEncoding.dictionaryDecode(l) + " ");
+			sb.append(RDF2SQLEncoding.dictionaryDecode(l)).append(" ");
 		}
 		return new String(sb);
 	}
@@ -825,7 +825,7 @@ public class Summary {
 		if (hm2 == null) {
 			return hm1;
 		}
-		HashMap<Long, Long> res = new HashMap<Long, Long>();
+		HashMap<Long, Long> res = new HashMap<>();
 		// first, add all the values on keys from hm1:
 		for (Long l1: hm1.keySet()) {
 			Long x = res.get(l1); // initialize the count for this key
@@ -906,33 +906,24 @@ public class Summary {
 	 * subject and objects in the summary edges are just "new integer codes".
 	 *
 	 * @param conn
-	 * @param partialResult
-	 * @param summarizationInput
 	 */
-	public void saveSummaryInPostgres(Connection conn, boolean partialResult, String summarizationInput) {
+	public void saveSummaryInPostgres(Connection conn) {
 		try {
 			conn.setAutoCommit(false);
 		}
 		catch (SQLException ex) {
 			LOGGER.error(ex);
 		}
-		String newTableName = encodedTriplesTableName;
 		String timestamp = SD_FORMAT.format(new Timestamp(System.currentTimeMillis()));
-		if (partialResult)
-			newTableName = newTableName + "_sum";
-		else if (summarizationInput.equals("")) {
-			newTableName = "sav_" + timestamp + "_" + newTableName + "_" + getSummaryURIPrefix();
-		}
-		else {
-			newTableName = "sav_" + timestamp + "_" + newTableName + "_" + summarizationInput + "_" + getSummaryURIPrefix();
-		}
+		boolean summarizeSaturatedGraph = summarizationProperties.getProperty("summary.summarize_saturated_graph").equals("true");
+		String newTableName = "summary_" + timestamp + (summarizeSaturatedGraph ? "_sat" : "") + "_" + getSummaryURIPrefix();
 		String newSummaryTableNameRep = newTableName + "_rep";
 		// Ioana, Sept 25, 2018: we need the following line in order for the drawing with split leaves
 		// to know where to look for the representation table
 		this.repTableName = newSummaryTableNameRep;
 		String newSummaryTableNameEdges = newTableName + "_edges";
 		String newSummaryTableNameNodeStats = newTableName + "_nodeStats";
-		LOGGER.info("Saving " + this.getClass().getName() + " in Postgres in tables " + newSummaryTableNameRep + " and " + newSummaryTableNameEdges);
+		LOGGER.info("Saving " + this.getClass().getName() + " summary edges in Postgres in table: " + newSummaryTableNameEdges);
 
 		Statement stmt;
 		try {
@@ -942,7 +933,9 @@ public class Summary {
 			throw new IllegalStateException("Could not create the statement: " + e.toString());
 		}
 
-		if (!partialResult) {
+		boolean saveRepresentationFunctionAndNodeStatistics = summarizationProperties.getProperty("summary.save_representation_function_and_node_statistics").equals("true");
+		if (saveRepresentationFunctionAndNodeStatistics) {
+			LOGGER.info("Saving " + this.getClass().getName() + " rep and node statistics in Postgres in tables: " + newSummaryTableNameRep + " and " + newSummaryTableNameNodeStats);
 			// save representation function and also compute summary node statistics
 			try {
 				long start = System.currentTimeMillis();
@@ -1024,6 +1017,7 @@ public class Summary {
 				throw new IllegalStateException("Could not save node statistics in " + newSummaryTableNameNodeStats + ": " + e.toString());
 			}
 		}
+
 		// save summary
 		try {
 			long start = System.currentTimeMillis();
@@ -1056,7 +1050,6 @@ public class Summary {
 				conn.commit();
 				summaryEdgesSavingTime += System.currentTimeMillis() - start;
 				LOGGER.info("Saved " + edges.size() + " summary edges in " + summaryEdgesSavingTime + " ms");
-				LOGGER.info("Summary saved in Postgres");
 			}
 		}
 		catch (SQLException e) {
@@ -1110,12 +1103,13 @@ public class Summary {
 
 	/**
 	 * Writes the summary in RDF (in .nt format) then also in DOT; also attempts to draw it using DOT.
+	 * @param conn
 	 */
 	public void writeEncodedSummaryToFileAndDraw(Connection conn) {
 		ensureExporter();
 		addIndexesToRepTable(conn);
-		exporter.writeEncodedSummaryToFile(exporter.getNTSummaryFileName(""));
-		exporter.writeEncodedSummaryToDotFile(exporter.getDotFileName(""));
+		exporter.writeEncodedSummaryToFile(exporter.getNTSummaryFileName());
+		exporter.writeEncodedSummaryToDotFile(exporter.getDotFileName());
 	}
 
 	/**
@@ -1124,11 +1118,11 @@ public class Summary {
 	 * @param conn SQL connection
 	 * @param suffix
 	 */
-	public void writeDecodedSummaryToFileSplitLeavesAndDraw(Connection conn, String suffix) {
+	public void writeDecodedSummaryToFileSplitLeavesAndDraw(Connection conn) {
 		LOGGER.info("Drawing summary with split leaves");
 		ensureExporter();
 		addIndexesToRepTable(conn);
-		String summaryDotFileName = exporter.getDotFileNameSplitLeaves(suffix);
+		String summaryDotFileName = exporter.getDotFileNameSplitLeaves();
 		exporter.writeSummaryToDotFileSplitLeaves(conn, summaryDotFileName);
 	}
 
@@ -1138,11 +1132,11 @@ public class Summary {
 	 * @param conn SQL connection
 	 * @param suffix
 	 */
-	public void writeDecodedSummaryToFileSplitFoldLeavesAndDraw(Connection conn, String suffix) {
+	public void writeDecodedSummaryToFileSplitFoldLeavesAndDraw(Connection conn) {
 		LOGGER.info("Drawing summary with split and folded leaves");
 		ensureExporter();
 		addIndexesToRepTable(conn);
-		String summaryDotFileName = exporter.getDotFileNameFoldLeaves(suffix);
+		String summaryDotFileName = exporter.getDotFileNameFoldLeaves();
 		exporter.writeSummaryToDotFileSplitAndFoldLeaves(conn, summaryDotFileName);
 	}
 
@@ -1290,17 +1284,19 @@ public class Summary {
 	public HashSet<Long> getSchemaNodes() {
 		return sn;
 	}
+
 	public boolean generalizeTypes() {
 		return this.replaceTypeWithMostGeneralType;
 	}
-	public void writeDecodedSummaryToNTFile(Connection conn, String summarizationTechnique) {
+
+	public void writeDecodedSummaryToNTFile(Connection conn) {
 		ensureExporter();
-		exporter.writeDecodedSummaryToNTFile(conn, summarizationTechnique);
+		exporter.writeDecodedSummaryToNTFile(conn);
 	}
 
-	public String getNTSummaryFileName(String summarizationTechnique) {
+	public String getNTSummaryFileName() {
 		ensureExporter();
-		return exporter.getNTSummaryFileName(summarizationTechnique);
+		return exporter.getNTSummaryFileName();
 	}
 
 	public Long getRepresentedNodeNumber(Long s) {
@@ -1333,6 +1329,6 @@ public class Summary {
 		return this.summaryNodeToActualTypeToCardinality.get(s);
 	}
 	public int getMaxTypesDisplayedPerNameSpace() {
-		return (new Integer(summarizationProperties.getProperty("maxTypesDrawnPerNameSpace"))).intValue();
+		return new Integer(summarizationProperties.getProperty("drawing.max_types_drawn_per_namespace"));
 	}
 }

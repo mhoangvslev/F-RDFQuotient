@@ -431,20 +431,20 @@ public class Builder {
 	}
 
 	private static void saveSummary(boolean partialResult, String summarizationTechnique) {
-		summaryInUse.saveSummaryInPostgres(connectionInUse, partialResult, summarizationTechnique);
+		//summaryInUse.saveSummaryInPostgres(connectionInUse, partialResult, summarizationTechnique);
 	}
 
 	private static void exportSummary(String summarizationTechnique, String draw) throws FileNotFoundException {
 		LOGGER.info("Exporting summary to disk");
 
-		summaryInUse.writeDecodedSummaryToNTFile(connectionInUse, summarizationTechnique);
+		//summaryInUse.writeDecodedSummaryToNTFile(connectionInUse, summarizationTechnique);
 
 		if (draw.toLowerCase().equals("plain"))
 			summaryInUse.drawSummaryAndGraph(connectionInUse, summarizationTechnique);
-		if (draw.toLowerCase().equals("splitleaves"))
-			summaryInUse.writeDecodedSummaryToFileSplitLeavesAndDraw(connectionInUse, summarizationTechnique);
-		if (draw.toLowerCase().equals("foldleaves") || draw.toLowerCase().equals("draw"))
-			summaryInUse.writeDecodedSummaryToFileSplitFoldLeavesAndDraw(connectionInUse, summarizationTechnique);
+		//if (draw.toLowerCase().equals("splitleaves"))
+			//summaryInUse.writeDecodedSummaryToFileSplitLeavesAndDraw(connectionInUse, summarizationTechnique);
+		//if (draw.toLowerCase().equals("foldleaves") || draw.toLowerCase().equals("draw"))
+			//summaryInUse.writeDecodedSummaryToFileSplitFoldLeavesAndDraw(connectionInUse, summarizationTechnique);
 		LOGGER.info("Summary exported to disk");
 	}
 

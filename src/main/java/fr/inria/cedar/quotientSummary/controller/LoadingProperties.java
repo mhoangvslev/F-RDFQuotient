@@ -2,53 +2,75 @@
 
 package fr.inria.cedar.quotientSummary.controller;
 
-import java.util.Enumeration;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Properties;
+import java.util.TreeMap;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
-public class LoadingProperties {
+public class LoadingProperties extends ConfigurationProperties {
+	private static final Logger LOGGER = Logger.getLogger(LoadingProperties.class.getName());
+
 	static final String DEFAULT_LOADING_PROPERTIES_FILE_NAME = "conf/loading.properties";
 
-	static Properties reconcileProperties(String loadingPropertiesFileName, String optionValue) {
-		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-	}
-	public Properties prop;
-
-	public LoadingProperties(){
-		prop = new Properties();
-
-		// ontoSQL properties:
-		prop.put("database.engine", "POSTGRESQL");
-		prop.put("database.host", "localhost");
-		prop.put("database.port", "5432");
-		prop.put("database.name", "testkwd1fb");
-		prop.put("database.user", "postgres");
-		prop.put("database.password", "postgres");
-		prop.put("database.triples_table_name", "triples");
-		prop.put("database.encoded_triples_table_name", "encoded_triples");
-		prop.put("database.dictionary_table_name", "dictionary");
-		prop.put("database.storage_layout", "TRIPLES_TABLE");
-		prop.put("database.storage_layout", "TABLE_PER_ROLE_AND_CONCEPT");
-		prop.put("database.drop_existing_db", "true");
-		prop.put("saturation.batch_size", "1000");
-		prop.put("saturation.enable", "false");
-		prop.put("statistics.create_tables_flag", "false");
-		prop.put("dictionary.fetch_size", "1000");
+	public LoadingProperties() {
+		LOGGER.setLevel(Level.INFO);
 	}
 
-	public void put(String name, String value){
-		prop.put(name, value);
+	public static Properties getDefaultProperties() {
+		Properties properties = new Properties();
+
+		properties.put("dataset.filename", "test.nt");
+
+		// OntoSQL extra configuration
+		properties.put("database.engine", "POSTGRESQL");
+
+		properties.put("database.host", "localhost");
+		properties.put("database.port", "5432");
+		properties.put("database.user", "postgres");
+		properties.put("database.password", "postgres");
+		properties.put("database.name", "");
+		properties.put("database.drop_existing_db", "true");
+		// Valid options: TRIPLES_TABLE, TABLE_PER_ROLE_AND_CONCEPT
+		properties.put("database.storage_layout", "TRIPLES_TABLE");
+		properties.put("database.triples_table_name", "triples");
+		properties.put("database.encoded_triples_table_name", "encoded_triples");
+		properties.put("database.dictionary_table_name", "dictionary");
+		properties.put("dictionary.fetch_size", "1000");
+		properties.put("saturation.enable", "false");
+		properties.put("database.encoded_saturated_triples_table_name", "encoded_saturated_triples");
+		properties.put("saturation.batch_size", "1000");
+		properties.put("statistics.export_to_csv_file", "true");
+
+		// OntoSQL extra configuration
+		properties.put("statistics.create_tables_flag", "false");
+
+		return properties;
 	}
 
-	public void overrideFrom(Properties otherProps){
-		Enumeration<?> e = otherProps.propertyNames();
-		while (e.hasMoreElements()){
-			String name = (String)(e.nextElement());
-			String value = otherProps.getProperty(name);
-			prop.put(name,  value);
+	public static void writeDefaultPropertiesFile() {
+		try {
+			try (PrintWriter pw = new PrintWriter(new FileWriter(DEFAULT_LOADING_PROPERTIES_FILE_NAME))) {
+				Properties properties = getDefaultProperties();
+
+				TreeMap<String, String> propertiesSorted = new TreeMap<>();
+				for (Object property: properties.keySet()) {
+					propertiesSorted.put((String) property, properties.getProperty((String) property));
+				}
+
+				for (String property: propertiesSorted.keySet()) {
+					pw.println(property + "=" + propertiesSorted.get(property));
+				}
+			}
+		}
+		catch (IOException ex) {
+			LOGGER.error(ex);
 		}
 	}
 
-	public Properties getProperties() {
-		return prop;
+	public static void main(String[] args) {
+		writeDefaultPropertiesFile();
 	}
 }
