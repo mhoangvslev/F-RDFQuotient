@@ -29,6 +29,10 @@ public class ConfigurationProperties {
 			LOGGER.info(ex);
 			return null;
 		}
+		catch (NullPointerException ex) {
+			LOGGER.info(ex);
+			return null;
+		}
 		return properties;
 	}
 

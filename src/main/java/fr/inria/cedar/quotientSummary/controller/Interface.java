@@ -182,17 +182,17 @@ public class Interface {
 		1.
 		Properties myProperties = new Properties;
 		myProperties.put("dataset.filename", "datasets/my_dataset.nt");
-		load(LoadingProperties.getDefaultLoadingPropertiesFilename(), myProperties, true);
+		Interface.load(LoadingProperties.getDefaultLoadingPropertiesFilename(), myProperties, true);
 
 		2.
 		Properties myProperties = LoadingProperties.getDefaultProperties();
 		myProperties.put("dataset.filename", "datasets/my_dataset.nt");
-		load(null, myProperties, true);
+		Interface.load(null, myProperties, true);
 
 		3.
 		Properties myProperties = LoadingProperties.getDefaultProperties();
 		myProperties.put("dataset.filename", "datasets/my_dataset.nt");
-		load("conf/my_config_file.properties", myProperties, true);
+		Interface.load("conf/my_config_file.properties", myProperties, true);
 	*/
 	public static void load(String configurationFilename, Properties properties, boolean closeConnection) {
 		Properties defaultProperties = LoadingProperties.getDefaultProperties();
@@ -337,7 +337,7 @@ public class Interface {
 
 		LOGGER.info("Exporting summary to disk to NT file");
 		summarySavingToDiskTime = 0L;
-		if (summarizationProperties.getProperty("summary.export_to_database").equals("true")) {
+		if (summarizationProperties.getProperty("summary.export_to_nt_file").equals("true")) {
 			long start = System.currentTimeMillis();
 			summary.writeDecodedSummaryToNTFile(databaseConnection);
 			summarySavingToDiskTime = System.currentTimeMillis() - start;
@@ -353,7 +353,7 @@ public class Interface {
 		String drawingStyle = summarizationProperties.getProperty("drawing.style");
 		if (drawingStyle.equals("plain")) {
 			LOGGER.info("Exporting summary DOT drawing to disk");
-			summary.writeEncodedSummaryToFileAndDraw(databaseConnection);
+			summary.writeDecodedSummaryToFileAndDraw(databaseConnection);
 			LOGGER.info("Summary DOT drawing exported to disk");
 		}
 		else if (drawingStyle.equals("split_leaves")) {

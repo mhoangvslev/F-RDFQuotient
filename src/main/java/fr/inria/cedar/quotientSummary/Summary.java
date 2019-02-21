@@ -1113,6 +1113,17 @@ public class Summary {
 	}
 
 	/**
+	 * Writes the summary in RDF (in .nt format) then also in DOT; also attempts to draw it using DOT.
+	 * @param conn
+	 */
+	public void writeDecodedSummaryToFileAndDraw(Connection conn) {
+		ensureExporter();
+		addIndexesToRepTable(conn);
+		String summaryDotFileName = exporter.getDotFileName();
+		this.exporter.writeSummaryToDotFile(conn, summaryDotFileName);
+	}
+
+	/**
 	 * Writes the summary in RDF (in .nt format), then also in DOT by splitting each leaf data node
 	 * into one node per incoming edge.
 	 * @param conn SQL connection

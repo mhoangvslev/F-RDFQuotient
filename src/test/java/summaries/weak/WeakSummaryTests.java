@@ -2,11 +2,12 @@
 
 package summaries.weak;
 
-import fr.inria.cedar.ontosql.db.UnsupportedDatabaseEngineException;
-import fr.inria.cedar.quotientSummary.controller.Builder;
+import fr.inria.cedar.quotientSummary.controller.Interface;
+import fr.inria.cedar.quotientSummary.controller.LoadingProperties;
+import fr.inria.cedar.quotientSummary.controller.SummarizationProperties;
 import java.io.File;
 import java.io.IOException;
-import java.sql.SQLException;
+import java.util.Properties;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -24,87 +25,56 @@ public class WeakSummaryTests {
 		System.out.println("################################################################################");
 
 		String inputFileName = "src/test/resources/test" + i + "-weak/test-" + i + ".nt";
-		String outputFileName = "src/test/resources/test" + i + "-weak/test-" + i + "_w_noSaturation.nt";
-		//String[] argConfig = { "setCustomConfig", "", System.getProperty("user.dir") + "/conf/customConf.properties"};
-		try {
-			//Builder.main(argConfig);
-			String[] argsSum = {"loadAndSummarize", "weak", inputFileName};
-			try {
-				Builder.main(argsSum);
-				String[] argsSave = {"saveSummaryComputedWithoutSaturation"};
-				Builder.main(argsSave);
-				String[] argsExport = {"exportSummaryComputedWithoutSaturation", "draw", inputFileName};
-				Builder.main(argsExport);
-			}
-			catch (UnsupportedDatabaseEngineException ex) {
-				LOGGER.error(ex);
-			}
-			finally {
-				String[] argsCloseConnection = {"closeConnection"};
-				try {
-					Builder.main(argsCloseConnection);
-				}
-				catch (UnsupportedDatabaseEngineException ex1) {
-					LOGGER.error(ex1);
-				}
-			}
-			return new File(outputFileName);
-		}
-		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in weak test " + i + " " + e.toString());
-		}
-		catch (SQLException e) {
-			throw new IllegalStateException("SQL error while summarizing " + e.toString());
-		}
-		//catch (UnsupportedDatabaseEngineException e) {
-		//	throw new IllegalStateException("Cannot load custom config file!");
-		//}
+		String outputFileName = "src/test/resources/test" + i + "-weak/test-" + i + "_w.nt";
+
+		Properties loadingProperties = LoadingProperties.getDefaultProperties();
+		loadingProperties.put("dataset.filename", inputFileName);
+		loadingProperties.put("database.name", "weak_test");
+		loadingProperties.put("statistics.export_to_csv_file", "false");
+		Interface.load(null, loadingProperties, false);
+
+		Properties summarizationProperties = SummarizationProperties.getDefaultProperties();
+		summarizationProperties.put("dataset.filename", inputFileName);
+		summarizationProperties.put("database.name", "weak_test");
+		summarizationProperties.put("summary.type", "weak");
+		summarizationProperties.put("summary.replace_type_with_most_general_type", "false");
+		summarizationProperties.put("drawing.style", "plain");
+		summarizationProperties.put("statistics.export_to_csv_file", "false");
+		Interface.summarize(null, summarizationProperties, true);
+
+		return new File(outputFileName);
 	}
 
 	public File saturateAndSummarizeUsingWeakSummary(int i) {
+		LOGGER.setLevel(Level.INFO);
 		System.out.println("################################################################################");
 		System.out.println("Weak summary test " + i + " saturation and summarization");
 		System.out.println("################################################################################");
 
 		String inputFileName = "src/test/resources/test" + i + "-weak/test-" + i + ".nt";
-		String outputFileName = "src/test/resources/test" + i + "-weak/test-" + i + "_w_classical.nt";
-		//String[] argConfig = { "setCustomConfig", "", System.getProperty("user.dir") + "/conf/customConf.properties"};
-		try {
-			//Builder.main(argConfig);
-			String[] argsSum = {"loadWithSaturationAndSummarize", "weak", inputFileName};
-			try {
-				Builder.main(argsSum);
-				String[] argsSave = {"saveSummaryComputedClassicalWay"};
-				Builder.main(argsSave);
-				String[] argsExport = {"exportSummaryComputedClassicalWay", "draw", inputFileName};
-				Builder.main(argsExport);
-			}
-			catch (UnsupportedDatabaseEngineException ex) {
-				LOGGER.error(ex);
-			}
-			finally {
-				String[] argsCloseConnection = {"closeConnection"};
-				try {
-					Builder.main(argsCloseConnection);
-				}
-				catch (UnsupportedDatabaseEngineException ex1) {
-					LOGGER.error(ex1);
-				}
-			}
-			return new File(outputFileName);
-		}
-		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in weak test " + i + " " + e.toString());
-		}
-		catch (SQLException e) {
-			throw new IllegalStateException("SQL error while summarizing " + e.toString());
-		}
-		//catch (UnsupportedDatabaseEngineException e) {
-		//	throw new IllegalStateException("Cannot load custom config file!");
-		//}
+		String outputFileName = "src/test/resources/test" + i + "-weak/test-" + i + "_sat_w.nt";
+
+		Properties loadingProperties = LoadingProperties.getDefaultProperties();
+		loadingProperties.put("dataset.filename", inputFileName);
+		loadingProperties.put("database.name", "weak_test");
+		loadingProperties.put("saturation.enable", "true");
+		loadingProperties.put("statistics.export_to_csv_file", "false");
+		Interface.load(null, loadingProperties, false);
+
+		Properties summarizationProperties = SummarizationProperties.getDefaultProperties();
+		summarizationProperties.put("dataset.filename", inputFileName);
+		summarizationProperties.put("database.name", "weak_test");
+		summarizationProperties.put("summary.type", "weak");
+		summarizationProperties.put("summary.summarize_saturated_graph", "true");
+		summarizationProperties.put("summary.replace_type_with_most_general_type", "false");
+		summarizationProperties.put("drawing.style", "plain");
+		summarizationProperties.put("statistics.export_to_csv_file", "false");
+		Interface.summarize(null, summarizationProperties, true);
+
+		return new File(outputFileName);
 	}
 
-	public File summarizeThroughShortcutUsingWeakSummary(int i) {
+	/*public File summarizeThroughShortcutUsingWeakSummary(int i) {
 		System.out.println("################################################################################");
 		System.out.println("Weak summary test " + i + " summarization through shortcut");
 		System.out.println("################################################################################");
@@ -140,15 +110,15 @@ public class WeakSummaryTests {
 		catch (SQLException e) {
 			throw new IllegalStateException("SQL error while summarizing " + e.toString());
 		}
-	}
+	}*/
 
-	private String expectedOutput(int i, String summarizationTechnique) {
-		return "src/test/resources/test" + i + "-weak/test-" + i + "_w_" + summarizationTechnique + "-reference.nt";
+	private String expectedOutput(int i, String saturated) {
+		return "src/test/resources/test" + i + "-weak/test-" + i + "_w" + (saturated.equals("") ? "" : "_" + saturated) + "-reference.nt";
 	}
 
 	@Test
 	public void summarizeWeakTest1() {
-		String referenceFileName = expectedOutput(1, "noSaturation");
+		String referenceFileName = expectedOutput(1, "");
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingWeakSummary(1);
@@ -167,7 +137,7 @@ public class WeakSummaryTests {
 
 	@Test
 	public void summarizeWeakTest2() {
-		String referenceFileName = expectedOutput(2, "noSaturation");
+		String referenceFileName = expectedOutput(2, "");
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingWeakSummary(2);
@@ -186,7 +156,7 @@ public class WeakSummaryTests {
 
 	@Test
 	public void summarizeWeakTest3() {
-		String referenceFileName = expectedOutput(3, "noSaturation");
+		String referenceFileName = expectedOutput(3, "");
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingWeakSummary(3);
@@ -205,7 +175,7 @@ public class WeakSummaryTests {
 
 	@Test
 	public void summarizeWeakTest4() {
-		String referenceFileName = expectedOutput(4, "noSaturation");
+		String referenceFileName = expectedOutput(4, "");
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingWeakSummary(4);
@@ -224,7 +194,7 @@ public class WeakSummaryTests {
 
 	@Test
 	public void summarizeWeakTest5() {
-		String referenceFileName = expectedOutput(5, "noSaturation");
+		String referenceFileName = expectedOutput(5, "");
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingWeakSummary(5);
@@ -243,7 +213,7 @@ public class WeakSummaryTests {
 
 	@Test
 	public void summarizeWeakTest6() {
-		String referenceFileName = expectedOutput(6, "noSaturation");
+		String referenceFileName = expectedOutput(6, "");
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingWeakSummary(6);
@@ -262,7 +232,7 @@ public class WeakSummaryTests {
 
 	@Test
 	public void summarizeWeakTest7() {
-		String referenceFileName = expectedOutput(7, "noSaturation");
+		String referenceFileName = expectedOutput(7, "");
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingWeakSummary(7);
@@ -281,7 +251,7 @@ public class WeakSummaryTests {
 
 	@Test
 	public void summarizeWeakTest8() {
-		String referenceFileName = expectedOutput(8, "noSaturation");
+		String referenceFileName = expectedOutput(8, "");
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingWeakSummary(8);
@@ -300,7 +270,7 @@ public class WeakSummaryTests {
 
 	@Test
 	public void summarizeWeakTest9() {
-		String referenceFileName = expectedOutput(9, "noSaturation");
+		String referenceFileName = expectedOutput(9, "");
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingWeakSummary(9);
@@ -319,7 +289,7 @@ public class WeakSummaryTests {
 
 	@Test
 	public void summarizeWeakTest10() {
-		String referenceFileName = expectedOutput(10, "noSaturation");
+		String referenceFileName = expectedOutput(10, "");
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingWeakSummary(10);
@@ -338,7 +308,7 @@ public class WeakSummaryTests {
 
 	@Test
 	public void summarizeWeakTest11() {
-		String referenceFileName = expectedOutput(11, "noSaturation");
+		String referenceFileName = expectedOutput(11, "");
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingWeakSummary(11);
@@ -357,7 +327,7 @@ public class WeakSummaryTests {
 
 	@Test
 	public void summarizeWeakTest12() {
-		String referenceFileName = expectedOutput(12, "noSaturation");
+		String referenceFileName = expectedOutput(12, "");
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingWeakSummary(12);
@@ -376,7 +346,7 @@ public class WeakSummaryTests {
 
 	@Test
 	public void summarizeWeakTest13() {
-		String referenceFileName = expectedOutput(13, "noSaturation");
+		String referenceFileName = expectedOutput(13, "");
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingWeakSummary(13);
@@ -395,7 +365,7 @@ public class WeakSummaryTests {
 
 	@Test
 	public void summarizeWeakTest14() {
-		String referenceFileName = expectedOutput(14, "noSaturation");
+		String referenceFileName = expectedOutput(14, "");
 		File expectedOutput = new File(referenceFileName);
 		try {
 			File testOutput = summarizeUsingWeakSummary(14);
@@ -683,7 +653,7 @@ public class WeakSummaryTests {
 	}
 
 	// Shortcut tests only with the graphs that have a schema
-	@Test
+	/*@Test
 	public void summarizeThroughShortcutWeakTest6() {
 		String referenceFileName = expectedOutput(6, "shortcut");
 		File expectedOutput = new File(referenceFileName);
@@ -719,7 +689,7 @@ public class WeakSummaryTests {
 		catch (IOException e) {
 			throw new IllegalStateException("Unable to open .nt files in weak test 12 " + e.toString());
 		}
-	}
+	}*/
 
 	/**
 	 * Test with custom config file
