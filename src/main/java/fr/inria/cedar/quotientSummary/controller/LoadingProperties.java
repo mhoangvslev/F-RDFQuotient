@@ -13,10 +13,14 @@ import org.apache.log4j.Logger;
 public class LoadingProperties extends ConfigurationProperties {
 	private static final Logger LOGGER = Logger.getLogger(LoadingProperties.class.getName());
 
-	static final String DEFAULT_LOADING_PROPERTIES_FILE_NAME = "conf/loading.properties";
+	static final String DEFAULT_LOADING_PROPERTIES_FILENAME = "conf/loading.properties";
 
 	public LoadingProperties() {
 		LOGGER.setLevel(Level.INFO);
+	}
+
+	public static String getDefaultLoadingPropertiesFilename() {
+		return DEFAULT_LOADING_PROPERTIES_FILENAME;
 	}
 
 	public static Properties getDefaultProperties() {
@@ -52,7 +56,7 @@ public class LoadingProperties extends ConfigurationProperties {
 
 	public static void writeDefaultPropertiesFile() {
 		try {
-			try (PrintWriter pw = new PrintWriter(new FileWriter(DEFAULT_LOADING_PROPERTIES_FILE_NAME))) {
+			try (PrintWriter pw = new PrintWriter(new FileWriter(DEFAULT_LOADING_PROPERTIES_FILENAME))) {
 				Properties properties = getDefaultProperties();
 
 				TreeMap<String, String> propertiesSorted = new TreeMap<>();

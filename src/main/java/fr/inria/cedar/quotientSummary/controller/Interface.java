@@ -66,6 +66,68 @@ public class Interface {
 	public Interface() {
 	}
 
+	/*
+		properties object needs to contain the following fields:
+		- database.host
+		- database.port
+		- database.user
+		- database.password
+		- database.name
+	*/
+	private static void setUpDatabaseConnection(Properties properties) {
+		try {
+			Class.forName("org.postgresql.Driver");
+		}
+		catch (ClassNotFoundException ex) {
+			LOGGER.error(ex);
+			System.exit(1);
+		}
+
+		String connectionURL = "jdbc:postgresql://"
+			+ properties.getProperty("database.host")
+			+ ":" + properties.getProperty("database.port")
+			+ "/" + properties.getProperty("database.name")
+			+ "?user=" + properties.getProperty("database.user")
+			+ "&password=" + properties.getProperty("database.password");
+		try {
+			databaseConnection = DriverManager.getConnection(connectionURL);
+		}
+		catch (SQLException ex) {
+			LOGGER.error(ex);
+			System.exit(1);
+		}
+		LOGGER.info("Connection to Postgres established with URL: " + connectionURL);
+
+		Preconditions.checkState(databaseConnection != null, "No connection for " + connectionURL);
+	}
+
+	/*
+		properties object needs to contain the following fields:
+		- database.host
+		- database.port
+		- database.user
+		- database.password
+		- database.name
+	*/
+	public static Connection getDatabaseConnection(Properties properties) {
+		if (databaseConnection == null) {
+			setUpDatabaseConnection(properties);
+		}
+		return databaseConnection;
+	}
+
+	public static void closeDatabaseConnection() {
+		try {
+			databaseConnection.close();
+			databaseConnection = null;
+			LOGGER.info("Connection closed");
+		}
+		catch (SQLException ex) {
+			LOGGER.error(ex);
+			System.exit(1);
+		}
+	}
+
 	private static String trimNT(String fileName, boolean trimSlash) {
 		int lastDotPosition = Math.max(0, fileName.lastIndexOf("."));
 		return fileName.substring(trimSlash ? fileName.lastIndexOf("/") + 1 : 0, lastDotPosition);
@@ -103,9 +165,38 @@ public class Interface {
 		return ConfigurationProperties.reconcileProperties(ConfigurationProperties.reconcileProperties(defaultProperties, configurationFileProperties), commandLineProperties);
 	}
 
-	public static void load(String configurationFilename, Properties commandLineProperties, boolean closeConnection) {
+	/*
+		If both configurationFilename and properties are null or point to a
+		file/object that does not contain valid configuration properties,
+		default values will be used.
+
+		Otherwise the following precedure applies:
+		1. Take default values
+		2. Overwrite them with the values from the file configurationFilename
+		3. Overwrite them with the values from the object properties
+
+		Parameter closeConnection controls whether to close connection to the
+		database after the call to this method.
+
+		Examples:
+		1.
+		Properties myProperties = new Properties;
+		myProperties.put("dataset.filename", "datasets/my_dataset.nt");
+		load(LoadingProperties.getDefaultLoadingPropertiesFilename(), myProperties, true);
+
+		2.
+		Properties myProperties = LoadingProperties.getDefaultProperties();
+		myProperties.put("dataset.filename", "datasets/my_dataset.nt");
+		load(null, myProperties, true);
+
+		3.
+		Properties myProperties = LoadingProperties.getDefaultProperties();
+		myProperties.put("dataset.filename", "datasets/my_dataset.nt");
+		load("conf/my_config_file.properties", myProperties, true);
+	*/
+	public static void load(String configurationFilename, Properties properties, boolean closeConnection) {
 		Properties defaultProperties = LoadingProperties.getDefaultProperties();
-		Properties loadingProperties = reconcileProperties(defaultProperties, configurationFilename, commandLineProperties);
+		Properties loadingProperties = reconcileProperties(defaultProperties, configurationFilename, properties);
 
 		LOGGER.info("Loading graph to Postgres");
 		String datasetFilename = loadingProperties.getProperty("dataset.filename");
@@ -141,55 +232,6 @@ public class Interface {
 
 		if (closeConnection) {
 			closeDatabaseConnection();
-		}
-	}
-
-	/*
-		properties object needs to contain the following fields:
-		- database.host
-		- database.port
-		- database.user
-		- database.password
-		- database.name
-	*/
-	public static void setUpDatabaseConnection(Properties properties) {
-		try {
-			Class.forName("org.postgresql.Driver");
-		}
-		catch (ClassNotFoundException ex) {
-			LOGGER.error(ex);
-			System.exit(1);
-		}
-
-		String connectionURL = "jdbc:postgresql://" + properties.getProperty("database.host") + ":" + properties.getProperty("database.port") + "/" + properties.getProperty("database.name");
-		try {
-			databaseConnection = DriverManager.getConnection(connectionURL, properties);
-		}
-		catch (SQLException ex) {
-			LOGGER.error(ex);
-			System.exit(1);
-		}
-		LOGGER.info("Connection to Postgres established with URL: " + connectionURL + " with user " + properties.getProperty("database.user") + " and password " + properties.getProperty("database.password"));
-
-		Preconditions.checkState(databaseConnection != null, "No connection for " + connectionURL);
-	}
-
-	public static Connection getDatabaseConnection() throws IllegalStateException {
-		if (databaseConnection == null) {
-			throw new IllegalStateException("Connection is not set up.");
-		}
-		return databaseConnection;
-	}
-
-	public static void closeDatabaseConnection() {
-		try {
-			databaseConnection.close();
-			databaseConnection = null;
-			LOGGER.info("Connection closed");
-		}
-		catch (SQLException ex) {
-			LOGGER.error(ex);
-			System.exit(1);
 		}
 	}
 
@@ -255,9 +297,12 @@ public class Interface {
 		LOGGER.info("Summarization statistics exported to disk");
 	}
 
-	public static void summarize(String configurationFilename, Properties commandLineProperties, boolean closeConnection) {
+	/*
+		See load method comment: in examples use SummarizationProperties class instead of LoadingProperties.
+	*/
+	public static void summarize(String configurationFilename, Properties properties, boolean closeConnection) {
 		Properties defaultProperties = SummarizationProperties.getDefaultProperties();
-		Properties summarizationProperties = reconcileProperties(defaultProperties, configurationFilename, commandLineProperties);
+		Properties summarizationProperties = reconcileProperties(defaultProperties, configurationFilename, properties);
 
 		LOGGER.info("Summarizing graph from Postgres");
 		String datasetFilename = summarizationProperties.getProperty("dataset.filename");
@@ -271,7 +316,7 @@ public class Interface {
 		try {
 			summary = createNewSummary(summarizationProperties);
 			summary.setSummarizationProperties(summarizationProperties);
-			setUpDatabaseConnection(summarizationProperties);
+			getDatabaseConnection(summarizationProperties);
 			summary.summarizeFromPostgres(databaseConnection);
 		}
 		catch (IllegalArgumentException ex) {
@@ -281,15 +326,6 @@ public class Interface {
 		}
 		LOGGER.info("Graph from Postgres summarized");
 
-		LOGGER.info("Exporting summary to disk to NT file");
-		summarySavingToDiskTime = 0L;
-		if (summarizationProperties.getProperty("summary.export_to_database").equals("true")) {
-			long start = System.currentTimeMillis();
-			summary.writeDecodedSummaryToNTFile(databaseConnection);
-			summarySavingToDiskTime = System.currentTimeMillis() - start;
-		}
-		LOGGER.info("Summary NT file exported to disk");
-
 		summarySavingInPostgresTime = 0L;
 		if (summarizationProperties.getProperty("summary.export_to_database").equals("true")) {
 			LOGGER.info("Saving summary to Postgres");
@@ -298,6 +334,15 @@ public class Interface {
 			summarySavingInPostgresTime = System.currentTimeMillis() - start;
 			LOGGER.info("Summary saved in Postgres");
 		}
+
+		LOGGER.info("Exporting summary to disk to NT file");
+		summarySavingToDiskTime = 0L;
+		if (summarizationProperties.getProperty("summary.export_to_database").equals("true")) {
+			long start = System.currentTimeMillis();
+			summary.writeDecodedSummaryToNTFile(databaseConnection);
+			summarySavingToDiskTime = System.currentTimeMillis() - start;
+		}
+		LOGGER.info("Summary NT file exported to disk");
 
 		if (summarizationProperties.getProperty("statistics.export_to_csv_file").equals("true")) {
 			LOGGER.info("Exporting loading statistics to disk");
@@ -324,6 +369,37 @@ public class Interface {
 
 		if (closeConnection) {
 			closeDatabaseConnection();
+		}
+	}
+
+	/*
+		See load method comment.
+	*/
+	public static Summary read(String configurationFilename, Properties properties, boolean closeConnection) {
+		Properties defaultProperties = SummarizationProperties.getDefaultProperties();
+		Properties readProperties = reconcileProperties(defaultProperties, configurationFilename, properties);
+
+		String datasetFilename = readProperties.getProperty("dataset.filename");
+
+		// derive database name from filename if not specified
+		if (!readProperties.containsKey("database.name") || readProperties.getProperty("database.name").equals("")) {
+			String databaseName = deriveDatabaseNameFromFilename(datasetFilename);
+			readProperties.put("database.name", databaseName);
+		}
+
+		try {
+			LOGGER.info("Reading summary from Postgres");
+			Summary s = new Summary(getDatabaseConnection(readProperties));
+			LOGGER.info("Summary read from Postgres");
+			return s;
+		}
+		catch (SQLException e) {
+			throw new IllegalStateException("Could not read summary " + e.toString());
+		}
+		finally {
+			if (closeConnection) {
+				closeDatabaseConnection();
+			}
 		}
 	}
 
@@ -376,7 +452,6 @@ public class Interface {
 		mainOptions.addOption(readOption);
 		mainOptions.addOption(helpOption);
 		mainOptions.addOption(versionOption);
-		mainOptions.addOption(dryRunOption);
 
 		loadingPropertiesOption = Option.builder("lp")
 			.longOpt("loading-properties")
@@ -398,9 +473,13 @@ public class Interface {
 		configurationFilesOptions.addOption(loadingPropertiesOption);
 		configurationFilesOptions.addOption(summarizationPropertiesOption);
 
+		final OptionGroup dryRunOptions = new OptionGroup();
+		dryRunOptions.addOption(dryRunOption);
+
 		options = new Options();
 		options.addOptionGroup(mainOptions);
 		options.addOptionGroup(configurationFilesOptions);
+		options.addOptionGroup(dryRunOptions);
 	}
 
 	private static void printHelp() {
@@ -449,12 +528,12 @@ public class Interface {
 		try {
 			final CommandLine arguments = parser.parse(options, args);
 
-			if (arguments.hasOption(helpOption.getArgName())) {
+			if (arguments.hasOption(helpOption.getLongOpt())) {
 				printHelp();
 				return;
 			}
 
-			if (arguments.hasOption(versionOption.getArgName())) {
+			if (arguments.hasOption(versionOption.getLongOpt())) {
 				String version;
 				MavenXpp3Reader reader = new MavenXpp3Reader();
 				try {
@@ -468,22 +547,19 @@ public class Interface {
 				return;
 			}
 
-			String loadingPropertiesFilename = LoadingProperties.DEFAULT_LOADING_PROPERTIES_FILE_NAME;
-			if (arguments.hasOption(loadingPropertiesOption.getArgName())) {
-				loadingPropertiesFilename = arguments.getOptionValue(loadingPropertiesOption.getArgName());
+			String loadingPropertiesFilename = LoadingProperties.DEFAULT_LOADING_PROPERTIES_FILENAME;
+			if (arguments.hasOption(loadingPropertiesOption.getLongOpt())) {
+				loadingPropertiesFilename = arguments.getOptionValue(loadingPropertiesOption.getLongOpt());
 			}
 
-			String summarizationPropertiesFilename = SummarizationProperties.DEFAULT_SUMMARIZATION_PROPERTIES_FILE_NAME;
-			if (arguments.hasOption(summarizationPropertiesOption.getArgName())) {
-				summarizationPropertiesFilename = arguments.getOptionValue(summarizationPropertiesOption.getArgName());
+			String summarizationPropertiesFilename = SummarizationProperties.DEFAULT_SUMMARIZATION_PROPERTIES_FILENAME;
+			if (arguments.hasOption(summarizationPropertiesOption.getLongOpt())) {
+				summarizationPropertiesFilename = arguments.getOptionValue(summarizationPropertiesOption.getLongOpt());
 			}
 
-			if (arguments.hasOption(loadOption.getArgName())) {
-				Properties commandLineProperties = parseProperties(arguments.getOptionValue(loadOption.getArgName()));
-				if (arguments.hasOption(dryRunOption.getArgName())) {
-					load(loadingPropertiesFilename, commandLineProperties, true);
-				}
-				else {
+			if (arguments.hasOption(loadOption.getLongOpt())) {
+				Properties commandLineProperties = parseProperties(arguments.getOptionValue(loadOption.getLongOpt()));
+				if (arguments.hasOption(dryRunOption.getLongOpt())) {
 					Properties defaultProperties = LoadingProperties.getDefaultProperties();
 					Properties loadingProperties = reconcileProperties(defaultProperties, loadingPropertiesFilename, commandLineProperties);
 					System.out.println(loadingProperties.toString());
@@ -499,31 +575,46 @@ public class Interface {
 						System.out.println("CAUTION: database " + databaseName + " will be dropped before loading.");
 					}
 				}
+				else {
+					load(loadingPropertiesFilename, commandLineProperties, true);
+				}
 				return;
 			}
 
-			if (arguments.hasOption(summarizeOption.getArgName())) {
-				Properties commandLineProperties = parseProperties(arguments.getOptionValue(summarizeOption.getArgName()));
-				if (arguments.hasOption(dryRunOption.getArgName())) {
-					summarize(summarizationPropertiesFilename, commandLineProperties, true);
-				}
-				else {
+			if (arguments.hasOption(summarizeOption.getLongOpt())) {
+				Properties commandLineProperties = parseProperties(arguments.getOptionValue(summarizeOption.getLongOpt()));
+				if (arguments.hasOption(dryRunOption.getLongOpt())) {
 					Properties defaultProperties = SummarizationProperties.getDefaultProperties();
 					Properties summarizationProperties = reconcileProperties(defaultProperties, summarizationPropertiesFilename, commandLineProperties);
+					// derive database name from filename if not specified
+					if (!summarizationProperties.containsKey("database.name") || summarizationProperties.getProperty("database.name").equals("")) {
+						String datasetFilename = summarizationProperties.getProperty("dataset.filename");
+						String databaseName = deriveDatabaseNameFromFilename(datasetFilename);
+						summarizationProperties.put("database.name", databaseName);
+					}
 					System.out.println(summarizationProperties.toString());
+				}
+				else {
+					summarize(summarizationPropertiesFilename, commandLineProperties, true);
 				}
 				return;
 			}
 
-			if (arguments.hasOption(readOption.getArgName())) {
-				Properties commandLineProperties = parseProperties(arguments.getOptionValue(readOption.getArgName()));
-				if (arguments.hasOption(dryRunOption.getArgName())) {
-					//TODO
-				}
-				else {
+			if (arguments.hasOption(readOption.getLongOpt())) {
+				Properties commandLineProperties = parseProperties(arguments.getOptionValue(readOption.getLongOpt()));
+				if (arguments.hasOption(dryRunOption.getLongOpt())) {
 					Properties defaultProperties = LoadingProperties.getDefaultProperties();
 					Properties readProperties = reconcileProperties(defaultProperties, loadingPropertiesFilename, commandLineProperties);
+					// derive database name from filename if not specified
+					if (!readProperties.containsKey("database.name") || readProperties.getProperty("database.name").equals("")) {
+						String datasetFilename = readProperties.getProperty("dataset.filename");
+						String databaseName = deriveDatabaseNameFromFilename(datasetFilename);
+						readProperties.put("database.name", databaseName);
+					}
 					System.out.println(readProperties.toString());
+				}
+				else {
+					read(loadingPropertiesFilename, commandLineProperties, true);
 				}
 				return;
 			}

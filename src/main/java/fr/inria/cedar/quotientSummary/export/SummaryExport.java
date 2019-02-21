@@ -942,7 +942,7 @@ public class SummaryExport {
 		String pathToDot = properties.getProperty("drawing.dot_installation");
 		try {
 			String pngFileName = dotFileName.substring(0, dotFileName.length() - 4) + ".png";
-			Runtime.getRuntime().exec(pathToDot + " -Tpng " + dotFileName + " -o " + pngFileName);
+			Runtime.getRuntime().exec(new String[] {pathToDot, "-Tpng", dotFileName, "-o", pngFileName});
 			LOGGER.info("Summary drawn to PNG file " + pngFileName);
 		}
 		catch (IOException e) {

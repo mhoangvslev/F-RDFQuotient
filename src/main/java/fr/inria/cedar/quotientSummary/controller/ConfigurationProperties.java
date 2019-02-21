@@ -22,17 +22,27 @@ public class ConfigurationProperties {
 			properties.load(new FileInputStream(filename));
 		}
 		catch (FileNotFoundException ex) {
-			LOGGER.error(ex);
+			LOGGER.info(ex);
 			return null;
 		}
 		catch (IOException ex) {
-			LOGGER.error(ex);
+			LOGGER.info(ex);
 			return null;
 		}
 		return properties;
 	}
 
 	public static Properties reconcileProperties(Properties lessImportantProperties, Properties moreImportantProperties) {
+		if (lessImportantProperties == null && moreImportantProperties == null) {
+			throw new IllegalArgumentException("Both properties objects are nulls");
+		}
+		if (lessImportantProperties == null) {
+			return moreImportantProperties;
+		}
+		if (moreImportantProperties == null) {
+			return lessImportantProperties;
+		}
+
 		lessImportantProperties.putAll(moreImportantProperties);
 		return lessImportantProperties;
 	}

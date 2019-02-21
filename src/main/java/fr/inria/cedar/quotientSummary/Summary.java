@@ -190,7 +190,7 @@ public class Summary {
 		catch (SQLException ex) {
 			LOGGER.error(ex);
 		}
-		LOGGER.info("Trying to read summary from Postgres");
+		//LOGGER.info("Trying to read summary from Postgres");
 		Statement stmt = conn.createStatement();
 		try{
 			ResultSet rs = stmt.executeQuery("select name from saved_summary_table_names where role='dictionary';");
@@ -1155,6 +1155,7 @@ public class Summary {
 		return "select summarynode from " + PostgresIdentifier.escapedQuotedId(repTableName) + " where graphnode=?;";
 	}
 
+	/*
 	public static Summary readSummaryFromPostgres(Connection conn) {
 		try {
 			conn.setAutoCommit(false);
@@ -1167,6 +1168,7 @@ public class Summary {
 		RDF2SQLEncoding.setUp(conn, "dictionary");
 		return sum;
 	}
+	*/
 
 	public String getSummaryTablePrefix() {
 		return this.summaryTablePrefix;

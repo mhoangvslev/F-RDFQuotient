@@ -13,10 +13,14 @@ import org.apache.log4j.Logger;
 public class SummarizationProperties extends ConfigurationProperties {
 	private static final Logger LOGGER = Logger.getLogger(SummarizationProperties.class.getName());
 
-	static final String DEFAULT_SUMMARIZATION_PROPERTIES_FILE_NAME = "conf/summarization.properties";
+	static final String DEFAULT_SUMMARIZATION_PROPERTIES_FILENAME = "conf/summarization.properties";
 
 	public SummarizationProperties() {
 		LOGGER.setLevel(Level.INFO);
+	}
+
+	public static String getDefaultSummarizationPropertiesFilename() {
+		return DEFAULT_SUMMARIZATION_PROPERTIES_FILENAME;
 	}
 
 	public static Properties getDefaultProperties() {
@@ -66,7 +70,7 @@ public class SummarizationProperties extends ConfigurationProperties {
 		properties.put("summary.save_representation_function_and_node_statistics", "true");
 
 		// Whether or not to compute support statistics and add them in the .nt printout of the summary
-		properties.put("summary.gather_representation_counts", "false");
+		properties.put("summary.gather_representation_counts", "true");
 
 		// Whether to export run statistics
 		properties.put("statistics.export_to_csv_file", "true");
@@ -116,7 +120,7 @@ public class SummarizationProperties extends ConfigurationProperties {
 
 	public static void writeDefaultPropertiesFile() {
 		try {
-			try (PrintWriter pw = new PrintWriter(new FileWriter(DEFAULT_SUMMARIZATION_PROPERTIES_FILE_NAME))) {
+			try (PrintWriter pw = new PrintWriter(new FileWriter(DEFAULT_SUMMARIZATION_PROPERTIES_FILENAME))) {
 				Properties properties = getDefaultProperties();
 
 				TreeMap<String, String> propertiesSorted = new TreeMap<>();
