@@ -214,6 +214,19 @@ public class Interface {
 		Parameters datasets = new Parameters();
 		datasets.setAllInFile(datasetSourceFiles);
 
+		// check if loading properties are correct
+		setUpDatabaseConnection(loadingProperties);
+		if (databaseConnection != null) {
+			try {
+				databaseConnection.close();
+			}
+			catch (SQLException ex) {
+				LOGGER.error("Could not close database connection " + ex);
+				System.exit(1);
+			}
+			databaseConnection = null;
+		}
+
 		try {
 			DataLoading.process(datasets, loadingProperties);
 			Config configuration = new Config(loadingProperties);
