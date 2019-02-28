@@ -19,7 +19,7 @@ public class readingTests {
 		loadingProperties.put("dataset.filename", inputFilename);
 		loadingProperties.put("database.name", "reading_test");
 		loadingProperties.put("statistics.export_to_csv_file", "false");
-		Interface.load(null, loadingProperties, false); // first argument can be replace with configuration file name
+		Interface.load(null, loadingProperties, false); // first argument can be replaced with configuration file name
 
 		// summarize
 		Properties summarizationProperties = SummarizationProperties.getDefaultProperties();
@@ -30,9 +30,9 @@ public class readingTests {
 		summarizationProperties.put("summary.export_to_nt_file", "false");
 		summarizationProperties.put("drawing.style", "none");
 		summarizationProperties.put("statistics.export_to_csv_file", "false");
-		Interface.summarize(null, summarizationProperties, false); // first argument can be replace with configuration file name
+		Interface.summarize(null, summarizationProperties, false); // first argument can be replaced with configuration file name
 
 		// read from Postgres
-		Summary s = Interface.read(null, loadingProperties, true); // first argument can be replace with configuration file name
+		Summary s = Interface.read(null, loadingProperties, true); // first argument can be replaced with configuration file name
 	}
 }
