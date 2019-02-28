@@ -159,6 +159,14 @@ public class Summary {
 		summarizationProperties = SummarizationProperties.reconcileProperties(summarizationProperties, newProperties);
 	}
 
+	// Interface.summarize method should be used instead.
+	// Only some, exceptional circumstances, like for example
+	// programmatic usage from outside of this project source code,
+	// may justify a usage of setSummarizationProperty at a level of Summary class.
+	public void setSummarizationProperty(String key, String value) {
+		summarizationProperties.put(key, value);
+	}
+
 	public void setGenericProperties() {
 		if (summarizationProperties.getProperty("summary.omit_generic_properties_from_cliques").toLowerCase().equals("true")) {
 			String[] props  = summarizationProperties.getProperty("summary.generic_properties").split(",");
@@ -531,7 +539,7 @@ public class Summary {
 	 * @return
 	 */
 	private HashSet<Long> extractTopTypes(HashSet<Long> superTypes){
-		HashSet<Long> topTypes = new HashSet<Long>();
+		HashSet<Long> topTypes = new HashSet<>();
 		for (Long superType: superTypes) {
 			if (generalizers.get(superType) == null) {
 				topTypes.add(superType);
@@ -1127,7 +1135,6 @@ public class Summary {
 	 * Writes the summary in RDF (in .nt format), then also in DOT by splitting each leaf data node
 	 * into one node per incoming edge.
 	 * @param conn SQL connection
-	 * @param suffix
 	 */
 	public void writeDecodedSummaryToFileSplitLeavesAndDraw(Connection conn) {
 		LOGGER.info("Drawing summary with split leaves");
@@ -1141,7 +1148,6 @@ public class Summary {
 	 * Writes the summary in RDF (in .nt format), then also in DOT by splitting each leaf data node
 	 * into one node per incoming edge.
 	 * @param conn SQL connection
-	 * @param suffix
 	 */
 	public void writeDecodedSummaryToFileSplitFoldLeavesAndDraw(Connection conn) {
 		LOGGER.info("Drawing summary with split and folded leaves");

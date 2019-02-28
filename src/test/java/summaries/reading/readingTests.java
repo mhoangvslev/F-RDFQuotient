@@ -2,6 +2,7 @@
 
 package summaries.reading;
 
+import fr.inria.cedar.quotientSummary.Summary;
 import fr.inria.cedar.quotientSummary.controller.Interface;
 import fr.inria.cedar.quotientSummary.controller.LoadingProperties;
 import fr.inria.cedar.quotientSummary.controller.SummarizationProperties;
@@ -32,6 +33,6 @@ public class readingTests {
 		Interface.summarize(null, summarizationProperties, false); // first argument can be replace with configuration file name
 
 		// read from Postgres
-		Interface.read(null, loadingProperties, true); // first argument can be replace with configuration file name
+		Summary s = Interface.read(null, loadingProperties, true); // first argument can be replace with configuration file name
 	}
 }

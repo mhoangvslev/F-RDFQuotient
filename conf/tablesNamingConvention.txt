@@ -1,14 +1,15 @@
-tmp_encoded_saturated
-tmp_encoded
-tmp_encoded_summarized
-tmp_encoded_summarized_saturated
+summary table name: "summary_"<timestamp><info>"_"<summaryType>
+rep table name: "summary_"<timestamp><info>"_"<summaryType>"_rep"
+edges table name: "summary_"<timestamp><info>"_"<summaryType>"_edges"
+node stats table name: "summary_"<timestamp><info>"_"<summaryType>"_nodeStats"
+
+<timestamp>: datetime in yyyyMMdd_HHmmss format
+<summaryType>: "w", "s", "tw", "ts", "2pw", "2pwuf", "2ps", "2ptw", "2pts", "onefb", "onefw"
+<info>: "", "_sum"
+
+A catalog of table names is saved in a table called saved_summary_table_names. It contains the following rows:
 dictionary
-
-sav_<timestamp>_encoded
-sav_<timestamp>_encoded_<summaryType>_<summarizationTechnique>_<info>
-sav_<timestamp>_dictionary
-
-<timestamp>: YYYYMMDD_HHMMSSFF
-<summaryType>: w, s, tw, ts
-<summarizationTechnique>: shortcut, classical
-<info>: rep, sum
+edges
+representation
+encoded_triples
+summary_node_stats

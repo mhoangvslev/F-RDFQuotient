@@ -2,7 +2,6 @@
 
 package fr.inria.cedar.quotientSummary.controller;
 
-import com.google.common.base.Preconditions;
 import fr.inria.cedar.ontosql.db.UnsupportedDatabaseEngineException;
 import fr.inria.cedar.ontosql.rdfdb.dataloading.Config;
 import fr.inria.cedar.ontosql.rdfdb.dataloading.DataLoading;
@@ -93,12 +92,15 @@ public class Interface {
 			databaseConnection = DriverManager.getConnection(connectionURL);
 		}
 		catch (SQLException ex) {
-			LOGGER.error(ex);
+			LOGGER.error("Could not establish connection to Postgres server " + ex);
 			System.exit(1);
 		}
 		LOGGER.info("Connection to Postgres established with URL: " + connectionURL);
 
-		Preconditions.checkState(databaseConnection != null, "No connection for " + connectionURL);
+		if (databaseConnection == null) {
+			LOGGER.error("No connection for " + connectionURL);
+			System.exit(1);
+		}
 	}
 
 	/*
@@ -218,7 +220,7 @@ public class Interface {
 			databaseConnection = configuration.getDataSource().getConnection();
 		}
 		catch (UnsupportedDatabaseEngineException | FileNotFoundException | SQLException ex) {
-			LOGGER.error(ex.getMessage());
+			LOGGER.error("Could not load dataset " + ex);
 			System.exit(1);
 		}
 
@@ -233,6 +235,43 @@ public class Interface {
 		if (closeConnection) {
 			closeDatabaseConnection();
 		}
+	}
+
+	private static String checkConsistencyOfSummarizationProperties(Properties summarizationProperties) {
+		String message = "";
+
+		if (summarizationProperties.getProperty("summary.replace_type_with_most_general_type").equals("true")) {
+			String summaryType = summarizationProperties.getProperty("summary.type");
+			String typeGeneralization = "Type generalization is not supported for ";
+			switch (summaryType) {
+				case "weak":
+				case "2pweak":
+				case "2pweakunionfind":
+					message += typeGeneralization + "weak summaries. ";
+					break;
+				case "strong":
+				case "2pstrong":
+					message += typeGeneralization + "strong summaries. ";
+					break;
+				case "onefb":
+				case "onefw":
+					message += typeGeneralization + "bisimulation-based summaries. ";
+					break;
+			}
+		}
+
+		if (summarizationProperties.getProperty("summary.export_to_database").equals("false")) {
+			String drawingStyle = summarizationProperties.getProperty("drawing.style");
+			switch (drawingStyle) {
+				case "plain":
+				case "split_leaves":
+				case "split_and_fold_leaves":
+					message += "Exporting summary to database is manadatory in order to draw it.";
+					break;
+			}
+		}
+
+		return message.equals("") ? null : message;
 	}
 
 	private static Summary createNewSummary(Properties summarizationProperties) throws IllegalArgumentException {
@@ -313,6 +352,12 @@ public class Interface {
 			summarizationProperties.put("database.name", databaseName);
 		}
 
+		String summarizationPropertiesConsistencyStatus = checkConsistencyOfSummarizationProperties(summarizationProperties);
+		if (summarizationPropertiesConsistencyStatus != null) {
+			LOGGER.error(summarizationPropertiesConsistencyStatus);
+			System.exit(1);
+		}
+
 		try {
 			summary = createNewSummary(summarizationProperties);
 			summary.setSummarizationProperties(summarizationProperties);
@@ -351,20 +396,22 @@ public class Interface {
 		}
 
 		String drawingStyle = summarizationProperties.getProperty("drawing.style");
-		if (drawingStyle.equals("plain")) {
-			LOGGER.info("Exporting summary DOT drawing to disk");
-			summary.writeDecodedSummaryToFileAndDraw(databaseConnection);
-			LOGGER.info("Summary DOT drawing exported to disk");
-		}
-		else if (drawingStyle.equals("split_leaves")) {
-			LOGGER.info("Exporting summary DOT drawing to disk");
-			summary.writeDecodedSummaryToFileSplitLeavesAndDraw(databaseConnection);
-			LOGGER.info("Summary DOT drawing exported to disk");
-		}
-		if (drawingStyle.equals("split_and_fold_leaves")) {
-			LOGGER.info("Exporting summary DOT drawing to disk");
-			summary.writeDecodedSummaryToFileSplitFoldLeavesAndDraw(databaseConnection);
-			LOGGER.info("Summary DOT drawing exported to disk");
+		switch (drawingStyle) {
+			case "plain":
+				LOGGER.info("Exporting summary DOT drawing to disk");
+				summary.writeDecodedSummaryToFileAndDraw(databaseConnection);
+				LOGGER.info("Summary DOT drawing exported to disk");
+				break;
+			case "split_leaves":
+				LOGGER.info("Exporting summary DOT drawing to disk");
+				summary.writeDecodedSummaryToFileSplitLeavesAndDraw(databaseConnection);
+				LOGGER.info("Summary DOT drawing exported to disk");
+				break;
+			case "split_and_fold_leaves":
+				LOGGER.info("Exporting summary DOT drawing to disk");
+				summary.writeDecodedSummaryToFileSplitFoldLeavesAndDraw(databaseConnection);
+				LOGGER.info("Summary DOT drawing exported to disk");
+				break;
 		}
 
 		if (closeConnection) {
@@ -377,19 +424,19 @@ public class Interface {
 	*/
 	public static Summary read(String configurationFilename, Properties properties, boolean closeConnection) {
 		Properties defaultProperties = SummarizationProperties.getDefaultProperties();
-		Properties readProperties = reconcileProperties(defaultProperties, configurationFilename, properties);
+		Properties readingProperties = reconcileProperties(defaultProperties, configurationFilename, properties);
 
-		String datasetFilename = readProperties.getProperty("dataset.filename");
+		String datasetFilename = readingProperties.getProperty("dataset.filename");
 
 		// derive database name from filename if not specified
-		if (!readProperties.containsKey("database.name") || readProperties.getProperty("database.name").equals("")) {
+		if (!readingProperties.containsKey("database.name") || readingProperties.getProperty("database.name").equals("")) {
 			String databaseName = deriveDatabaseNameFromFilename(datasetFilename);
-			readProperties.put("database.name", databaseName);
+			readingProperties.put("database.name", databaseName);
 		}
 
 		try {
 			LOGGER.info("Reading summary from Postgres");
-			Summary s = new Summary(getDatabaseConnection(readProperties));
+			Summary s = new Summary(getDatabaseConnection(readingProperties));
 			LOGGER.info("Summary read from Postgres");
 			return s;
 		}
@@ -495,12 +542,14 @@ public class Interface {
 		final HelpFormatter helpFormatter = new HelpFormatter();
 		helpFormatter.setWidth(80);
 		helpFormatter.setLeftPadding(0);
-		System.out.println("RDFQuotient " + version);
-		System.out.println();
-		System.out.println("This framework is designed to work with one graph at the time.");
-		System.out.println("Before using RDFQuotient make sure that Postgres server is running.");
-		System.out.println();
-		helpFormatter.printHelp("rdfquotient", "\n", options, "\n[ARGS] is a comma-separated list of assigments of form key=value, where key is a configuration property from the list of loading or summarization configuration properties.", true);
+		String header = "RDFQuotient " + version
+			+ "\n\nThis framework is designed to work with one graph at a time.\n"
+			+ "Before using RDFQuotient make sure that Postgres server is running.\n"
+			+ "Input RDF dataset file format is N-Triples and the file is assumed not to\n"
+			+ "contain any duplicated triples.\n\n"
+			+ "rdfquotient";
+		String footer = "\n[ARGS] is a comma-separated list of assigments of form key=value, where key is a configuration property from the list of loading or summarization configuration properties.";
+		helpFormatter.printHelp(header, "\n", options, footer, true);
 	}
 
 	private static Properties parseProperties(String commandLineProperties) {
@@ -604,17 +653,18 @@ public class Interface {
 				Properties commandLineProperties = parseProperties(arguments.getOptionValue(readOption.getLongOpt()));
 				if (arguments.hasOption(dryRunOption.getLongOpt())) {
 					Properties defaultProperties = LoadingProperties.getDefaultProperties();
-					Properties readProperties = reconcileProperties(defaultProperties, loadingPropertiesFilename, commandLineProperties);
+					Properties readingProperties = reconcileProperties(defaultProperties, loadingPropertiesFilename, commandLineProperties);
 					// derive database name from filename if not specified
-					if (!readProperties.containsKey("database.name") || readProperties.getProperty("database.name").equals("")) {
-						String datasetFilename = readProperties.getProperty("dataset.filename");
+					if (!readingProperties.containsKey("database.name") || readingProperties.getProperty("database.name").equals("")) {
+						String datasetFilename = readingProperties.getProperty("dataset.filename");
 						String databaseName = deriveDatabaseNameFromFilename(datasetFilename);
-						readProperties.put("database.name", databaseName);
+						readingProperties.put("database.name", databaseName);
 					}
-					System.out.println(readProperties.toString());
+					System.out.println(readingProperties.toString());
 				}
 				else {
-					read(loadingPropertiesFilename, commandLineProperties, true);
+					System.out.println("This option does not have any effect in command line mode; it should be used in a programmatic way in Java code.");
+					Summary s = read(loadingPropertiesFilename, commandLineProperties, true);
 				}
 				return;
 			}

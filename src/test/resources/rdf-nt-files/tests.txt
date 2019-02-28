@@ -1,17 +1,17 @@
 Weak
-	noSaturation: 1-14
-	classical: 1-14
-	shortcut: 6, 12
+	without saturation: 1-14
+	with saturation: 1-14
+	using shortcut: 6, 12
 
 Typed Weak
-	noSaturation: 1-7, 11, 12, 14
-	classical: 1-7, 11, 12, 14
+	without saturation: 1-7, 11, 12, 14
+	with saturation: 1-7, 11, 12, 14
 
 Strong
-	noSaturation: 1-14
-	classical: 1-14
-	shortcut: 6, 12
+	without saturation: 1-14
+	with saturation: 1-14
+	using shortcut: 6, 12
 
 Typed Strong
-	noSaturation: 1-7, 11, 12, 14
-	classical: 1-7, 11, 12, 14
+	without saturation: 1-7, 11, 12, 14
+	with saturation: 1-7, 11, 12, 14

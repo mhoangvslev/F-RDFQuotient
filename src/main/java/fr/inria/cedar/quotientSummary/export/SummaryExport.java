@@ -812,7 +812,7 @@ public class SummaryExport {
 		HashSet<Long> sn = summary.getSchemaNodes();
 		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
 		dax.resetColors();
-		LOGGER.debug("writeSummaryToDotFileSplitLeaves:");
+		//LOGGER.debug("writeSummaryToDotFileSplitLeaves:");
 
 		HashMap<Long, EntitySummaryNode> entities = new HashMap<Long, EntitySummaryNode>();
 		long entityEdgeCount = 0;
