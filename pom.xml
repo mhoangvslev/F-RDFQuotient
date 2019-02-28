@@ -49,6 +49,7 @@
 			<version>1.4</version>
 		</dependency>
 	</dependencies>
+
 	<distributionManagement>
 		<repository>
 			<id>cedarcommons-private-release</id>
@@ -61,6 +62,7 @@
 			<url>http://maven.inria.fr/artifactory/cedarcommons-private-snapshot</url>
 		</snapshotRepository>
 	</distributionManagement>
+
 	<repositories>
 		<repository>
 			<id>cedarcommons-private-release</id>
@@ -68,6 +70,7 @@
 			<url>http://maven.inria.fr/artifactory/cedarcommons-private-release</url>
 		</repository>
 	</repositories>
+
 	<build>
 		<plugins>
 			<plugin>
@@ -95,7 +98,7 @@
 						<manifest>
 							<!-- Jar file entry point -->
 							<addClasspath>true</addClasspath>
-							<mainClass>fr.inria.cedar.quotientSummary.BuilderCmd</mainClass>
+							<mainClass>fr.inria.cedar.quotientSummary.controller.Interface</mainClass>
 						</manifest>
 					</archive>
 					<descriptorRefs>

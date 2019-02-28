@@ -1,8 +1,8 @@
 cedar001
+	abuse
 	clean_energy_data_uniq
 	conference
 	ctgovdata
-	dbpedia_persondata_en_uniq
 	enelshops
 	foodista
 	insee_geo
@@ -10,40 +10,31 @@ cedar001
 	nobel
 	nobelprizes_uniq
 
-cedar002
-	lubm1m
-
 cedar003
 	bsbm1m
 	bsbm10m
 	dbpedia_persondata_en_uniq
 	lubm1m
 	lubm10m
-	watdiv10m
+		watdiv10m
+	watdiv10m_onto
 
 cedar004
-	conference
-	dbpedia_persondata_en_uniq
-	insee_geo
 	lubm100m
-	nobel
-	watdiv100m
+		watdiv100m
+	watdiv100m_onto
 
 cedar005
-	bsbm1m
-	dblp_large_uniq
-	lubm100m
+		dblp_large_uniq
+	dblp_large_uniq_onto
+		lubm100m
 
 cedar006
-	bsbm10m
+		bsbm10m
 	bsbm100m
 	bsbm138m
-	lubm1m
-	lubm10m
+		lubm1m
+		lubm10m
 
 cedar007
-	bsbm100m
-
-cedar008
-	conference
-	dblp_large_uniq
+		bsbm100m

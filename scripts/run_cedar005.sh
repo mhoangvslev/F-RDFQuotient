@@ -1,5 +1,9 @@
 #!/bin/bash
 
-for SUMMARY_TYPE in weak strong typedweak typedstrong 2pweak 2pstrong 2ptypedweak 2ptypedstrong 2pweakunionfind onefb; do
-	./scripts/summarize.sh bsbm/bsbm1m.nt $SUMMARY_TYPE false
+for DATASET in dblp/dblp_large_uniq_onto.nt; do
+	for SATURATED in "true" "false"; do
+		for SUMMARY_TYPE in weak strong typedweak typedstrong 2pweak 2pstrong 2ptypedweak 2ptypedstrong 2pweakunionfind onefb onefw; do
+			./scripts/summarize.sh $DATASET $SUMMARY_TYPE $SATURATED split_and_fold_leaves
+		done
+	done
 done
