@@ -20,7 +20,7 @@ public class SummarizationProperties extends ConfigurationProperties {
 		LOGGER.setLevel(Level.INFO);
 	}
 
-	public static String getDefaultSummarizationPropertiesFilename() {
+	public static String getDefaultPropertiesFilename() {
 		return DEFAULT_SUMMARIZATION_PROPERTIES_FILENAME;
 	}
 

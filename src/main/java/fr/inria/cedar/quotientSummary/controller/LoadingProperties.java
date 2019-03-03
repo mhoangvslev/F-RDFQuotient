@@ -20,7 +20,7 @@ public class LoadingProperties extends ConfigurationProperties {
 		LOGGER.setLevel(Level.INFO);
 	}
 
-	public static String getDefaultLoadingPropertiesFilename() {
+	public static String getDefaultPropertiesFilename() {
 		return DEFAULT_LOADING_PROPERTIES_FILENAME;
 	}
 

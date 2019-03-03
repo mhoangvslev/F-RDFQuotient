@@ -1,6 +1,0 @@
-<http://qs.org/w4> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://qstest.org/C1> .
-<http://qs.org/w4> <http://qstest.org/b> <http://qs.org/w7> .
-<http://qs.org/w4> <http://qstest.org/d> <http://qs.org/w9> .
-<http://qs.org/w4> <http://qstest.org/a> <http://qs.org/w5> .
-<http://qs.org/w8> <http://qstest.org/g> <http://qs.org/w4> .
-<http://qs.org/w10> <http://qstest.org/f> <http://qs.org/w4> .

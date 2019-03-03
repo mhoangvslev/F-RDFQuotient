@@ -1,0 +1,17 @@
+digraph g{
+splines=polyline;
+ nodesep=0.15;
+ ranksep=0.2;
+ node[shape=box, color=black, style=filled];
+"N1 (1)" [ label=< <TABLE BGCOLOR="lightpink"> <TR><TD><FONT color="black" POINT-SIZE="12.0" FACE="Times-Bold"> N1 (1) </FONT> </TD> </TR> <TR><TD><FONT color="black"  POINT-SIZE="12.0"> prop1 (1 &rarr; 1) </FONT></TD></TR>
+ <TR><TD><FONT color="black"  POINT-SIZE="12.0"> prop2 (1 &rarr; 1) </FONT></TD></TR>
+</TABLE>> ]
+"N1 (1)" -> "N2 (3)" [weight=1, arrowsize=0.8, fontsize=12, arrowhead=vee, label="prop3 (1)"]
+"N2 (3)" [ label=< <TABLE BGCOLOR="chartreuse"> <TR><TD><FONT color="black" POINT-SIZE="12.0" FACE="Times-Bold"> N2 (3)<BR/>http://qstest.org/class3</FONT></TD></TR><TR><TD><FONT color="black" POINT-SIZE="12.0">http://qstest.org/class12: 1<BR/>http://qstest.org/class10: 1<BR/>http://qstest.org/class1: 1<BR/>http://qstest.org/class4: 1<BR/>...7 more types from http://qstest.org </FONT> </TD> </TR> <TR><TD><FONT color="black"  POINT-SIZE="12.0"> prop1 (2 &rarr; 2) </FONT></TD></TR>
+ <TR><TD><FONT color="black"  POINT-SIZE="12.0"> prop2 (1 &rarr; 1) </FONT></TD></TR>
+</TABLE>> ]
+"N2 (3)" -> "N3 (1)" [weight=1, arrowsize=0.8, fontsize=12, arrowhead=vee, label="prop3 (1)"]
+"N3 (1)" [ label=< <TABLE BGCOLOR="cadetblue1"> <TR><TD><FONT color="black" POINT-SIZE="12.0" FACE="Times-Bold"> N3 (1)<BR/>http://qstest.org/class6</FONT></TD></TR><TR><TD><FONT color="black" POINT-SIZE="12.0">http://qstest.org/class6: 1 </FONT> </TD> </TR></TABLE>> ]
+fontsize=12; label="TypedStrongSummary (generalize types)  of src/test/resources/test15-typegen/test-15.nt (31 triples): 3 nodes, 2 edges"
+labelloc=top; labeljust=center;
+}

@@ -15,14 +15,18 @@ public class ReadingTests extends Tests {
 	public void readingTest() {
 		String inputFilename = "src/test/resources/rdf-nt-files/test-1.nt";
 
-		// load test dataset
+		// Load test dataset
 		Properties loadingProperties = LoadingProperties.getDefaultProperties();
 		loadingProperties.put("dataset.filename", inputFilename);
 		loadingProperties.put("database.name", "reading_test");
 		loadingProperties.put("statistics.export_to_csv_file", "false");
-		Interface.load(null, loadingProperties, false); // first argument can be replaced with configuration file name
 
-		// summarize
+		// first argument can be replaced with configuration file name e.g. LoadingProperties.getDefaultPropertiesFilename()
+		// last argument specifies database connection to not be closed
+		Interface.load(null, loadingProperties, false);
+
+
+		// Summarize test dataset
 		Properties summarizationProperties = SummarizationProperties.getDefaultProperties();
 		summarizationProperties.put("dataset.filename", inputFilename);
 		summarizationProperties.put("database.name", "weak_test");
@@ -31,9 +35,15 @@ public class ReadingTests extends Tests {
 		summarizationProperties.put("summary.export_to_nt_file", "false");
 		summarizationProperties.put("drawing.style", "none");
 		summarizationProperties.put("statistics.export_to_csv_file", "false");
-		Interface.summarize(null, summarizationProperties, false); // first argument can be replaced with configuration file name
 
-		// read from Postgres
-		Summary s = Interface.read(null, loadingProperties, true); // first argument can be replaced with configuration file name
+		// first argument can be replaced with configuration file name e.g. SummarizationProperties.getDefaultPropertiesFilename()
+		// last argument specifies database connection to not be closed
+		Interface.summarize(null, summarizationProperties, false);
+
+
+		// Read test dataset from Postgres
+		// first argument can be replaced with configuration file name e.g. LoadingProperties.getDefaultPropertiesFilename()
+		// last argument specifies database connection to be closed
+		Summary s = Interface.read(null, loadingProperties, true);
 	}
 }

@@ -1,7 +1,0 @@
-<http://qs.org/s4> <http://qstest.org/prop2> <http://qs.org/s5> .
-<http://qs.org/s5> <http://qstest.org/prop2> <http://qs.org/s6> .
-<http://qs.org/s5> <http://qstest.org/prop3> <http://qs.org/s9> .
-<http://qs.org/s6> <http://qstest.org/prop1> <http://qs.org/s4> .
-<http://qs.org/s9> <http://qstest.org/prop4> <http://qs.org/s11> .
-<http://qs.org/s11> <http://qstest.org/prop5> <http://qs.org/s12> .
-<http://qs.org/s12> <http://qstest.org/prop6> <http://qs.org/s6> .

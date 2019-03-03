@@ -6,8 +6,13 @@ import fr.inria.cedar.quotientSummary.controller.Interface;
 import fr.inria.cedar.quotientSummary.controller.LoadingProperties;
 import fr.inria.cedar.quotientSummary.controller.SummarizationProperties;
 import fr.inria.cedar.quotientSummary.summarization.Tests;
+import java.io.File;
+import java.io.IOException;
 import java.util.Properties;
-import org.junit.Ignore;
+import org.apache.commons.io.FileUtils;
+import org.apache.log4j.Logger;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import org.junit.Test;
 
 /**
@@ -42,6 +47,8 @@ import org.junit.Test;
 // PG: I tried to address the issues mentioned above while refactoring
 
 public class TypeGeneralizationTests extends Tests {
+	private static final Logger LOGGER = Logger.getLogger(TypeGeneralizationTests.class.getName());
+
 	public static String sourceFilename(int i) {
 		return "src/test/resources/test" + i + "-typegen/test-" + i + ".nt";
 	}
@@ -62,10 +69,32 @@ public class TypeGeneralizationTests extends Tests {
 		return Interface.loadAndSummarize(loadingProperties, summarizationProperties).get("DOTfilename");
 	}
 
-	@Ignore // Under development, source file "src/test/resources/test15-typegen/test-15.nt" not available at the repository
+	// validates the test
+	public static void compareDOTFileWithReference(String summaryDOTFilename) {
+		try {
+			String referenceDOTFilename = summaryDOTFilename.substring(0, summaryDOTFilename.length() - 4) + "-reference.dot";
+			File testOutput = new File(summaryDOTFilename);
+			File expectedOutput = new File(referenceDOTFilename);
+			if (!testOutput.exists()) {
+				fail("Test output not found: " + summaryDOTFilename);
+			}
+			if (!expectedOutput.exists()) {
+				fail("Expected output not found: " + referenceDOTFilename);
+			}
+			assertTrue("Summary file "
+				   + summaryDOTFilename
+				   + " does not match reference file: "
+				   + referenceDOTFilename,
+				   FileUtils.contentEquals(testOutput, expectedOutput));
+		}
+		catch (IOException ex) {
+			LOGGER.error(ex);
+		}
+	}
+
 	@Test
 	public void summarizeTypeGenTest15() {
 		// compares DOT files
-		compareWithReference(testSummarizationWithMostGeneralTypes(sourceFilename(15), "typedstrong")); // use "typedweak" or "typedstrong"
+		compareDOTFileWithReference(testSummarizationWithMostGeneralTypes(sourceFilename(15), "typedstrong")); // use "typedweak" or "typedstrong"
 	}
 }
