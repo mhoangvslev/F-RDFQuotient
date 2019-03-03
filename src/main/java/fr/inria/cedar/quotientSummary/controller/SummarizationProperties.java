@@ -5,6 +5,7 @@ package fr.inria.cedar.quotientSummary.controller;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Iterator;
 import java.util.Properties;
 import java.util.TreeMap;
 import org.apache.log4j.Level;
@@ -128,8 +129,15 @@ public class SummarizationProperties extends ConfigurationProperties {
 					propertiesSorted.put((String) property, properties.getProperty((String) property));
 				}
 
-				for (String property: propertiesSorted.keySet()) {
-					pw.println(property + "=" + propertiesSorted.get(property));
+				Iterator<String> it = propertiesSorted.keySet().iterator();
+				while(it.hasNext()) {
+					String property = it.next();
+					if (it.hasNext()) {
+						pw.println(property + "=" + propertiesSorted.get(property));
+					}
+					else {
+						pw.print(property + "=" + propertiesSorted.get(property));
+					}
 				}
 			}
 		}

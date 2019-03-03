@@ -87,11 +87,10 @@ public class Summary {
 	protected String edgeTableName = "";
 	protected boolean checkConsistency = false;
 
+	// statistics
 	public long triplesSummarizedSoFar = 0;
 	protected long typeTriplesSummarizedSoFar = 0;
 	protected long nonTypeTriplesSummarizedSoFar = 0;
-
-	// statistics
 	protected long schemaNodesCollectionTime = 0;
 	protected long summaryEdgesSavingTime = 0;
 	protected long representationFunctionSavingTime = 0;
@@ -517,6 +516,7 @@ public class Summary {
 		recGatherAllSuperTypes(s, res);
 		return res;
 	}
+
 	private void recGatherAllSuperTypes(Long s, HashSet<Long> res) {
 		HashSet<Long> res2 = new HashSet<>();
 		res2.addAll(res);
@@ -721,9 +721,8 @@ public class Summary {
 				topClasses.put(t.o, oTopClasses);
 			}
 		}
-		boolean firstSightS = true;
 		Long repS = n2cs.get(t.s);
-		firstSightS = (repS == null);
+		boolean firstSightS = (repS == null);
 		TreeSet<Long> sClassSet = null; // the types according to which t.s will be represented
 
 		if (firstSightS) {
@@ -1123,38 +1122,41 @@ public class Summary {
 	/**
 	 * Writes the summary in RDF (in .nt format) then also in DOT; also attempts to draw it using DOT.
 	 * @param conn
+	 * @return
 	 */
-	public void writeDecodedSummaryToFileAndDraw(Connection conn) {
+	public String writeDecodedSummaryToFileAndDraw(Connection conn) {
 		ensureExporter();
 		addIndexesToRepTable(conn);
 		String summaryDotFileName = exporter.getDotFileName();
-		this.exporter.writeSummaryToDotFile(conn, summaryDotFileName);
+		return exporter.writeSummaryToDotFile(conn, summaryDotFileName);
 	}
 
 	/**
 	 * Writes the summary in RDF (in .nt format), then also in DOT by splitting each leaf data node
 	 * into one node per incoming edge.
 	 * @param conn SQL connection
+	 * @return
 	 */
-	public void writeDecodedSummaryToFileSplitLeavesAndDraw(Connection conn) {
+	public String writeDecodedSummaryToFileSplitLeavesAndDraw(Connection conn) {
 		LOGGER.info("Drawing summary with split leaves");
 		ensureExporter();
 		addIndexesToRepTable(conn);
 		String summaryDotFileName = exporter.getDotFileNameSplitLeaves();
-		exporter.writeSummaryToDotFileSplitLeaves(conn, summaryDotFileName);
+		return exporter.writeSummaryToDotFileSplitLeaves(conn, summaryDotFileName);
 	}
 
 	/**
 	 * Writes the summary in RDF (in .nt format), then also in DOT by splitting each leaf data node
 	 * into one node per incoming edge.
 	 * @param conn SQL connection
+	 * @return
 	 */
-	public void writeDecodedSummaryToFileSplitFoldLeavesAndDraw(Connection conn) {
+	public String writeDecodedSummaryToFileSplitFoldLeavesAndDraw(Connection conn) {
 		LOGGER.info("Drawing summary with split and folded leaves");
 		ensureExporter();
 		addIndexesToRepTable(conn);
 		String summaryDotFileName = exporter.getDotFileNameFoldLeaves();
-		exporter.writeSummaryToDotFileSplitAndFoldLeaves(conn, summaryDotFileName);
+		return exporter.writeSummaryToDotFileSplitAndFoldLeaves(conn, summaryDotFileName);
 	}
 
 	public void display() {
@@ -1196,10 +1198,12 @@ public class Summary {
 			throw new IllegalStateException("The method should not be called on an instance of the root Summary type");
 		return this.summaryTablePrefix.substring(0, this.summaryTablePrefix.length() - 1);
 	}
+
 	// whether or not a certain property is generic
 	public boolean isGeneric(Long p) {
 		return this.genericPropertiesIgnoredInCliques.contains(p);
 	}
+
 	public HashMap<String, String> getRunStatistics() {
 		HashMap<String, String> stats = new HashMap<>();
 
@@ -1278,12 +1282,15 @@ public class Summary {
 	public HashMap<Long, Long> getSummaryNodeStatistics(){
 		return this.summaryNodeStatistics;
 	}
+
 	public HashMap<Triple, Long> getSummaryEdgeStatistics(){
 		return this.summaryEdgeStatistics;
 	}
+
 	public String getEncodedTriplesTableName() {
 		return this.encodedTriplesTableName;
 	}
+
 	public String getRepresentationTableName() {
 		return this.repTableName;
 	}
@@ -1308,9 +1315,9 @@ public class Summary {
 		return this.replaceTypeWithMostGeneralType;
 	}
 
-	public void writeDecodedSummaryToNTFile(Connection conn) {
+	public String writeDecodedSummaryToNTFile(Connection conn) {
 		ensureExporter();
-		exporter.writeDecodedSummaryToNTFile(conn);
+		return exporter.writeDecodedSummaryToNTFile(conn);
 	}
 
 	public String getNTSummaryFileName() {
@@ -1327,6 +1334,7 @@ public class Summary {
 			return 0L;
 		}
 	}
+
 	public Long getRepresentedTripleNumber(Triple t){
 		Long res = summaryEdgeStatistics.get(t);
 		if (res != null) {
@@ -1347,6 +1355,7 @@ public class Summary {
 	public HashMap<Long, Long> getActualTypesWithStatistics(long s) {
 		return this.summaryNodeToActualTypeToCardinality.get(s);
 	}
+
 	public int getMaxTypesDisplayedPerNameSpace() {
 		return new Integer(summarizationProperties.getProperty("drawing.max_types_drawn_per_namespace"));
 	}

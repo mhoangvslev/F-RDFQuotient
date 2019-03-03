@@ -2,62 +2,61 @@
 
 package fr.inria.cedar.quotientSummary.analysis;
 
+import fr.inria.cedar.quotientSummary.controller.Interface;
+import fr.inria.cedar.quotientSummary.controller.LoadingProperties;
+import fr.inria.cedar.quotientSummary.controller.SummarizationProperties;
+import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 import java.io.IOException;
-import java.sql.SQLException;
-
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-
-import java.sql.Statement;
-
 import java.sql.Connection;
 import java.sql.ResultSet;
-
-import fr.inria.cedar.ontosql.db.UnsupportedDatabaseEngineException;
-import fr.inria.cedar.quotientSummary.controller.Builder;
-import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Properties;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 public class ObjectAnalysis {
 	private static final Logger LOGGER = Logger.getLogger(ObjectAnalysis.class.getName());
 
-	
-	long objectNo; // the number of distinct subjects of data triples
-	long typedNo; // the number of distinct subjects of type triples
-	long typedObjectNo; // the number of distinct subjects of data triples and typed triple 
-	long untypedObjectNo; // the number of distinct untyped subjects of data triples
-	long typedNoData; // the number of typed resources with no data triple
+	private long objectNo; // the number of distinct subjects of data triples
+	private long typedNo; // the number of distinct subjects of type triples
+	private long typedObjectNo; // the number of distinct subjects of data triples and typed triple
+	private long untypedObjectNo; // the number of distinct untyped subjects of data triples
+	private long typedNoData; // the number of typed resources with no data triple
 
-	private static long typeCode = -1; // this is the long associated by OntoSQL to rdf:type. 
-	private static long subClassCode = -1;
-	private static long subPropertyCode = -1;
-	private static long domainCode = -1;
-	private static long rangeCode = -1;
-	private static long classCode = -1; 
-	private static long propertyCode = -1; 
+	private Connection conn;
 
-	Connection conn; 
-	
 	public ObjectAnalysis() {
-
 	}
 
-	public void analyze(String fileName) throws IOException {
+	public void analyze(String datasetFilename) throws IOException {
 		LOGGER.setLevel(Level.INFO);
 		System.out.println("############################################");
-		System.out.println("Analysis of " + fileName);
+		System.out.println("Analysis of " + datasetFilename);
 		System.out.println("#############################################");
-		String inputFileName =  fileName;
 		try {
-			String[] argsSum = {"loadWithSaturationAndSummarize", "weak", inputFileName};
-			Builder.main(argsSum);
-			conn = Builder.getConnection(); 
+			Properties loadingProperties = LoadingProperties.getDefaultProperties();
+			loadingProperties.put("dataset.filename", datasetFilename);
+			loadingProperties.put("statistics.export_to_csv_file", "false");
+			Interface.load(null, loadingProperties, false);
+
+			Properties summarizationProperties = SummarizationProperties.getDefaultProperties();
+			summarizationProperties.put("dataset.filename", datasetFilename);
+			summarizationProperties.put("summary.type", "weak");
+			summarizationProperties.put("summary.replace_type_with_most_general_type", "false");
+			summarizationProperties.put("drawing.style", "plain");
+			summarizationProperties.put("statistics.export_to_csv_file", "false");
+			Interface.summarize(null, summarizationProperties, false);
+
+			conn = Interface.getDatabaseConnection();
+
 			RDF2SQLEncoding.setUp(conn, "dictionary"); // fingers crossed
 		}
 		catch(Exception e) {
 			LOGGER.info("Error: " + e);
 		}
 		String typedSubjectsStmt = "create table typed as select distinct s from tmp_encoded_sat ";
-		boolean hasWhere = false; 
+		boolean hasWhere = false;
 
 		// typed subjects
 		if (RDF2SQLEncoding.getTypeCode() >= 0) {
@@ -68,15 +67,15 @@ public class ObjectAnalysis {
 			typedSubjectsStmt = typedSubjectsStmt + " p = " + RDF2SQLEncoding.getTypeCode();
 		}
 		else {
-			typedSubjectsStmt = "create table typed (s long)"; 
+			typedSubjectsStmt = "create table typed (s long)";
 		}
 		//LOGGER.info("TypedSubjectsStatement is: " + typedSubjectsStmt);
-		
+
 		this.createAndIndexOneColTable("typed", typedSubjectsStmt);
 		LOGGER.info("Typed table done.");
 
 		// data subjects
-		hasWhere = false; 
+		hasWhere = false;
 		String dataSubjectsStmt = "create table hasdataprops as select distinct s from tmp_encoded_sat ";
 		if (RDF2SQLEncoding.getTypeCode() >= 0) {
 			if (!hasWhere) {
@@ -116,16 +115,16 @@ public class ObjectAnalysis {
 		if (hasWhere) {
 			dataSubjectsStmt = dataSubjectsStmt.substring(0, dataSubjectsStmt.length() - 4);
 		}
-		
-		
+
+
 		this.createAndIndexOneColTable("hasdataprops", dataSubjectsStmt);
 		//LOGGER.info("DataSubjectsStatement is: " + dataSubjectsStmt);
 		LOGGER.info("HasDataProps done.");
 
-		
+
 		this.createAndIndexOneColTable("datatyped", "create table datatyped as (select * from typed natural join hasdataprops);");
 		LOGGER.info("DataTyped done.");
-		
+
 		Statement stat = null;
 		try{
 			stat = conn.createStatement();
@@ -133,7 +132,7 @@ public class ObjectAnalysis {
 		catch(SQLException e) {
 			LOGGER.error("Could not create statement " + e);
 		}
-		ResultSet rs; 
+		ResultSet rs;
 		String countTyped = "select count(*) from typed";
 		try {
 			rs = stat.executeQuery(countTyped);
@@ -155,7 +154,7 @@ public class ObjectAnalysis {
 		catch(SQLException e) {
 			LOGGER.info("Could not count data property subjects");
 		}
-		
+
 		String countDataUntyped = "with aux as (select * from hasdataprops except select * from datatyped) select count(*) from aux";
 		try {
 			rs = stat.executeQuery(countDataUntyped);
@@ -166,7 +165,7 @@ public class ObjectAnalysis {
 		catch(SQLException e) {
 			LOGGER.info("Could not count untyped data property subjects");
 		}
-		
+
 		String countTypedNoData = "with aux as (select * from typed except select * from datatyped) select count(*) from aux";
 		try {
 			rs = stat.executeQuery(countTypedNoData);
@@ -177,15 +176,14 @@ public class ObjectAnalysis {
 		catch(SQLException e) {
 			LOGGER.info("Could not count typed objects without any data");
 		}
-		
-		System.out.println("Typed: " + this.typedNo + 
+
+		System.out.println("Typed: " + this.typedNo +
 				" objects: " + this.objectNo +
-				" untypedObjects: " + this.untypedObjectNo + 
-				" typedNoData: " + this.typedNoData); 
-				
-		String[] argsCloseConnection = {"closeConnection"};
+				" untypedObjects: " + this.untypedObjectNo +
+				" typedNoData: " + this.typedNoData);
+
 		try {
-			Builder.main(argsCloseConnection);
+			Interface.closeDatabaseConnection();
 		}
 		catch (Exception e) {
 			LOGGER.error(e);
@@ -201,7 +199,7 @@ public class ObjectAnalysis {
 		catch(SQLException e) {
 			if (e.toString().indexOf("already exists") >= 0) {
 				try {
-					stat.executeUpdate("drop table " + tableName); 
+					stat.executeUpdate("drop table " + tableName);
 					stat.executeUpdate(createStatement);
 				}
 				catch(SQLException e2) {
@@ -209,7 +207,7 @@ public class ObjectAnalysis {
 				}
 			}
 			else{
-				LOGGER.info("Could not create " + tableName + " " + e); 
+				LOGGER.info("Could not create " + tableName + " " + e);
 			}
 		}
 		try {
@@ -219,14 +217,13 @@ public class ObjectAnalysis {
 			LOGGER.error("Could not create index " + e);
 		}
 	}
-	
+
 	public static void main(String[] argv) throws IOException {
 		ObjectAnalysis o = new ObjectAnalysis();
-		String[] fileNames = new String[] {"lubm10m"}; //, "frenchpolitics","lubm1m", "mondial", "nasa", "nobelprizes", "pokedex", "bsbm1m", "watdiv10m"};   
-		String directory = "src/test/resources/rdf-nt-files/"; 
+		String[] fileNames = new String[] {"lubm10m"}; //{"lubm10m", "frenchpolitics", "lubm1m", "mondial", "nasa", "nobelprizes", "pokedex", "bsbm1m", "watdiv10m"};
+		String directory = "src/test/resources/rdf-nt-files/";
 		for (String fileName: fileNames) {
-			o.analyze(directory + fileName + ".nt"); 
+			o.analyze(directory + fileName + ".nt");
 		}
 	}
-
 }

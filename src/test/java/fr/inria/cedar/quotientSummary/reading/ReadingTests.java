@@ -1,15 +1,16 @@
 //Initial software, [Manolescu-Goujot, Goasdoué, Guzewicz], Copyright C Inria and Rennes 1 University, see the license available at https://gitlab.inria.fr/cedar/quotientSummary/blob/master/LICENCE.txt
 
-package summaries.reading;
+package fr.inria.cedar.quotientSummary.reading;
 
 import fr.inria.cedar.quotientSummary.Summary;
 import fr.inria.cedar.quotientSummary.controller.Interface;
 import fr.inria.cedar.quotientSummary.controller.LoadingProperties;
 import fr.inria.cedar.quotientSummary.controller.SummarizationProperties;
+import fr.inria.cedar.quotientSummary.summarization.Tests;
 import java.util.Properties;
 import org.junit.Test;
 
-public class readingTests {
+public class ReadingTests extends Tests {
 	@Test
 	public void readingTest() {
 		String inputFilename = "src/test/resources/rdf-nt-files/test-1.nt";

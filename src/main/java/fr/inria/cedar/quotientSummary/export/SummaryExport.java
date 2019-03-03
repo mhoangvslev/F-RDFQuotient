@@ -105,7 +105,7 @@ public class SummaryExport {
 	 *
 	 * @param conn
 	 */
-	public void writeDecodedSummaryToNTFile(Connection conn) {
+	public String writeDecodedSummaryToNTFile(Connection conn) {
 		HashSet<Long> sn = summary.getSchemaNodes();
 		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
 
@@ -235,6 +235,7 @@ public class SummaryExport {
 			throw new IllegalStateException("Could not save the decoded summary in .nt file: " + e.toString());
 		}
 		LOGGER.info("Summary decoded and saved in .nt format");
+		return summaryNTFileName;
 	}
 
 	public void writeEncodedSummaryToFile(String fileName) {
@@ -285,12 +286,11 @@ public class SummaryExport {
 	 * @param conn
 	 * @param dotFileName
 	 */
-	public void writeSummaryToDotFile(Connection conn, String dotFileName) {
+	public String writeSummaryToDotFile(Connection conn, String dotFileName) {
 		HashSet<Long> sn = summary.getSchemaNodes();
 		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
 		dax.resetColors();
 		String URIprefix = properties.getProperty("drawing.prefix_URI_for_summary_nodes");
-		//LOGGER.info("writeSummaryToDotFile:");
 
 		int dotLinesPrinted = 0;
 
@@ -450,6 +450,8 @@ public class SummaryExport {
 		catch (IOException e) {
 			LOGGER.error("Could not turn .dot file into .png (check the pathToDot value in summarization.properties)" + e.toString());
 		}
+
+		return dotFileName;
 	}
 
 	/**
@@ -593,11 +595,12 @@ public class SummaryExport {
 	 *
 	 * @param conn
 	 * @param dotFileName
+	 * @return
 	 */
-	public void writeSummaryToDotFileSplitLeaves(Connection conn, String dotFileName) {
+	public String writeSummaryToDotFileSplitLeaves(Connection conn, String dotFileName) {
 		// first, determine who is a leaf
-		HashSet<Long> leaves = new HashSet<Long>(); // tentative leaf nodes (until discovered to be subjects)
-		HashSet<Long> notLeaves = new HashSet<Long>(); // certain non-leaf nodes (subjects)
+		HashSet<Long> leaves = new HashSet<>(); // tentative leaf nodes (until discovered to be subjects)
+		HashSet<Long> notLeaves = new HashSet<>(); // certain non-leaf nodes (subjects)
 		for (Triple t: this.summary.getSummaryEdges()) {
 			notLeaves.add(t.s); // for sure s is not a leaf
 			//LOGGER.info(t.s + " surely not a leaf");
@@ -616,7 +619,7 @@ public class SummaryExport {
 		dax.resetColors();
 		//LOGGER.debug("writeSummaryToDotFileSplitLeaves:");
 
-		HashMap<Long, Integer> leafCounter  = new HashMap<Long, Integer>();
+		HashMap<Long, Integer> leafCounter  = new HashMap<>();
 		int dotLinesPrinted = 0;
 		try {
 			try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(dotFileName)))) {
@@ -771,6 +774,8 @@ public class SummaryExport {
 		catch (IOException e) {
 			LOGGER.error("Could not turn .dot file into .png (check the pathToDot value in summarization.properties)" + e.toString());
 		}
+
+		return dotFileName;
 	}
 
 
@@ -783,11 +788,12 @@ public class SummaryExport {
 	 *
 	 * @param conn
 	 * @param dotFileName
+	 * @return
 	 */
-	public void writeSummaryToDotFileSplitAndFoldLeaves(Connection conn, String dotFileName) {
+	public String writeSummaryToDotFileSplitAndFoldLeaves(Connection conn, String dotFileName) {
 		// first, determine who is a leaf
-		HashSet<Long> leaves = new HashSet<Long>(); // tentative leaf nodes (until discovered to be subjects)
-		HashSet<Long> notLeaves = new HashSet<Long>(); // certain non-leaf nodes (subjects)
+		HashSet<Long> leaves = new HashSet<>(); // tentative leaf nodes (until discovered to be subjects)
+		HashSet<Long> notLeaves = new HashSet<>(); // certain non-leaf nodes (subjects)
 
 		for (Triple t: this.summary.getSummaryEdges()) {
 			notLeaves.add(t.s); // for sure s is not a leaf
@@ -814,7 +820,7 @@ public class SummaryExport {
 		dax.resetColors();
 		//LOGGER.debug("writeSummaryToDotFileSplitLeaves:");
 
-		HashMap<Long, EntitySummaryNode> entities = new HashMap<Long, EntitySummaryNode>();
+		HashMap<Long, EntitySummaryNode> entities = new HashMap<>();
 		long entityEdgeCount = 0;
 
 		try {
@@ -948,6 +954,8 @@ public class SummaryExport {
 		catch (IOException e) {
 			LOGGER.error("Could not turn .dot file into .png (check the pathToDot value in summarization.properties)" + e.toString());
 		}
+
+		return dotFileName;
 	}
 
 

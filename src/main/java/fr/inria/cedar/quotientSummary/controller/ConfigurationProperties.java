@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Properties;
+import java.util.TreeMap;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
@@ -30,7 +31,6 @@ public class ConfigurationProperties {
 			return null;
 		}
 		catch (NullPointerException ex) {
-			LOGGER.info(ex);
 			return null;
 		}
 		return properties;
@@ -49,5 +49,20 @@ public class ConfigurationProperties {
 
 		lessImportantProperties.putAll(moreImportantProperties);
 		return lessImportantProperties;
+	}
+
+	public static String prettifiedToString(Properties properties) {
+		String prettifiedProperties = "";
+
+		TreeMap<String, String> propertiesSorted = new TreeMap<>();
+		for (Object property: properties.keySet()) {
+			propertiesSorted.put((String) property, properties.getProperty((String) property));
+		}
+
+		for (String property: propertiesSorted.keySet()) {
+			prettifiedProperties += property + "=" + propertiesSorted.get(property) + "\n";
+		}
+
+		return prettifiedProperties.substring(0, prettifiedProperties.length() - 1);
 	}
 }

@@ -2,8 +2,6 @@
 
 package fr.inria.cedar.quotientSummary.controller;
 
-import fr.inria.cedar.ontosql.db.UnsupportedDatabaseEngineException;
-import fr.inria.cedar.ontosql.rdfdb.dataloading.Config;
 import fr.inria.cedar.ontosql.rdfdb.dataloading.DataLoading;
 import fr.inria.cedar.ontosql.rdfdb.dataloading.Parameters;
 import fr.inria.cedar.quotientSummary.Summary;
@@ -22,13 +20,17 @@ import fr.inria.cedar.quotientSummary.weak.WeakSummary;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
@@ -44,7 +46,6 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
-import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
 public class Interface {
 	private static final Logger LOGGER = Logger.getLogger(Interface.class.getName());
@@ -65,6 +66,56 @@ public class Interface {
 	public Interface() {
 	}
 
+	private static String currentDateTime() {
+		DateFormat localeLongDateFormat = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG);
+		return localeLongDateFormat.format(new Date());
+	}
+
+	private static void checkIfDatabaseServerIsRunning(Properties properties) {
+		try {
+			Class.forName("org.postgresql.Driver");
+		}
+		catch (ClassNotFoundException ex) {
+			LOGGER.error(ex);
+			System.exit(1);
+		}
+
+		String connectionURL = "jdbc:postgresql://";
+		try {
+			connectionURL += properties.getProperty("database.host")
+				+ ":" + properties.getProperty("database.port")
+				+ "/?user=" + URLEncoder.encode(properties.getProperty("database.user"), "UTF-8")
+				+ "&password=" + URLEncoder.encode(properties.getProperty("database.password"), "UTF-8");
+		}
+		catch (UnsupportedEncodingException ex) {
+			LOGGER.error(ex);
+			System.exit(1);
+		}
+
+		Connection connection = null;
+		try {
+			connection = DriverManager.getConnection(connectionURL);
+		}
+		catch (SQLException ex) {
+			LOGGER.error("Could not establish connection to Postgres server " + ex);
+			System.exit(1);
+		}
+		LOGGER.info("Connection to Postgres established with URL: " + connectionURL);
+
+		if (connection == null) {
+			LOGGER.error("No connection for " + connectionURL);
+			System.exit(1);
+		}
+
+		try {
+			connection.close();
+		}
+		catch (SQLException ex) {
+			LOGGER.error(ex);
+			System.exit(1);
+		}
+	}
+
 	/*
 		properties object needs to contain the following fields:
 		- database.host
@@ -82,12 +133,18 @@ public class Interface {
 			System.exit(1);
 		}
 
-		String connectionURL = "jdbc:postgresql://"
-			+ properties.getProperty("database.host")
-			+ ":" + properties.getProperty("database.port")
-			+ "/" + properties.getProperty("database.name")
-			+ "?user=" + properties.getProperty("database.user")
-			+ "&password=" + properties.getProperty("database.password");
+		String connectionURL = "jdbc:postgresql://";
+		try {
+			connectionURL += properties.getProperty("database.host")
+				+ ":" + properties.getProperty("database.port")
+				+ "/" + URLEncoder.encode(properties.getProperty("database.name"), "UTF-8")
+				+ "?user=" + URLEncoder.encode(properties.getProperty("database.user"), "UTF-8")
+				+ "&password=" + URLEncoder.encode(properties.getProperty("database.password"), "UTF-8");
+		}
+		catch (UnsupportedEncodingException ex) {
+			LOGGER.error(ex);
+			System.exit(1);
+		}
 		try {
 			databaseConnection = DriverManager.getConnection(connectionURL);
 		}
@@ -111,10 +168,15 @@ public class Interface {
 		- database.password
 		- database.name
 	*/
-	public static Connection getDatabaseConnection(Properties properties) {
+	public static Connection getOrEstablishNewDatabaseConnection(Properties properties) {
 		if (databaseConnection == null) {
 			setUpDatabaseConnection(properties);
 		}
+		return databaseConnection;
+	}
+
+	// may return null if database connection was not established or closed
+	public static Connection getDatabaseConnection() {
 		return databaseConnection;
 	}
 
@@ -123,6 +185,61 @@ public class Interface {
 			databaseConnection.close();
 			databaseConnection = null;
 			LOGGER.info("Connection closed");
+		}
+		catch (SQLException ex) {
+			LOGGER.error(ex);
+			System.exit(1);
+		}
+	}
+
+	// we need this method because DataLoading package doesn't close its connection to database and we can't share it neither
+	public static void forceCloseDatabaseConnection(Properties properties) {
+		try {
+			Class.forName("org.postgresql.Driver");
+		}
+		catch (ClassNotFoundException ex) {
+			LOGGER.error(ex);
+			System.exit(1);
+		}
+
+		String connectionURL = "jdbc:postgresql://";
+		try {
+			connectionURL += properties.getProperty("database.host")
+				+ ":" + properties.getProperty("database.port")
+				+ "/?user=" + URLEncoder.encode(properties.getProperty("database.user"), "UTF-8")
+				+ "&password=" + URLEncoder.encode(properties.getProperty("database.password"), "UTF-8");
+		}
+		catch (UnsupportedEncodingException ex) {
+			LOGGER.error(ex);
+			System.exit(1);
+		}
+
+		Connection connection = null;
+		try {
+			connection = DriverManager.getConnection(connectionURL);
+		}
+		catch (SQLException ex) {
+			LOGGER.error("Could not establish connection to Postgres server " + ex);
+			System.exit(1);
+		}
+		LOGGER.info("Connection to Postgres established with URL: " + connectionURL);
+
+		if (connection == null) {
+			LOGGER.error("No connection for " + connectionURL);
+			System.exit(1);
+		}
+
+		Statement statement;
+		try {
+			statement = connection.createStatement();
+			String datasetFilename = properties.getProperty("dataset.filename");
+			// derive database name from filename if not specified
+			if (!properties.containsKey("database.name") || properties.getProperty("database.name").equals("")) {
+				String databaseName = deriveDatabaseNameFromFilename(datasetFilename);
+				properties.put("database.name", databaseName);
+			}
+			statement.executeQuery("select pg_terminate_backend(pid) from pg_stat_activity where datname='" + properties.getProperty("database.name") + "'");
+			connection.close();
 		}
 		catch (SQLException ex) {
 			LOGGER.error(ex);
@@ -142,12 +259,9 @@ public class Interface {
 	private static void exportLoadingStatisticsToDisk(Properties loadingProperties) {
 		String datasetFilename = loadingProperties.getProperty("dataset.filename");
 		String csvFilename = trimNT(datasetFilename, false) + "-loading-statistics.csv";
-
-		LOGGER.info("Exporting loading statistics to disk to the file " + csvFilename);
-
+		LOGGER.info("Loading statistics written to file " + csvFilename);
 		long loadingTime = DataLoading.timeExecutionPerProcess.get("LoadTriplesToDatabase");
 		long saturationTime = (loadingProperties.getProperty("saturation.enable").equals("true")) ? DataLoading.timeExecutionPerProcess.get("RDFGraphSaturator") : 0L;
-
 		try (PrintWriter pw = new PrintWriter(new File(csvFilename))) {
 			StringBuilder sb = new StringBuilder();
 			sb.append("loadingTime,saturationTime\n");
@@ -158,8 +272,6 @@ public class Interface {
 			LOGGER.error(ex);
 			System.exit(1);
 		}
-
-		LOGGER.info("Loading statistics exported to disk");
 	}
 
 	private static Properties reconcileProperties(Properties defaultProperties, String configurationFilename, Properties commandLineProperties) {
@@ -195,12 +307,13 @@ public class Interface {
 		Properties myProperties = LoadingProperties.getDefaultProperties();
 		myProperties.put("dataset.filename", "datasets/my_dataset.nt");
 		Interface.load("conf/my_config_file.properties", myProperties, true);
+
+		Returns a name of the database.
 	*/
-	public static void load(String configurationFilename, Properties properties, boolean closeConnection) {
+	public static String load(String configurationFilename, Properties properties, boolean closeConnection) {
 		Properties defaultProperties = LoadingProperties.getDefaultProperties();
 		Properties loadingProperties = reconcileProperties(defaultProperties, configurationFilename, properties);
 
-		LOGGER.info("Loading graph to Postgres");
 		String datasetFilename = loadingProperties.getProperty("dataset.filename");
 
 		// derive database name from filename if not specified
@@ -209,13 +322,16 @@ public class Interface {
 			loadingProperties.put("database.name", databaseName);
 		}
 
-		List<String> datasetSourceFiles = new ArrayList<>();
-		datasetSourceFiles.add(datasetFilename);
-		Parameters datasets = new Parameters();
-		datasets.setAllInFile(datasetSourceFiles);
+		System.out.println("********************************************************************************");
+		System.out.println(currentDateTime());
+		System.out.println("Executing load operation using "
+			+ loadingProperties.getProperty("database.name")
+			+ " database with saturation "
+			+ (loadingProperties.getProperty("saturation.enable").equals("true") ? "enabled" : "disabled"));
+		System.out.println("********************************************************************************");
 
 		// check if loading properties are correct
-		setUpDatabaseConnection(loadingProperties);
+		//checkIfDatabaseServerIsRunning(loadingProperties);
 		if (databaseConnection != null) {
 			try {
 				databaseConnection.close();
@@ -227,17 +343,20 @@ public class Interface {
 			databaseConnection = null;
 		}
 
+		List<String> datasetSourceFiles = new ArrayList<>();
+		datasetSourceFiles.add(datasetFilename);
+		Parameters datasets = new Parameters();
+		datasets.setAllInFile(datasetSourceFiles);
+
 		try {
+			LOGGER.info("Loading graph to Postgres");
 			DataLoading.process(datasets, loadingProperties);
-			Config configuration = new Config(loadingProperties);
-			databaseConnection = configuration.getDataSource().getConnection();
+			LOGGER.info("Graph loaded to Postgres");
 		}
-		catch (UnsupportedDatabaseEngineException | FileNotFoundException | SQLException ex) {
+		catch (Exception ex) {
 			LOGGER.error("Could not load dataset " + ex);
 			System.exit(1);
 		}
-
-		LOGGER.info("Graph loaded to Postgres");
 
 		if (loadingProperties.getProperty("statistics.export_to_csv_file").equals("true")) {
 			LOGGER.info("Exporting loading statistics to disk");
@@ -245,9 +364,22 @@ public class Interface {
 			LOGGER.info("Loading statistics exported to disk");
 		}
 
+		// These lines
+		forceCloseDatabaseConnection(loadingProperties);
+		if (!closeConnection) {
+			setUpDatabaseConnection(loadingProperties);
+		}
+		// should be replaced by
+		/*
+		Config configuration = DataLoading.getConfiguration();
+		databaseConnection = configuration.getDataSource().getConnection();
 		if (closeConnection) {
 			closeDatabaseConnection();
 		}
+		*/
+		// when DataLoading interface is adjusted to provide connection sharing
+
+		return loadingProperties.getProperty("database.name");
 	}
 
 	private static String checkConsistencyOfSummarizationProperties(Properties summarizationProperties) {
@@ -323,7 +455,7 @@ public class Interface {
 
 	private static void exportSummarizationStatisticsToDisk() {
 		String csvFileName = trimNT(summary.getNTSummaryFileName(), false) + "-summarization-statistics.csv";
-		LOGGER.info("Exporting summarization statistics to disk to the file " + csvFileName);
+		LOGGER.info("Summarization statistics written to CSV file " + csvFileName);
 		try (PrintWriter pw = new PrintWriter(new File(csvFileName))) {
 			HashMap<String, String> statistics = summary.getRunStatistics();
 			statistics.put("summarySavingInPostgresTime", Long.toString(summarySavingInPostgresTime));
@@ -346,17 +478,17 @@ public class Interface {
 			LOGGER.error(ex);
 			System.exit(1);
 		}
-		LOGGER.info("Summarization statistics exported to disk");
 	}
 
 	/*
 		See load method comment: in examples use SummarizationProperties class instead of LoadingProperties.
+		Returns a map with keys: "databaseName", "NTfilename" and "DOTfilename".
+		If the corresponding name is not present, the value is set to null.
 	*/
-	public static void summarize(String configurationFilename, Properties properties, boolean closeConnection) {
+	public static HashMap<String, String> summarize(String configurationFilename, Properties properties, boolean closeConnection) {
 		Properties defaultProperties = SummarizationProperties.getDefaultProperties();
 		Properties summarizationProperties = reconcileProperties(defaultProperties, configurationFilename, properties);
 
-		LOGGER.info("Summarizing graph from Postgres");
 		String datasetFilename = summarizationProperties.getProperty("dataset.filename");
 
 		// derive database name from filename if not specified
@@ -371,58 +503,85 @@ public class Interface {
 			System.exit(1);
 		}
 
+		System.out.println("********************************************************************************");
+		System.out.println(currentDateTime());
+		String message = "Executing summarize operation using "
+			+ summarizationProperties.getProperty("database.name")
+			+ " database, computing "
+			+ summarizationProperties.getProperty("summary.type")
+			+ " summary with"
+			+ (summarizationProperties.getProperty("summary.replace_type_with_most_general_type").equals("true") ? "" : "out")
+			+ " type generalization, on "
+			+ (summarizationProperties.getProperty("summary.summarize_saturated_graph").equals("true") ? "" : "not ")
+			+ "saturated graph";
+		String drawingStyle = summarizationProperties.getProperty("drawing.style");
+		switch (drawingStyle) {
+			case "plain":
+			case "split_leaves":
+			case "split_and_fold_leaves":
+				message += ", drawing visualizations with DOT in " + drawingStyle + " layout";
+				break;
+			default:
+				message += ", no drawing";
+				break;
+		}
+		System.out.println(message);
+		System.out.println("********************************************************************************");
+
 		try {
+			LOGGER.info("Summarizing graph from Postgres");
 			summary = createNewSummary(summarizationProperties);
 			summary.setSummarizationProperties(summarizationProperties);
-			getDatabaseConnection(summarizationProperties);
+			getOrEstablishNewDatabaseConnection(summarizationProperties);
 			summary.summarizeFromPostgres(databaseConnection);
+			LOGGER.info("Graph from Postgres summarized");
 		}
 		catch (IllegalArgumentException ex) {
 			LOGGER.error(ex);
 			System.out.println("Make sure that the input graph is loaded into database.");
 			System.exit(1);
 		}
-		LOGGER.info("Graph from Postgres summarized");
 
 		summarySavingInPostgresTime = 0L;
 		if (summarizationProperties.getProperty("summary.export_to_database").equals("true")) {
-			LOGGER.info("Saving summary to Postgres");
+			LOGGER.info("Exporting summary to Postgres");
 			long start = System.currentTimeMillis();
 			summary.saveSummaryInPostgres(databaseConnection);
 			summarySavingInPostgresTime = System.currentTimeMillis() - start;
-			LOGGER.info("Summary saved in Postgres");
+			LOGGER.info("Summary exported to Postgres");
 		}
 
-		LOGGER.info("Exporting summary to disk to NT file");
+		String NTfilename = null;
 		summarySavingToDiskTime = 0L;
 		if (summarizationProperties.getProperty("summary.export_to_nt_file").equals("true")) {
+			LOGGER.info("Exporting summary to disk to NT file");
 			long start = System.currentTimeMillis();
-			summary.writeDecodedSummaryToNTFile(databaseConnection);
+			NTfilename = summary.writeDecodedSummaryToNTFile(databaseConnection);
 			summarySavingToDiskTime = System.currentTimeMillis() - start;
+			LOGGER.info("Summary NT file exported to disk");
 		}
-		LOGGER.info("Summary NT file exported to disk");
 
 		if (summarizationProperties.getProperty("statistics.export_to_csv_file").equals("true")) {
-			LOGGER.info("Exporting loading statistics to disk");
+			LOGGER.info("Exporting summarization statistics to disk");
 			exportSummarizationStatisticsToDisk();
-			LOGGER.info("Loading statistics exported to disk");
+			LOGGER.info("Summarization statistics exported to disk");
 		}
 
-		String drawingStyle = summarizationProperties.getProperty("drawing.style");
+		String DOTfilename = null;
 		switch (drawingStyle) {
 			case "plain":
 				LOGGER.info("Exporting summary DOT drawing to disk");
-				summary.writeDecodedSummaryToFileAndDraw(databaseConnection);
+				DOTfilename = summary.writeDecodedSummaryToFileAndDraw(databaseConnection);
 				LOGGER.info("Summary DOT drawing exported to disk");
 				break;
 			case "split_leaves":
 				LOGGER.info("Exporting summary DOT drawing to disk");
-				summary.writeDecodedSummaryToFileSplitLeavesAndDraw(databaseConnection);
+				DOTfilename = summary.writeDecodedSummaryToFileSplitLeavesAndDraw(databaseConnection);
 				LOGGER.info("Summary DOT drawing exported to disk");
 				break;
 			case "split_and_fold_leaves":
 				LOGGER.info("Exporting summary DOT drawing to disk");
-				summary.writeDecodedSummaryToFileSplitFoldLeavesAndDraw(databaseConnection);
+				DOTfilename = summary.writeDecodedSummaryToFileSplitFoldLeavesAndDraw(databaseConnection);
 				LOGGER.info("Summary DOT drawing exported to disk");
 				break;
 		}
@@ -430,10 +589,18 @@ public class Interface {
 		if (closeConnection) {
 			closeDatabaseConnection();
 		}
+
+		HashMap<String, String> names = new HashMap<>();
+		names.put("databaseName", summarizationProperties.getProperty("database.name"));
+		names.put("NTfilename", NTfilename);
+		names.put("DOTfilename", DOTfilename);
+
+		return names;
 	}
 
 	/*
 		See load method comment.
+		Returns Summary object.
 	*/
 	public static Summary read(String configurationFilename, Properties properties, boolean closeConnection) {
 		Properties defaultProperties = SummarizationProperties.getDefaultProperties();
@@ -447,9 +614,16 @@ public class Interface {
 			readingProperties.put("database.name", databaseName);
 		}
 
+		System.out.println("********************************************************************************");
+		System.out.println(currentDateTime());
+		System.out.println("Executing read operation using "
+			+ readingProperties.getProperty("database.name")
+			+ " database");
+		System.out.println("********************************************************************************");
+
 		try {
 			LOGGER.info("Reading summary from Postgres");
-			Summary s = new Summary(getDatabaseConnection(readingProperties));
+			Summary s = new Summary(getOrEstablishNewDatabaseConnection(readingProperties));
 			LOGGER.info("Summary read from Postgres");
 			return s;
 		}
@@ -549,7 +723,7 @@ public class Interface {
 			Model model = reader.read(new FileReader("pom.xml"));
 			version = model.getVersion();
 		}
-		catch(IOException | XmlPullParserException ex) {
+		catch(Exception ex) {
 			version = "";
 		}
 		final HelpFormatter helpFormatter = new HelpFormatter();
@@ -602,7 +776,7 @@ public class Interface {
 					Model model = reader.read(new FileReader("pom.xml"));
 					version = model.getVersion();
 				}
-				catch(IOException | XmlPullParserException ex) {
+				catch(Exception ex) {
 					version = "unknown";
 				}
 				System.out.println("RDFQuotient version: " + version);
@@ -624,17 +798,16 @@ public class Interface {
 				if (arguments.hasOption(dryRunOption.getLongOpt())) {
 					Properties defaultProperties = LoadingProperties.getDefaultProperties();
 					Properties loadingProperties = reconcileProperties(defaultProperties, loadingPropertiesFilename, commandLineProperties);
-					System.out.println(loadingProperties.toString());
-					if (loadingProperties.getProperty("database.drop_exisiting_db").equals("true")) {
+					// derive database name from filename if not specified
+					if (!loadingProperties.containsKey("database.name") || loadingProperties.getProperty("database.name").equals("")) {
 						String datasetFilename = loadingProperties.getProperty("dataset.filename");
-						String databaseName;
-						if (!loadingProperties.containsKey("database.name") || loadingProperties.getProperty("database.name").equals("")) {
-							databaseName = deriveDatabaseNameFromFilename(datasetFilename);
-						}
-						else {
-							databaseName = loadingProperties.getProperty("database.name");
-						}
-						System.out.println("CAUTION: database " + databaseName + " will be dropped before loading.");
+						String databaseName = deriveDatabaseNameFromFilename(datasetFilename);
+						loadingProperties.put("database.name", databaseName);
+					}
+					loadingProperties.remove("database.engine");
+					System.out.println(ConfigurationProperties.prettifiedToString(loadingProperties));
+					if (loadingProperties.getProperty("database.drop_existing_db").equals("true")) {
+						System.out.println("\nCAUTION: database " + loadingProperties.getProperty("database.name") + " will be dropped before loading.");
 					}
 				}
 				else {
@@ -654,7 +827,7 @@ public class Interface {
 						String databaseName = deriveDatabaseNameFromFilename(datasetFilename);
 						summarizationProperties.put("database.name", databaseName);
 					}
-					System.out.println(summarizationProperties.toString());
+					System.out.println(ConfigurationProperties.prettifiedToString(summarizationProperties));
 				}
 				else {
 					summarize(summarizationPropertiesFilename, commandLineProperties, true);
@@ -673,12 +846,13 @@ public class Interface {
 						String databaseName = deriveDatabaseNameFromFilename(datasetFilename);
 						readingProperties.put("database.name", databaseName);
 					}
-					System.out.println(readingProperties.toString());
+					readingProperties.remove("database.engine");
+					System.out.println(ConfigurationProperties.prettifiedToString(readingProperties));
 				}
 				else {
-					System.out.println("This option does not have any effect in command line mode; it should be used in a programmatic way in Java code.");
 					Summary s = read(loadingPropertiesFilename, commandLineProperties, true);
 				}
+				System.out.println("\nThis operation does not have any effect in command line mode; it should be used in a programmatic way in Java code.");
 				return;
 			}
 			printHelp();
@@ -686,5 +860,40 @@ public class Interface {
 		catch (ParseException ex) {
 			printHelp();
 		}
+	}
+
+	// convenience methods
+	public static HashMap<String, String> loadAndSummarize(Properties loadingProperties, Properties summarizationProperties) {
+		load(null, loadingProperties, false);
+		HashMap<String, String> names = summarize(null, summarizationProperties, true);
+
+		return names;
+	}
+
+	public static HashMap<String, String> loadAndSummarizeThroughShortcut(Properties loadingProperties, Properties summarizationProperties) {
+		String summaryType = summarizationProperties.getProperty("summary.type");
+		switch (summaryType) {
+			case "typedweak":
+			case "2ptypedweak":
+			case "typedstrong":
+			case "2ptypedstrong":
+				throw new IllegalArgumentException("No shortcut for typed summaries");
+		}
+
+		loadingProperties.put("saturation.enable", "false");
+		load(null, loadingProperties, false);
+		summarizationProperties.put("summary.summarize_saturated_graph", "false");
+		HashMap<String, String> names = summarize(null, summarizationProperties, true);
+
+		loadingProperties.put("saturation.enable", "true");
+		loadingProperties.put("database.name", "");
+		loadingProperties.put("dataset.filename", names.get("NTfilename"));
+		summarizationProperties.put("database.name", "");
+		summarizationProperties.put("dataset.filename", names.get("NTfilename"));
+		summarizationProperties.put("summary.summarize_saturated_graph", "true");
+		load(null, loadingProperties, false);
+		names = summarize(null, summarizationProperties, true);
+
+		return names;
 	}
 }

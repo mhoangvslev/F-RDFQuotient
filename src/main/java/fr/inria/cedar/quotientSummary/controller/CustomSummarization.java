@@ -2,65 +2,36 @@
 
 package fr.inria.cedar.quotientSummary.controller;
 
-import fr.inria.cedar.ontosql.db.UnsupportedDatabaseEngineException;
-import java.io.IOException;
-import java.sql.SQLException;
+import java.util.Properties;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 public class CustomSummarization {
 	private static final Logger LOGGER = Logger.getLogger(CustomSummarization.class.getName());
 
-	public static void summarize(String fileName, String summarizationMethod){
+	public static void loadAndSummarize(String datasetFilename, String summaryType){
 		LOGGER.setLevel(Level.INFO);
-		System.out.println("############################################");
-		System.out.println("Custom " + summarizationMethod + " summarization of " + fileName);
-		System.out.println("#############################################");
+		Properties loadingProperties = LoadingProperties.getDefaultProperties();
+		loadingProperties.put("dataset.filename", datasetFilename);
+		loadingProperties.put("statistics.export_to_csv_file", "false");
 
-		String inputFileName =  fileName;
-		try {
-			String[] argsSum = {"loadAndSummarize", summarizationMethod, inputFileName};
-			try {
-				Builder.main(argsSum);
-				String[] argsSave = {"saveSummaryComputedWithoutSaturation"};
-				Builder.main(argsSave);
-				String[] argsExport = {"exportSummaryComputedClassicalWay", 
-						"foldleaves",  // plain or foldLeaves
-						inputFileName};
-				Builder.main(argsExport);
-			}
-			catch (UnsupportedDatabaseEngineException ex) {
-				LOGGER.error(ex);
-			}
-			finally {
-				String[] argsCloseConnection = {"closeConnection"};
-				try {
-					Builder.main(argsCloseConnection);
-				}
-				catch (UnsupportedDatabaseEngineException ex1) {
-					LOGGER.error(ex1);
-				}
-			}
-		}
-		catch (IOException e) {
-			throw new IllegalStateException("Unable to open .nt files in " + summarizationMethod +
-					" "+ fileName + " " + e.toString());
-		}
-		catch (SQLException e) {
-			throw new IllegalStateException("SQL error while summarizing " + e.toString());
-		}
+		Properties summarizationProperties = SummarizationProperties.getDefaultProperties();
+		summarizationProperties.put("dataset.filename", datasetFilename);
+		summarizationProperties.put("summary.type", summaryType);
+		summarizationProperties.put("summary.replace_type_with_most_general_type", "false");
+		summarizationProperties.put("drawing.style", "plain");
+		summarizationProperties.put("statistics.export_to_csv_file", "false");
+
+		Interface.loadAndSummarize(loadingProperties, summarizationProperties);
 	}
 
 	public static void main(String[] argv) {
-		//String fileName = argv[0];
-		//String summarizationMethod = argv[1];
-		//File f = summarize(fileName, summarizationMethod);
-		String[] fileNames = new String[] {"test-15"};//{"test-15", "conference", "enelshops", "foodista", "frenchpolitics","lubm1m", "mondial", "nasa", "nobelprizes", "pokedex", "bsbm1m", "watdiv10m"};
 		String directory = "src/test/resources/rdf-nt-files/";
-		String [] summarizationMethods = new String[] {"typedstrong"}; //, "strong", "typedweak", "typedstrong", "onefb", "onefw"};
+		String[] fileNames = new String[] {"test-15"};//{"test-15", "conference", "enelshops", "foodista", "frenchpolitics", "lubm1m", "mondial", "nasa", "nobelprizes", "pokedex", "bsbm1m", "watdiv10m"};
+		String [] summaryTypes = new String[] {"typedstrong"}; //, "strong", "typedweak", "typedstrong", "onefb", "onefw"};
 		for (String fileName: fileNames) {
-			for (String summarizationMethod: summarizationMethods) {
-				summarize(directory + fileName + ".nt", summarizationMethod);
+			for (String summaryType: summaryTypes) {
+				loadAndSummarize(directory + fileName + ".nt", summaryType);
 			}
 		}
 	}

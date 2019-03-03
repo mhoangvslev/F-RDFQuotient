@@ -1,17 +1,13 @@
-Weak
+weak, strong
 	without saturation: 1-14
 	with saturation: 1-14
 	using shortcut: 6, 12
 
-Typed Weak
-	without saturation: 1-7, 11, 12, 14
-	with saturation: 1-7, 11, 12, 14
+onefb
+	without saturation: 6, 8, 9
+	with saturation: 6, 8, 9
+	using shortcut: 6
 
-Strong
-	without saturation: 1-14
-	with saturation: 1-14
-	using shortcut: 6, 12
-
-Typed Strong
+typedweak, typedstrong
 	without saturation: 1-7, 11, 12, 14
 	with saturation: 1-7, 11, 12, 14
