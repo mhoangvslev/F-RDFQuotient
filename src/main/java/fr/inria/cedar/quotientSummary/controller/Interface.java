@@ -192,7 +192,7 @@ public class Interface {
 		}
 	}
 
-	// we need this method because DataLoading package doesn't close its connection to database and we can't share it neither
+	// this is an emergency method if some library misbehaves and doesn't close connection, should not be used otherwise
 	public static void forceCloseDatabaseConnection(Properties properties) {
 		try {
 			Class.forName("org.postgresql.Driver");
@@ -364,20 +364,10 @@ public class Interface {
 			LOGGER.info("Loading statistics exported to disk");
 		}
 
-		// These lines
-		forceCloseDatabaseConnection(loadingProperties);
 		if (!closeConnection) {
+			// DataLoading closes connection by default, open if needed
 			setUpDatabaseConnection(loadingProperties);
 		}
-		// should be replaced by
-		/*
-		Config configuration = DataLoading.getConfiguration();
-		databaseConnection = configuration.getDataSource().getConnection();
-		if (closeConnection) {
-			closeDatabaseConnection();
-		}
-		*/
-		// when DataLoading interface is adjusted to provide connection sharing
 
 		return loadingProperties.getProperty("database.name");
 	}
