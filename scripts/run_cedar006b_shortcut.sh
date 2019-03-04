@@ -17,15 +17,17 @@ translate_summary_name() {
 }
 
 for SUMMARY_TYPE in weak strong 2pweak 2pstrong 2pweakunionfind onefb; do
+	DATASET=bsbm/bsbm138m.nt
 	# SATURATE + SUMMARIZE
 	# summarize saturated
-	./scripts/summarize.sh bsbm/bsbm138m.nt $SUMMARY_TYPE true
+	./scripts/summarize.sh $DATASET $SUMMARY_TYPE true false
 
 	# SHORTCUT
 	# summarize not saturated
-	#./scripts/summarize.sh bsbm/bsbm138m.nt $SUMMARY_TYPE false
+	#./scripts/summarize.sh $DATASET $SUMMARY_TYPE false false
 	# load the summary with saturation
-	./scripts/load.sh bsbm/bsbm138m_$(translate_summary_name $SUMMARY_TYPE).nt true
+	DATASET=${DATASET%.*}\_$(translate_summary_name $SUMMARY_TYPE).nt
+	./scripts/load.sh $DATASET true
 	# summarize saturated
-	./scripts/summarize.sh bsbm/bsbm138m_$(translate_summary_name $SUMMARY_TYPE).nt $SUMMARY_TYPE true
+	./scripts/summarize.sh $DATASET $SUMMARY_TYPE true split_and_fold_leaves
 done
