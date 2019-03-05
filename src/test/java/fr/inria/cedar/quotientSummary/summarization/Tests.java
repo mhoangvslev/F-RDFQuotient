@@ -26,9 +26,11 @@ public class Tests {
 		summarizationProperties.put("summary.type", summaryType);
 		summarizationProperties.put("summary.replace_type_with_most_general_type", "false");
 		summarizationProperties.put("drawing.style", "plain");
+		summarizationProperties.put("drawing.dot_files_prefix", "");
+		summarizationProperties.put("drawing.png_files_prefix", "");
 		summarizationProperties.put("statistics.export_to_csv_file", "false");
 
-		return Interface.loadAndSummarize(loadingProperties, summarizationProperties).get("NTfilename");
+		return Interface.loadAndSummarize(loadingProperties, summarizationProperties).get("NTFilename");
 	}
 
 	public static String testSummarizationOfSaturated(String datasetFilename, String summaryType) {
@@ -43,9 +45,11 @@ public class Tests {
 		summarizationProperties.put("summary.summarize_saturated_graph", "true");
 		summarizationProperties.put("summary.replace_type_with_most_general_type", "false");
 		summarizationProperties.put("drawing.style", "plain");
+		summarizationProperties.put("drawing.dot_files_prefix", "");
+		summarizationProperties.put("drawing.png_files_prefix", "");
 		summarizationProperties.put("statistics.export_to_csv_file", "false");
 
-		return Interface.loadAndSummarize(loadingProperties, summarizationProperties).get("NTfilename");
+		return Interface.loadAndSummarize(loadingProperties, summarizationProperties).get("NTFilename");
 	}
 
 	public static String testSummarizationThroughShortcut(String datasetFilename, String summaryType) {
@@ -58,9 +62,11 @@ public class Tests {
 		summarizationProperties.put("summary.type", summaryType);
 		summarizationProperties.put("summary.replace_type_with_most_general_type", "false");
 		summarizationProperties.put("drawing.style", "plain");
+		summarizationProperties.put("drawing.dot_files_prefix", "");
+		summarizationProperties.put("drawing.png_files_prefix", "");
 		summarizationProperties.put("statistics.export_to_csv_file", "false");
 
-		return Interface.loadAndSummarizeThroughShortcut(loadingProperties, summarizationProperties).get("NTfilename");
+		return Interface.loadAndSummarizeThroughShortcut(loadingProperties, summarizationProperties).get("NTFilename");
 	}
 
 	// validates the test

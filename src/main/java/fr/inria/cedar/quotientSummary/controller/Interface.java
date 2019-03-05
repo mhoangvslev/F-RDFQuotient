@@ -246,18 +246,18 @@ public class Interface {
 		}
 	}
 
-	private static String trimNT(String fileName, boolean trimSlash) {
+	public static String trimExtension(String fileName, boolean trimSlash) {
 		int lastDotPosition = Math.max(0, fileName.lastIndexOf("."));
 		return fileName.substring(trimSlash ? fileName.lastIndexOf("/") + 1 : 0, lastDotPosition);
 	}
 
 	private static String deriveDatabaseNameFromFilename(String datasetFilename) {
-		return PostgresIdentifier.escapeQuotes(trimNT(datasetFilename, true));
+		return PostgresIdentifier.escapeQuotes(trimExtension(datasetFilename, true));
 	}
 
 	private static void exportLoadingStatisticsToDisk(Properties loadingProperties) {
 		String datasetFilename = loadingProperties.getProperty("dataset.filename");
-		String csvFilename = trimNT(datasetFilename, false) + "-loading-statistics.csv";
+		String csvFilename = trimExtension(datasetFilename, false) + "-loading-statistics.csv";
 		LOGGER.info("Loading statistics written to file " + csvFilename);
 		long loadingTime = DataLoading.timeExecutionPerProcess.get("LoadTriplesToDatabase");
 		long saturationTime = (loadingProperties.getProperty("saturation.enable").equals("true")) ? DataLoading.timeExecutionPerProcess.get("RDFGraphSaturator") : 0L;
@@ -442,8 +442,9 @@ public class Interface {
 		throw new IllegalArgumentException("Wrong summary identifier: " + summaryType);
 	}
 
-	private static void exportSummarizationStatisticsToDisk() {
-		String csvFileName = trimNT(summary.getNTSummaryFileName(), false) + "-summarization-statistics.csv";
+	private static void exportSummarizationStatisticsToDisk(Properties summarizationProperties) {
+		String datasetFilename = summarizationProperties.getProperty("dataset.filename");
+		String csvFileName = trimExtension(datasetFilename, false) + "-summarization-statistics.csv";
 		LOGGER.info("Summarization statistics written to CSV file " + csvFileName);
 		try (PrintWriter pw = new PrintWriter(new File(csvFileName))) {
 			HashMap<String, String> statistics = summary.getRunStatistics();
@@ -471,7 +472,7 @@ public class Interface {
 
 	/*
 		See load method comment: in examples use SummarizationProperties class instead of LoadingProperties.
-		Returns a map with keys: "databaseName", "NTfilename" and "DOTfilename".
+		Returns a map with keys: "databaseName", "NTFilename" and "DOTFilename".
 		If the corresponding name is not present, the value is set to null.
 	*/
 	public static HashMap<String, String> summarize(String configurationFilename, Properties properties, boolean closeConnection) {
@@ -504,10 +505,12 @@ public class Interface {
 			+ (summarizationProperties.getProperty("summary.summarize_saturated_graph").equals("true") ? "" : "not ")
 			+ "saturated graph";
 		String drawingStyle = summarizationProperties.getProperty("drawing.style");
+		boolean drawingEnabled = false;
 		switch (drawingStyle) {
 			case "plain":
 			case "split_leaves":
 			case "split_and_fold_leaves":
+				drawingEnabled = true;
 				message += ", drawing visualizations with DOT in " + drawingStyle + " layout";
 				break;
 			default:
@@ -540,39 +543,27 @@ public class Interface {
 			LOGGER.info("Summary exported to Postgres");
 		}
 
-		String NTfilename = null;
+		String NTFilename = null;
 		summarySavingToDiskTime = 0L;
 		if (summarizationProperties.getProperty("summary.export_to_nt_file").equals("true")) {
 			LOGGER.info("Exporting summary to disk to NT file");
 			long start = System.currentTimeMillis();
-			NTfilename = summary.writeDecodedSummaryToNTFile(databaseConnection);
+			NTFilename = summary.writeDecodedSummaryToNTFile(databaseConnection);
 			summarySavingToDiskTime = System.currentTimeMillis() - start;
 			LOGGER.info("Summary NT file exported to disk");
 		}
 
 		if (summarizationProperties.getProperty("statistics.export_to_csv_file").equals("true")) {
 			LOGGER.info("Exporting summarization statistics to disk");
-			exportSummarizationStatisticsToDisk();
+			exportSummarizationStatisticsToDisk(summarizationProperties);
 			LOGGER.info("Summarization statistics exported to disk");
 		}
 
-		String DOTfilename = null;
-		switch (drawingStyle) {
-			case "plain":
-				LOGGER.info("Exporting summary DOT drawing to disk");
-				DOTfilename = summary.writeDecodedSummaryToFileAndDraw(databaseConnection);
-				LOGGER.info("Summary DOT drawing exported to disk");
-				break;
-			case "split_leaves":
-				LOGGER.info("Exporting summary DOT drawing to disk");
-				DOTfilename = summary.writeDecodedSummaryToFileSplitLeavesAndDraw(databaseConnection);
-				LOGGER.info("Summary DOT drawing exported to disk");
-				break;
-			case "split_and_fold_leaves":
-				LOGGER.info("Exporting summary DOT drawing to disk");
-				DOTfilename = summary.writeDecodedSummaryToFileSplitFoldLeavesAndDraw(databaseConnection);
-				LOGGER.info("Summary DOT drawing exported to disk");
-				break;
+		String DOTFilename = null;
+		if (drawingEnabled) {
+			LOGGER.info("Exporting summary DOT drawing to disk");
+			DOTFilename = summary.writeDecodedSummaryToDOTFile(databaseConnection, drawingStyle);
+			LOGGER.info("Summary DOT drawing exported to disk");
 		}
 
 		if (closeConnection) {
@@ -581,8 +572,8 @@ public class Interface {
 
 		HashMap<String, String> names = new HashMap<>();
 		names.put("databaseName", summarizationProperties.getProperty("database.name"));
-		names.put("NTfilename", NTfilename);
-		names.put("DOTfilename", DOTfilename);
+		names.put("NTFilename", NTFilename);
+		names.put("DOTFilename", DOTFilename);
 
 		return names;
 	}
@@ -876,9 +867,9 @@ public class Interface {
 
 		loadingProperties.put("saturation.enable", "true");
 		loadingProperties.put("database.name", "");
-		loadingProperties.put("dataset.filename", names.get("NTfilename"));
+		loadingProperties.put("dataset.filename", names.get("NTFilename"));
 		summarizationProperties.put("database.name", "");
-		summarizationProperties.put("dataset.filename", names.get("NTfilename"));
+		summarizationProperties.put("dataset.filename", names.get("NTFilename"));
 		summarizationProperties.put("summary.summarize_saturated_graph", "true");
 		load(null, loadingProperties, false);
 		names = summarize(null, summarizationProperties, true);

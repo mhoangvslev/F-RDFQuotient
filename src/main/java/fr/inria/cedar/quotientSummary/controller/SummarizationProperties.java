@@ -81,7 +81,14 @@ public class SummarizationProperties extends ConfigurationProperties {
 		// Path to dot executable. If this is not found, it is not an error, just drawing won't work
 		properties.put("drawing.dot_installation", "/usr/local/bin/dot");
 
-		// Visualization variant, valid options:﻿plain, split_leaves, split_and_fold_leaves
+		// Prefixes added to drawing files, usually to dispatch them into separate directories
+		properties.put("drawing.dot_files_prefix", "dot/");
+		properties.put("drawing.png_files_prefix", "png/");
+
+		// Whether to print step-by-step drawings
+		properties.put("drawing.step_by_step", "false");
+
+		// Visualization variant, valid options: plain, split_leaves, split_and_fold_leaves
 		properties.put("drawing.style", "split_and_fold_leaves");
 
 		// The color scheme to use for drawing. Available color schemes are: diverse (default), bw, ivory, and light

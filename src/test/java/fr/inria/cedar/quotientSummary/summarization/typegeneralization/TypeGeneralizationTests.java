@@ -66,7 +66,7 @@ public class TypeGeneralizationTests extends Tests {
 		summarizationProperties.put("drawing.color_scheme", "bw");
 		summarizationProperties.put("statistics.export_to_csv_file", "false");
 
-		return Interface.loadAndSummarize(loadingProperties, summarizationProperties).get("DOTfilename");
+		return Interface.loadAndSummarize(loadingProperties, summarizationProperties).get("DOTFilename");
 	}
 
 	// validates the test

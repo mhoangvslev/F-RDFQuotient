@@ -66,18 +66,18 @@ public class Summary {
 	protected boolean isTypeFirst = false;
 	protected boolean isTwoPass = false;
 	protected static String ROOT_SUMMARY_PREFIX = "";
-	protected static String WEAK_SUMMARY_PREFIX = "w_";
-	protected static String STRONG_SUMMARY_PREFIX = "s_";
-	protected static String TYPED_WEAK_SUMMARY_PREFIX = "tw_";
-	protected static String TYPED_STRONG_SUMMARY_PREFIX = "ts_";
-	protected static String TWO_PASS_WEAK_SUMMARY_PREFIX = "2pw_";
-	protected static String TWO_PASS_WEAK_SUMMARY_WITH_UNION_FIND_PREFIX = "2pwuf_";
-	protected static String TWO_PASS_STRONG_SUMMARY_PREFIX = "2ps_";
-	protected static String TWO_PASS_SOURCE_SUMMARY_PREFIX = "2sc_";
-	protected static String TWO_PASS_TYPED_WEAK_SUMMARY_PREFIX = "2ptw_";
-	protected static String TWO_PASS_TYPED_STRONG_SUMMARY_PREFIX = "2pts_";
-	protected static String ONEFB_SUMMARY_PREFIX = "1fb_";
-	protected static String ONEFW_SUMMARY_PREFIX = "1fw_";
+	protected static String WEAK_SUMMARY_PREFIX = "w";
+	protected static String STRONG_SUMMARY_PREFIX = "s";
+	protected static String TYPED_WEAK_SUMMARY_PREFIX = "tw";
+	protected static String TYPED_STRONG_SUMMARY_PREFIX = "ts";
+	protected static String TWO_PASS_WEAK_SUMMARY_PREFIX = "2pw";
+	protected static String TWO_PASS_WEAK_SUMMARY_WITH_UNION_FIND_PREFIX = "2pwuf";
+	protected static String TWO_PASS_STRONG_SUMMARY_PREFIX = "2ps";
+	protected static String TWO_PASS_SOURCE_SUMMARY_PREFIX = "2sc";
+	protected static String TWO_PASS_TYPED_WEAK_SUMMARY_PREFIX = "2ptw";
+	protected static String TWO_PASS_TYPED_STRONG_SUMMARY_PREFIX = "2pts";
+	protected static String ONEFB_SUMMARY_PREFIX = "1fb";
+	protected static String ONEFW_SUMMARY_PREFIX = "1fw";
 
 	protected String triplesFileName = "";
 	protected String triplesTableName = "";
@@ -923,7 +923,7 @@ public class Summary {
 		}
 		String timestamp = SD_FORMAT.format(new Timestamp(System.currentTimeMillis()));
 		boolean summarizeSaturatedGraph = summarizationProperties.getProperty("summary.summarize_saturated_graph").equals("true");
-		String newTableName = "summary_" + timestamp + (summarizeSaturatedGraph ? "_sat" : "") + "_" + getSummaryURIPrefix();
+		String newTableName = "summary_" + timestamp + (summarizeSaturatedGraph ? "_sat" : "") + "_" + getSummaryTablePrefix();
 		String newSummaryTableNameRep = newTableName + "_rep";
 		// Ioana, Sept 25, 2018: we need the following line in order for the drawing with split leaves
 		// to know where to look for the representation table
@@ -1102,61 +1102,61 @@ public class Summary {
 	public void drawSummaryAndGraph(Connection conn, String suffix) {
 		ensureExporter();
 		addIndexesToRepTable(conn);
-		String summaryDotFileName = exporter.getDotFileName(suffix);
-		this.exporter.writeSummaryToDotFile(conn, summaryDotFileName);
-		String graphDotFileName = exporter.getRDFDotFileName(suffix);
-		this.exporter.writeRDFGraphToDotFile(conn, graphDotFileName);
+
+		String summaryDOTFileName = exporter.getDOTFileName(true, suffix);
+		String summaryPNGFileName = exporter.getPNGFileName(true, suffix);
+		exporter.writeSummaryToDOTFile(conn, summaryDOTFileName, summaryPNGFileName);
+
+		String graphDOTFileName = exporter.getDOTFileName(false, suffix);
+		String graphPNGFileName = exporter.getPNGFileName(false, suffix);
+		exporter.writeRDFGraphToDOTFile(conn, graphDOTFileName, graphPNGFileName);
 	}
 
 	/**
-	 * Writes the summary in RDF (in .nt format) then also in DOT; also attempts to draw it using DOT.
+	 * Writes the summary in RDF (in .nt format) then also in DOT (.dot format); also attempts to draw it using DOT.
 	 * @param conn
 	 */
 	public void writeEncodedSummaryToFileAndDraw(Connection conn) {
 		ensureExporter();
 		addIndexesToRepTable(conn);
+
 		exporter.writeEncodedSummaryToFile(exporter.getNTSummaryFileName());
-		exporter.writeEncodedSummaryToDotFile(exporter.getDotFileName());
+
+		String summaryDOTFileName = exporter.getDOTFileName(true, "encoded");
+		String summaryPNGFileName = exporter.getPNGFileName(true, "encoded");
+		exporter.writeEncodedSummaryToDOTFile(summaryDOTFileName, summaryPNGFileName);
 	}
 
-	/**
-	 * Writes the summary in RDF (in .nt format) then also in DOT; also attempts to draw it using DOT.
-	 * @param conn
-	 * @return
-	 */
-	public String writeDecodedSummaryToFileAndDraw(Connection conn) {
+	public String writeDecodedSummaryToNTFile(Connection conn) {
 		ensureExporter();
-		addIndexesToRepTable(conn);
-		String summaryDotFileName = exporter.getDotFileName();
-		return exporter.writeSummaryToDotFile(conn, summaryDotFileName);
+		return exporter.writeDecodedSummaryToNTFile(conn);
 	}
 
 	/**
-	 * Writes the summary in RDF (in .nt format), then also in DOT by splitting each leaf data node
-	 * into one node per incoming edge.
+	 * Writes the summary in DOT (.dot format), then also attempts to draw it
+	 * using DOT according to specified drawingStyle adding prefixes to DOT and
+	 * PNG filenames
 	 * @param conn SQL connection
-	 * @return
+	 * @return dot filename
 	 */
-	public String writeDecodedSummaryToFileSplitLeavesAndDraw(Connection conn) {
-		LOGGER.info("Drawing summary with split leaves");
+	public String writeDecodedSummaryToDOTFile(Connection conn, String drawingStyle) {
 		ensureExporter();
 		addIndexesToRepTable(conn);
-		String summaryDotFileName = exporter.getDotFileNameSplitLeaves();
-		return exporter.writeSummaryToDotFileSplitLeaves(conn, summaryDotFileName);
-	}
 
-	/**
-	 * Writes the summary in RDF (in .nt format), then also in DOT by splitting each leaf data node
-	 * into one node per incoming edge.
-	 * @param conn SQL connection
-	 * @return
-	 */
-	public String writeDecodedSummaryToFileSplitFoldLeavesAndDraw(Connection conn) {
-		LOGGER.info("Drawing summary with split and folded leaves");
-		ensureExporter();
-		addIndexesToRepTable(conn);
-		String summaryDotFileName = exporter.getDotFileNameFoldLeaves();
-		return exporter.writeSummaryToDotFileSplitAndFoldLeaves(conn, summaryDotFileName);
+		String summaryDOTFileName = exporter.getDOTFileName();
+		String summaryPNGFileName = exporter.getPNGFileName();
+		switch (drawingStyle) {
+			case "plain":
+				exporter.writeSummaryToDOTFile(conn, summaryDOTFileName, summaryPNGFileName);
+				break;
+			case "split_leaves":
+				exporter.writeSummaryToDOTFileSplitLeaves(conn, summaryDOTFileName, summaryPNGFileName);
+				break;
+			case "split_and_fold_leaves":
+				exporter.writeSummaryToDOTFileSplitAndFoldLeaves(conn, summaryDOTFileName, summaryPNGFileName);
+				break;
+		}
+		return summaryDOTFileName;
 	}
 
 	public void display() {
@@ -1174,29 +1174,11 @@ public class Summary {
 		return "select summarynode from " + PostgresIdentifier.escapedQuotedId(repTableName) + " where graphnode=?;";
 	}
 
-	/*
-	public static Summary readSummaryFromPostgres(Connection conn) {
-		try {
-			conn.setAutoCommit(false);
-		}
-		catch (SQLException ex) {
-			LOGGER.error(ex);
-		}
-		Summary sum = new Summary();
-		LOGGER.info("Trying to read summary from Postgres");
-		RDF2SQLEncoding.setUp(conn, "dictionary");
-		return sum;
-	}
-	*/
-
 	public String getSummaryTablePrefix() {
-		return this.summaryTablePrefix;
-	}
-
-	public String getSummaryURIPrefix() {
-		if (this.summaryTablePrefix.length() < 2)
+		if (this.summaryTablePrefix.equals("")) {
 			throw new IllegalStateException("The method should not be called on an instance of the root Summary type");
-		return this.summaryTablePrefix.substring(0, this.summaryTablePrefix.length() - 1);
+		}
+		return summaryTablePrefix;
 	}
 
 	// whether or not a certain property is generic
@@ -1208,7 +1190,7 @@ public class Summary {
 		HashMap<String, String> stats = new HashMap<>();
 
 		stats.put("inputFileName", triplesFileName);
-		stats.put("summaryType", getSummaryURIPrefix());
+		stats.put("summaryType", getSummaryTablePrefix());
 
 		stats.put("summaryEdgesSavingTime", Long.toString(summaryEdgesSavingTime));
 		stats.put("representationFunctionSavingTime", Long.toString(representationFunctionSavingTime));
@@ -1315,16 +1297,6 @@ public class Summary {
 		return this.replaceTypeWithMostGeneralType;
 	}
 
-	public String writeDecodedSummaryToNTFile(Connection conn) {
-		ensureExporter();
-		return exporter.writeDecodedSummaryToNTFile(conn);
-	}
-
-	public String getNTSummaryFileName() {
-		ensureExporter();
-		return exporter.getNTSummaryFileName();
-	}
-
 	public Long getRepresentedNodeNumber(Long s) {
 		Long res =  summaryNodeStatistics.get(s);
 		if (res != null) {
@@ -1344,6 +1316,7 @@ public class Summary {
 			return 0L;
 		}
 	}
+
 	/**
 	 * If we are using type generalization, we need to separately account for the
 	 * actual types of the nodes. This method returns the types and respective cardinalities

@@ -8,6 +8,7 @@
 package fr.inria.cedar.quotientSummary.export;
 
 import fr.inria.cedar.quotientSummary.Summary;
+import fr.inria.cedar.quotientSummary.controller.Interface;
 import fr.inria.cedar.quotientSummary.datastructures.Long2LongSet;
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
 import fr.inria.cedar.quotientSummary.util.PostgresIdentifier;
@@ -62,7 +63,7 @@ public class SummaryExport {
 		this.triplesFileName = triplesFileName;
 		this.summaryTablePrefix = s.getSummaryTablePrefix();
 		this.encodedTriplesTableName = encodedTriplesTableName;
-		this.newNodeLabels = new HashMap<Long, String>();
+		this.newNodeLabels = new HashMap<>();
 		lastGivenLabel = 0;
 		// by default statistics are not used
 		this.gatherStatistics = false;
@@ -98,12 +99,29 @@ public class SummaryExport {
 
 	//============= Saving in NT format ====
 
+	protected void writeEncodedTripleToFile(BufferedWriter bw) throws IOException {
+		for (Triple t : summary.getSummaryEdges())
+			bw.write(t.toString() + "\n");
+	}
+
+	public void writeEncodedSummaryToFile(String fileName) {
+		try {
+			try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(fileName)))) {
+				this.writeEncodedTripleToFile(bw);
+			}
+		}
+		catch (IOException e) {
+			throw new IllegalStateException("Could not write encoded summary to file: " + fileName + ". Is the path correct?");
+		}
+	}
+
 	/**
 	 * This decodes the summary (replaces property codes with the original URIs
 	 * or strings) based on a dictionary table in Postgres. It saves the
 	 * summary in an .nt file
 	 *
 	 * @param conn
+	 * @return
 	 */
 	public String writeDecodedSummaryToNTFile(Connection conn) {
 		HashSet<Long> sn = summary.getSchemaNodes();
@@ -238,44 +256,16 @@ public class SummaryExport {
 		return summaryNTFileName;
 	}
 
-	public void writeEncodedSummaryToFile(String fileName) {
-		try {
-			try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(fileName)))) {
-				this.writeEncodedTripleToFile(bw);
-			}
-		}
-		catch (IOException e) {
-			throw new IllegalStateException("Could not write encoded summary to file: " + fileName + ". Is the path correct?");
-		}
-	}
-
-	protected void writeEncodedTripleToFile(BufferedWriter bw) throws IOException {
-		for (Triple t : summary.getSummaryEdges())
-			bw.write(t.toString() + "\n");
-	}
-
 	//============= Saving in DOT format ====
 
-	public void writeEncodedSummaryToDotFile() {
-		String dotFile = getNTSummaryFileName();
+	private void drawWithDOT(String summaryDOTFileName, String summaryPNGFileName) {
+		String pathToDot = properties.getProperty("drawing.dot_installation");
 		try {
-			try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(dotFile)))) {
-				bw.write("digraph g{\nsplines=polyline;\n");
-				for (Triple t : summary.getSummaryEdges())
-					bw.write(t.s + " -> " + t.o + " [label=\"" + t.p + "\"];\n");
-				if (drawGraphLabel) {
-					bw.write("fontsize=12; label=\"" + summary.getClass().getSimpleName() +
-					(summary.generalizeTypes()?" (generalize types) ":"") +
-							" of " +
-					triplesFileName + " (" +
-					summary.triplesSummarizedSoFar + " triples)\"\n");
-					bw.write("labelloc=top; labeljust=center;\n");
-			}
-				bw.write("}\n");
-			}
+			Runtime.getRuntime().exec(new String[] {pathToDot, "-Tpng", summaryDOTFileName, "-o", summaryPNGFileName});
+			LOGGER.info("Summary drawn to PNG file " + summaryPNGFileName);
 		}
 		catch (IOException e) {
-			throw new IllegalStateException("Could not write encoded summary to dot file: " + dotFile + ". Is the path correct?");
+			LOGGER.error("Could not turn .dot file into .png (check the drawing.dot_installation value in summarization.properties)" + e.toString());
 		}
 	}
 
@@ -284,9 +274,8 @@ public class SummaryExport {
 	 * or strings) based on a dictionary table in Postgres
 	 *
 	 * @param conn
-	 * @param dotFileName
 	 */
-	public String writeSummaryToDotFile(Connection conn, String dotFileName) {
+	public void writeSummaryToDOTFile(Connection conn, String summaryDOTFileName, String summaryPNGFileName) {
 		HashSet<Long> sn = summary.getSchemaNodes();
 		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
 		dax.resetColors();
@@ -295,7 +284,7 @@ public class SummaryExport {
 		int dotLinesPrinted = 0;
 
 		try {
-			try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(dotFileName)))) {
+			try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(summaryDOTFileName)))) {
 				bw.write("digraph g{\nsplines=polyline;\n node[shape=box, color=black, style=filled];\n");
 
 				ArrayList<Triple> summEdges = summary.getSummaryEdges();
@@ -439,19 +428,9 @@ public class SummaryExport {
 		catch (IOException e) {
 			throw new IllegalStateException("Unable to open the DOT file to for the summary: " + e.toString());
 		}
-		LOGGER.info("Summary written to DOT file " + dotFileName);
+		LOGGER.info("Summary written to DOT file " + summaryDOTFileName);
 
-		String pathToDot = properties.getProperty("drawing.dot_installation");
-		try {
-			String pngFileName = dotFileName.substring(0, dotFileName.length() - 4) + ".png";
-			Runtime.getRuntime().exec(pathToDot + " -Tpng " + dotFileName + " -o " + pngFileName);
-			LOGGER.info("Summary drawn to PNG file " + pngFileName);
-		}
-		catch (IOException e) {
-			LOGGER.error("Could not turn .dot file into .png (check the pathToDot value in summarization.properties)" + e.toString());
-		}
-
-		return dotFileName;
+		drawWithDOT(summaryDOTFileName, summaryPNGFileName);
 	}
 
 	/**
@@ -594,10 +573,10 @@ public class SummaryExport {
 	 * a different node for every leaf
 	 *
 	 * @param conn
-	 * @param dotFileName
-	 * @return
+	 * @param summaryDOTFileName
+	 * @param summaryPNGFileName
 	 */
-	public String writeSummaryToDotFileSplitLeaves(Connection conn, String dotFileName) {
+	public void writeSummaryToDOTFileSplitLeaves(Connection conn, String summaryDOTFileName, String summaryPNGFileName) {
 		// first, determine who is a leaf
 		HashSet<Long> leaves = new HashSet<>(); // tentative leaf nodes (until discovered to be subjects)
 		HashSet<Long> notLeaves = new HashSet<>(); // certain non-leaf nodes (subjects)
@@ -617,12 +596,12 @@ public class SummaryExport {
 		HashSet<Long> sn = summary.getSchemaNodes();
 		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
 		dax.resetColors();
-		//LOGGER.debug("writeSummaryToDotFileSplitLeaves:");
+		//LOGGER.debug("writeSummaryToDOTFileSplitLeaves:");
 
 		HashMap<Long, Integer> leafCounter  = new HashMap<>();
 		int dotLinesPrinted = 0;
 		try {
-			try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(dotFileName)))) {
+			try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(summaryDOTFileName)))) {
 				bw.write("digraph g{\nsplines=polyline;\n node[shape=box, color=black, style=filled];\n");
 
 				int penWidth=2;
@@ -763,23 +742,10 @@ public class SummaryExport {
 		catch (IOException e) {
 			throw new IllegalStateException("Unable to open the DOT file to for the summary: " + e.toString());
 		}
-		LOGGER.info("Summary written to DOT file " + dotFileName);
+		LOGGER.info("Summary written to DOT file " + summaryDOTFileName);
 
-		String pathToDot = properties.getProperty("drawing.dot_installation");
-		try {
-			String pngFileName = dotFileName.substring(0, dotFileName.length() - 4) + ".png";
-			Runtime.getRuntime().exec(pathToDot + " -Tpng " + dotFileName + " -o " + pngFileName);
-			LOGGER.info("Summary drawn to PNG file " + pngFileName);
-		}
-		catch (IOException e) {
-			LOGGER.error("Could not turn .dot file into .png (check the pathToDot value in summarization.properties)" + e.toString());
-		}
-
-		return dotFileName;
+		drawWithDOT(summaryDOTFileName, summaryPNGFileName);
 	}
-
-
-
 
 	/**
 	 * This decodes the summary (replaces property codes with the original URIs
@@ -787,10 +753,10 @@ public class SummaryExport {
 	 * a different node for every leaf
 	 *
 	 * @param conn
-	 * @param dotFileName
-	 * @return
+	 * @param summaryDOTFileName
+	 * @param summaryPNGFileName
 	 */
-	public String writeSummaryToDotFileSplitAndFoldLeaves(Connection conn, String dotFileName) {
+	public void writeSummaryToDOTFileSplitAndFoldLeaves(Connection conn, String summaryDOTFileName, String summaryPNGFileName) {
 		// first, determine who is a leaf
 		HashSet<Long> leaves = new HashSet<>(); // tentative leaf nodes (until discovered to be subjects)
 		HashSet<Long> notLeaves = new HashSet<>(); // certain non-leaf nodes (subjects)
@@ -818,13 +784,13 @@ public class SummaryExport {
 		HashSet<Long> sn = summary.getSchemaNodes();
 		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
 		dax.resetColors();
-		//LOGGER.debug("writeSummaryToDotFileSplitLeaves:");
+		//LOGGER.debug("writeSummaryToDOTFileSplitLeaves:");
 
 		HashMap<Long, EntitySummaryNode> entities = new HashMap<>();
 		long entityEdgeCount = 0;
 
 		try {
-			try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(dotFileName)))) {
+			try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(summaryDOTFileName)))) {
 				bw.write("digraph g{\nsplines=polyline;\n nodesep=0.15;\n ranksep=0.2;\n node[shape=box, color=black, style=filled];\n");
 
 				ArrayList<Triple> summEdges = summary.getSummaryEdges();
@@ -943,22 +909,10 @@ public class SummaryExport {
 		catch (IOException e) {
 			throw new IllegalStateException("Unable to open the DOT file to for the summary: " + e.toString());
 		}
-		LOGGER.info("Summary written to DOT file " + dotFileName);
+		LOGGER.info("Summary written to DOT file " + summaryDOTFileName);
 
-		String pathToDot = properties.getProperty("drawing.dot_installation");
-		try {
-			String pngFileName = dotFileName.substring(0, dotFileName.length() - 4) + ".png";
-			Runtime.getRuntime().exec(new String[] {pathToDot, "-Tpng", dotFileName, "-o", pngFileName});
-			LOGGER.info("Summary drawn to PNG file " + pngFileName);
-		}
-		catch (IOException e) {
-			LOGGER.error("Could not turn .dot file into .png (check the pathToDot value in summarization.properties)" + e.toString());
-		}
-
-		return dotFileName;
+		drawWithDOT(summaryDOTFileName, summaryPNGFileName);
 	}
-
-
 
 	private void writeNodeToDot(BufferedWriter bw, long node, String label) {
 		try{
@@ -974,10 +928,9 @@ public class SummaryExport {
 		}
 	}
 
-
-	public void writeEncodedSummaryToDotFile(String dotFile) {
+	public void writeEncodedSummaryToDOTFile(String summaryDOTFileName, String summaryPNGFileName) {
 		try {
-			try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(dotFile)))) {
+			try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(summaryDOTFileName)))) {
 				bw.write("digraph g{\nsplines=polyline;");
 				for (Triple t : summary.getSummaryEdges())
 					bw.write(t.s + " -> " + t.o + " [arrowsize=" + arrowsize + ", arrowhead=vee, label=\"" + t.p + "\"];\n");
@@ -993,17 +946,15 @@ public class SummaryExport {
 			}
 		}
 		catch (IOException e) {
-			throw new IllegalStateException("Could not write encoded summary to dot file: " + dotFile + ". Is the path correct?");
+			throw new IllegalStateException("Could not write encoded summary to dot file: " + summaryDOTFileName + ". Is the path correct?");
 		}
+
+		drawWithDOT(summaryDOTFileName, summaryPNGFileName);
 	}
 
-
-
-
-
-	public void writeRDFGraphToDotFile(Connection conn, String dotFileName) {
+	public void writeRDFGraphToDOTFile(Connection conn, String summaryDOTFileName, String summaryPNGFileName) {
 		try {
-			try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(dotFileName)))) {
+			try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(summaryDOTFileName)))) {
 				bw.write("digraph g{\nsplines=polyline;\n");
 				long triplesToDraw = Math.min(100, summary.triplesSummarizedSoFar);
 				//LOGGER.debug("Writing " + triplesToDraw + " RDF graph triples to DOT");
@@ -1044,17 +995,9 @@ public class SummaryExport {
 			throw new IllegalStateException("Unable to read and plot RDF triples: " + e.toString());
 
 		}
-		LOGGER.info("Graph written to DOT file " + dotFileName);
+		LOGGER.info("Graph written to DOT file " + summaryDOTFileName);
 
-		String pathToDot = properties.getProperty("drawing.dot_installation");
-		try {
-			String pngFileName = dotFileName.substring(0, dotFileName.length() - 4) + ".png";
-			Runtime.getRuntime().exec(pathToDot + " -Tpng " + dotFileName + " -o " + pngFileName);
-			LOGGER.info("Graph drawn to PNG file " + pngFileName);
-		}
-		catch (IOException e) {
-			LOGGER.error("Could not turn .dot file into .png (check the pathToDot value in summarization.properties)" + e.toString());
-		}
+		drawWithDOT(summaryDOTFileName, summaryPNGFileName);
 	}
 
 	/**
@@ -1081,7 +1024,7 @@ public class SummaryExport {
 				long p = RDF2SQLEncoding.dictionaryEncode(property);
 				//LOGGER.debug("DRAW Triple! (" + subject + " " + property + " " + object + ")");
 				//LOGGER.debug("DRAW Represented by: " + sRep + " " + p + " " + oRep);
-				writeGraphTripleToDotFile(bw, s, p, o, subject, property, object, sRep, oRep);
+				writeGraphTripleToDOTFile(bw, s, p, o, subject, property, object, sRep, oRep);
 				triplesDrawnInDot++;
 			}
 		}
@@ -1134,7 +1077,7 @@ public class SummaryExport {
 		}
 	}
 
-	protected void writeGraphTripleToDotFile(BufferedWriter bw, long s, long p, long o, String subject, String property, String object, long sRep, long oRep) {
+	protected void writeGraphTripleToDOTFile(BufferedWriter bw, long s, long p, long o, String subject, String property, String object, long sRep, long oRep) {
 		//LOGGER.debug("WRITE GRAPH TRIPLE TO DOT s: " + s + " p: " + p + " o: " + o + " subject: "  + subject + " property " + property + " object " + object + " sRep: " + sRep + " oRep: " + oRep);
 		String subjectForDot = getVeryShortForDot(subject).replaceAll("\"", "");
 		String objectForDot = getVeryShortForDot(object).replaceAll("\"", "");
@@ -1195,110 +1138,125 @@ public class SummaryExport {
 
 	//=========== below this line auxiliary getters
 
+	/**
+	 * Computes a summary filename by:
+	 * 1) adding information about saturation after dataset filename
+	 * 2) adding summary short name just before the file extension
+	 *
+	 * @return
+	 */
 	public String getNTSummaryFileName() {
-		int lastDotPosition = Math.max(0, triplesFileName.lastIndexOf("."));
-		int lastSlashPosition = Math.max(0, triplesFileName.lastIndexOf("/"));
-		if (lastDotPosition - lastSlashPosition < 1)
-			throw new IllegalStateException("Was not able to extract a core component of the file name " + triplesFileName);
-		boolean summarizeSaturatedGraph = properties.getProperty("summary.summarize_saturated_graph").equals("true");
-		return triplesFileName.substring(0, lastDotPosition) + (summarizeSaturatedGraph ? "_sat" : "") + "_" + getSummaryURIPrefix() + ".nt";
-	}
+		String filePathWithoutExtension = Interface.trimExtension(triplesFileName, false);
+		String saturated = properties.getProperty("summary.summarize_saturated_graph").equals("true") ? "_sat" : "";
 
-
-	public String getSummaryURIPrefix() {
-		if (summaryTablePrefix.length() < 2)
-			throw new IllegalStateException("The method should not be called on an instance of the root Summary type");
-		return summaryTablePrefix.substring(0, summaryTablePrefix.length() - 1);
-	}
-//	/**
-//	 * Given a path to an .nt RDF data file, computes a file name by inserting
-//	 * the prefix encoding the summary type before the main file name, and
-//	 * replacing the trailing .nt with .dot
-//	 */
-//	private String extractShortFileName() {
-//		int lastDotPosition = Math.max(0, triplesFileName.lastIndexOf("."));
-//		int lastSlashPosition = Math.max(0, triplesFileName.lastIndexOf("/"));
-//		if (lastDotPosition - lastSlashPosition < 1)
-//			throw new IllegalStateException("Was not able to extract a core component of the file name " + triplesFileName);
-//		return triplesFileName.substring(0, lastDotPosition);
-//
-//	}
-
-	/**
-	 * Takes the short file name and inserts the suffix before the ".".
-	 *
-	 * @return
-	 */
-	public String getDotFileName() {
-		int lastDotPosition = Math.max(0, triplesFileName.lastIndexOf("."));
-		int lastSlashPosition = Math.max(0, triplesFileName.lastIndexOf("/"));
-		if (lastDotPosition - lastSlashPosition < 1)
-			throw new IllegalStateException("Was not able to extract a core component of the file name " + triplesFileName);
-		boolean summarizeSaturatedGraph = properties.getProperty("summary.summarize_saturated_graph").equals("true");
-		return triplesFileName.substring(0, lastDotPosition) + (summarizeSaturatedGraph ? "_sat" : "") + "_" + getSummaryURIPrefix() + "_plain.dot"; // replace .nt with .dot
+		return filePathWithoutExtension + saturated + "_" + summaryTablePrefix + ".nt";
 	}
 
 	/**
-	 * Takes the short file name and inserts the suffix before the ".".
+	 * Computes a DOT filename by:
+	 * 1) adding prefix for DOT filename after last slash
+	 * 2) adding information about saturation after dataset filename
+	 * 3) adding summary short name
+	 * 4) adding drawing style information according to shortSummaryName
+	 * 5) adding the suffix just before the file extension
+	 * 6) replacing .nt extension in dataset filename with .dot
 	 *
-	 * @return
-	 */
-	public String getDotFileNameSplitLeaves() {
-		int lastDotPosition = Math.max(0, triplesFileName.lastIndexOf("."));
-		int lastSlashPosition = Math.max(0, triplesFileName.lastIndexOf("/"));
-		if (lastDotPosition - lastSlashPosition < 1)
-			throw new IllegalStateException("Was not able to extract a core component of the file name " + triplesFileName);
-		boolean summarizeSaturatedGraph = properties.getProperty("summary.summarize_saturated_graph").equals("true");
-		return triplesFileName.substring(0, lastDotPosition) + (summarizeSaturatedGraph ? "_sat" : "") + "_" + getSummaryURIPrefix() + "_split.dot"; // replace .nt with .dot
-	}
-
-	/**
-	 * Takes the short file name and inserts the suffix before the ".".
-	 *
-	 * @return
-	 */
-	public String getDotFileNameFoldLeaves() {
-		int lastDotPosition = Math.max(0, triplesFileName.lastIndexOf("."));
-		int lastSlashPosition = Math.max(0, triplesFileName.lastIndexOf("/"));
-		if (lastDotPosition - lastSlashPosition < 1)
-			throw new IllegalStateException("Was not able to extract a core component of the file name " + triplesFileName);
-		boolean summarizeSaturatedGraph = properties.getProperty("summary.summarize_saturated_graph").equals("true");
-		return triplesFileName.substring(0, lastDotPosition) + (summarizeSaturatedGraph ? "_sat" : "") + "_" + getSummaryURIPrefix() + "_fold.dot"; // replace .nt with .dot
-	}
-
-	/**
-	 * Given a path to an .nt RDF data file, computes a file name by replacing
-	 * the trailing .nt with .dot.
-	 *
-	 * It also adds the suffix just before the "."
-	 *
+	 * As a side effect, creates directory(-ies) according to the added prefix.
+	 * @param shortSummaryName
 	 * @param suffix
 	 *
 	 * @return
 	 */
-	public String getRDFDotFileName(String suffix) {
-		int lastDotPosition = Math.max(0, triplesFileName.lastIndexOf("."));
-		int lastSlashPosition = Math.max(0, triplesFileName.lastIndexOf("/"));
-		if (lastDotPosition - lastSlashPosition < 1)
-			throw new IllegalStateException("Was not able to extract a core component of the file name " + triplesFileName);
-		boolean summarizeSaturatedGraph = properties.getProperty("summary.summarize_saturated_graph").equals("true");
-		return triplesFileName.substring(0, lastDotPosition) + (summarizeSaturatedGraph ? "_sat" : "") + suffix + ".dot";
+	public String getDOTFileName(Boolean shortSummaryName, String suffix) {
+		String filePathWithoutExtension = Interface.trimExtension(triplesFileName, false);
+		String DOTFilenamePrefix = properties.getProperty("drawing.dot_files_prefix");
+		int lastSlashPostion = filePathWithoutExtension.lastIndexOf("/");
+		String newPath = filePathWithoutExtension.substring(0, lastSlashPostion + 1) + DOTFilenamePrefix;
+		String filename = filePathWithoutExtension.substring(lastSlashPostion + 1);
+		filePathWithoutExtension = newPath + filename;
+
+		if (DOTFilenamePrefix.contains("/")) {
+			File f = new File(newPath);
+			f.mkdirs();
+		}
+
+		String saturated = properties.getProperty("summary.summarize_saturated_graph").equals("true") ? "_sat" : "";
+		String drawingStyle = properties.getProperty("drawing.style");
+
+		if (shortSummaryName) {
+			return filePathWithoutExtension + saturated + "_" + summaryTablePrefix + "_" + drawingStyle + suffix + ".dot";
+		}
+		return filePathWithoutExtension + saturated + drawingStyle + suffix + ".dot";
 	}
 
 	/**
-	 * Takes the short file name and inserts the suffix before the ".".
+	 * Computes a DOT filename by:
+	 * 1) adding prefix for DOT filename after last slash
+	 * 2) adding information about saturation after dataset filename
+	 * 3) adding summary short name
+	 * 4) adding drawing style information
+	 * 5) replacing .nt extension in dataset filename with .dot
 	 *
+	 * As a side effect, creates directory(-ies) according to the added prefix.
+	 * @return
+	 */
+	public String getDOTFileName() {
+		return getDOTFileName(true, "");
+	}
+
+	/**
+	 * Computes a PNG filename by:
+	 * 1) adding prefix for PNG filename after last slash
+	 * 2) adding information about saturation after dataset filename
+	 * 3) adding summary short name
+	 * 4) adding drawing style information according to shortSummaryName
+	 * 5) adding the suffix just before the file extension
+	 * 6) replacing .nt extension in dataset filename with .dot
+	 *
+	 * As a side effect, creates directory(-ies) according to the added prefix.
+	 *
+	 * @param shortSummaryName
 	 * @param suffix
 	 *
 	 * @return
 	 */
-	public String getDotFileName(String suffix) {
-		int lastDotPosition = Math.max(0, triplesFileName.lastIndexOf("."));
-		int lastSlashPosition = Math.max(0, triplesFileName.lastIndexOf("/"));
-		if (lastDotPosition - lastSlashPosition < 1)
-			throw new IllegalStateException("Was not able to extract a core component of the file name " + triplesFileName);
-		boolean summarizeSaturatedGraph = properties.getProperty("summary.summarize_saturated_graph").equals("true");
-		return triplesFileName.substring(0, lastDotPosition) + (summarizeSaturatedGraph ? "_sat" : "") + "_" + getSummaryURIPrefix() + suffix + ".dot"; // replace .nt with .dot
+	public String getPNGFileName(Boolean shortSummaryName, String suffix) {
+		String filePathWithoutExtension = Interface.trimExtension(triplesFileName, false);
+		String PNGFilenamePrefix = properties.getProperty("drawing.png_files_prefix");
+		int lastSlashPostion = filePathWithoutExtension.lastIndexOf("/");
+
+		String newPath = filePathWithoutExtension.substring(0, lastSlashPostion + 1) + PNGFilenamePrefix;
+		String filename = filePathWithoutExtension.substring(lastSlashPostion + 1);
+		filePathWithoutExtension = newPath + filename;
+
+		if (PNGFilenamePrefix.contains("/")) {
+			File f = new File(newPath);
+			f.mkdirs();
+		}
+
+		String saturated = properties.getProperty("summary.summarize_saturated_graph").equals("true") ? "_sat" : "";
+		String drawingStyle = properties.getProperty("drawing.style");
+
+		if (shortSummaryName) {
+			return filePathWithoutExtension + saturated + "_" + summaryTablePrefix + "_" + drawingStyle + suffix + ".png";
+		}
+		return filePathWithoutExtension + saturated + drawingStyle + suffix + ".dot";
+	}
+
+	/**
+	 * Computes a PNG filename by:
+	 * 1) adding prefix for PNG filename after last slash
+	 * 2) adding information about saturation after dataset filename
+	 * 3) adding summary short name
+	 * 4) adding drawing style information
+	 * 5) replacing .nt extension in dataset filename with .dot
+	 *
+	 * As a side effect, creates directory(-ies) according to the added prefix.
+	 *
+	 * @return
+	 */
+	public String getPNGFileName() {
+		return getPNGFileName(true, "");
 	}
 
 	/**
@@ -1354,6 +1312,6 @@ public class SummaryExport {
 	 * @return
 	 */
 	protected String getSummaryNodeURI(String uriPrefix, long n) {
-		return ("<" + uriPrefix + this.getSummaryURIPrefix() + n + ">");
+		return ("<" + uriPrefix + summaryTablePrefix + n + ">");
 	}
 }
