@@ -100,7 +100,6 @@ public class Interface {
 			LOGGER.error("Could not establish connection to Postgres server " + ex);
 			System.exit(1);
 		}
-		LOGGER.info("Connection to Postgres established with URL: " + connectionURL);
 
 		if (connection == null) {
 			LOGGER.error("No connection for " + connectionURL);
@@ -331,7 +330,7 @@ public class Interface {
 		System.out.println("********************************************************************************");
 
 		// check if loading properties are correct
-		//checkIfDatabaseServerIsRunning(loadingProperties);
+		checkIfDatabaseServerIsRunning(loadingProperties);
 		if (databaseConnection != null) {
 			try {
 				databaseConnection.close();
