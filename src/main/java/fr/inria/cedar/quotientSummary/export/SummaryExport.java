@@ -1140,13 +1140,24 @@ public class SummaryExport {
 
 	/**
 	 * Computes a summary filename by:
-	 * 1) adding information about saturation after dataset filename
-	 * 2) adding summary short name just before the file extension
+	 * 1) adding prefix for DOT filename after last slash
+	 * 2) adding information about saturation after dataset filename
+	 * 3) adding summary short name just before the file extension
 	 *
 	 * @return
 	 */
 	public String getNTSummaryFileName() {
 		String filePathWithoutExtension = Interface.trimExtension(triplesFileName, false);
+		String NTFilenamePrefix = properties.getProperty("summary.nt_file_prefix");
+		int lastSlashPostion = filePathWithoutExtension.lastIndexOf("/");
+		String newPath = filePathWithoutExtension.substring(0, lastSlashPostion + 1) + NTFilenamePrefix;
+		String filename = filePathWithoutExtension.substring(lastSlashPostion + 1);
+		filePathWithoutExtension = newPath + filename;
+		if (NTFilenamePrefix.contains("/")) {
+			File f = new File(newPath);
+			f.mkdirs();
+		}
+
 		String saturated = properties.getProperty("summary.summarize_saturated_graph").equals("true") ? "_sat" : "";
 
 		return filePathWithoutExtension + saturated + "_" + summaryTablePrefix + ".nt";
@@ -1169,12 +1180,11 @@ public class SummaryExport {
 	 */
 	public String getDOTFileName(Boolean shortSummaryName, String suffix) {
 		String filePathWithoutExtension = Interface.trimExtension(triplesFileName, false);
-		String DOTFilenamePrefix = properties.getProperty("drawing.dot_files_prefix");
+		String DOTFilenamePrefix = properties.getProperty("drawing.dot_file_prefix");
 		int lastSlashPostion = filePathWithoutExtension.lastIndexOf("/");
 		String newPath = filePathWithoutExtension.substring(0, lastSlashPostion + 1) + DOTFilenamePrefix;
 		String filename = filePathWithoutExtension.substring(lastSlashPostion + 1);
 		filePathWithoutExtension = newPath + filename;
-
 		if (DOTFilenamePrefix.contains("/")) {
 			File f = new File(newPath);
 			f.mkdirs();
@@ -1222,13 +1232,11 @@ public class SummaryExport {
 	 */
 	public String getPNGFileName(Boolean shortSummaryName, String suffix) {
 		String filePathWithoutExtension = Interface.trimExtension(triplesFileName, false);
-		String PNGFilenamePrefix = properties.getProperty("drawing.png_files_prefix");
+		String PNGFilenamePrefix = properties.getProperty("drawing.png_file_prefix");
 		int lastSlashPostion = filePathWithoutExtension.lastIndexOf("/");
-
 		String newPath = filePathWithoutExtension.substring(0, lastSlashPostion + 1) + PNGFilenamePrefix;
 		String filename = filePathWithoutExtension.substring(lastSlashPostion + 1);
 		filePathWithoutExtension = newPath + filename;
-
 		if (PNGFilenamePrefix.contains("/")) {
 			File f = new File(newPath);
 			f.mkdirs();

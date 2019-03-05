@@ -64,6 +64,9 @@ public class SummarizationProperties extends ConfigurationProperties {
 		// Whether to export to NT file
 		properties.put("summary.export_to_nt_file", "true");
 
+		// Prefix added to summary NT file, usually to dispatch it into a separate directory
+		properties.put("summary.nt_file_prefix", "summariesNT/");
+
 		// Whether to export to database
 		properties.put("summary.export_to_database", "true");
 
@@ -82,8 +85,8 @@ public class SummarizationProperties extends ConfigurationProperties {
 		properties.put("drawing.dot_installation", "/usr/local/bin/dot");
 
 		// Prefixes added to drawing files, usually to dispatch them into separate directories
-		properties.put("drawing.dot_files_prefix", "dot/");
-		properties.put("drawing.png_files_prefix", "png/");
+		properties.put("drawing.dot_files_prefix", "summariesDOT/");
+		properties.put("drawing.png_files_prefix", "summariesPNG/");
 
 		// Whether to print step-by-step drawings
 		properties.put("drawing.step_by_step", "false");
