@@ -1154,6 +1154,8 @@ public class SummaryExport {
 		String filename = filePathWithoutExtension.substring(lastSlashPostion + 1);
 		filePathWithoutExtension = newPath + filename;
 		if (NTFilenamePrefix.contains("/")) {
+			lastSlashPostion = newPath.lastIndexOf("/");
+			newPath = newPath.substring(0, lastSlashPostion);
 			File f = new File(newPath);
 			f.mkdirs();
 		}
@@ -1186,6 +1188,8 @@ public class SummaryExport {
 		String filename = filePathWithoutExtension.substring(lastSlashPostion + 1);
 		filePathWithoutExtension = newPath + filename;
 		if (DOTFilenamePrefix.contains("/")) {
+			lastSlashPostion = newPath.lastIndexOf("/");
+			newPath = newPath.substring(0, lastSlashPostion);
 			File f = new File(newPath);
 			f.mkdirs();
 		}
@@ -1238,6 +1242,8 @@ public class SummaryExport {
 		String filename = filePathWithoutExtension.substring(lastSlashPostion + 1);
 		filePathWithoutExtension = newPath + filename;
 		if (PNGFilenamePrefix.contains("/")) {
+			lastSlashPostion = newPath.lastIndexOf("/");
+			newPath = newPath.substring(0, lastSlashPostion);
 			File f = new File(newPath);
 			f.mkdirs();
 		}
