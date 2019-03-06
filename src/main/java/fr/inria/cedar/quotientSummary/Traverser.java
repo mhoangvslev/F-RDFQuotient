@@ -9,6 +9,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Locale;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
@@ -56,9 +57,18 @@ public abstract class Traverser {
 		domainCode = RDF2SQLEncoding.getDomainCode();
 		rangeCode = RDF2SQLEncoding.getRangeCode();
 
-		summ.setGenericProperties();
-		summ.setMostGeneralType();
+		summ.setUpClassFieldsDependingOnProperties();
 		setupTime = System.currentTimeMillis() - start;
+	}
+
+	protected void drawStepByStep() {
+		String numberOfTriples = String.format((Locale) null, "%09d", summ.triplesSummarizedSoFar);
+		summ.drawGraphAndSummary(conn, "_after_" + numberOfTriples);
+	}
+
+	protected void drawStepByStep(Triple t) {
+		String numberOfTriples = String.format((Locale) null, "%09d", summ.triplesSummarizedSoFar);
+		summ.drawGraphAndSummary(conn, "_after_" + numberOfTriples + "-" + t.s + "-" + t.p + "-" + t.o);
 	}
 
 	protected void mostGeneralTypePass() {
@@ -102,7 +112,9 @@ public abstract class Traverser {
 						if (summ.checkConsistency) {
 							summ.consistencyChecks();
 						}
-						//summ.drawSummaryAndGraph(conn, "after-" + summ.triplesSummarizedSoFar + "-" + t.s + "-" + t.p + "-" + t.o);
+						if (summ.drawStepByStep) {
+							drawStepByStep();
+						}
 					}
 				}
 			}
@@ -137,6 +149,9 @@ public abstract class Traverser {
 							else {
 								summ.classifyDataTriple(t);
 							}
+						}
+						if (summ.drawStepByStep) {
+							drawStepByStep();
 						}
 					}
 				}
@@ -176,7 +191,9 @@ public abstract class Traverser {
 						if (summ.checkConsistency) {
 							summ.consistencyChecks();
 						}
-						//summ.drawSummaryAndGraph(conn, "after-" + summ.triplesSummarizedSoFar + "-" + t.s + "-" + t.p + "-" + t.o);
+						if (summ.drawStepByStep) {
+							drawStepByStep();
+						}
 					}
 				}
 			}

@@ -36,7 +36,9 @@ public class DataFirstTraverser extends Traverser {
 						if (summ.checkConsistency) {
 							summ.consistencyChecks();
 						}
-						//summ.drawSummaryAndGraph(conn, "after-" + summ.triplesSummarizedSoFar + "-" + t.s + "-" + t.p + "-" + t.o);
+						if (summ.drawStepByStep) {
+							drawStepByStep();
+						}
 					}
 				}
 			}

@@ -27,6 +27,7 @@ public class Tests {
 		summarizationProperties.put("summary.replace_type_with_most_general_type", "false");
 		summarizationProperties.put("summary.nt_file_prefix", "");
 		summarizationProperties.put("drawing.style", "plain");
+		summarizationProperties.put("drawing.step_by_step", "false");
 		summarizationProperties.put("drawing.dot_file_prefix", "");
 		summarizationProperties.put("drawing.png_file_prefix", "");
 		summarizationProperties.put("statistics.export_to_csv_file", "false");
@@ -47,6 +48,7 @@ public class Tests {
 		summarizationProperties.put("summary.replace_type_with_most_general_type", "false");
 		summarizationProperties.put("summary.nt_file_prefix", "");
 		summarizationProperties.put("drawing.style", "plain");
+		summarizationProperties.put("drawing.step_by_step", "false");
 		summarizationProperties.put("drawing.dot_file_prefix", "");
 		summarizationProperties.put("drawing.png_file_prefix", "");
 		summarizationProperties.put("statistics.export_to_csv_file", "false");
@@ -65,6 +67,7 @@ public class Tests {
 		summarizationProperties.put("summary.replace_type_with_most_general_type", "false");
 		summarizationProperties.put("summary.nt_file_prefix", "");
 		summarizationProperties.put("drawing.style", "plain");
+		summarizationProperties.put("drawing.step_by_step", "false");
 		summarizationProperties.put("drawing.dot_file_prefix", "");
 		summarizationProperties.put("drawing.png_file_prefix", "");
 		summarizationProperties.put("statistics.export_to_csv_file", "false");

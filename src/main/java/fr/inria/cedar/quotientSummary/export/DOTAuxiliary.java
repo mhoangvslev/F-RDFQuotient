@@ -18,31 +18,31 @@ public class DOTAuxiliary {
 											"lightgoldenrod", "orange", "khaki1", "orangered", "navy",
 											"lightpink", "magenta", "cyan", "firebrick"};
 	public static String[] bwColorNames = {"white"};
-	
+
 	public static String[] ivoryColorNames = {"ivory"};
-	
+
 	public static String[] lightColorNames = {"white", "lightcyan", "ivory", "azure", "lemonchiffon", "mistyrose1",
-											   "lavender", "beige", "aliceblue", "greenyellow", 
+											   "lavender", "beige", "aliceblue", "greenyellow",
 											  "thistle", "paleturquoise", "pink", "yellow"};
-	public static TreeSet<String> darkColorNames; 
-	
-	public static String[] colorNames = diverseColorNames; 
-	
-	// color index for each summary node (may cycle if there are more 
+	public static TreeSet<String> darkColorNames;
+
+	public static String[] colorNames = diverseColorNames;
+
+	// color index for each summary node (may cycle if there are more
 	// summary nodes than colors)
 	public HashMap<Long, Integer> coloredSummaryNodes;
-	
-	// whether or not the RDF node has already been colored. 
-	// We do not store colors for them as we will use the colors 
+
+	// whether or not the RDF node has already been colored.
+	// We do not store colors for them as we will use the colors
 	// of their from the representative node.
 	public TreeSet<Long> coloredRDFNodes;
 	public int nextSummaryColorToGive;
 
-	public HashSet<Long> schemaNodes; 
-	
+	public HashSet<Long> schemaNodes;
+
 	public DOTAuxiliary(String colorScheme) {
 		LOGGER.setLevel(Level.INFO);
-		// diverse is the default 
+		// diverse is the default
 		if (colorScheme.toLowerCase().equals("bw")) {
 			colorNames = bwColorNames;
 		}
@@ -50,11 +50,11 @@ public class DOTAuxiliary {
 			colorNames = ivoryColorNames;
 		}
 		if (colorScheme.toLowerCase().equals("light")){
-			colorNames = lightColorNames; 
+			colorNames = lightColorNames;
 		}
 		coloredSummaryNodes = new HashMap<>();
 		coloredRDFNodes = new TreeSet<>();
-		schemaNodes = new HashSet<Long>();
+		schemaNodes = new HashSet<>();
 		nextSummaryColorToGive = -1;
 		initDarkColors();
 	}
@@ -62,10 +62,10 @@ public class DOTAuxiliary {
 		darkColorNames = new TreeSet<>();
 		darkColorNames.add("blueviolet");
 		darkColorNames.add("navy");
-		darkColorNames.add("firebrick"); 
+		darkColorNames.add("firebrick");
 	}
 	public boolean isDarkColor(String s){
-		return darkColorNames.contains(s); 
+		return darkColorNames.contains(s);
 	}
 	public String getSummaryNodeColor(long summaryNodeCode) {
 		Integer colorForThisNode = coloredSummaryNodes.get(summaryNodeCode);
@@ -99,13 +99,14 @@ public class DOTAuxiliary {
 		coloredRDFNodes = new TreeSet<>();
 		nextSummaryColorToGive = -1;
 	}
+
 	public boolean unknownSchemaNode(long s) {
 		if (!schemaNodes.contains(s)){
 			schemaNodes.add(s);
 			return true;
 		}
 		else{
-			return false; 
+			return false;
 		}
 	}
 }

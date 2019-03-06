@@ -85,8 +85,8 @@ public class SummarizationProperties extends ConfigurationProperties {
 		properties.put("drawing.dot_installation", "/usr/local/bin/dot");
 
 		// Prefixes added to drawing files, usually to dispatch them into separate directories
-		properties.put("drawing.dot_files_prefix", "summariesDOT/");
-		properties.put("drawing.png_files_prefix", "summariesPNG/");
+		properties.put("drawing.dot_file_prefix", "summariesDOT/");
+		properties.put("drawing.png_file_prefix", "summariesPNG/");
 
 		// Whether to print step-by-step drawings
 		properties.put("drawing.step_by_step", "false");

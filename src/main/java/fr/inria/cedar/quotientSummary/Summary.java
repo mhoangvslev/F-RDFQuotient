@@ -8,7 +8,6 @@ import fr.inria.cedar.quotientSummary.datastructures.EdgesWithProvenanceCounts;
 import fr.inria.cedar.quotientSummary.datastructures.Long2Long;
 import fr.inria.cedar.quotientSummary.datastructures.Long2LongSet;
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
-import fr.inria.cedar.quotientSummary.export.DOTAuxiliary;
 import fr.inria.cedar.quotientSummary.export.SummaryExport;
 import fr.inria.cedar.quotientSummary.util.PostgresIdentifier;
 import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
@@ -86,6 +85,8 @@ public class Summary {
 	protected String repTableName = "";
 	protected String edgeTableName = "";
 	protected boolean checkConsistency = false;
+	protected boolean drawStepByStep = false;
+	protected boolean gatherStatistics = false;
 
 	// statistics
 	public long triplesSummarizedSoFar = 0;
@@ -98,14 +99,11 @@ public class Summary {
 	protected long typeTriplesSummarizationTime = 0;
 	protected long nonTypeTriplesSummarizationTime = 0;
 	protected long allTriplesSummarizationTime = 0;
-	// for each summary node, the number of graph nodes it represents
+	// for each summary node, the number of graph nodes it represented
 	protected HashMap<Long, Long> summaryNodeStatistics;
-	// for each summary edge, the number of graph edge it represents
+	// for each summary edge, the number of graph edge it represented
 	protected HashMap<Triple, Long> summaryEdgeStatistics;
 	public long numberOfLeaves;
-
-	// helper class for multicolor printing to DOT
-	protected DOTAuxiliary dax;
 
 	// exporter utility
 	protected SummaryExport exporter;
@@ -134,19 +132,12 @@ public class Summary {
 		summaryNodeStatistics = new HashMap<>();
 		summaryEdgeStatistics = new HashMap<>();
 
-		// initialize summarizationProperties with default values from code
-		summarizationProperties = SummarizationProperties.getDefaultProperties();
-
-		try{
-			checkConsistency = summarizationProperties.getProperty("summary.consistency_checks").toLowerCase().equals("true");
-		} catch (Exception e) {
-			throw new IllegalStateException("Unable to extract property information: " +
-					e.toString());
-		}
 		genericPropertiesIgnoredInCliques = new HashSet<>();
 		targetsOfGenericPropertiesIgnoredInCliques = new HashMap<>();
 		sourcesOfGenericPropertiesIgnoredInCliques = new HashMap<>();
-		dax = new DOTAuxiliary(summarizationProperties.getProperty("drawing.color_scheme"));
+
+		// initialize summarizationProperties with default values from code
+		summarizationProperties = SummarizationProperties.getDefaultProperties();
 	}
 
 	public void setSummarizationProperties(Properties newProperties) {
@@ -166,7 +157,7 @@ public class Summary {
 		summarizationProperties.put(key, value);
 	}
 
-	public void setGenericProperties() {
+	private void setGenericProperties() {
 		if (summarizationProperties.getProperty("summary.omit_generic_properties_from_cliques").toLowerCase().equals("true")) {
 			String[] props  = summarizationProperties.getProperty("summary.generic_properties").split(",");
 			for (String nonCliqueP: props) {
@@ -176,7 +167,7 @@ public class Summary {
 		}
 	}
 
-	public void setMostGeneralType() {
+	private void setMostGeneralType() {
 		boolean replace = summarizationProperties.getProperty("summary.replace_type_with_most_general_type").toLowerCase().equals("true");
 		//LOGGER.debug("Replace types with the most general type: " + (replace ? "true" : "false"));
 		replaceTypeWithMostGeneralType = replace;
@@ -186,6 +177,19 @@ public class Summary {
 			this.topClass = new HashMap<>();
 			this.topClasses = new HashMap<>();
 		}
+	}
+
+	public void setUpClassFieldsDependingOnProperties() {
+		try {
+			checkConsistency = summarizationProperties.getProperty("summary.consistency_checks").toLowerCase().equals("true");
+			drawStepByStep = summarizationProperties.getProperty("drawing.step_by_step").toLowerCase().equals("true");
+			gatherStatistics = summarizationProperties.getProperty("summary.gather_representation_counts").toLowerCase().equals("true");
+		}
+		catch (Exception ex) {
+			throw new IllegalStateException("Unable to extract property information: " + ex);
+		}
+		setGenericProperties();
+		setMostGeneralType();
 	}
 
 	public Summary(Connection conn) throws SQLException {
@@ -204,14 +208,14 @@ public class Summary {
 			if (rs.next()){
 				this.dictionaryTableName = rs.getString(1);
 			}
-			else{
+			else {
 				throw new IllegalStateException("Could not learn the name of the dictionary table");
 			}
 			rs = stmt.executeQuery("select name from saved_summary_table_names where role='representation';");
 			if (rs.next()){
 				this.repTableName = rs.getString(1);
 			}
-			else{
+			else {
 				throw new IllegalStateException("Could not learn the name of the representation table");
 			}
 			rs = stmt.executeQuery("select name from saved_summary_table_names where role='edges';");
@@ -235,7 +239,7 @@ public class Summary {
 			conn.close();
 			throw new IllegalStateException("Could not read summary from Postgres " + e.toString());
 		}
-		RDF2SQLEncoding.setUp(conn, this.dictionaryTableName);
+		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
 		//LOGGER.debug("Set up special URIs from dictionary");
 		String getSummaryTriples = getSummaryTriplesSQLQuery();
 		try (
@@ -256,8 +260,8 @@ public class Summary {
 	 * Fills in the exporter object
 	 */
 	protected void ensureExporter(){
-		if (exporter == null){
-			exporter = new SummaryExport(this, summarizationProperties, dax, dictionaryTableName, triplesFileName, encodedTriplesTableName);
+		if (exporter == null) {
+			exporter = new SummaryExport(this, summarizationProperties, dictionaryTableName, triplesFileName, encodedTriplesTableName);
 		}
 	}
 
@@ -573,17 +577,12 @@ public class Summary {
 		this.maxSummaryNode += n;
 	}
 
-	// needs to be refactored
-	/*public void gatherStatistics() {
-		gatherNodeStatistics();
-		gatherEdgeStatistics();
-	}*/
-
 	/**
 	 * write in summaryNodeStatistics the number of
-	 * data nodes each summary node represents
+ data nodes each summary node represented
 	 */
 	public void gatherNodeStatistics() {
+		summaryNodeStatistics.clear();
 		for (Long l: rep.getKeys()){
 			Long sn = rep.get(l);
 			Long existingSnCount = summaryNodeStatistics.get(sn);
@@ -594,7 +593,7 @@ public class Summary {
 				existingSnCount = (existingSnCount + 1L);
 			}
 			//if (this.sn.contains(sn)) {
-			//	System.out.println("Schema node " + sn + " represents " + existingSnCount + " nodes");
+			//	System.out.println("Schema node " + sn + " represented " + existingSnCount + " nodes");
 			//}
 			summaryNodeStatistics.put(sn, existingSnCount);
 		}
@@ -602,10 +601,10 @@ public class Summary {
 
 	public void gatherEdgeStatistics() {
 		for (Triple t: this.edgesWithProv.getSummaryEdges()){
-			long represents = edgesWithProv.getCounter(t.s,t.p, t.o);
+			long represented = edgesWithProv.getCounter(t.s,t.p, t.o);
 			//System.out.println("Summary edge " + t.toString() + " represented: " +
-			//		represents);
-			summaryEdgeStatistics.put(t, represents);
+			//		represented);
+			summaryEdgeStatistics.put(t, represented);
 		}
 	}
 
@@ -941,11 +940,14 @@ public class Summary {
 		}
 
 		boolean saveRepresentationFunctionAndNodeStatistics = summarizationProperties.getProperty("summary.save_representation_function_and_node_statistics").equals("true");
+		HashMap<Long, Long> summaryNodeStatisticsForDB = null;
+		HashMap<Triple, Long> summaryEdgeStatisticsForDB = null;
 		if (saveRepresentationFunctionAndNodeStatistics) {
 			LOGGER.info("Saving " + this.getClass().getName() + " rep and node statistics in Postgres in tables: " + newSummaryTableNameRep + " and " + newSummaryTableNameNodeStats);
 			// save representation function and also compute summary node statistics
 			try {
 				long start = System.currentTimeMillis();
+				summaryNodeStatisticsForDB = new HashMap<>();
 				// create the table (it may have existed)
 				if (!existsTable(conn, newSummaryTableNameRep)) {
 					stmt.execute("create table " + PostgresIdentifier.escapedQuotedId(newSummaryTableNameRep) + "(graphNode int not null, summaryNode int not null);");
@@ -967,14 +969,14 @@ public class Summary {
 						insertInRep.setLong(2, sumNode);
 						insertInRep.executeUpdate();
 						// update the node statistics:
-						Long existingSnCount = summaryNodeStatistics.get(sumNode);
+						Long existingSnCount = summaryNodeStatisticsForDB.get(sumNode);
 						if (existingSnCount == null){
 							existingSnCount = 1L;
 						}
 						else{
 							existingSnCount = (existingSnCount + 1L);
 						}
-						summaryNodeStatistics.put(sumNode, existingSnCount);
+						summaryNodeStatisticsForDB.put(sumNode, existingSnCount);
 					}
 				}
 				// if (!hasIndex(conn, "encoded_rep"))
@@ -1006,8 +1008,8 @@ public class Summary {
 				// now insert all the summary node stats:
 				String insertIntoNodeStats = "insert into " + PostgresIdentifier.escapedQuotedId(newSummaryTableNameNodeStats) + " values(?, ?);";
 				try (PreparedStatement insertInNodeStats = conn.prepareStatement(insertIntoNodeStats)) {
-					for (Long sumNode: summaryNodeStatistics.keySet()){
-						Long nodeCount = summaryNodeStatistics.get(sumNode);
+					for (Long sumNode: summaryNodeStatisticsForDB.keySet()){
+						Long nodeCount = summaryNodeStatisticsForDB.get(sumNode);
 						//LOGGER.debug("Saving in Postgres node statistics for: " + sumNode);
 						insertInNodeStats.setLong(1, sumNode);
 						insertInNodeStats.setLong(2, nodeCount);
@@ -1028,6 +1030,7 @@ public class Summary {
 		// save summary
 		try {
 			long start = System.currentTimeMillis();
+			summaryEdgeStatisticsForDB = new HashMap<>();
 			// create the table (it may have existed)
 			if (!existsTable(conn, newSummaryTableNameEdges)) {
 				stmt.execute("create table " + PostgresIdentifier.escapedQuotedId(newSummaryTableNameEdges) + "(s int not null, p int not null, o int not null, count int not null);");
@@ -1049,7 +1052,9 @@ public class Summary {
 					insertInSummary.setLong(1, t.s);
 					insertInSummary.setLong(2, t.p);
 					insertInSummary.setLong(3, t.o);
-					insertInSummary.setLong(4, edgesWithProv.getCounter(t.s, t.p, t.o));
+					Long represented = edgesWithProv.getCounter(t.s, t.p, t.o);
+					insertInSummary.setLong(4, represented);
+					summaryEdgeStatisticsForDB.put(t, represented);
 					insertInSummary.executeUpdate();
 				}
 				// if (!hasIndex(conn, "encoded_summary"))
@@ -1061,6 +1066,20 @@ public class Summary {
 		}
 		catch (SQLException e) {
 			throw new IllegalStateException("Could not insert summary triples in " + newSummaryTableNameEdges + ": " + e.toString());
+		}
+		if (gatherStatistics) {
+			if (summaryNodeStatisticsForDB != null) {
+				summaryNodeStatistics = summaryNodeStatisticsForDB;
+			}
+			else {
+				gatherNodeStatistics();
+			}
+			if (summaryEdgeStatisticsForDB != null) {
+				summaryEdgeStatistics = summaryEdgeStatisticsForDB;
+			}
+			else {
+				gatherEdgeStatistics();
+			}
 		}
 
 		// saving the table names in Postgres:
@@ -1099,17 +1118,20 @@ public class Summary {
 		}
 	}
 
-	public void drawSummaryAndGraph(Connection conn, String suffix) {
+	public void drawGraphAndSummary(Connection conn, String suffix) {
 		ensureExporter();
-		addIndexesToRepTable(conn);
-
-		String summaryDOTFileName = exporter.getDOTFileName(true, suffix);
-		String summaryPNGFileName = exporter.getPNGFileName(true, suffix);
-		exporter.writeSummaryToDOTFile(conn, summaryDOTFileName, summaryPNGFileName);
 
 		String graphDOTFileName = exporter.getDOTFileName(false, suffix);
 		String graphPNGFileName = exporter.getPNGFileName(false, suffix);
 		exporter.writeRDFGraphToDOTFile(conn, graphDOTFileName, graphPNGFileName);
+
+		if (gatherStatistics) {
+			gatherNodeStatistics();
+			gatherEdgeStatistics();
+		}
+		String summaryDOTFileName = exporter.getDOTFileName(true, suffix);
+		String summaryPNGFileName = exporter.getPNGFileName(true, suffix);
+		exporter.writeSummaryToDOTFile(conn, summaryDOTFileName, summaryPNGFileName);
 	}
 
 	/**
@@ -1137,6 +1159,7 @@ public class Summary {
 	 * using DOT according to specified drawingStyle adding prefixes to DOT and
 	 * PNG filenames
 	 * @param conn SQL connection
+	 * @param drawingStyle
 	 * @return dot filename
 	 */
 	public String writeDecodedSummaryToDOTFile(Connection conn, String drawingStyle) {

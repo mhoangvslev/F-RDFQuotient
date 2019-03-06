@@ -22,7 +22,7 @@ public class TypeFirstTraverser extends Traverser {
 	@Override
 	protected void typePass() {
 		long start = System.currentTimeMillis();
-		// we traverse all the type triples, build the class sets and (if needed) the actual class sets. We do not represent yet. 
+		// we traverse all the type triples, build the class sets and (if needed) the actual class sets. We do not represent yet.
 		String getTypedTriplesString = ("select *  from " + PostgresIdentifier.escapedQuotedId(summ.encodedTriplesTableName) + " where p = " + typeConstantCode);
 		try {
 			try (Statement getTypedTriples = conn.createStatement()) {
@@ -37,7 +37,9 @@ public class TypeFirstTraverser extends Traverser {
 						if (summ.checkConsistency) {
 							summ.consistencyChecks();
 						}
-						//summ.drawSummaryAndGraph(conn, "after-" + summ.triplesSummarizedSoFar + "-" + t.s + "-" + t.p + "-" + t.o);
+						if (summ.drawStepByStep) {
+							drawStepByStep();
+						}
 					}
 				}
 			}

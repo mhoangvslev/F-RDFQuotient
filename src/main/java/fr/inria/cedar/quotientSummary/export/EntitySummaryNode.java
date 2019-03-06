@@ -2,6 +2,7 @@
 
 package fr.inria.cedar.quotientSummary.export;
 
+import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -9,87 +10,84 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
-
 import org.apache.log4j.Logger;
-
-import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
 
 public class EntitySummaryNode {
 	long node;
 	long ownCardinality;
-	String hiddenDotName; 
-	
-	SummaryExport exporter; 
-	
+	String hiddenDotName;
+
+	SummaryExport exporter;
+
 	HashMap<Long, Long> actualTypes; // for each actual type of a resource represented by this entity, how many times that happened
 	HashSet<Long> groupByTypes; // each of the top types corresponding to this node's class set (or actual types)
-	
+
 	// properties in sorted order
 	TreeMap<String, Long> outgoingPropertiesMap;
 	TreeMap<String, Long> leafChildrenMap;
-	TreeMap<String, Long> propCardinalitiesMap; 
+	TreeMap<String, Long> propCardinalitiesMap;
 	TreeMap<String, Long> childCardinalitiesMap;
-	TreeMap<String, Long> typesMap; 
-	
+	TreeMap<String, Long> typesMap;
+
 	TreeSet<String> genericProperties;
-	
+
 	ArrayList<String> fullTypes; // for each type, how many subjects of this entity have this type
-	int maxTypesDrawnPerNameSpace;  
-			
+	int maxTypesDrawnPerNameSpace;
+
 	private static final Logger LOGGER = Logger.getLogger(EntitySummaryNode.class.getName());
-	
+
 	public EntitySummaryNode(long node, long ownCardinality, String hiddenDotName, SummaryExport exporter) {
-		//LOGGER.info("Created ESN " + hiddenDotName + " for " + node + " (" + ownCardinality + ")"); 
-		this.exporter = exporter; 
+		//LOGGER.info("Created ESN " + hiddenDotName + " for " + node + " (" + ownCardinality + ")");
+		this.exporter = exporter;
 		this.node = node;
 		this.ownCardinality = ownCardinality;
-		this.hiddenDotName = hiddenDotName; 
-		outgoingPropertiesMap = new TreeMap<String, Long>();
-		leafChildrenMap = new TreeMap<String, Long>();
-		propCardinalitiesMap = new TreeMap<String, Long>();
-		childCardinalitiesMap = new TreeMap<String, Long>();	
-		genericProperties = new TreeSet<String>(); 
-		actualTypes = new HashMap<Long, Long>(); 
-		groupByTypes = new HashSet<Long>(); 
-		fullTypes = new ArrayList<String>(); 
+		this.hiddenDotName = hiddenDotName;
+		outgoingPropertiesMap = new TreeMap<>();
+		leafChildrenMap = new TreeMap<>();
+		propCardinalitiesMap = new TreeMap<>();
+		childCardinalitiesMap = new TreeMap<>();
+		genericProperties = new TreeSet<>();
+		actualTypes = new HashMap<>();
+		groupByTypes = new HashSet<>();
+		fullTypes = new ArrayList<>();
 		maxTypesDrawnPerNameSpace = exporter.summary.getMaxTypesDisplayedPerNameSpace();
 	}
-	
+
 	public void addLeafChild(long prop, long leafChild, long propCard, long childCard) {
-		//LOGGER.info("Adding to ESN " + node + " child " + leafChild + " (" + childCard + 
-		//		") on property " + prop + " " + RDF2SQLEncoding.dictionaryDecode(prop) + 
-		//		" (" + propCard + ")"); 
-	
+		//LOGGER.info("Adding to ESN " + node + " child " + leafChild + " (" + childCard +
+		//		") on property " + prop + " " + RDF2SQLEncoding.dictionaryDecode(prop) +
+		//		" (" + propCard + ")");
+
 		String propName =  RDF2SQLEncoding.dictionaryDecode(prop);
-		String propertyInDot = exporter.getVeryShortForDot(propName); 
-	
-		this.outgoingPropertiesMap.put(propertyInDot, prop); 
+		String propertyInDot = exporter.getVeryShortForDot(propName);
+
+		this.outgoingPropertiesMap.put(propertyInDot, prop);
 		this.leafChildrenMap.put(propertyInDot, leafChild);
 		this.propCardinalitiesMap.put(propertyInDot, propCard);
-		this.childCardinalitiesMap.put(propertyInDot, childCard); 
+		this.childCardinalitiesMap.put(propertyInDot, childCard);
 		if (exporter.summary.isGeneric(prop)) {
-			genericProperties.add(propertyInDot); 
+			genericProperties.add(propertyInDot);
 		}
 	}
-	
+
 	public void addType(long newType, long typeCardinality) {
-		actualTypes.put(newType, typeCardinality); 
+		actualTypes.put(newType, typeCardinality);
 	}
 
 	public void addNodeDescriptionTo(BufferedWriter bw, DOTAuxiliary dax) {
 		try {
 			String nColor = dax.getSummaryNodeColor(node);
-			String fontColor = (dax.isDarkColor(nColor)?"white":"black"); 
+			String fontColor = (dax.isDarkColor(nColor)?"white":"black");
 			bw.write("\"" + hiddenDotName + "\" [ label=< <TABLE BGCOLOR=\"" + nColor + "\"> <TR><TD><FONT color=\"" + fontColor  +
 					"\" POINT-SIZE=\"12.0\" FACE=\"Times-Bold\"> " + hiddenDotName);
-			addTypeDescriptionTo(bw, fontColor); 
+			addTypeDescriptionTo(bw, fontColor);
 			bw.write(" </FONT> </TD> </TR>");
 			for (String propertyInDot: outgoingPropertiesMap.keySet()) {
-				boolean genericProperty = genericProperties.contains(propertyInDot); 
+				boolean genericProperty = genericProperties.contains(propertyInDot);
 				bw.write(" <TR><TD><FONT color=\"" + fontColor + "\" " +
-						(genericProperty?" FACE=\"Times-Italic\"":"") + 
+						(genericProperty?" FACE=\"Times-Italic\"":"") +
 						" POINT-SIZE=\"12.0\"> " + 	propertyInDot +
-						( (propCardinalitiesMap.get(propertyInDot) >=0)?(" (" + propCardinalitiesMap.get(propertyInDot) + 
+						( (propCardinalitiesMap.get(propertyInDot) >=0)?(" (" + propCardinalitiesMap.get(propertyInDot) +
 								" &rarr; " + childCardinalitiesMap.get(propertyInDot) + ") "):"") +
 						"</FONT></TD></TR>\n");
 			}
@@ -99,7 +97,7 @@ public class EntitySummaryNode {
 			throw new IllegalStateException(ioe.toString());
 		}
 	}
-	
+
 	/**
 	 * This:
 	 * - takes the actualTypes and makes them groupByTypes
@@ -114,7 +112,7 @@ public class EntitySummaryNode {
 		this.groupByTypes.addAll(this.actualTypes.keySet());
 		this.actualTypes = typeToCard;
 		if (this.actualTypes == null) {
-			this.actualTypes = new HashMap<Long, Long>(); 
+			this.actualTypes = new HashMap<>();
 			//LOGGER.info("Currently no actual types");
 		}
 		else {
@@ -136,37 +134,37 @@ public class EntitySummaryNode {
 			}
 			for (long nodeType: actualTypes.keySet()) {
 				String s = (RDF2SQLEncoding.dictionaryDecode(nodeType)).replaceAll(">", "").replaceAll("<", "");
-				fullTypes.add(s + ": " + actualTypes.get(nodeType)); 
+				fullTypes.add(s + ": " + actualTypes.get(nodeType));
 			}
 			//LOGGER.info(actualTypes.size() + " actual types, " + fullTypes.size() + " full types");
 			String prevNameSpace = "";
 			String crtNameSpace = "";
-			int ommittedFromCrtNameSpace = 0; 
-			int typesInCurrentNameSpace = 0; 
-			boolean firstType = true; 
+			int ommittedFromCrtNameSpace = 0;
+			int typesInCurrentNameSpace = 0;
+			boolean firstType = true;
 			for (String fullType: fullTypes) {
 				crtNameSpace = fullType.substring(0, fullType.lastIndexOf('/'));
 				if (!prevNameSpace.equals(crtNameSpace)) {
-					// we just entered in this namespace; acknowledge ommissions if any before moving to new namespace: 
+					// we just entered in this namespace; acknowledge ommissions if any before moving to new namespace:
 					if (ommittedFromCrtNameSpace > 0) {
 						bw.write("<BR/>..." + ommittedFromCrtNameSpace + " more type" +
 								((ommittedFromCrtNameSpace > 1)?"s":"") + " from " + crtNameSpace);
 					}
 					// now reset the counter
-					typesInCurrentNameSpace = 1; 
-					ommittedFromCrtNameSpace = 0; 
+					typesInCurrentNameSpace = 1;
+					ommittedFromCrtNameSpace = 0;
 				}
 				else {
-					typesInCurrentNameSpace ++; 
+					typesInCurrentNameSpace ++;
 				}
-				if (typesInCurrentNameSpace < this.maxTypesDrawnPerNameSpace) {		
+				if (typesInCurrentNameSpace < this.maxTypesDrawnPerNameSpace) {
 					if (firstType) {
-						if (groupByTypes.size()==0) {
+						if (groupByTypes.isEmpty()) {
 							// if there are no group-by types, this is the first type
 							// after the node name
 							bw.write("<BR/>");
 						}
-						firstType = false; 
+						firstType = false;
 					}
 					else {
 						bw.write("<BR/>");
@@ -174,11 +172,11 @@ public class EntitySummaryNode {
 					bw.write(fullType);
 				}
 				else { // we had to cut the tail
-					ommittedFromCrtNameSpace ++; 
+					ommittedFromCrtNameSpace ++;
 				}
-				prevNameSpace = crtNameSpace; 
+				prevNameSpace = crtNameSpace;
 			}
-			//if there were some ommissions in the last traversed namespace, we need to acknowledge them here: 
+			//if there were some ommissions in the last traversed namespace, we need to acknowledge them here:
 			if (ommittedFromCrtNameSpace > 0) {
 				bw.write("<BR/>..." + ommittedFromCrtNameSpace + " more type" +
 						((ommittedFromCrtNameSpace > 1)?"s":"") + " from " + crtNameSpace);

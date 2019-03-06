@@ -28,19 +28,20 @@ import java.util.Properties;
 import org.apache.log4j.Logger;
 
 public class SummaryExport {
-	Properties properties;
+	private Properties properties;
 	private static final Logger LOGGER = Logger.getLogger(SummaryExport.class.getName());
 	Summary summary;
-	String dictionaryTableName;
-	String triplesFileName;
-	String summaryTablePrefix;
-	String encodedTriplesTableName;
+	private String dictionaryTableName;
+	private String triplesFileName;
+	private String summaryTablePrefix;
+	private String encodedTriplesTableName;
 
-	boolean gatherStatistics;
-	boolean drawOfTypeClassEdges = false; // whether or not to draw edges of the form C rdf:type rdfs:Class
-	boolean drawGraphLabel = false; // when drawing with entities, we may include a label of the graph, or not
+	private boolean gatherStatistics;
+	private boolean drawOfTypeClassEdges = false; // whether or not to draw edges of the form C rdf:type rdfs:Class
+	private boolean drawGraphLabel = false; // when drawing with entities, we may include a label of the graph, or not
 
-	DOTAuxiliary dax;
+	// helper class for multicolor printing to DOT
+	private DOTAuxiliary dax;
 
 	private static PreparedStatement stmtSplitLeavesCount;
 
@@ -49,16 +50,14 @@ public class SummaryExport {
 	private long lastGivenLabel;
 
 	// one size fits all attribute for drawing
-	double arrowsize=0.8;
-	String schemaNodeLineSuffix = "\" [penwidth=2, fontsize=12, fillcolor=white, fontcolor=black];\n";
-	int maxDotLinesPrinted = 1000;
+	private double arrowsize = 0.8;
+	private String schemaNodeLineSuffix = "\" [penwidth=2, fontsize=12, fillcolor=white, fontcolor=black];\n";
+	private int maxDotLinesPrinted = 1000;
 
-
-	public SummaryExport(Summary s, Properties properties, DOTAuxiliary dax, String dictionaryTableName,
+	public SummaryExport(Summary s, Properties properties, String dictionaryTableName,
 			String triplesFileName, String encodedTriplesTableName){
 		this.summary = s;
 		this.properties = properties;
-		this.dax = dax;
 		this.dictionaryTableName = dictionaryTableName;
 		this.triplesFileName = triplesFileName;
 		this.summaryTablePrefix = s.getSummaryTablePrefix();
@@ -68,20 +67,13 @@ public class SummaryExport {
 		// by default statistics are not used
 		this.gatherStatistics = false;
 		this.drawGraphLabel = false;
-		try{
-			this.gatherStatistics = properties.getProperty("summary.gather_representation_counts").toLowerCase().equals("true");
-			this.drawGraphLabel = properties.getProperty("drawing.summary_drawing_title").toLowerCase().equals("true");
+		try {
+			gatherStatistics = properties.getProperty("summary.gather_representation_counts").toLowerCase().equals("true");
+			dax = new DOTAuxiliary(properties.getProperty("drawing.color_scheme"));
+			drawGraphLabel = properties.getProperty("drawing.summary_drawing_title").toLowerCase().equals("true");
 		}
 		catch(Exception e){
-			LOGGER.info("Could not determine if I should output summarization statistics. Will not do it.");
-		}
-		if (gatherStatistics){
-			if (summary.getSummaryNodeStatistics().isEmpty()){
-				summary.gatherNodeStatistics();
-			}
-			if (summary.getSummaryEdgeStatistics().isEmpty()){
-				summary.gatherEdgeStatistics();
-			}
+			LOGGER.error(e);
 		}
 		String representationTableName = summary.getRepresentationTableName();
 		String getSplitLeafRepCountQuery = "select count(distinct et.o) from " + PostgresIdentifier.escapedQuotedId(encodedTriplesTableName) + " et, " +
@@ -274,8 +266,11 @@ public class SummaryExport {
 	 * or strings) based on a dictionary table in Postgres
 	 *
 	 * @param conn
+	 * @param summaryDOTFileName
+	 * @param summaryPNGFileName
 	 */
 	public void writeSummaryToDOTFile(Connection conn, String summaryDOTFileName, String summaryPNGFileName) {
+		dax = new DOTAuxiliary(properties.getProperty("drawing.color_scheme"));
 		HashSet<Long> sn = summary.getSchemaNodes();
 		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
 		dax.resetColors();
@@ -285,7 +280,7 @@ public class SummaryExport {
 
 		try {
 			try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(summaryDOTFileName)))) {
-				bw.write("digraph g{\nsplines=polyline;\n node[shape=box, color=black, style=filled];\n");
+				bw.write("digraph g{\n node[color=black, style=filled];\n");
 
 				ArrayList<Triple> summEdges = summary.getSummaryEdges();
 				for (Triple t : summEdges) {
@@ -577,6 +572,7 @@ public class SummaryExport {
 	 * @param summaryPNGFileName
 	 */
 	public void writeSummaryToDOTFileSplitLeaves(Connection conn, String summaryDOTFileName, String summaryPNGFileName) {
+		dax = new DOTAuxiliary(properties.getProperty("drawing.color_scheme"));
 		// first, determine who is a leaf
 		HashSet<Long> leaves = new HashSet<>(); // tentative leaf nodes (until discovered to be subjects)
 		HashSet<Long> notLeaves = new HashSet<>(); // certain non-leaf nodes (subjects)
@@ -757,6 +753,7 @@ public class SummaryExport {
 	 * @param summaryPNGFileName
 	 */
 	public void writeSummaryToDOTFileSplitAndFoldLeaves(Connection conn, String summaryDOTFileName, String summaryPNGFileName) {
+		dax = new DOTAuxiliary(properties.getProperty("drawing.color_scheme"));
 		// first, determine who is a leaf
 		HashSet<Long> leaves = new HashSet<>(); // tentative leaf nodes (until discovered to be subjects)
 		HashSet<Long> notLeaves = new HashSet<>(); // certain non-leaf nodes (subjects)
@@ -955,7 +952,7 @@ public class SummaryExport {
 	public void writeRDFGraphToDOTFile(Connection conn, String summaryDOTFileName, String summaryPNGFileName) {
 		try {
 			try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(summaryDOTFileName)))) {
-				bw.write("digraph g{\nsplines=polyline;\n");
+				bw.write("digraph g{\n");
 				long triplesToDraw = Math.min(100, summary.triplesSummarizedSoFar);
 				//LOGGER.debug("Writing " + triplesToDraw + " RDF graph triples to DOT");
 				long triplesDrawn;
@@ -1200,7 +1197,7 @@ public class SummaryExport {
 		if (shortSummaryName) {
 			return filePathWithoutExtension + saturated + "_" + summaryTablePrefix + "_" + drawingStyle + suffix + ".dot";
 		}
-		return filePathWithoutExtension + saturated + drawingStyle + suffix + ".dot";
+		return filePathWithoutExtension + saturated + "_" + drawingStyle + suffix + ".dot";
 	}
 
 	/**
@@ -1254,7 +1251,7 @@ public class SummaryExport {
 		if (shortSummaryName) {
 			return filePathWithoutExtension + saturated + "_" + summaryTablePrefix + "_" + drawingStyle + suffix + ".png";
 		}
-		return filePathWithoutExtension + saturated + drawingStyle + suffix + ".dot";
+		return filePathWithoutExtension + saturated + "_" + drawingStyle + suffix + ".png";
 	}
 
 	/**
