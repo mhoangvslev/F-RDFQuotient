@@ -86,6 +86,7 @@ public class Summary {
 	protected String edgeTableName = "";
 	protected boolean checkConsistency = false;
 	protected boolean drawStepByStep = false;
+	protected boolean haltStepByStep = false;
 	protected boolean gatherStatistics = false;
 
 	// statistics
@@ -183,6 +184,7 @@ public class Summary {
 		try {
 			checkConsistency = summarizationProperties.getProperty("summary.consistency_checks").toLowerCase().equals("true");
 			drawStepByStep = summarizationProperties.getProperty("drawing.step_by_step").toLowerCase().equals("true");
+			haltStepByStep = summarizationProperties.getProperty("summary.step_by_step").toLowerCase().equals("true");
 			gatherStatistics = summarizationProperties.getProperty("summary.gather_representation_counts").toLowerCase().equals("true");
 		}
 		catch (Exception ex) {

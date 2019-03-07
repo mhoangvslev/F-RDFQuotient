@@ -39,6 +39,9 @@ public class DataFirstTraverser extends Traverser {
 						if (summ.drawStepByStep) {
 							drawStepByStep();
 						}
+						if (summ.haltStepByStep) {
+							haltStepByStep();
+						}
 					}
 				}
 			}

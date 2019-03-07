@@ -40,6 +40,9 @@ public class TypeFirstTraverser extends Traverser {
 						if (summ.drawStepByStep) {
 							drawStepByStep();
 						}
+						if (summ.haltStepByStep) {
+							haltStepByStep();
+						}
 					}
 				}
 			}

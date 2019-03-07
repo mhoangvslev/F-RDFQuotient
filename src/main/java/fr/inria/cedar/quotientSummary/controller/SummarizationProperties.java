@@ -57,7 +57,7 @@ public class SummarizationProperties extends ConfigurationProperties {
 		// In type triples, whether to replace the type with the most general type
 		properties.put("summary.replace_type_with_most_general_type", "true");
 
-		// Whether or not to run consistency checks after each summarized triple
+		// Whether to run consistency checks after each summarized triple
 		// This may make summarization significantly slower; set it to true only for debugging.
 		properties.put("summary.consistency_checks", "false");
 
@@ -73,8 +73,11 @@ public class SummarizationProperties extends ConfigurationProperties {
 		// Whether to store representation function and node statistics while exporting to database
 		properties.put("summary.save_representation_function_and_node_statistics", "true");
 
-		// Whether or not to compute support statistics and add them in the .nt printout of the summary
+		// Whether to compute support statistics and add them in the .nt printout of the summary
 		properties.put("summary.gather_representation_counts", "true");
+
+		// Whether to execute summarization
+		properties.put("summary.step_by_step", "false");
 
 		// Whether to export run statistics
 		properties.put("statistics.export_to_csv_file", "true");

@@ -21,3 +21,7 @@ conf/documentation.synctex.gz
 src/test/resources/test16-step-by-step/summariesDOT
 src/test/resources/test16-step-by-step/summariesPNG
 src/test/resources/test16-step-by-step/summariesNT/test-16_w.nt
+demo/summariesDOT
+demo/summariesPNG
+demo/summariesNT
+demo/summariesNT/*

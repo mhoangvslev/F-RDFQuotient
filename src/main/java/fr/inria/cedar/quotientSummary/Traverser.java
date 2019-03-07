@@ -5,6 +5,7 @@ package fr.inria.cedar.quotientSummary;
 import fr.inria.cedar.quotientSummary.datastructures.Triple;
 import fr.inria.cedar.quotientSummary.util.PostgresIdentifier;
 import fr.inria.cedar.quotientSummary.util.RDF2SQLEncoding;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -61,6 +62,16 @@ public abstract class Traverser {
 		setupTime = System.currentTimeMillis() - start;
 	}
 
+	protected void haltStepByStep() {
+		LOGGER.info("Press ENTER to continue");
+		try {
+			System.in.read();
+		}
+		catch (IOException ex) {
+			LOGGER.error(ex);
+		}
+	}
+
 	protected void drawStepByStep() {
 		String numberOfTriples = String.format((Locale) null, "%09d", summ.triplesSummarizedSoFar);
 		summ.drawGraphAndSummary(conn, "_after_" + numberOfTriples);
@@ -115,6 +126,9 @@ public abstract class Traverser {
 						if (summ.drawStepByStep) {
 							drawStepByStep();
 						}
+						if (summ.haltStepByStep) {
+							haltStepByStep();
+						}
 					}
 				}
 			}
@@ -149,9 +163,6 @@ public abstract class Traverser {
 							else {
 								summ.classifyDataTriple(t);
 							}
-						}
-						if (summ.drawStepByStep) {
-							drawStepByStep();
 						}
 					}
 				}
@@ -193,6 +204,9 @@ public abstract class Traverser {
 						}
 						if (summ.drawStepByStep) {
 							drawStepByStep();
+						}
+						if (summ.haltStepByStep) {
+							haltStepByStep();
 						}
 					}
 				}

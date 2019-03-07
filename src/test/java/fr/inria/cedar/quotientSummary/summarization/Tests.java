@@ -19,11 +19,14 @@ public class Tests {
 	public static String testSummarizationOfNotSaturated(String datasetFilename, String summaryType) {
 		Properties loadingProperties = LoadingProperties.getDefaultProperties();
 		loadingProperties.put("dataset.filename", datasetFilename);
+		loadingProperties.put("saturation.enable", "false");
 		loadingProperties.put("statistics.export_to_csv_file", "false");
+		loadingProperties.put("configuration.export_to_disk", "false");
 
 		Properties summarizationProperties = SummarizationProperties.getDefaultProperties();
 		summarizationProperties.put("dataset.filename", datasetFilename);
 		summarizationProperties.put("summary.type", summaryType);
+		summarizationProperties.put("summary.summarize_saturated_graph", "false");
 		summarizationProperties.put("summary.replace_type_with_most_general_type", "false");
 		summarizationProperties.put("summary.nt_file_prefix", "");
 		summarizationProperties.put("drawing.style", "plain");
@@ -31,6 +34,7 @@ public class Tests {
 		summarizationProperties.put("drawing.dot_file_prefix", "");
 		summarizationProperties.put("drawing.png_file_prefix", "");
 		summarizationProperties.put("statistics.export_to_csv_file", "false");
+		summarizationProperties.put("configuration.export_to_disk", "false");
 
 		return Interface.loadAndSummarize(loadingProperties, summarizationProperties).get("NTFilename");
 	}
@@ -40,6 +44,7 @@ public class Tests {
 		loadingProperties.put("dataset.filename", datasetFilename);
 		loadingProperties.put("saturation.enable", "true");
 		loadingProperties.put("statistics.export_to_csv_file", "false");
+		loadingProperties.put("configuration.export_to_disk", "false");
 
 		Properties summarizationProperties = SummarizationProperties.getDefaultProperties();
 		summarizationProperties.put("dataset.filename", datasetFilename);
@@ -52,6 +57,7 @@ public class Tests {
 		summarizationProperties.put("drawing.dot_file_prefix", "");
 		summarizationProperties.put("drawing.png_file_prefix", "");
 		summarizationProperties.put("statistics.export_to_csv_file", "false");
+		summarizationProperties.put("configuration.export_to_disk", "false");
 
 		return Interface.loadAndSummarize(loadingProperties, summarizationProperties).get("NTFilename");
 	}
@@ -60,6 +66,7 @@ public class Tests {
 		Properties loadingProperties = LoadingProperties.getDefaultProperties();
 		loadingProperties.put("dataset.filename", datasetFilename);
 		loadingProperties.put("statistics.export_to_csv_file", "false");
+		loadingProperties.put("configuration.export_to_disk", "false");
 
 		Properties summarizationProperties = SummarizationProperties.getDefaultProperties();
 		summarizationProperties.put("dataset.filename", datasetFilename);
@@ -71,6 +78,7 @@ public class Tests {
 		summarizationProperties.put("drawing.dot_file_prefix", "");
 		summarizationProperties.put("drawing.png_file_prefix", "");
 		summarizationProperties.put("statistics.export_to_csv_file", "false");
+		summarizationProperties.put("configuration.export_to_disk", "false");
 
 		return Interface.loadAndSummarizeThroughShortcut(loadingProperties, summarizationProperties).get("NTFilename");
 	}
