@@ -273,6 +273,12 @@ public class Interface {
 		}
 	}
 
+	private static void exportLoadingConfigurationToDisk(Properties loadingProperties) {
+		String datasetFilename = loadingProperties.getProperty("dataset.filename");
+		String propertiesFilename = trimExtension(datasetFilename, false) + "-loading-configuration.properties";
+		LoadingProperties.writePropertiesFile(loadingProperties, propertiesFilename);
+	}
+
 	private static Properties reconcileProperties(Properties defaultProperties, String configurationFilename, Properties commandLineProperties) {
 		Properties configurationFileProperties = ConfigurationProperties.getPropertiesFromFile(configurationFilename);
 		return ConfigurationProperties.reconcileProperties(ConfigurationProperties.reconcileProperties(defaultProperties, configurationFileProperties), commandLineProperties);
@@ -361,6 +367,12 @@ public class Interface {
 			LOGGER.info("Exporting loading statistics to disk");
 			exportLoadingStatisticsToDisk(loadingProperties);
 			LOGGER.info("Loading statistics exported to disk");
+		}
+
+		if (loadingProperties.getProperty("configuration.export_to_disk").equals("true")) {
+			LOGGER.info("Exporting loading configuration to disk");
+			exportLoadingConfigurationToDisk(loadingProperties);
+			LOGGER.info("Loading configuration exported to disk");
 		}
 
 		if (!closeConnection) {
@@ -470,6 +482,12 @@ public class Interface {
 		}
 	}
 
+	private static void exportSummarizationConfigurationToDisk(Properties summarizationProperties) {
+		String datasetFilename = summarizationProperties.getProperty("dataset.filename");
+		String propertiesFilename = trimExtension(datasetFilename, false) + "-summarization-configuration.properties";
+		LoadingProperties.writePropertiesFile(summarizationProperties, propertiesFilename);
+	}
+
 	/*
 		See load method comment: in examples use SummarizationProperties class instead of LoadingProperties.
 		Returns a map with keys: "databaseName", "NTFilename" and "DOTFilename".
@@ -557,6 +575,12 @@ public class Interface {
 			LOGGER.info("Exporting summarization statistics to disk");
 			exportSummarizationStatisticsToDisk(summarizationProperties);
 			LOGGER.info("Summarization statistics exported to disk");
+		}
+
+		if (summarizationProperties.getProperty("configuration.export_to_disk").equals("true")) {
+			LOGGER.info("Exporting loading configuration to disk");
+			exportSummarizationConfigurationToDisk(summarizationProperties);
+			LOGGER.info("Loading configuration exported to disk");
 		}
 
 		String DOTFilename = null;

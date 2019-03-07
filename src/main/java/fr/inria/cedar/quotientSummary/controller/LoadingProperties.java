@@ -33,21 +33,38 @@ public class LoadingProperties extends ConfigurationProperties {
 		properties.put("database.engine", "POSTGRESQL");
 
 		properties.put("database.host", "localhost");
+
 		properties.put("database.port", "5432");
+
 		properties.put("database.user", "postgres");
+
 		properties.put("database.password", "postgres");
+
 		properties.put("database.name", "");
+
 		properties.put("database.drop_existing_db", "true");
+
 		// Valid options: TRIPLES_TABLE, TABLE_PER_ROLE_AND_CONCEPT
 		properties.put("database.storage_layout", "TRIPLES_TABLE");
+
 		properties.put("database.triples_table_name", "triples");
+
 		properties.put("database.encoded_triples_table_name", "encoded_triples");
+
 		properties.put("database.dictionary_table_name", "dictionary");
+
 		properties.put("dictionary.fetch_size", "1000");
+
 		properties.put("saturation.enable", "false");
+
 		properties.put("database.encoded_saturated_triples_table_name", "encoded_saturated_triples");
+
 		properties.put("saturation.batch_size", "1000");
+
 		properties.put("statistics.export_to_csv_file", "true");
+
+		// Whether to export loading configuration to disk
+		properties.put("configuration.export_to_disk", "false");
 
 		// OntoSQL extra configuration
 		properties.put("statistics.create_tables_flag", "false");
@@ -55,10 +72,9 @@ public class LoadingProperties extends ConfigurationProperties {
 		return properties;
 	}
 
-	public static void writeDefaultPropertiesFile() {
+	public static void writePropertiesFile(Properties properties, String filename) {
 		try {
-			try (PrintWriter pw = new PrintWriter(new FileWriter(DEFAULT_LOADING_PROPERTIES_FILENAME))) {
-				Properties properties = getDefaultProperties();
+			try (PrintWriter pw = new PrintWriter(new FileWriter(filename))) {
 				properties.remove("database.engine");
 
 				TreeMap<String, String> propertiesSorted = new TreeMap<>();
@@ -81,6 +97,12 @@ public class LoadingProperties extends ConfigurationProperties {
 		catch (IOException ex) {
 			LOGGER.error(ex);
 		}
+	}
+
+	public static void writeDefaultPropertiesFile() {
+		Properties properties = getDefaultProperties();
+		String filename = DEFAULT_LOADING_PROPERTIES_FILENAME;
+		writePropertiesFile(properties, filename);
 	}
 
 	public static void main(String[] args) {

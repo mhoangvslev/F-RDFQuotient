@@ -79,6 +79,9 @@ public class SummarizationProperties extends ConfigurationProperties {
 		// Whether to export run statistics
 		properties.put("statistics.export_to_csv_file", "true");
 
+		// Whether to export summarization configuration to disk
+		properties.put("configuration.export_to_disk", "false");
+
 		// Drawing configuration
 
 		// Path to dot executable. If this is not found, it is not an error, just drawing won't work
@@ -129,11 +132,9 @@ public class SummarizationProperties extends ConfigurationProperties {
 		return properties;
 	}
 
-	public static void writeDefaultPropertiesFile() {
+	public static void writePropertiesFile(Properties properties, String filename) {
 		try {
-			try (PrintWriter pw = new PrintWriter(new FileWriter(DEFAULT_SUMMARIZATION_PROPERTIES_FILENAME))) {
-				Properties properties = getDefaultProperties();
-
+			try (PrintWriter pw = new PrintWriter(new FileWriter(filename))) {
 				TreeMap<String, String> propertiesSorted = new TreeMap<>();
 				for (Object property: properties.keySet()) {
 					propertiesSorted.put((String) property, properties.getProperty((String) property));
@@ -154,6 +155,12 @@ public class SummarizationProperties extends ConfigurationProperties {
 		catch (IOException ex) {
 			LOGGER.error(ex);
 		}
+	}
+
+	public static void writeDefaultPropertiesFile() {
+		Properties properties = getDefaultProperties();
+		String filename = DEFAULT_SUMMARIZATION_PROPERTIES_FILENAME;
+		writePropertiesFile(properties, filename);
 	}
 
 	public static void main(String[] args) {
