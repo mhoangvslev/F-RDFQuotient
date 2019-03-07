@@ -28,15 +28,16 @@ import java.util.Properties;
 import org.apache.log4j.Logger;
 
 public class SummaryExport {
-	private Properties properties;
 	private static final Logger LOGGER = Logger.getLogger(SummaryExport.class.getName());
+
 	Summary summary;
+	private Properties summarizationProperties;
 	private String dictionaryTableName;
 	private String triplesFileName;
 	private String summaryTablePrefix;
 	private String encodedTriplesTableName;
 
-	private boolean gatherStatistics;
+	private boolean gatherStatistics = false;
 	private boolean drawOfTypeClassEdges = false; // whether or not to draw edges of the form C rdf:type rdfs:Class
 	private boolean drawGraphLabel = false; // when drawing with entities, we may include a label of the graph, or not
 
@@ -54,10 +55,10 @@ public class SummaryExport {
 	private String schemaNodeLineSuffix = "\" [penwidth=2, fontsize=12, fillcolor=white, fontcolor=black];\n";
 	private int maxDotLinesPrinted = 1000;
 
-	public SummaryExport(Summary s, Properties properties, String dictionaryTableName,
+	public SummaryExport(Summary s, Properties summarizationProperties, String dictionaryTableName,
 			String triplesFileName, String encodedTriplesTableName){
 		this.summary = s;
-		this.properties = properties;
+		this.summarizationProperties = summarizationProperties;
 		this.dictionaryTableName = dictionaryTableName;
 		this.triplesFileName = triplesFileName;
 		this.summaryTablePrefix = s.getSummaryTablePrefix();
@@ -68,24 +69,12 @@ public class SummaryExport {
 		this.gatherStatistics = false;
 		this.drawGraphLabel = false;
 		try {
-			gatherStatistics = properties.getProperty("summary.gather_representation_counts").toLowerCase().equals("true");
-			dax = new DOTAuxiliary(properties.getProperty("drawing.color_scheme"));
-			drawGraphLabel = properties.getProperty("drawing.summary_drawing_title").toLowerCase().equals("true");
+			gatherStatistics = summarizationProperties.getProperty("summary.gather_representation_counts").toLowerCase().equals("true");
+			dax = new DOTAuxiliary(summarizationProperties.getProperty("drawing.color_scheme"));
+			drawGraphLabel = summarizationProperties.getProperty("drawing.summary_drawing_title").toLowerCase().equals("true");
 		}
 		catch(Exception e){
 			LOGGER.error(e);
-		}
-		String representationTableName = summary.getRepresentationTableName();
-		String getSplitLeafRepCountQuery = "select count(distinct et.o) from " + PostgresIdentifier.escapedQuotedId(encodedTriplesTableName) + " et, " +
-				PostgresIdentifier.escapedQuotedId(representationTableName) + " reps, " + PostgresIdentifier.escapedQuotedId(representationTableName) +
-				" repo where reps.summarynode=? and reps.graphnode=et.s and " +
-				" et.p=? and repo.summarynode=? and repo.graphnode=et.o";
-		try{
-			stmtSplitLeavesCount =  RDF2SQLEncoding.getConnection().prepareStatement(getSplitLeafRepCountQuery);
-		}
-		catch(SQLException e) {
-			e.printStackTrace();
-			throw new IllegalStateException("Unable to prepare statement for cardinality computation");
 		}
 	}
 
@@ -119,7 +108,7 @@ public class SummaryExport {
 		HashSet<Long> sn = summary.getSchemaNodes();
 		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
 
-		String URIprefix = properties.getProperty("drawing.prefix_URI_for_summary_nodes");
+		String URIprefix = summarizationProperties.getProperty("drawing.prefix_URI_for_summary_nodes");
 
 		String summaryNTFileName = getNTSummaryFileName();
 
@@ -215,7 +204,7 @@ public class SummaryExport {
 					for (long node : summaryNodeStats.keySet()) {
 						long numberOfRepresentedGraphNodes = summaryNodeStats.get(node);
 						String subject = getSummaryNodeURI(URIprefix, node);
-						String property = properties.getProperty("drawing.summary_node_support_URI");
+						String property = summarizationProperties.getProperty("drawing.summary_node_support_URI");
 						String object = ("\"" + numberOfRepresentedGraphNodes + "\"");
 						//LOGGER.debug(subject + " " + property + " " + object);
 						bw.write(subject + " <" + property + "> " + object + " .\n");
@@ -226,15 +215,15 @@ public class SummaryExport {
 					for (Triple ts : summaryEdgeStats.keySet()) {
 						// TODO: fix this too so that the edge cardinalities refer to actual edges (not the case now)
 						long numberOfRepresentedEdges = summaryEdgeStats.get(ts);
-						String reifEdgeURI = getSummaryNodeURI(properties.getProperty("drawing.reified_summary_edge_URI_prefix"),
+						String reifEdgeURI = getSummaryNodeURI(summarizationProperties.getProperty("drawing.reified_summary_edge_URI_prefix"),
 							reifiedEdgeNumber);
-						bw.write(reifEdgeURI + " <" + properties.getProperty("drawing.reified_edge_has_subject") + "> "
+						bw.write(reifEdgeURI + " <" + summarizationProperties.getProperty("drawing.reified_edge_has_subject") + "> "
 							+ getSummaryNodeURI(URIprefix, ts.s) + " .\n");
-						bw.write(reifEdgeURI + " <" + properties.getProperty("drawing.reified_edge_has_property") + "> "
+						bw.write(reifEdgeURI + " <" + summarizationProperties.getProperty("drawing.reified_edge_has_property") + "> "
 							+ RDF2SQLEncoding.dictionaryDecode(ts.p) + " .\n");
-						bw.write(reifEdgeURI + " <" + properties.getProperty("drawing.reified_edge_has_object") + "> "
+						bw.write(reifEdgeURI + " <" + summarizationProperties.getProperty("drawing.reified_edge_has_object") + "> "
 							+ getSummaryNodeURI(URIprefix, ts.o) + " .\n");
-						bw.write(reifEdgeURI + " <" + properties.getProperty("drawing.summary_edge_support_URI") + "> \""
+						bw.write(reifEdgeURI + " <" + summarizationProperties.getProperty("drawing.summary_edge_support_URI") + "> \""
 							+ numberOfRepresentedEdges + "\" .\n");
 						reifiedEdgeNumber++;
 					}
@@ -251,7 +240,7 @@ public class SummaryExport {
 	//============= Saving in DOT format ====
 
 	private void drawWithDOT(String summaryDOTFileName, String summaryPNGFileName) {
-		String pathToDot = properties.getProperty("drawing.dot_installation");
+		String pathToDot = summarizationProperties.getProperty("drawing.dot_installation");
 		try {
 			Runtime.getRuntime().exec(new String[] {pathToDot, "-Tpng", summaryDOTFileName, "-o", summaryPNGFileName});
 			LOGGER.info("Summary drawn to PNG file " + summaryPNGFileName);
@@ -270,11 +259,11 @@ public class SummaryExport {
 	 * @param summaryPNGFileName
 	 */
 	public void writeSummaryToDOTFile(Connection conn, String summaryDOTFileName, String summaryPNGFileName) {
-		dax = new DOTAuxiliary(properties.getProperty("drawing.color_scheme"));
+		dax = new DOTAuxiliary(summarizationProperties.getProperty("drawing.color_scheme"));
 		HashSet<Long> sn = summary.getSchemaNodes();
 		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
 		dax.resetColors();
-		String URIprefix = properties.getProperty("drawing.prefix_URI_for_summary_nodes");
+		String URIprefix = summarizationProperties.getProperty("drawing.prefix_URI_for_summary_nodes");
 
 		int dotLinesPrinted = 0;
 
@@ -544,6 +533,22 @@ public class SummaryExport {
 	 * @return the number of nodes represented by t.o as above
 	 */
 	private Long getRepresentedByThisLeaf(Triple t) {
+		if (stmtSplitLeavesCount == null) {
+			String representationTableName = summary.getRepresentationTableName();
+			String getSplitLeafRepCountQuery = "select count(distinct et.o) from "
+				+ PostgresIdentifier.escapedQuotedId(encodedTriplesTableName) + " et, "
+				+ PostgresIdentifier.escapedQuotedId(representationTableName) + " reps, "
+				+ PostgresIdentifier.escapedQuotedId(representationTableName)
+				+ " repo where reps.summarynode=? and reps.graphnode=et.s and "
+				+ " et.p=? and repo.summarynode=? and repo.graphnode=et.o";
+			try{
+				stmtSplitLeavesCount =  RDF2SQLEncoding.getConnection().prepareStatement(getSplitLeafRepCountQuery);
+			}
+			catch(SQLException e) {
+				e.printStackTrace();
+				throw new IllegalStateException("Unable to prepare statement for cardinality computation");
+			}
+		}
 		try {
 			stmtSplitLeavesCount.setLong(1, t.s);
 			stmtSplitLeavesCount.setLong(2, t.p);
@@ -572,7 +577,7 @@ public class SummaryExport {
 	 * @param summaryPNGFileName
 	 */
 	public void writeSummaryToDOTFileSplitLeaves(Connection conn, String summaryDOTFileName, String summaryPNGFileName) {
-		dax = new DOTAuxiliary(properties.getProperty("drawing.color_scheme"));
+		dax = new DOTAuxiliary(summarizationProperties.getProperty("drawing.color_scheme"));
 		// first, determine who is a leaf
 		HashSet<Long> leaves = new HashSet<>(); // tentative leaf nodes (until discovered to be subjects)
 		HashSet<Long> notLeaves = new HashSet<>(); // certain non-leaf nodes (subjects)
@@ -753,7 +758,7 @@ public class SummaryExport {
 	 * @param summaryPNGFileName
 	 */
 	public void writeSummaryToDOTFileSplitAndFoldLeaves(Connection conn, String summaryDOTFileName, String summaryPNGFileName) {
-		dax = new DOTAuxiliary(properties.getProperty("drawing.color_scheme"));
+		dax = new DOTAuxiliary(summarizationProperties.getProperty("drawing.color_scheme"));
 		// first, determine who is a leaf
 		HashSet<Long> leaves = new HashSet<>(); // tentative leaf nodes (until discovered to be subjects)
 		HashSet<Long> notLeaves = new HashSet<>(); // certain non-leaf nodes (subjects)
@@ -1145,7 +1150,7 @@ public class SummaryExport {
 	 */
 	public String getNTSummaryFileName() {
 		String filePathWithoutExtension = Interface.trimExtension(triplesFileName, false);
-		String NTFilenamePrefix = properties.getProperty("summary.nt_file_prefix");
+		String NTFilenamePrefix = summarizationProperties.getProperty("summary.nt_file_prefix");
 		int lastSlashPostion = filePathWithoutExtension.lastIndexOf("/");
 		String newPath = filePathWithoutExtension.substring(0, lastSlashPostion + 1) + NTFilenamePrefix;
 		String filename = filePathWithoutExtension.substring(lastSlashPostion + 1);
@@ -1157,7 +1162,7 @@ public class SummaryExport {
 			f.mkdirs();
 		}
 
-		String saturated = properties.getProperty("summary.summarize_saturated_graph").equals("true") ? "_sat" : "";
+		String saturated = summarizationProperties.getProperty("summary.summarize_saturated_graph").equals("true") ? "_sat" : "";
 
 		return filePathWithoutExtension + saturated + "_" + summaryTablePrefix + ".nt";
 	}
@@ -1179,7 +1184,7 @@ public class SummaryExport {
 	 */
 	public String getDOTFileName(Boolean shortSummaryName, String suffix) {
 		String filePathWithoutExtension = Interface.trimExtension(triplesFileName, false);
-		String DOTFilenamePrefix = properties.getProperty("drawing.dot_file_prefix");
+		String DOTFilenamePrefix = summarizationProperties.getProperty("drawing.dot_file_prefix");
 		int lastSlashPostion = filePathWithoutExtension.lastIndexOf("/");
 		String newPath = filePathWithoutExtension.substring(0, lastSlashPostion + 1) + DOTFilenamePrefix;
 		String filename = filePathWithoutExtension.substring(lastSlashPostion + 1);
@@ -1191,8 +1196,8 @@ public class SummaryExport {
 			f.mkdirs();
 		}
 
-		String saturated = properties.getProperty("summary.summarize_saturated_graph").equals("true") ? "_sat" : "";
-		String drawingStyle = properties.getProperty("drawing.style");
+		String saturated = summarizationProperties.getProperty("summary.summarize_saturated_graph").equals("true") ? "_sat" : "";
+		String drawingStyle = summarizationProperties.getProperty("drawing.style");
 
 		if (shortSummaryName) {
 			return filePathWithoutExtension + saturated + "_" + summaryTablePrefix + "_" + drawingStyle + suffix + ".dot";
@@ -1233,7 +1238,7 @@ public class SummaryExport {
 	 */
 	public String getPNGFileName(Boolean shortSummaryName, String suffix) {
 		String filePathWithoutExtension = Interface.trimExtension(triplesFileName, false);
-		String PNGFilenamePrefix = properties.getProperty("drawing.png_file_prefix");
+		String PNGFilenamePrefix = summarizationProperties.getProperty("drawing.png_file_prefix");
 		int lastSlashPostion = filePathWithoutExtension.lastIndexOf("/");
 		String newPath = filePathWithoutExtension.substring(0, lastSlashPostion + 1) + PNGFilenamePrefix;
 		String filename = filePathWithoutExtension.substring(lastSlashPostion + 1);
@@ -1245,8 +1250,8 @@ public class SummaryExport {
 			f.mkdirs();
 		}
 
-		String saturated = properties.getProperty("summary.summarize_saturated_graph").equals("true") ? "_sat" : "";
-		String drawingStyle = properties.getProperty("drawing.style");
+		String saturated = summarizationProperties.getProperty("summary.summarize_saturated_graph").equals("true") ? "_sat" : "";
+		String drawingStyle = summarizationProperties.getProperty("drawing.style");
 
 		if (shortSummaryName) {
 			return filePathWithoutExtension + saturated + "_" + summaryTablePrefix + "_" + drawingStyle + suffix + ".png";
@@ -1278,7 +1283,7 @@ public class SummaryExport {
 	 * @return
 	 */
 	protected String getShortURIForDot(String URI) {
-		int maxNodeLabelLength = Integer.parseInt(properties.getProperty("drawing.max_node_label_length"));
+		int maxNodeLabelLength = Integer.parseInt(summarizationProperties.getProperty("drawing.max_node_label_length"));
 		if (URI.length() < maxNodeLabelLength)
 			return URI;
 		else
@@ -1305,7 +1310,7 @@ public class SummaryExport {
 		}
 	}
 	protected String dotSuffixOfStringsAndURIs(String s){
-		int suffixLength = Integer.parseInt(properties.getProperty("drawing.max_node_label_length"));
+		int suffixLength = Integer.parseInt(summarizationProperties.getProperty("drawing.max_node_label_length"));
 		if (s.length() <= suffixLength){
 			return s;
 		}

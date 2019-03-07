@@ -1121,6 +1121,13 @@ public class Summary {
 	public void drawGraphAndSummary(Connection conn, String suffix) {
 		ensureExporter();
 
+		String drawingStyle = summarizationProperties.getProperty("drawing.style");
+		if (!drawingStyle.equals("plain")) {
+			LOGGER.warn("Drawing style for step-by-step drawing set to plain, despite configuration set to: " + drawingStyle);
+			// change to plain layout
+			summarizationProperties.put("drawing.style", "plain");
+		}
+
 		String graphDOTFileName = exporter.getDOTFileName(false, suffix);
 		String graphPNGFileName = exporter.getPNGFileName(false, suffix);
 		exporter.writeRDFGraphToDOTFile(conn, graphDOTFileName, graphPNGFileName);
@@ -1132,6 +1139,9 @@ public class Summary {
 		String summaryDOTFileName = exporter.getDOTFileName(true, suffix);
 		String summaryPNGFileName = exporter.getPNGFileName(true, suffix);
 		exporter.writeSummaryToDOTFile(conn, summaryDOTFileName, summaryPNGFileName);
+
+		// revert changes
+		summarizationProperties.put("drawing.style", drawingStyle);
 	}
 
 	/**
