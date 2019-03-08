@@ -18,6 +18,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -954,30 +955,123 @@ public class SummaryExport {
 		drawWithDOT(summaryDOTFileName, summaryPNGFileName);
 	}
 
+	/**
+	 * Takes triples from a cursor and prints them in DOT format into a buffered writer.
+	 * @param conn
+	 * @param rs
+	 * @param bw
+	 * @param triplesToDraw
+	 * @param triplesDrawn
+	 * @return the number of triples drawn. This is needed to control how many triples (if any) we need to print from the second group of triples.
+	 */
+	protected long drawTriples(Connection conn, ResultSet rs, BufferedWriter bw, long triplesToDraw, long triplesDrawn){
+		long currentPosition = triplesDrawn;
+		long triplesDrawnInDot = 0;
+		ResultSet userRS = null;
+		String userSubject = null;
+		String userProperty = null;
+		String userObject = null;
+		Long userAddedAfter = null;
+		String subject;
+		String property;
+		String object;
+
+		if (userEncodedTriplesTableExists(conn)) {
+			userRS = getUserTriplesCursorForDotDrawing(conn);
+		}
+		try {
+			do {
+				if (currentPosition == triplesToDraw) {
+					break;
+				}
+				// check user triple
+				if (userRS != null) {
+					if (userAddedAfter == null) {
+						if (userRS.next()) {
+							userSubject = userRS.getString(1);
+							userProperty = userRS.getString(2);
+							userObject = userRS.getString(3);
+							userAddedAfter = userRS.getLong(4);
+						}
+					}
+					if (userAddedAfter != null && userAddedAfter == currentPosition) {
+						subject = userSubject;
+						property = userProperty;
+						object = userObject;
+						userSubject = null;
+						userProperty = null;
+						userObject = null;
+						userAddedAfter = null;
+					}
+					else {
+						if (rs.next()) {
+							subject = rs.getString(1);
+							property = rs.getString(2);
+							object = rs.getString(3);
+						}
+						else {
+							break;
+						}
+					}
+				}
+				else {
+					if (rs.next()) {
+						subject = rs.getString(1);
+						property = rs.getString(2);
+						object = rs.getString(3);
+					}
+					else {
+						break;
+					}
+				}
+
+				long s = RDF2SQLEncoding.dictionaryEncode(subject);
+				long sRep = summary.getRepresentative(s);
+				//LOGGER.debug("DrawTriples: Encoded " + subject + " into " + s + " whose representative is: "  + sRep);
+
+				long o = RDF2SQLEncoding.dictionaryEncode(object);
+				long oRep = summary.getRepresentative(o);
+
+				//LOGGER.debug("DrawTriples: Encoded " + object + " into " + o + " whose representative is: " + oRep);
+				long p = RDF2SQLEncoding.dictionaryEncode(property);
+				//LOGGER.debug("DRAW Triple! (" + subject + " " + property + " " + object + ")");
+				//LOGGER.debug("DRAW Represented by: " + sRep + " " + p + " " + oRep);
+				writeGraphTripleToDOTFile(bw, s, p, o, subject, property, object, sRep, oRep);
+				triplesDrawnInDot++;
+				currentPosition++;
+			}
+			while (true);
+		}
+		catch (SQLException ex) {
+			throw new IllegalStateException("Could not get triple from cursor " + ex.toString());
+		}
+		return triplesDrawnInDot;
+	}
+
 	public void writeRDFGraphToDOTFile(Connection conn, String summaryDOTFileName, String summaryPNGFileName) {
 		try {
 			try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(summaryDOTFileName)))) {
 				bw.write("digraph g{\n");
 				long triplesToDraw = Math.min(100, summary.triplesSummarizedSoFar);
 				//LOGGER.debug("Writing " + triplesToDraw + " RDF graph triples to DOT");
-				long triplesDrawn;
+				long triplesDrawn = 0;
 				if (summary.isTypeFirst()) {
 					try (ResultSet rs = getTypeTriplesCursorForDotDrawing(conn, triplesToDraw)) {
-						triplesDrawn = drawTriples(rs, bw);
+						triplesDrawn = drawTriples(conn, rs, bw, triplesToDraw, triplesDrawn);
 					}
 					if (triplesDrawn < triplesToDraw){
 						try (ResultSet rs2 = getNonTypeTriplesCursorForDotDrawing(conn, triplesToDraw-triplesDrawn)) {
-							drawTriples(rs2, bw);
+							drawTriples(conn, rs2, bw, triplesToDraw, triplesDrawn);
 						}
 					}
 				}
 				else {
 					try (ResultSet rs = getNonTypeTriplesCursorForDotDrawing(conn, triplesToDraw)) {
-						triplesDrawn = drawTriples(rs, bw);
+						triplesDrawn = drawTriples(conn, rs, bw, triplesToDraw, triplesDrawn);
 					}
 					if (triplesDrawn < triplesToDraw){
 						try (ResultSet rs2 = getTypeTriplesCursorForDotDrawing(conn, triplesToDraw-triplesDrawn)) {
-							drawTriples(rs2, bw);
+							drawTriples(conn, rs2, bw, triplesToDraw, triplesDrawn);
 						}
 					}
 				}
@@ -1003,40 +1097,6 @@ public class SummaryExport {
 	}
 
 	/**
-	 * Takes triples from a cursor and prints them in DOT format into a buffered writer.
-	 * @param rs
-	 * @param bw
-	 * @return the number of triples drawn. This is needed to control how many triples (if any) we need to print from the second group of triples.
-	 */
-	protected long drawTriples(ResultSet rs, BufferedWriter bw){
-		long triplesDrawnInDot = 0;
-		try {
-			while (rs.next()) {
-				String subject = rs.getString(1);
-				long s = RDF2SQLEncoding.dictionaryEncode(subject);
-				long sRep = summary.getRepresentative(s);
-				//LOGGER.debug("DrawTriples: Encoded " + subject + " into " + s + " whose representative is: "  + sRep);
-
-				String object = rs.getString(3);
-				long o = RDF2SQLEncoding.dictionaryEncode(object);
-				long oRep = summary.getRepresentative(o);
-
-				//LOGGER.debug("DrawTriples: Encoded " + object + " into " + o + " whose representative is: " + oRep);
-				String property = rs.getString(2);
-				long p = RDF2SQLEncoding.dictionaryEncode(property);
-				//LOGGER.debug("DRAW Triple! (" + subject + " " + property + " " + object + ")");
-				//LOGGER.debug("DRAW Represented by: " + sRep + " " + p + " " + oRep);
-				writeGraphTripleToDOTFile(bw, s, p, o, subject, property, object, sRep, oRep);
-				triplesDrawnInDot++;
-			}
-		}
-		catch (SQLException e){
-			throw new IllegalStateException("Could not get triple from cursor " + e.toString());
-		}
-		return triplesDrawnInDot;
-	}
-
-	/**
 	 * This is used only when drawing the graph using Dot.
 	 * Different summaries need to traverse their triples in different orders, thus the two cursors which differ between the typed and untyped summaries.
 	 * Returns the first cursor, over the non-type triples
@@ -1057,6 +1117,7 @@ public class SummaryExport {
 			throw new IllegalStateException("Could not get a cursor on the graph triples for drawing");
 		}
 	}
+
 	/**
 	 * This is used only when drawing the graph using Dot.
 	 * Different summaries need to traverse their triples in different orders, thus the two cursors which differ between the typed and untyped summaries.
@@ -1074,7 +1135,32 @@ public class SummaryExport {
 				+ " d3 on t.o = d3.key where d2.value = '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' limit " + triplesToDraw;
 			return conn.createStatement().executeQuery(query);
 		}
-		catch(SQLException e){
+		catch(SQLException e) {
+			throw new IllegalStateException("Could not get a cursor on the graph triples for drawing");
+		}
+	}
+
+	protected boolean userEncodedTriplesTableExists(Connection conn) {
+		try {
+			DatabaseMetaData dbm = conn.getMetaData();
+			ResultSet rs = dbm.getTables(null, "public", "user_encoded_triples", null);
+			return rs.next();
+		}
+		catch(SQLException e) {
+			throw new IllegalStateException("Could not get a cursor on the graph triples for drawing");
+		}
+	}
+
+	protected ResultSet getUserTriplesCursorForDotDrawing(Connection conn) {
+		try {
+			String query = "select d1.value, d2.value, d3.value, added_after from "
+				+ " user_encoded_triples t join " + dictionaryTableName
+				+ " d1 on t.s = d1.key join " + dictionaryTableName
+				+ " d2 on t.p = d2.key join " + dictionaryTableName
+				+ " d3 on t.o = d3.key";
+			return conn.createStatement().executeQuery(query);
+		}
+		catch(SQLException e) {
 			throw new IllegalStateException("Could not get a cursor on the graph triples for drawing");
 		}
 	}

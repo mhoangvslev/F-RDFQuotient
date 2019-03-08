@@ -11,6 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Locale;
+import java.util.Scanner;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
@@ -72,6 +73,88 @@ public abstract class Traverser {
 		}
 	}
 
+	protected Triple haltStepByStepAndAskForTripleFromUser(boolean typeTriple) {
+		LOGGER.info("Press ENTER to continue, press n to add new " + (typeTriple ? "" : "non-") + "type triple");
+		Scanner scanner = new Scanner(System.in);
+		String line = scanner.nextLine();
+		if (line.equals("n")) {
+			LOGGER.info("Type subject of new triple:");
+			String s = scanner.nextLine();
+			LOGGER.info("Type property of new triple:");
+			String p = scanner.nextLine();
+			LOGGER.info("Type object of new triple:");
+			String o = scanner.nextLine();
+
+			// TODO: validate URIs
+
+			long sEncoded = -1;
+			long pEncoded = -1;
+			long oEncoded = -1;
+			try {
+				sEncoded = RDF2SQLEncoding.dictionaryEncode(s);
+			}
+			catch (IllegalStateException ex) {
+				LOGGER.error(ex);
+			}
+			if (sEncoded == -1) {
+				sEncoded = RDF2SQLEncoding.addNewEntryToDictionary(s, summ.dictionaryTableName);
+			}
+			try {
+				pEncoded = RDF2SQLEncoding.dictionaryEncode(p);
+			}
+			catch (IllegalStateException ex) {
+				LOGGER.error(ex);
+			}
+			if (pEncoded == -1) {
+				pEncoded = RDF2SQLEncoding.addNewEntryToDictionary(p, summ.dictionaryTableName);
+			}
+			try {
+				oEncoded = RDF2SQLEncoding.dictionaryEncode(o);
+			}
+			catch (IllegalStateException ex) {
+				LOGGER.error(ex);
+			}
+			if (oEncoded == -1) {
+				oEncoded = RDF2SQLEncoding.addNewEntryToDictionary(o, summ.dictionaryTableName);
+			}
+
+			long typeCode = RDF2SQLEncoding.getTypeCode();
+			long classCode = RDF2SQLEncoding.getClassCode();
+			long propertyCode = RDF2SQLEncoding.getPropertyCode();
+			if (typeTriple && (pEncoded != typeCode)) {
+				LOGGER.error("Expected type triple, addition cancelled, retry");
+				return haltStepByStepAndAskForTripleFromUser(typeTriple);
+			}
+			if (!typeTriple && (pEncoded == typeCode)) {
+				LOGGER.error("Expected type non-triple, addition cancelled, retry");
+				return haltStepByStepAndAskForTripleFromUser(typeTriple);
+			}
+
+			RDF2SQLEncoding.createIfNotExistsUserTriplesTable();
+			RDF2SQLEncoding.createIfNotExistsUserEncodedTriplesTable();
+			RDF2SQLEncoding.addNewTripleToUserTriplesTable(s, p, o, summ.triplesTableName);
+			RDF2SQLEncoding.addNewTripleToUserEncodedTriplesTable(sEncoded, pEncoded, oEncoded, summ.triplesSummarizedSoFar, summ.encodedTriplesTableName);
+
+			if (RDF2SQLEncoding.isSchemaProperty(pEncoded)) {
+				summ.sn.add(sEncoded);
+				summ.rep.put(sEncoded, sEncoded);
+				summ.sn.add(oEncoded);
+				summ.rep.put(oEncoded, oEncoded);
+			}
+			if (pEncoded == typeCode) {
+				summ.sn.add(oEncoded);
+				summ.rep.put(oEncoded, oEncoded);
+				if (oEncoded == classCode || oEncoded == propertyCode) {
+					summ.sn.add(sEncoded);
+					summ.rep.put(sEncoded, sEncoded);
+				}
+			}
+
+			return new Triple(sEncoded, pEncoded, oEncoded);
+		}
+		return null;
+	}
+
 	protected void drawStepByStep() {
 		String numberOfTriples = String.format((Locale) null, "%09d", summ.triplesSummarizedSoFar);
 		summ.drawGraphAndSummary(conn, "_after_" + numberOfTriples);
@@ -101,13 +184,29 @@ public abstract class Traverser {
 			try (Statement getUntypedTriples = conn.createStatement()) {
 				getUntypedTriples.setFetchSize(10000);
 				try (ResultSet rs = getUntypedTriples.executeQuery(getUntypedTriplesString)) {
-					while (rs.next()) {
-						Triple t = new Triple(rs.getLong(1), rs.getLong(2), rs.getLong(3));
+					do {
+						Triple t = null;
+
+						if (summ.haltStepByStep) {
+							t = haltStepByStepAndAskForTripleFromUser(false);
+						}
+						if (t == null) {
+							if (rs.next()) {
+								t = new Triple(rs.getLong(1), rs.getLong(2), rs.getLong(3));
+							}
+							else {
+								if (summ.haltStepByStep) {
+									LOGGER.info("No more data triples");
+								}
+								break;
+							}
+						}
+
 						if ((t.p == subClassCode)
 						|| (t.p == subPropertyCode)
 						|| (t.p == domainCode)
 						|| (t.p == rangeCode)) { // schema triple
-							// s, o represented in collectSchemaNodes
+							// scanner, o represented in collectSchemaNodes
 							summ.edgesWithProv.addTriple(summ.rep.get(t.s), t.p, summ.rep.get(t.o));
 						}
 						else { // data triple
@@ -126,10 +225,8 @@ public abstract class Traverser {
 						if (summ.drawStepByStep) {
 							drawStepByStep();
 						}
-						if (summ.haltStepByStep) {
-							haltStepByStep();
-						}
 					}
+					while (true);
 				}
 			}
 		}
@@ -153,7 +250,7 @@ public abstract class Traverser {
 						|| (t.p == subPropertyCode)
 						|| (t.p == domainCode)
 						|| (t.p == rangeCode)) { // schema triple
-							// s, o represented in collectSchemaNodes
+							// scanner, o represented in collectSchemaNodes
 							summ.edgesWithProv.addTriple(summ.rep.get(t.s), t.p, summ.rep.get(t.o));
 						}
 						else { // data triple
@@ -186,6 +283,9 @@ public abstract class Traverser {
 				getUntypedTriples.setFetchSize(10000);
 				try (ResultSet rs = getUntypedTriples.executeQuery(getUntypedTriplesString)) {
 					while (rs.next()) {
+						if (summ.haltStepByStep) {
+							haltStepByStep();
+						}
 						Triple t = new Triple(rs.getLong(1), rs.getLong(2), rs.getLong(3));
 						if (summ.genericPropertiesIgnoredInCliques.contains(t.p)) { // avoid generic property triples, they will be represented later
 							continue;
@@ -204,9 +304,6 @@ public abstract class Traverser {
 						}
 						if (summ.drawStepByStep) {
 							drawStepByStep();
-						}
-						if (summ.haltStepByStep) {
-							haltStepByStep();
 						}
 					}
 				}

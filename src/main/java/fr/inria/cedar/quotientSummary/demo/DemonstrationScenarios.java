@@ -41,7 +41,7 @@ public class DemonstrationScenarios {
 	}
 
 	public static void main(String[] argv) {
-		//loadDatasets();
+		loadDatasets();
 		scenario1();
 	}
 }

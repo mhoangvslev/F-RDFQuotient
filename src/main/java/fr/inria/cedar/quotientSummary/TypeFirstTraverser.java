@@ -28,9 +28,25 @@ public class TypeFirstTraverser extends Traverser {
 			try (Statement getTypedTriples = conn.createStatement()) {
 				getTypedTriples.setFetchSize(1000);
 				try (ResultSet rs = getTypedTriples.executeQuery(getTypedTriplesString)) {
-					while (rs.next()) {
-						// type triple
-						Triple t = new Triple(rs.getLong(1), rs.getLong(2), summ.rep.get(rs.getLong(3)));
+					do {
+						Triple t = null;
+
+						if (summ.haltStepByStep) {
+							t = haltStepByStepAndAskForTripleFromUser(true);
+						}
+						if (t == null) {
+							if (rs.next()) {
+								t = new Triple(rs.getLong(1), rs.getLong(2), rs.getLong(3));
+							}
+							else {
+								if (summ.haltStepByStep) {
+									LOGGER.info("No more type triples");
+								}
+								break;
+							}
+						}
+						t = new Triple (t.s, t.p, summ.rep.get(t.o));
+
 						summ.handleTypeTripleBeforeData(t);
 						summ.triplesSummarizedSoFar++;
 						summ.typeTriplesSummarizedSoFar++;
@@ -40,10 +56,8 @@ public class TypeFirstTraverser extends Traverser {
 						if (summ.drawStepByStep) {
 							drawStepByStep();
 						}
-						if (summ.haltStepByStep) {
-							haltStepByStep();
-						}
 					}
+					while (true);
 				}
 			}
 		}

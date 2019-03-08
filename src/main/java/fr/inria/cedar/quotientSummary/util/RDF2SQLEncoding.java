@@ -146,8 +146,9 @@ public class RDF2SQLEncoding {
 	public static long dictionaryEncode(String URI) {
 		// try to use the cache if possible
 		Long alreadyKnownCode = uriOrLiteralToCode.get(URI);
-		if (alreadyKnownCode != null)
+		if (alreadyKnownCode != null) {
 			return alreadyKnownCode;
+		}
 		long code = -1;
 		try {
 			stmtEncode.setString(1, URI);
@@ -167,26 +168,102 @@ public class RDF2SQLEncoding {
 		return code;
 	}
 
-	public static String dictionaryDecode(long URL) {
+	public static String dictionaryDecode(long encodedURI) {
 		// try to use the cache if possible
-		String alreadyKnownURIOrLiteral = codeToURIOrLiteral.get(URL);
-		if (alreadyKnownURIOrLiteral != null)
+		String alreadyKnownURIOrLiteral = codeToURIOrLiteral.get(encodedURI);
+		if (alreadyKnownURIOrLiteral != null) {
 			return alreadyKnownURIOrLiteral;
+		}
 		try {
-			stmtDecode.setLong(1, URL);
+			stmtDecode.setLong(1, encodedURI);
 			ResultSet rs = stmtDecode.executeQuery();
 			if (rs.next()) {
 				String s = rs.getString(1);
 				//LOGGER.info("We got #" + s + "#");
 				// feed the cache:
-				codeToURIOrLiteral.put(URL, s);
+				codeToURIOrLiteral.put(encodedURI, s);
 				return s;
 			}
-			else
-				throw new IllegalStateException("No value for code " + URL);
+			else {
+				throw new IllegalStateException("No value for code " + encodedURI);
+			}
 		}
 		catch (SQLException e) {
 			throw new IllegalStateException("Not able to decode ");
+		}
+	}
+
+	public static long addNewEntryToDictionary(String n, String dictionaryTableName) {
+		long nEncoded = -1;
+		try {
+			// determine encoding
+			PreparedStatement stmtDictionarySize = conn.prepareStatement("select count(*) from " + PostgresIdentifier.escapedQuotedId(dictionaryTableName));
+			ResultSet rs = stmtDictionarySize.executeQuery();
+			if (rs.next()) {
+				// new encoding is double the size of dictionary (to avoid collision with new summary IDs and with newly added triples)
+				nEncoded = rs.getLong(1) * 2;
+			}
+
+			// add to dictionary
+			PreparedStatement stmtAddToDictionary = conn.prepareStatement("insert into " + PostgresIdentifier.escapedQuotedId(dictionaryTableName) + " values (?, ?)");
+			stmtAddToDictionary.setLong(1, nEncoded);
+			stmtAddToDictionary.setString(2, n);
+			stmtAddToDictionary.executeUpdate();
+			conn.commit();
+			uriOrLiteralToCode.put(n, nEncoded);
+		}
+		catch (SQLException ex) {
+			LOGGER.error(ex);
+		}
+		return nEncoded;
+	}
+
+	public static void createIfNotExistsUserTriplesTable() {
+		try {
+			PreparedStatement stmtcreateIfNotExistsUserTriplesTable = conn.prepareStatement("create table if not exists user_triples (s text, p text, o text)");
+			stmtcreateIfNotExistsUserTriplesTable.executeUpdate();
+		}
+		catch (SQLException ex) {
+			LOGGER.error(ex);
+		}
+	}
+
+	public static void createIfNotExistsUserEncodedTriplesTable() {
+		try {
+			PreparedStatement stmtcreateIfNotExistsUserEncodedTriplesTable = conn.prepareStatement("create table if not exists user_encoded_triples (s integer, p integer, o integer, added_after integer)");
+			stmtcreateIfNotExistsUserEncodedTriplesTable.executeUpdate();
+		}
+		catch (SQLException ex) {
+			LOGGER.error(ex);
+		}
+	}
+
+	public static void addNewTripleToUserTriplesTable(String s, String p, String o, String triplesTableName) {
+		try {
+			PreparedStatement stmtAddToUserTriplesTable = conn.prepareStatement("insert into user_triples values (?, ?, ?)");
+			stmtAddToUserTriplesTable.setString(1, s);
+			stmtAddToUserTriplesTable.setString(2, p);
+			stmtAddToUserTriplesTable.setString(3, o);
+			stmtAddToUserTriplesTable.executeUpdate();
+			conn.commit();
+		}
+		catch (SQLException ex) {
+			LOGGER.error(ex);
+		}
+	}
+
+	public static void addNewTripleToUserEncodedTriplesTable(long sEncoded, long pEncoded, long oEncoded, long addedAfter, String encodedTriplesTableName) {
+		try {
+			PreparedStatement stmtAddToUserEncodedTriplesTable = conn.prepareStatement("insert into user_encoded_triples values (?, ?, ?, ?)");
+			stmtAddToUserEncodedTriplesTable.setLong(1, sEncoded);
+			stmtAddToUserEncodedTriplesTable.setLong(2, pEncoded);
+			stmtAddToUserEncodedTriplesTable.setLong(3, oEncoded);
+			stmtAddToUserEncodedTriplesTable.setLong(4, addedAfter);
+			stmtAddToUserEncodedTriplesTable.executeUpdate();
+			conn.commit();
+		}
+		catch (SQLException ex) {
+			LOGGER.error(ex);
 		}
 	}
 
@@ -208,5 +285,4 @@ public class RDF2SQLEncoding {
 	public static DecodedTriple decode(Triple t) {
 		return new DecodedTriple(dictionaryDecode(t.s), dictionaryDecode(t.p), dictionaryDecode(t.o));
 	}
-
 }
