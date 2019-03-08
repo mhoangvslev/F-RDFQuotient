@@ -543,6 +543,22 @@ public class Interface {
 			summary = createNewSummary(summarizationProperties);
 			summary.setSummarizationProperties(summarizationProperties);
 			getOrEstablishNewDatabaseConnection(summarizationProperties);
+			if (summarizationProperties.getProperty("summary.step_by_step").equals("true")) {
+				if (summarizationProperties.getProperty("drawing.step_by_step").equals("false")) {
+					LOGGER.warn("Configuration set to summary.step_by_step=true and drawing.step_by_step=false implies incremental execution without step-by-step drawings");
+				}
+
+				String summaryType = summarizationProperties.getProperty("summary.type");
+				switch (summaryType) {
+					case "weak":
+					case "strong":
+					case "typedweak":
+					case "typedstrong":
+						break;
+					default:
+						LOGGER.warn("summary.step_by_step=true for " + summaryType + " which is not incremental: showing only second pass");
+				}
+			}
 			summary.summarizeFromPostgres(databaseConnection);
 			LOGGER.info("Graph from Postgres summarized");
 		}

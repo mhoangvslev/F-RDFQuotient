@@ -8,15 +8,15 @@ import fr.inria.cedar.quotientSummary.controller.SummarizationProperties;
 import java.util.Properties;
 
 public class DemonstrationScenarios {
-	private static final String[] datasetFilenames = {"demo/test-1.nt"};
+	private static final String[] DATASET_FILENAMES = {"demo/test-1.nt"};
 
-	public void loadDatasets() {
+	public static void loadDatasets() {
 		Properties loadingProperties = LoadingProperties.getDefaultProperties();
 		loadingProperties.put("saturation.enable", "true");
 		loadingProperties.put("statistics.export_to_csv_file", "false");
 		loadingProperties.put("configuration.export_to_disk", "false");
 
-		for (String datasetFilename: datasetFilenames) {
+		for (String datasetFilename: DATASET_FILENAMES) {
 			loadingProperties.put("dataset.filename", datasetFilename);
 			Interface.load(null, loadingProperties, true);
 		}
@@ -24,7 +24,7 @@ public class DemonstrationScenarios {
 
 	public static void scenario1() { // summarize step-by-step, stopping after every triple
 		Properties summarizationProperties = SummarizationProperties.getDefaultProperties();
-		summarizationProperties.put("dataset.filename", datasetFilenames[0]);
+		summarizationProperties.put("dataset.filename", DATASET_FILENAMES[0]);
 		summarizationProperties.put("summary.type", "weak");
 		summarizationProperties.put("summary.summarize_saturated_graph", "false");
 		summarizationProperties.put("summary.replace_type_with_most_general_type", "false");
@@ -41,6 +41,7 @@ public class DemonstrationScenarios {
 	}
 
 	public static void main(String[] argv) {
+		//loadDatasets();
 		scenario1();
 	}
 }
