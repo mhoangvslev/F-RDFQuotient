@@ -55,7 +55,14 @@ Click on a version number below to download stand-alone jar file.
 * [1.8-SNAPSHOT](http://files.inria.fr/cedar/RDFQuotient/quotientSummaryWithDependencies-1.8-SNAPSHOT.jar) (recommended) current, 1.8 pre-release version, still under development but rather stable, build from March 11, 2019
 * [1.7](http://files.inria.fr/cedar/RDFQuotient/quotientSummaryWithDependencies-1.7.jar) (legacy code) stable version released on October 19, 2018
 
-<!---
-###Building from sources
+### Building from sources
 The loading functionality is provided by the OntoSQL/rdfDB package developed in CEDAR, on which this project depends.
--->
+
+In order to build the project:
+
+1. Clone this git repository.
+2. Download [OntoSQL jar file](http://files.inria.fr/cedar/RDFQuotient/ontosql-rdfdb-1.0.9-SNAPSHOT-with-dependencies.jar).
+3. Download a modified [pom.xml file](http://files.inria.fr/cedar/RDFQuotient/pom.xml).
+4. Replace project pom.xml file with modified pom.xml.
+5. In line 25 of the modified pom.xml, replace "yourpath/ontosql-rdfdb-1.0.9-SNAPSHOT-with-dependencies.jar" with the path to the OntoSQL jar file.
+6. Run mvn clean install command.

@@ -5,10 +5,6 @@
 /.settings/
 .DS_Store
 .ipynb_checkpoints
-conf/documentation.aux
-conf/documentation.log
-conf/documentation.pdf
-conf/documentation.synctex.gz
 /src/test/resources/*/*.nt
 !/src/test/resources/*/*reference.nt
 !/src/test/resources/rdf-nt-files/*.nt
