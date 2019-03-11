@@ -4,8 +4,6 @@ Authors: Ioana Manolescu, Paweł Guzewicz (CEDAR team at Inria Saclay, France).
 
 Visit our [project website](https://project.inria.fr/rdfquotient/) for details about our scientific contribution.
 
-GitLab project name: quotientSummary.
-
 ## Description
 This software allows to build quotient summaries of RDF graphs. 
 
@@ -36,24 +34,24 @@ The code works by loading the RDF graph expected in **N-Triples format** with **
 
 In short, two main functionalities can be understood by looking at our scripts:
  
-* [load.sh](https://gitlab.inria.fr/cedar/quotientSummary/blob/master/scripts/load.sh)
-* [summarize.sh](https://gitlab.inria.fr/cedar/quotientSummary/blob/master/scripts/summarize.sh)
+* [load.sh](https://gitlab.inria.fr/cedar/RDFQuotient/blob/master/scripts/load.sh)
+* [summarize.sh](https://gitlab.inria.fr/cedar/RDFQuotient/blob/master/scripts/summarize.sh)
 
 The example usage of those primitives is the scheduled computation of the set of experiments for a given dataset, e.g.:
 
-* [run_cedar001.sh](https://gitlab.inria.fr/cedar/quotientSummary/blob/master/scripts/run_cedar001.sh)
-* [run_cedar001_shortcut.sh](https://gitlab.inria.fr/cedar/quotientSummary/blob/master/scripts/run_cedar001_shortcut.sh)
+* [run_cedar001.sh](https://gitlab.inria.fr/cedar/RDFQuotient/blob/master/scripts/run_cedar001.sh)
+* [run_cedar001_shortcut.sh](https://gitlab.inria.fr/cedar/RDFQuotient/blob/master/scripts/run_cedar001_shortcut.sh)
 
 ### IMPORTANT: before using our software
-* read the [licence](https://gitlab.inria.fr/cedar/quotientSummary/blob/master/LICENCE.txt)
-* read the [documentation](https://gitlab.inria.fr/cedar/quotientSummary/blob/master/documentation.pdf), which contains detailed description of stand-alone and programmatic interfaces of RDFQuotient tool.
+* read the [license](https://gitlab.inria.fr/cedar/RDFQuotient/blob/master/LICENSE.txt)
+* read the [documentation](https://gitlab.inria.fr/cedar/RDFQuotient/blob/master/documentation.pdf), which contains detailed description of stand-alone and programmatic interfaces of RDFQuotient tool.
 
 ## Download
 ### Jar files
 Click on a version number below to download stand-alone jar file.
 
-* [1.8-SNAPSHOT](http://files.inria.fr/cedar/RDFQuotient/quotientSummary-1.8-SNAPSHOT-with-dependencies.jar) (recommended) current, 1.8 pre-release version, still under development but rather stable, build from March 11, 2019
-* [1.7](http://files.inria.fr/cedar/RDFQuotient/quotientSummary-1.7-with-dependencies.jar) (legacy code) stable version released on October 19, 2018
+* [1.8-SNAPSHOT](http://files.inria.fr/cedar/RDFQuotient/RDFQuotient-1.8-SNAPSHOT-with-dependencies.jar) (recommended) current, 1.8 pre-release version, still under development but rather stable, build from March 11, 2019
+* [1.7](http://files.inria.fr/cedar/RDFQuotient/RDFQuotient-1.7-with-dependencies.jar) (legacy code) stable version released on October 19, 2018
 
 ### Building from sources
 The loading functionality is provided by the OntoSQL/rdfDB package developed in CEDAR, on which this project depends.

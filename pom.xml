@@ -4,12 +4,12 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>fr.inria.cedar</groupId>
-	<artifactId>quotientSummary</artifactId>
+	<artifactId>RDFQuotient</artifactId>
 	<version>1.8-SNAPSHOT</version>
 
 	<packaging>jar</packaging>
 
-	<name>quotientSummary</name>
+	<name>RDFQuotient</name>
 	<url>http://maven.apache.org</url>
 
 	<properties>
@@ -124,13 +124,13 @@
 						<manifest>
 							<!-- Jar file entry point -->
 							<addClasspath>true</addClasspath>
-							<mainClass>fr.inria.cedar.quotientSummary.controller.Interface</mainClass>
+							<mainClass>fr.inria.cedar.RDFQuotient.controller.Interface</mainClass>
 						</manifest>
 					</archive>
 					<descriptorRefs>
 						<descriptorRef>jar-with-dependencies</descriptorRef>
 					</descriptorRefs>
-					<finalName>quotientSummary-${project.version}-with-dependencies</finalName>
+					<finalName>RDFQuotient-${project.version}-with-dependencies</finalName>
 					<appendAssemblyId>false</appendAssemblyId>
 				</configuration>
 			</plugin>
