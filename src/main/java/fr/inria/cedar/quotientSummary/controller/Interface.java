@@ -289,7 +289,7 @@ public class Interface {
 		file/object that does not contain valid configuration properties,
 		default values will be used.
 
-		Otherwise the following precedure applies:
+		Otherwise the following procedure applies:
 		1. Take default values
 		2. Overwrite them with the values from the file configurationFilename
 		3. Overwrite them with the values from the object properties
@@ -690,7 +690,7 @@ public class Interface {
 
 		versionOption = Option.builder("v")
 			.longOpt("version")
-			.desc("- print version of RDQQuotient")
+			.desc("- print the version of RDFQuotient")
 			.required(false)
 			.build();
 

@@ -72,7 +72,7 @@ public class SummaryExport {
 		try {
 			gatherStatistics = summarizationProperties.getProperty("summary.gather_representation_counts").toLowerCase().equals("true");
 			dax = new DOTAuxiliary(summarizationProperties.getProperty("drawing.color_scheme"));
-			drawGraphLabel = summarizationProperties.getProperty("drawing.summary_drawing_title").toLowerCase().equals("true");
+			drawGraphLabel = summarizationProperties.getProperty("drawing.title").toLowerCase().equals("true");
 		}
 		catch(Exception e){
 			LOGGER.error(e);
@@ -109,7 +109,7 @@ public class SummaryExport {
 		HashSet<Long> sn = summary.getSchemaNodes();
 		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
 
-		String URIprefix = summarizationProperties.getProperty("drawing.prefix_URI_for_summary_nodes");
+		String URIprefix = summarizationProperties.getProperty("drawing.summary_node_URI_prefix");
 
 		String summaryNTFileName = getNTSummaryFileName();
 
@@ -205,7 +205,7 @@ public class SummaryExport {
 					for (long node : summaryNodeStats.keySet()) {
 						long numberOfRepresentedGraphNodes = summaryNodeStats.get(node);
 						String subject = getSummaryNodeURI(URIprefix, node);
-						String property = summarizationProperties.getProperty("drawing.summary_node_support_URI");
+						String property = summarizationProperties.getProperty("drawing.summary_node_support_URI_prefix");
 						String object = ("\"" + numberOfRepresentedGraphNodes + "\"");
 						//LOGGER.debug(subject + " " + property + " " + object);
 						bw.write(subject + " <" + property + "> " + object + " .\n");
@@ -218,13 +218,13 @@ public class SummaryExport {
 						long numberOfRepresentedEdges = summaryEdgeStats.get(ts);
 						String reifEdgeURI = getSummaryNodeURI(summarizationProperties.getProperty("drawing.reified_summary_edge_URI_prefix"),
 							reifiedEdgeNumber);
-						bw.write(reifEdgeURI + " <" + summarizationProperties.getProperty("drawing.reified_edge_has_subject") + "> "
+						bw.write(reifEdgeURI + " <" + summarizationProperties.getProperty("drawing.reified_edge_subject_URI_prefix") + "> "
 							+ getSummaryNodeURI(URIprefix, ts.s) + " .\n");
-						bw.write(reifEdgeURI + " <" + summarizationProperties.getProperty("drawing.reified_edge_has_property") + "> "
+						bw.write(reifEdgeURI + " <" + summarizationProperties.getProperty("drawing.reified_edge_property_URI_prefix") + "> "
 							+ RDF2SQLEncoding.dictionaryDecode(ts.p) + " .\n");
-						bw.write(reifEdgeURI + " <" + summarizationProperties.getProperty("drawing.reified_edge_has_object") + "> "
+						bw.write(reifEdgeURI + " <" + summarizationProperties.getProperty("drawing.reified_edge_object_URI_prefix") + "> "
 							+ getSummaryNodeURI(URIprefix, ts.o) + " .\n");
-						bw.write(reifEdgeURI + " <" + summarizationProperties.getProperty("drawing.summary_edge_support_URI") + "> \""
+						bw.write(reifEdgeURI + " <" + summarizationProperties.getProperty("drawing.summary_edge_support_URI_prefix") + "> \""
 							+ numberOfRepresentedEdges + "\" .\n");
 						reifiedEdgeNumber++;
 					}
@@ -264,7 +264,7 @@ public class SummaryExport {
 		HashSet<Long> sn = summary.getSchemaNodes();
 		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
 		dax.resetColors();
-		String URIprefix = summarizationProperties.getProperty("drawing.prefix_URI_for_summary_nodes");
+		String URIprefix = summarizationProperties.getProperty("drawing.summary_node_URI_prefix");
 
 		int dotLinesPrinted = 0;
 

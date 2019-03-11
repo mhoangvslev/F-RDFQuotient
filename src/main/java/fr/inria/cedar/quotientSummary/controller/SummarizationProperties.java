@@ -76,7 +76,7 @@ public class SummarizationProperties extends ConfigurationProperties {
 		// Whether to compute support statistics and add them in the .nt printout of the summary
 		properties.put("summary.gather_representation_counts", "true");
 
-		// Whether to execute summarization
+		// Whether to execute step-by-step summarization
 		properties.put("summary.step_by_step", "false");
 
 		// Whether to export run statistics
@@ -87,28 +87,28 @@ public class SummarizationProperties extends ConfigurationProperties {
 
 		// Drawing configuration
 
-		// Path to dot executable. If this is not found, it is not an error, just drawing won't work
+		// Path to dot executable; if this is not found, it is not an error, just drawing won't work
 		properties.put("drawing.dot_installation", "/usr/local/bin/dot");
 
 		// Prefixes added to drawing files, usually to dispatch them into separate directories
 		properties.put("drawing.dot_file_prefix", "summariesDOT/");
 		properties.put("drawing.png_file_prefix", "summariesPNG/");
 
-		// Whether to print step-by-step drawings
+		// Whether to draw step-by-step drawings
 		properties.put("drawing.step_by_step", "false");
 
 		// Visualization variant, valid options: plain, split_leaves, split_and_fold_leaves
 		properties.put("drawing.style", "split_and_fold_leaves");
 
-		// The color scheme to use for drawing. Available color schemes are: diverse (default), bw, ivory, and light
+		// The color scheme to use for drawing; available color schemes are: diverse (default), bw, ivory, and light
 		properties.put("drawing.color_scheme", "diverse");
 
 		// This prefix will be used for all the URIs of nodes created by summarization.
 		// Its value must be such that if one appends a short summary code (a few characters) then a number, the result is an URI.
-		properties.put("drawing.prefix_URI_for_summary_nodes", "http://rq.org/");
+		properties.put("drawing.summary_node_URI_prefix", "http://rq.org/");
 
 		// Whether to include a graph label when drawing the summary, or not
-		properties.put("drawing.summary_drawing_title", "true");
+		properties.put("drawing.title", "true");
 
 		// Maximum number of characters used to label a summary node when written in a DOT file
 		// Currently, literals will be shown as a suffix of at most this length, while
@@ -119,18 +119,18 @@ public class SummarizationProperties extends ConfigurationProperties {
 		properties.put("drawing.max_types_drawn_per_namespace", "5");
 
 		// This URI will be used as a property, to denote the number of graph nodes represented by a given summary node
-		properties.put("drawing.summary_node_support_URI", "http://rq.org/nodeSupport");
+		properties.put("drawing.summary_node_support_URI_prefix", "http://rq.org/nodeSupport");
 
 		// This URI will be used as a property, to denote the number of graph edges represented by a given summary edge
-		properties.put("drawing.summary_edge_support_URI", "http://rq.org/edgeSupport");
+		properties.put("drawing.summary_edge_support_URI_prefix", "http://rq.org/edgeSupport");
 
 		// This prefix will be used to assign URIs (through reification) to summary edges
 		properties.put("drawing.reified_summary_edge_URI_prefix", "http://rq.org/edge");
 
 		// The next three URIs will be used to describe reified summary edges, in order to state their support
-		properties.put("drawing.reified_edge_has_subject", "http://rq.org/reifiedEdgeSubject");
-		properties.put("drawing.reified_edge_has_property", "http://rq.org/reifiedEdgeProperty");
-		properties.put("drawing.reified_edge_has_object", "http://rq.org/reifiedEdgeObject");
+		properties.put("drawing.reified_edge_subject_URI_prefix", "http://rq.org/reifiedEdgeSubject");
+		properties.put("drawing.reified_edge_property_URI_prefix", "http://rq.org/reifiedEdgeProperty");
+		properties.put("drawing.reified_edge_object_URI_prefix", "http://rq.org/reifiedEdgeObject");
 
 		return properties;
 	}

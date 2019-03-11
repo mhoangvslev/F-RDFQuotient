@@ -61,13 +61,13 @@ public class LoadingProperties extends ConfigurationProperties {
 
 		properties.put("saturation.batch_size", "1000");
 
+		// OntoSQL extra configuration
+		properties.put("statistics.create_tables_flag", "false");
+
 		properties.put("statistics.export_to_csv_file", "true");
 
 		// Whether to export loading configuration to disk
 		properties.put("configuration.export_to_disk", "false");
-
-		// OntoSQL extra configuration
-		properties.put("statistics.create_tables_flag", "false");
 
 		return properties;
 	}
