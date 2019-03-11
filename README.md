@@ -1,4 +1,4 @@
-#RDFQuotient
+# RDFQuotient
 
 Authors: Ioana Manolescu, Paweł Guzewicz (CEDAR team at Inria Saclay, France).
 
@@ -6,7 +6,7 @@ Visit our [project website](https://project.inria.fr/rdfquotient/) for details a
 
 GitLab project name: quotientSummary.
 
-##Description
+## Description
 This software allows to build quotient summaries of RDF graphs. 
 
 An equivalence relation between the nodes of an RDF graph is a symmetric, transitive and reflexive relation over the nodes. 
@@ -31,7 +31,7 @@ This leads to a total of 10 algorithms:
 * 1-forward-backward-bisimulation (OneBisim or onefb/1fb)
 * 1-forward-bisimulation (OneFW or onefw/1fw)
 
-##Implementation
+## Implementation
 The code works by loading the RDF graph expected in **N-Triples format** with **no duplicates** into Postgres using OntoSQL/RDFDB library. Then, it reads it from there, stores the summary in Postgres (where subsequent applications can use it from) and in an output .nt file, as well as, writes vizualization of a summary into a DOT file. **Postgres** DBSM is used as a back-end and **must be installed**. In order to obtain drawings, [dot](https://www.graphviz.org/) software needs to be installed as well.
 
 In short, two main functionalities can be understood by looking at our scripts:
@@ -44,12 +44,12 @@ The example usage of those primitives is the scheduled computation of the set of
 * [run_cedar001.sh](https://gitlab.inria.fr/cedar/quotientSummary/blob/master/scripts/run_cedar001.sh)
 * [run_cedar001_shortcut.sh](https://gitlab.inria.fr/cedar/quotientSummary/blob/master/scripts/run_cedar001_shortcut.sh)
 
-###IMPORTANT: before using our software
+### IMPORTANT: before using our software
 * read the [licence](https://gitlab.inria.fr/cedar/quotientSummary/blob/master/LICENCE.txt)
 * read the [documentation](https://gitlab.inria.fr/cedar/quotientSummary/blob/master/documentation.pdf), which contains detailed description of stand-alone and programmatic interfaces of RDFQuotient tool.
 
-##Download
-###Jar files
+## Download
+### Jar files
 Click on a version number below to download stand-alone jar file.
 
 * [1.8-SNAPSHOT](http://files.inria.fr/cedar/RDFQuotient/quotientSummaryWithDependencies-1.8-SNAPSHOT.jar) (recommended) current, 1.8 pre-release version, still under development but rather stable, build from March 11, 2019
