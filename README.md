@@ -5,7 +5,7 @@ Authors: Ioana Manolescu, Paweł Guzewicz (CEDAR team at Inria Saclay, France).
 Visit our [project website](https://project.inria.fr/rdfquotient/) for details about the concepts and algorithms. 
 
 ## Description
-This software allows to build a **quotient summary of an RDF graph*, based on  an _equivalence relation_ between the graph nodes.  
+This software allows to build a **quotient summary of an RDF graph**, based on  an _equivalence relation_ between the graph nodes.  
 
 An equivalence relation is a binary symmetric, transitive and reflexive relation.  
 
