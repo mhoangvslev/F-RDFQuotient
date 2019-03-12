@@ -3,10 +3,6 @@
 package fr.inria.cedar.RDFQuotient.summarization.onefb;
 
 import fr.inria.cedar.RDFQuotient.summarization.Tests;
-import static fr.inria.cedar.RDFQuotient.summarization.Tests.compareWithReference;
-import static fr.inria.cedar.RDFQuotient.summarization.Tests.testSummarizationOfNotSaturated;
-import static fr.inria.cedar.RDFQuotient.summarization.Tests.testSummarizationOfSaturated;
-import static fr.inria.cedar.RDFQuotient.summarization.Tests.testSummarizationThroughShortcut;
 import org.junit.Test;
 
 public class OneFBSummaryTests extends Tests {

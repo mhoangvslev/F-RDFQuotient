@@ -3,10 +3,6 @@
 package fr.inria.cedar.RDFQuotient.summarization.weak;
 
 import fr.inria.cedar.RDFQuotient.summarization.Tests;
-import static fr.inria.cedar.RDFQuotient.summarization.Tests.compareWithReference;
-import static fr.inria.cedar.RDFQuotient.summarization.Tests.testSummarizationOfNotSaturated;
-import static fr.inria.cedar.RDFQuotient.summarization.Tests.testSummarizationOfSaturated;
-import static fr.inria.cedar.RDFQuotient.summarization.Tests.testSummarizationThroughShortcut;
 import org.junit.Test;
 
 public class TwoPassWeakSummaryTests extends Tests {
