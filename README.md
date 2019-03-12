@@ -1,6 +1,6 @@
 # RDFQuotient
 
-Authors: Ioana Manolescu, Paweł Guzewicz (CEDAR team at Inria Saclay, France).
+Authors: Ioana Manolescu, Paweł Guzewicz (CEDAR team at Inria Saclay, France), François Goasdoué (Université de Rennes 1 and CEDAR team)
 
 Visit our [project website](https://project.inria.fr/rdfquotient/) for details about the concepts and algorithms. 
 
@@ -30,7 +30,9 @@ This leads to a total of 10 algorithms:
 * 1-forward-bisimulation (OneFW or onefw/1fw)
 
 ## Implementation
-The code works by loading the RDF graph expected in **N-Triples format** with **no duplicates** into Postgres using OntoSQL/RDFDB library. Then, it reads it from there, stores the summary in Postgres (where subsequent applications can use it from) and in an output .nt file, as well as, writes vizualization of a summary into a DOT file. **Postgres** DBSM is used as a back-end and **must be installed**. In order to obtain drawings, [dot](https://www.graphviz.org/) software needs to be installed as well.
+The code works by loading the RDF graph expected in **N-Triples format** with **no duplicates** into Postgres using OntoSQL/RDFDB library. Then, it reads it from there, stores the summary in Postgres (where subsequent applications can use it from) and in an output .nt file, as well as, writes vizualization of a summary into a DOT file. 
+**Postgres** DBMS is used as a back-end and **must be installed**. 
+To obtain summary visualizations, **[DOT](https://www.graphviz.org/)** needs to be installed as well.
 
 Its two main functionalities can be understood by looking at our scripts:
  
@@ -45,7 +47,6 @@ The example usage of those primitives is the scheduled computation of the set of
 ### IMPORTANT: before using our software
 * read the [license](https://gitlab.inria.fr/cedar/RDFQuotient/blob/master/LICENSE.txt)
 * read the [documentation](https://gitlab.inria.fr/cedar/RDFQuotient/blob/master/documentation.pdf), which contains detailed description of stand-alone and programmatic interfaces of RDFQuotient tool.
-
 ## Download
 ### Jar files
 Click on a version number below to download stand-alone jar file.
