@@ -31,8 +31,8 @@ This leads to a total of 10 algorithms:
 
 ## Implementation
 The code works by loading the RDF graph expected in **N-Triples format** with **no duplicates** into Postgres using OntoSQL/RDFDB library. Then, it reads it from there, stores the summary in Postgres (where subsequent applications can use it from) and in an output .nt file, as well as, writes vizualization of a summary into a DOT file. 
-**Postgres** DBSM is used as a back-end and **must be installed**. 
-To obtain summary visualizations, **[DOT]**(https://www.graphviz.org/) needs to be installed as well.
+**Postgres** DBMS is used as a back-end and **must be installed**. 
+To obtain summary visualizations, **[DOT](https://www.graphviz.org/)** needs to be installed as well.
 
 Its two main functionalities can be understood by looking at our scripts:
  
