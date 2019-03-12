@@ -5,9 +5,9 @@ Authors: Ioana Manolescu, Paweł Guzewicz (CEDAR team at Inria Saclay, France).
 Visit our [project website](https://project.inria.fr/rdfquotient/) for details about the concepts and algorithms. 
 
 ## Description
-This software allows to build quotient summaries of RDF graphs, based on equivalence relations between nodes.  
+This software allows to build a **quotient summary of an RDF graph*, based on  an _equivalence relation_ between the graph nodes.  
 
-An equivalence relation is a symmetric, transitive and reflexive relation over the nodes. 
+An equivalence relation is a binary symmetric, transitive and reflexive relation.  
 
 * The quotient of an RDF graph through a given equivalence relation is another graph, having one node for every equivalence class (group of equivalent nodes) of the input graph. 
 * The edges of the quotient summary graph are derived from the input graph edges: whenever the input graph contained an edge a--p-->b, the quotient summary graph contains an edge rep(a)--p-->rep(b), where rep(a), rep(b) denote the summary nodes that correspond to a and to b in the original graph, respectively, and p denotes the edge of the label going from a to b (or, the value of the property connecting a to b in the input graph).
