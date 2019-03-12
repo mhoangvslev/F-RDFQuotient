@@ -45,7 +45,7 @@ The example usage of those primitives is the scheduled computation of the set of
 ### IMPORTANT: before using our software
 * read the [license](https://gitlab.inria.fr/cedar/RDFQuotient/blob/master/LICENSE.txt)
 * read the [documentation](https://gitlab.inria.fr/cedar/RDFQuotient/blob/master/documentation.pdf), which contains detailed description of stand-alone and programmatic interfaces of RDFQuotient tool.
-
+* you most likely want to use RDFQuotient to **visualize** the structure of an RDF graph. We rely on **DOT (GraphViz)** for that; you can install it from [here](https://www.graphviz.org/). (Our code works even in the absence of GraphViz, but you don't get the drawings!)
 ## Download
 ### Jar files
 Click on a version number below to download stand-alone jar file.
