@@ -1,6 +1,6 @@
 # RDFQuotient
 
-Authors: Ioana Manolescu, Paweł Guzewicz (CEDAR team at Inria Saclay, France).
+Authors: Ioana Manolescu, Paweł Guzewicz (CEDAR team at Inria Saclay, France), François Goasdoué (Université de Rennes 1 and CEDAR team)
 
 Visit our [project website](https://project.inria.fr/rdfquotient/) for details about the concepts and algorithms. 
 
