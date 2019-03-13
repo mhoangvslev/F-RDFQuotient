@@ -56,6 +56,7 @@ public class TypeGeneralizationTests extends Tests {
 	public static String testSummarizationWithMostGeneralTypes(String datasetFilename, String summaryType) {
 		Properties loadingProperties = LoadingProperties.getDefaultProperties();
 		loadingProperties.put("dataset.filename", datasetFilename);
+		loadingProperties.put("database.deterministic_ordering", "true");
 		loadingProperties.put("statistics.export_to_csv_file", "false");
 
 		Properties summarizationProperties = SummarizationProperties.getDefaultProperties();
