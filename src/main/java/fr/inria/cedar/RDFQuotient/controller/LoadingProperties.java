@@ -55,14 +55,15 @@ public class LoadingProperties extends ConfigurationProperties {
 
 		properties.put("dictionary.fetch_size", "1000");
 
-		// Whether to sort dictionary entries before assigning encodings; used for tests, should not be used for big graphs
-		properties.put("database.deterministic_ordering", "false");
-
 		properties.put("saturation.enable", "false");
 
 		properties.put("database.encoded_saturated_triples_table_name", "encoded_saturated_triples");
 
 		properties.put("saturation.batch_size", "1000");
+
+		// Whether to sort dictionary entries before assigning encodings and also encode_triples and encoded_saturated_triples tables
+		// used for tests, should not be used for big graphs
+		properties.put("database.deterministic_ordering", "false");
 
 		// OntoSQL extra configuration
 		properties.put("statistics.create_tables_flag", "false");
