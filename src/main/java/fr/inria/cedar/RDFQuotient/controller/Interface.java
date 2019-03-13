@@ -2,8 +2,6 @@
 
 package fr.inria.cedar.RDFQuotient.controller;
 
-import fr.inria.cedar.ontosql.rdfdb.dataloading.DataLoading;
-import fr.inria.cedar.ontosql.rdfdb.dataloading.Parameters;
 import fr.inria.cedar.RDFQuotient.Summary;
 import fr.inria.cedar.RDFQuotient.bisim.OneBisimSummary;
 import fr.inria.cedar.RDFQuotient.bisim.OneFWSummary;
@@ -17,6 +15,8 @@ import fr.inria.cedar.RDFQuotient.weak.TwoPassWeakSummary;
 import fr.inria.cedar.RDFQuotient.weak.TwoPassWeakSummaryWithUnionFind;
 import fr.inria.cedar.RDFQuotient.weak.TypedWeakSummary;
 import fr.inria.cedar.RDFQuotient.weak.WeakSummary;
+import fr.inria.cedar.ontosql.rdfdb.dataloading.DataLoading;
+import fr.inria.cedar.ontosql.rdfdb.dataloading.Parameters;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;

@@ -21,6 +21,7 @@ public class StepByStepDrawingTests extends Tests {
 	public static String testSummarizationOfNotSaturated(String datasetFilename, String summaryType) {
 		Properties loadingProperties = LoadingProperties.getDefaultProperties();
 		loadingProperties.put("dataset.filename", datasetFilename);
+		loadingProperties.put("dictionary.order", "true");
 		loadingProperties.put("statistics.export_to_csv_file", "false");
 
 		Properties summarizationProperties = SummarizationProperties.getDefaultProperties();

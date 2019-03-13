@@ -51,7 +51,7 @@ The example usage of those primitives is the scheduled computation of the set of
 ### Jar files
 Click on a version number below to download stand-alone jar file.
 
-* [1.8-SNAPSHOT](http://files.inria.fr/cedar/RDFQuotient/RDFQuotient-1.8-SNAPSHOT-with-dependencies.jar) (recommended) current, 1.8 pre-release version, still under development but rather stable, build from March 11, 2019
+* [1.8-SNAPSHOT](http://files.inria.fr/cedar/RDFQuotient/RDFQuotient-1.8-SNAPSHOT-with-dependencies.jar) (recommended) current, 1.8 pre-release version, still under development but rather stable, build from March 13, 2019
 * [1.7](http://files.inria.fr/cedar/RDFQuotient/RDFQuotient-1.7-with-dependencies.jar) (legacy code) stable version released on October 19, 2018
 
 ### Building from sources
@@ -60,8 +60,8 @@ The loading functionality is provided by the OntoSQL/rdfDB package developed in 
 In order to build the project:
 
 1. Clone this git repository.
-2. Download [OntoSQL jar file](http://files.inria.fr/cedar/RDFQuotient/ontosql-rdfdb-1.0.9-SNAPSHOT-with-dependencies.jar).
-3. Download a modified [pom.xml file](http://files.inria.fr/cedar/RDFQuotient/pom.xml).
+2. Download [OntoSQL jar file](http://files.inria.fr/cedar/RDFQuotient/ontosql-rdfdb-1.0.10-SNAPSHOT-with-dependencies.jar).
+3. Download a [modified pom.xml file](http://files.inria.fr/cedar/RDFQuotient/pom.xml).
 4. Replace the project pom.xml file with the modified pom.xml.
-5. In line 25 of the modified pom.xml, replace "yourpath/ontosql-rdfdb-1.0.9-SNAPSHOT-with-dependencies.jar" with your local path to the OntoSQL jar file.
+5. In line 25 of the modified pom.xml, replace "yourpath/ontosql-rdfdb-1.0.10-SNAPSHOT-with-dependencies.jar" with your local path to the OntoSQL jar file.
 6. Run the mvn clean install command.

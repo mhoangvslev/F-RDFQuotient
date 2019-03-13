@@ -55,6 +55,9 @@ public class LoadingProperties extends ConfigurationProperties {
 
 		properties.put("dictionary.fetch_size", "1000");
 
+		// Whether to sort dictionary entries before assigning encodings; used for tests, should not be used for big graphs
+		properties.put("dictionary.order", "false");
+
 		properties.put("saturation.enable", "false");
 
 		properties.put("database.encoded_saturated_triples_table_name", "encoded_saturated_triples");
