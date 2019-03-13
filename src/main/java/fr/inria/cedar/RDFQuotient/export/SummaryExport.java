@@ -247,7 +247,7 @@ public class SummaryExport {
 			LOGGER.info("Summary drawn to PNG file " + summaryPNGFileName);
 		}
 		catch (IOException e) {
-			LOGGER.error("Could not turn .dot file into .png (check the drawing.dot_installation value in summarization.properties)" + e.toString());
+			LOGGER.error("Could not turn .dot file into .png (check the drawing.dot_installation value in summarization.properties) " + e);
 		}
 	}
 
@@ -927,7 +927,7 @@ public class SummaryExport {
 					+ "];\n");
 		}
 		catch (IOException e) {
-			LOGGER.error("Could not turn .dot file into .png (check the pathToDot value in summarization.properties)" + e.toString());
+			LOGGER.error("Could not turn .dot file into .png (check the pathToDot value in summarization.properties) " + e);
 		}
 	}
 

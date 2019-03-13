@@ -231,7 +231,7 @@ public abstract class Traverser {
 			}
 		}
 		catch (SQLException e) {
-			throw new IllegalStateException("Postgres error encountered while summarizing data triples " + e.toString());
+			throw new IllegalStateException("Postgres error encountered while summarizing data triples " + e);
 		}
 		summ.nonTypeTriplesSummarizationTime = System.currentTimeMillis() - start;
 	}
@@ -266,7 +266,7 @@ public abstract class Traverser {
 			}
 		}
 		catch (SQLException e) {
-			throw new IllegalStateException("Postgres error encountered while summarizing data triples " + e.toString());
+			throw new IllegalStateException("Postgres error encountered while summarizing data triples " + e);
 		}
 
 		summ.classificationPostProcessing();
@@ -310,7 +310,7 @@ public abstract class Traverser {
 			}
 		}
 		catch (SQLException e) {
-			throw new IllegalStateException("Postgres error encountered while summarizing data triples " + e.toString());
+			throw new IllegalStateException("Postgres error encountered while summarizing data triples " + e);
 		}
 		summ.nonTypeTriplesSummarizationTime += System.currentTimeMillis() - start;
 	}

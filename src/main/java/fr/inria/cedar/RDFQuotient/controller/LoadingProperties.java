@@ -56,7 +56,7 @@ public class LoadingProperties extends ConfigurationProperties {
 		properties.put("dictionary.fetch_size", "1000");
 
 		// Whether to sort dictionary entries before assigning encodings; used for tests, should not be used for big graphs
-		properties.put("dictionary.order", "false");
+		properties.put("database.deterministic_ordering", "false");
 
 		properties.put("saturation.enable", "false");
 

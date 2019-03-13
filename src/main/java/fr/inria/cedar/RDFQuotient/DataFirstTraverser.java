@@ -62,7 +62,7 @@ public class DataFirstTraverser extends Traverser {
 			}
 		}
 		catch (SQLException e) {
-			throw new IllegalStateException("Postgres error encountered while summarizing type triples: " + e.toString());
+			throw new IllegalStateException("Postgres error encountered while summarizing type triples: " + e);
 		}
 		summ.typeTriplesSummarizationTime += System.currentTimeMillis() - start;
 	}

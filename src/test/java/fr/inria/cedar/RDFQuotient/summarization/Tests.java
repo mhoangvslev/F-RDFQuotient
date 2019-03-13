@@ -19,7 +19,7 @@ public class Tests {
 	public static String testSummarizationOfNotSaturated(String datasetFilename, String summaryType) {
 		Properties loadingProperties = LoadingProperties.getDefaultProperties();
 		loadingProperties.put("dataset.filename", datasetFilename);
-		loadingProperties.put("dictionary.order", "true");
+		loadingProperties.put("database.deterministic_ordering", "true");
 		loadingProperties.put("saturation.enable", "false");
 		loadingProperties.put("statistics.export_to_csv_file", "false");
 		loadingProperties.put("configuration.export_to_disk", "false");
@@ -43,7 +43,7 @@ public class Tests {
 	public static String testSummarizationOfSaturated(String datasetFilename, String summaryType) {
 		Properties loadingProperties = LoadingProperties.getDefaultProperties();
 		loadingProperties.put("dataset.filename", datasetFilename);
-		loadingProperties.put("dictionary.order", "true");
+		loadingProperties.put("database.deterministic_ordering", "true");
 		loadingProperties.put("saturation.enable", "true");
 		loadingProperties.put("statistics.export_to_csv_file", "false");
 		loadingProperties.put("configuration.export_to_disk", "false");
@@ -67,7 +67,7 @@ public class Tests {
 	public static String testSummarizationThroughShortcut(String datasetFilename, String summaryType) {
 		Properties loadingProperties = LoadingProperties.getDefaultProperties();
 		loadingProperties.put("dataset.filename", datasetFilename);
-		loadingProperties.put("dictionary.order", "true");
+		loadingProperties.put("database.deterministic_ordering", "true");
 		loadingProperties.put("statistics.export_to_csv_file", "false");
 		loadingProperties.put("configuration.export_to_disk", "false");
 

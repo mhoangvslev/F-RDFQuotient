@@ -647,8 +647,8 @@ public class Interface {
 			LOGGER.info("Summary read from Postgres");
 			return s;
 		}
-		catch (SQLException e) {
-			throw new IllegalStateException("Could not read summary " + e.toString());
+		catch (SQLException ex) {
+			throw new IllegalStateException("Could not read summary " + ex);
 		}
 		finally {
 			if (closeConnection) {
