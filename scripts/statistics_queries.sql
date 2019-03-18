@@ -1,3 +1,10 @@
+-- number of distinct nodes
+select count(distinct n) from (
+    select s as n from encoded_triples
+    union
+    select o as n from encoded_triples
+) as q;
+
 -- number of schema triples
 select count(*) from triples where p = '<http://www.w3.org/2000/01/rdf-schema#domain>' or p = '<http://www.w3.org/2000/01/rdf-schema#range>' or p = '<http://www.w3.org/2000/01/rdf-schema#subClassOf>' or p = '<http://www.w3.org/2000/01/rdf-schema#subPropertyOf>';
 
