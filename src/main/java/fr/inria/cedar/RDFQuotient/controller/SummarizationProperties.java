@@ -90,6 +90,9 @@ public class SummarizationProperties extends ConfigurationProperties {
 		// Path to dot executable; if this is not found, it is not an error, just drawing won't work
 		properties.put("drawing.dot_installation", "/usr/local/bin/dot");
 
+		// Whether to remove DOT file in case of successful execution of dot
+		properties.put("drawing.remove_dot_file", "false");
+
 		// Prefixes added to drawing files, usually to dispatch them into separate directories
 		properties.put("drawing.dot_file_prefix", "summariesDOT/");
 		properties.put("drawing.png_file_prefix", "summariesPNG/");

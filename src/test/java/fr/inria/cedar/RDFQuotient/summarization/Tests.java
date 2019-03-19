@@ -30,10 +30,11 @@ public class Tests {
 		summarizationProperties.put("summary.summarize_saturated_graph", "false");
 		summarizationProperties.put("summary.replace_type_with_most_general_type", "false");
 		summarizationProperties.put("summary.nt_file_prefix", "");
-		summarizationProperties.put("drawing.style", "plain");
-		summarizationProperties.put("drawing.step_by_step", "false");
+		summarizationProperties.put("drawing.remove_dot_file", "true");
 		summarizationProperties.put("drawing.dot_file_prefix", "");
 		summarizationProperties.put("drawing.png_file_prefix", "");
+		summarizationProperties.put("drawing.step_by_step", "false");
+		summarizationProperties.put("drawing.style", "plain");
 		summarizationProperties.put("statistics.export_to_csv_file", "false");
 		summarizationProperties.put("configuration.export_to_disk", "false");
 
@@ -54,10 +55,11 @@ public class Tests {
 		summarizationProperties.put("summary.summarize_saturated_graph", "true");
 		summarizationProperties.put("summary.replace_type_with_most_general_type", "false");
 		summarizationProperties.put("summary.nt_file_prefix", "");
-		summarizationProperties.put("drawing.style", "plain");
-		summarizationProperties.put("drawing.step_by_step", "false");
+		summarizationProperties.put("drawing.remove_dot_file", "true");
 		summarizationProperties.put("drawing.dot_file_prefix", "");
 		summarizationProperties.put("drawing.png_file_prefix", "");
+		summarizationProperties.put("drawing.step_by_step", "false");
+		summarizationProperties.put("drawing.style", "plain");
 		summarizationProperties.put("statistics.export_to_csv_file", "false");
 		summarizationProperties.put("configuration.export_to_disk", "false");
 
@@ -76,10 +78,11 @@ public class Tests {
 		summarizationProperties.put("summary.type", summaryType);
 		summarizationProperties.put("summary.replace_type_with_most_general_type", "false");
 		summarizationProperties.put("summary.nt_file_prefix", "");
-		summarizationProperties.put("drawing.style", "plain");
-		summarizationProperties.put("drawing.step_by_step", "false");
+		summarizationProperties.put("drawing.remove_dot_file", "true");
 		summarizationProperties.put("drawing.dot_file_prefix", "");
 		summarizationProperties.put("drawing.png_file_prefix", "");
+		summarizationProperties.put("drawing.step_by_step", "false");
+		summarizationProperties.put("drawing.style", "plain");
 		summarizationProperties.put("statistics.export_to_csv_file", "false");
 		summarizationProperties.put("configuration.export_to_disk", "false");
 

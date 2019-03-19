@@ -240,11 +240,21 @@ public class SummaryExport {
 
 	//============= Saving in DOT format ====
 
-	private void drawWithDOT(String summaryDOTFileName, String summaryPNGFileName) {
-		String pathToDot = summarizationProperties.getProperty("drawing.dot_installation");
+	private void drawWithDOT(String summaryDOTFilename, String summaryPNGFilename) {
+		String pathToDOT = summarizationProperties.getProperty("drawing.dot_installation");
+		boolean removeDOTFile = summarizationProperties.getProperty("drawing.remove_dot_file").equals("true");
 		try {
-			Runtime.getRuntime().exec(new String[] {pathToDot, "-Tpng", summaryDOTFileName, "-o", summaryPNGFileName});
-			LOGGER.info("Summary drawn to PNG file " + summaryPNGFileName);
+			Runtime.getRuntime().exec(new String[] {pathToDOT, "-Tpng", summaryDOTFilename, "-o", summaryPNGFilename});
+			LOGGER.info("Summary drawn to PNG file " + summaryPNGFilename);
+			if (removeDOTFile) {
+				File file = new File(summaryDOTFilename);
+				if(file.delete()) {
+					LOGGER.info(summaryDOTFilename + " file deleted successfully");
+				}
+				else {
+					LOGGER.error("Failed to delete " + summaryDOTFilename + " file");
+				}
+			}
 		}
 		catch (IOException e) {
 			LOGGER.error("Could not turn .dot file into .png (check the drawing.dot_installation value in summarization.properties) " + e);

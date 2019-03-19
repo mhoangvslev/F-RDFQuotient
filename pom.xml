@@ -10,10 +10,18 @@
 	<packaging>jar</packaging>
 
 	<name>RDFQuotient</name>
-	<url>http://maven.apache.org</url>
+	<url>https://project.inria.fr/rdfquotient/</url>
+	<description>This software allows to build a quotient summary of an RDF graph, based on  an equivalence relation between the graph nodes.</description>
+	<inceptionYear>2018</inceptionYear>
+	<organization>
+		<name>Inria - CEDAR team</name>
+		<url>https://team.inria.fr/cedar/</url>
+	</organization>
+
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<jdk.version>1.8</jdk.version>
 	</properties>
 
 	<dependencies>
@@ -103,8 +111,8 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.1</version>
 				<configuration>
-					<source>1.8</source>
-					<target>1.8</target>
+					<source>${jdk.version}</source>
+					<target>${jdk.version}</target>
 					<encoding>UTF-8</encoding>
 				</configuration>
 			</plugin>
@@ -130,7 +138,7 @@
 					<descriptorRefs>
 						<descriptorRef>jar-with-dependencies</descriptorRef>
 					</descriptorRefs>
-					<finalName>RDFQuotient-${project.version}-with-dependencies</finalName>
+					<finalName>${project.artifactId}-${project.version}-with-dependencies</finalName>
 					<appendAssemblyId>false</appendAssemblyId>
 				</configuration>
 			</plugin>
