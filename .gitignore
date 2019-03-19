@@ -17,6 +17,7 @@
 src/test/resources/test16-step-by-step/summariesDOT
 src/test/resources/test16-step-by-step/summariesPNG
 src/test/resources/test16-step-by-step/summariesNT/test-16_w.nt
+src/test/resources/test16-step-by-step/summariesNT/test-16_s.nt
 demo/summariesDOT
 demo/summariesPNG
 demo/summariesNT

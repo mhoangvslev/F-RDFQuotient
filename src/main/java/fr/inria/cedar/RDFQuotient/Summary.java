@@ -85,7 +85,7 @@ public class Summary {
 	protected String repTableName = "";
 	protected String edgeTableName = "";
 	protected boolean checkConsistency = false;
-	protected boolean drawStepByStep = false;
+	protected String drawStepByStep = "false";
 	protected boolean haltStepByStep = false;
 	protected boolean gatherStatistics = false;
 
@@ -183,7 +183,7 @@ public class Summary {
 	public void setUpClassFieldsDependingOnProperties() {
 		try {
 			checkConsistency = summarizationProperties.getProperty("summary.consistency_checks").toLowerCase().equals("true");
-			drawStepByStep = summarizationProperties.getProperty("drawing.step_by_step").toLowerCase().equals("true");
+			drawStepByStep = summarizationProperties.getProperty("drawing.step_by_step").toLowerCase();
 			haltStepByStep = summarizationProperties.getProperty("summary.step_by_step").toLowerCase().equals("true");
 			gatherStatistics = summarizationProperties.getProperty("summary.gather_representation_counts").toLowerCase().equals("true");
 		}

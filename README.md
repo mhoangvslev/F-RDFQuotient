@@ -51,7 +51,7 @@ The example usage of those primitives is the scheduled computation of the set of
 ### Jar files
 Click on a version number below to download stand-alone jar file.
 
-* [1.8-SNAPSHOT](http://files.inria.fr/cedar/RDFQuotient/RDFQuotient-1.8-SNAPSHOT-with-dependencies.jar) (recommended) current, 1.8 pre-release version, still under development but rather stable, build from March 13, 2019
+* [1.8-SNAPSHOT](http://files.inria.fr/cedar/RDFQuotient/RDFQuotient-1.8-SNAPSHOT-with-dependencies.jar) (recommended) current, 1.8 pre-release version, still under development but rather stable, build from March 19, 2019
 * [1.7](http://files.inria.fr/cedar/RDFQuotient/RDFQuotient-1.7-with-dependencies.jar) (legacy code) stable version released on October 19, 2018
 
 ### Building from sources

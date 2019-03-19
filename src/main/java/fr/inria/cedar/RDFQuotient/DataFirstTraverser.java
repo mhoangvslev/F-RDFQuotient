@@ -53,8 +53,8 @@ public class DataFirstTraverser extends Traverser {
 						if (summ.checkConsistency) {
 							summ.consistencyChecks();
 						}
-						if (summ.drawStepByStep) {
-							drawStepByStep();
+						if (!summ.drawStepByStep.equals("false")) {
+							drawStepByStep(summ.drawStepByStep);
 						}
 					}
 					while (true);

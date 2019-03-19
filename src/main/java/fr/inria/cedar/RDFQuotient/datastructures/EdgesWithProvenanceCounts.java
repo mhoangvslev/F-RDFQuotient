@@ -169,11 +169,11 @@ public class EdgesWithProvenanceCounts {
 		}
 	}
 
-	public Set<Long> keySet(){
+	public Set<Long> keySet() {
 		return edges.keySet();
 	}
 
-	public long totalEdgeCount(){
+	public long totalEdgeCount() {
 		long res = 0L;
 		for (long s: counts.keySet()) {
 			HashMap<Long, HashMap<Long, Long>> maps = counts.get(s);
@@ -182,6 +182,18 @@ public class EdgesWithProvenanceCounts {
 				for (long o: mapsp.keySet()) {
 					res += mapsp.get(o);
 				}
+			}
+		}
+		return res;
+	}
+
+	public long numberOfDistinctEdges() {
+		long res = 0L;
+		for (long s: counts.keySet()) {
+			HashMap<Long, HashMap<Long, Long>> maps = counts.get(s);
+			for (long p: maps.keySet()) {
+				HashMap<Long, Long> mapsp = maps.get(p);
+				res += mapsp.keySet().size();
 			}
 		}
 		return res;

@@ -27,10 +27,15 @@ public abstract class Traverser {
 	protected long domainCode;
 	protected long rangeCode;
 
+	protected long numberOfSummaryNodesSoFar;
+	protected long numberOfSummaryEdgesSoFar;
+
 	public Traverser(Summary summ, Connection conn) {
+		LOGGER.setLevel(Level.INFO);
 		this.summ = summ;
 		this.conn = conn;
-		LOGGER.setLevel(Level.INFO);
+		numberOfSummaryNodesSoFar = 0;
+		numberOfSummaryEdgesSoFar = 0;
 	}
 
 	protected void schemaNodesCollection() {
@@ -155,9 +160,17 @@ public abstract class Traverser {
 		return null;
 	}
 
-	protected void drawStepByStep() {
-		String numberOfTriples = String.format((Locale) null, "%09d", summ.triplesSummarizedSoFar);
-		summ.drawGraphAndSummary(conn, "_after_" + numberOfTriples);
+	protected void drawStepByStep(String mode) {
+		long currentNumberOfSummaryNodes = summ.rep.numberOfDistinctValues();
+		long currentNumberOfSummaryEdges = summ.edgesWithProv.numberOfDistinctEdges();
+		if (mode.equals("always") || (mode.equals("when_changes")
+			&& (numberOfSummaryNodesSoFar != currentNumberOfSummaryNodes
+			|| numberOfSummaryEdgesSoFar != currentNumberOfSummaryEdges))) {
+			numberOfSummaryNodesSoFar = currentNumberOfSummaryNodes;
+			numberOfSummaryEdgesSoFar = currentNumberOfSummaryEdges;
+			String numberOfTriples = String.format((Locale) null, "%09d", summ.triplesSummarizedSoFar);
+			summ.drawGraphAndSummary(conn, "_after_" + numberOfTriples + "_triples");
+		}
 	}
 
 	protected void drawStepByStep(Triple t) {
@@ -222,8 +235,8 @@ public abstract class Traverser {
 						if (summ.checkConsistency) {
 							summ.consistencyChecks();
 						}
-						if (summ.drawStepByStep) {
-							drawStepByStep();
+						if (!summ.drawStepByStep.equals("false")) {
+							drawStepByStep(summ.drawStepByStep);
 						}
 					}
 					while (true);
@@ -302,8 +315,8 @@ public abstract class Traverser {
 						if (summ.checkConsistency) {
 							summ.consistencyChecks();
 						}
-						if (summ.drawStepByStep) {
-							drawStepByStep();
+						if (!summ.drawStepByStep.equals("false")) {
+							drawStepByStep(summ.drawStepByStep);
 						}
 					}
 				}

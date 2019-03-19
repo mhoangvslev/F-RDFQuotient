@@ -30,10 +30,10 @@ public class DemonstrationScenarios {
 		summarizationProperties.put("summary.replace_type_with_most_general_type", "false");
 		summarizationProperties.put("summary.nt_file_prefix", "summariesNT/");
 		summarizationProperties.put("summary.step_by_step", "true");
-		summarizationProperties.put("drawing.style", "plain");
-		summarizationProperties.put("drawing.step_by_step", "true");
 		summarizationProperties.put("drawing.dot_file_prefix", "summariesDOT/");
 		summarizationProperties.put("drawing.png_file_prefix", "summariesPNG/");
+		summarizationProperties.put("drawing.style", "plain");
+		summarizationProperties.put("drawing.step_by_step", "always");
 		summarizationProperties.put("statistics.export_to_csv_file", "false");
 		summarizationProperties.put("configuration.export_to_disk", "false");
 

@@ -244,7 +244,13 @@ public class SummaryExport {
 		String pathToDOT = summarizationProperties.getProperty("drawing.dot_installation");
 		boolean removeDOTFile = summarizationProperties.getProperty("drawing.remove_dot_file").equals("true");
 		try {
-			Runtime.getRuntime().exec(new String[] {pathToDOT, "-Tpng", summaryDOTFilename, "-o", summaryPNGFilename});
+			Process p = Runtime.getRuntime().exec(new String[] {pathToDOT, "-Tpng", summaryDOTFilename, "-o", summaryPNGFilename});
+			try {
+				p.waitFor();
+			}
+			catch (InterruptedException ex) {
+				LOGGER.error(ex);
+			}
 			LOGGER.info("Summary drawn to PNG file " + summaryPNGFilename);
 			if (removeDOTFile) {
 				File file = new File(summaryDOTFilename);

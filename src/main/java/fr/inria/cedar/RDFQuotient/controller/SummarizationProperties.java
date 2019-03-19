@@ -97,10 +97,10 @@ public class SummarizationProperties extends ConfigurationProperties {
 		properties.put("drawing.dot_file_prefix", "summariesDOT/");
 		properties.put("drawing.png_file_prefix", "summariesPNG/");
 
-		// Whether to draw step-by-step drawings
+		// Whether to draw step-by-step drawings, valid options: false, always, when_changes
 		properties.put("drawing.step_by_step", "false");
 
-		// Visualization variant, valid options: plain, split_leaves, split_and_fold_leaves
+		// Visualization variant, valid options: plain, split_leaves, split_and_fold_leaves; if invalid option is specified, drawing will be suppressed
 		properties.put("drawing.style", "split_and_fold_leaves");
 
 		// The color scheme to use for drawing; available color schemes are: diverse (default), bw, ivory, and light
