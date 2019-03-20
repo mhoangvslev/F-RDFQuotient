@@ -26,6 +26,7 @@ public class Tests {
 
 		Properties summarizationProperties = SummarizationProperties.getDefaultProperties();
 		summarizationProperties.put("dataset.filename", datasetFilename);
+		summarizationProperties.put("database.deterministic_ordering", "true");
 		summarizationProperties.put("summary.type", summaryType);
 		summarizationProperties.put("summary.summarize_saturated_graph", "false");
 		summarizationProperties.put("summary.replace_type_with_most_general_type", "false");
@@ -51,6 +52,7 @@ public class Tests {
 
 		Properties summarizationProperties = SummarizationProperties.getDefaultProperties();
 		summarizationProperties.put("dataset.filename", datasetFilename);
+		summarizationProperties.put("database.deterministic_ordering", "true");
 		summarizationProperties.put("summary.type", summaryType);
 		summarizationProperties.put("summary.summarize_saturated_graph", "true");
 		summarizationProperties.put("summary.replace_type_with_most_general_type", "false");
@@ -75,6 +77,7 @@ public class Tests {
 
 		Properties summarizationProperties = SummarizationProperties.getDefaultProperties();
 		summarizationProperties.put("dataset.filename", datasetFilename);
+		summarizationProperties.put("database.deterministic_ordering", "true");
 		summarizationProperties.put("summary.type", summaryType);
 		summarizationProperties.put("summary.replace_type_with_most_general_type", "false");
 		summarizationProperties.put("summary.nt_file_prefix", "");

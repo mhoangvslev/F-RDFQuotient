@@ -41,6 +41,10 @@ public class SummarizationProperties extends ConfigurationProperties {
 		properties.put("database.dictionary_table_name", "dictionary");
 		properties.put("database.encoded_saturated_triples_table_name", "encoded_saturated_triples");
 
+		// Whether to sort encode_triples and encoded_saturated_triples tables
+		// used for tests, should not be used for big graphs
+		properties.put("database.deterministic_ordering", "false");
+
 		// Summarization configuration
 
 		properties.put("summary.summarize_saturated_graph", "false");

@@ -164,8 +164,8 @@ public abstract class Traverser {
 		long currentNumberOfSummaryNodes = summ.rep.numberOfDistinctValues();
 		long currentNumberOfSummaryEdges = summ.edgesWithProv.numberOfDistinctEdges();
 		if (mode.equals("always") || (mode.equals("when_changes")
-			&& (numberOfSummaryNodesSoFar != currentNumberOfSummaryNodes
-			|| numberOfSummaryEdgesSoFar != currentNumberOfSummaryEdges))) {
+		&& (numberOfSummaryNodesSoFar != currentNumberOfSummaryNodes
+		|| numberOfSummaryEdgesSoFar != currentNumberOfSummaryEdges))) {
 			numberOfSummaryNodesSoFar = currentNumberOfSummaryNodes;
 			numberOfSummaryEdgesSoFar = currentNumberOfSummaryEdges;
 			String numberOfTriples = String.format((Locale) null, "%09d", summ.triplesSummarizedSoFar);
@@ -192,7 +192,10 @@ public abstract class Traverser {
 	// data and schema triples
 	protected void dataPass() {
 		long start = System.currentTimeMillis();
-		String getUntypedTriplesString = ("select *  from " + PostgresIdentifier.escapedQuotedId(summ.encodedTriplesTableName) + " where p <> " + typeConstantCode);
+		String getUntypedTriplesString = "select *  from "
+			+ PostgresIdentifier.escapedQuotedId(summ.encodedTriplesTableName)
+			+ " where p <> " + typeConstantCode
+			+ (summ.summarizationProperties.getProperty("database.deterministic_ordering").equals("false") ? "" : "order by s, p, o");
 		try {
 			try (Statement getUntypedTriples = conn.createStatement()) {
 				getUntypedTriples.setFetchSize(10000);
@@ -231,6 +234,9 @@ public abstract class Traverser {
 							}
 						}
 						summ.triplesSummarizedSoFar++;
+						if (summ.triplesSummarizedSoFar == 100) {
+							LOGGER.info("DEBUG");
+						}
 						summ.nonTypeTriplesSummarizedSoFar++;
 						if (summ.checkConsistency) {
 							summ.consistencyChecks();
@@ -252,7 +258,10 @@ public abstract class Traverser {
 	// first pass
 	protected void dataTriplesClassification() {
 		long start = System.currentTimeMillis();
-		String getUntypedTriplesString = ("select *  from " + PostgresIdentifier.escapedQuotedId(summ.encodedTriplesTableName) + " where p <> " + typeConstantCode);
+		String getUntypedTriplesString = "select *  from "
+			+ PostgresIdentifier.escapedQuotedId(summ.encodedTriplesTableName)
+			+ " where p <> " + typeConstantCode
+			+ (summ.summarizationProperties.getProperty("database.deterministic_ordering").equals("false") ? "" : "order by s, p, o");
 		try {
 			try (Statement getUntypedTriples = conn.createStatement()) {
 				getUntypedTriples.setFetchSize(10000);
@@ -290,7 +299,10 @@ public abstract class Traverser {
 	// second pass
 	protected void dataTriplesRepresentation() {
 		long start = System.currentTimeMillis();
-		String getUntypedTriplesString = ("select *  from " + PostgresIdentifier.escapedQuotedId(summ.encodedTriplesTableName) + " where p <> " + typeConstantCode);
+		String getUntypedTriplesString = "select *  from "
+			+ PostgresIdentifier.escapedQuotedId(summ.encodedTriplesTableName)
+			+ " where p <> " + typeConstantCode
+			+ (summ.summarizationProperties.getProperty("database.deterministic_ordering").equals("false") ? "" : "order by s, p, o");
 		try {
 			try (Statement getUntypedTriples = conn.createStatement()) {
 				getUntypedTriples.setFetchSize(10000);

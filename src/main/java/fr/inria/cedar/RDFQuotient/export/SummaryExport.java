@@ -1041,6 +1041,14 @@ public class SummaryExport {
 					}
 				}
 
+				triplesDrawnInDot++;
+				currentPosition++;
+
+				long p = RDF2SQLEncoding.dictionaryEncode(property);
+				if (summary.genericPropertiesIgnoredInCliques.contains(p)) {
+					continue;
+				}
+
 				long s = RDF2SQLEncoding.dictionaryEncode(subject);
 				long sRep = summary.getRepresentative(s);
 				//LOGGER.debug("DrawTriples: Encoded " + subject + " into " + s + " whose representative is: "  + sRep);
@@ -1049,12 +1057,9 @@ public class SummaryExport {
 				long oRep = summary.getRepresentative(o);
 
 				//LOGGER.debug("DrawTriples: Encoded " + object + " into " + o + " whose representative is: " + oRep);
-				long p = RDF2SQLEncoding.dictionaryEncode(property);
 				//LOGGER.debug("DRAW Triple! (" + subject + " " + property + " " + object + ")");
 				//LOGGER.debug("DRAW Represented by: " + sRep + " " + p + " " + oRep);
 				writeGraphTripleToDOTFile(bw, s, p, o, subject, property, object, sRep, oRep);
-				triplesDrawnInDot++;
-				currentPosition++;
 			}
 			while (true);
 		}
@@ -1122,11 +1127,15 @@ public class SummaryExport {
 	 */
 	protected ResultSet getNonTypeTriplesCursorForDotDrawing(Connection conn, long triplesToDraw) {
 		try {
+			String stepByStep = summarizationProperties.getProperty("summary.step_by_step");
+			Boolean sbs = stepByStep.equals("false");
 			String query = "select d1.value, d2.value, d3.value from (select row_number() over () as id, s, p, o from "
 				+ encodedTriplesTableName + ") t join " + dictionaryTableName
 				+ " d1 on t.s = d1.key join " + dictionaryTableName
 				+ " d2 on t.p = d2.key join " + dictionaryTableName
-				+ " d3 on t.o = d3.key where d2.value <> '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' order by id limit " + triplesToDraw;
+				+ " d3 on t.o = d3.key where d2.value <> '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>'"
+				+ (summarizationProperties.getProperty("database.deterministic_ordering").equals("false") ? " order by id" : " order by d1.key, d2.key, d3.key")
+				+ " limit " + triplesToDraw;
 			return conn.createStatement().executeQuery(query);
 		}
 		catch(SQLException e) {
@@ -1148,7 +1157,9 @@ public class SummaryExport {
 				+ encodedTriplesTableName + " t join " + dictionaryTableName
 				+ " d1 on t.s = d1.key join " + dictionaryTableName
 				+ " d2 on t.p = d2.key join " + dictionaryTableName
-				+ " d3 on t.o = d3.key where d2.value = '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' limit " + triplesToDraw;
+				+ " d3 on t.o = d3.key where d2.value = '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>'"
+				+ (summarizationProperties.getProperty("database.deterministic_ordering").equals("false") ? "" : " order by d1.value, d2.value, d3.value")
+				+ " limit " + triplesToDraw;
 			return conn.createStatement().executeQuery(query);
 		}
 		catch(SQLException e) {

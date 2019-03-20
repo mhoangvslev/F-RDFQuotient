@@ -110,7 +110,7 @@ public class Summary {
 	protected SummaryExport exporter;
 
 	// properties to ignore when building cliques
-	protected HashSet<Long> genericPropertiesIgnoredInCliques;
+	public HashSet<Long> genericPropertiesIgnoredInCliques;
 	protected HashMap<Long, Long> sourcesOfGenericPropertiesIgnoredInCliques;
 	protected HashMap<Long, Long> targetsOfGenericPropertiesIgnoredInCliques;
 
