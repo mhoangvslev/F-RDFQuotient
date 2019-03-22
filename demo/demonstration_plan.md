@@ -36,7 +36,7 @@ $ `./RDFQuotient.sh --summarize "dataset.filename=dataset2.nt" -sp "conf/scenari
 
 Observation: typed weak and typed strong summaries differ.
 
-## 6. Scenario 3: typed strong summarization with split-and-fold-leaves, step-by-step draw-when-changes drawing
+## 6. Scenario 3: typed strong summarization with split-and-fold-leaves, draw-when-changes drawing
 * typed strong summarization  
 $ `./RDFQuotient.sh --summarize "dataset.filename=dataset3.nt" -sp "conf/scenario3_summarization.properties"`
 
