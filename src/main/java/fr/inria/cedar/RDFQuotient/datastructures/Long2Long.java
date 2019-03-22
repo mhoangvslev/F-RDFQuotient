@@ -21,6 +21,12 @@ public class Long2Long {
 		inverse = new HashMap<>();
 	}
 
+	public Long2Long(Long2Long original) {
+		LOGGER.setLevel(Level.INFO);
+		map = new HashMap<>(original.map);
+		inverse = new HashMap<>(original.inverse);
+	}
+
 	public Long get(long node) {
 		return map.get(node);
 	}
@@ -30,14 +36,14 @@ public class Long2Long {
 	}
 
 	/**
-	 * Returns true if node had a previous representative who now becomes a 
+	 * Returns true if node had a previous representative who now becomes a
 	 * representative of no one.
 	 * @param k
 	 * @param v
 	 * @return
 	 */
 	public boolean put(Long k, Long v) {
-		//LOGGER.debug("Long2Long: upon entering put " + clique + " on " + node + ": " + this.display()); 
+		//LOGGER.debug("Long2Long: upon entering put " + clique + " on " + node + ": " + this.display());
 		boolean res = false;
 
 		Long previous = map.get(k);
@@ -46,14 +52,14 @@ public class Long2Long {
 			HashSet<Long> inversePrev = inverse.get(previous);
 			if (inversePrev == null){
 				//LOGGER.debug("Long2Long: Problem " + this.display());
-				throw new IllegalStateException("Map has " + previous + " on " + k + " but nothing in inverse for " + previous); 
+				throw new IllegalStateException("Map has " + previous + " on " + k + " but nothing in inverse for " + previous);
 			}
 			inversePrev.remove(k);
 			//LOGGER.debug("Long2Long: " + k + " no  longer mapped to " + previous);
 			if (inversePrev.isEmpty()){
 				//LOGGER.debug("Long2Long: No one is represented by " + previous + " any more!");
 				res = true;
-				inverse.remove(previous); 
+				inverse.remove(previous);
 			}
 		}
 		map.put(k, v);
@@ -66,7 +72,7 @@ public class Long2Long {
 		if (!keysForV.contains(k)){
 			keysForV.add(k);
 		}
-		return res; 
+		return res;
 	}
 
 	@Override
@@ -107,7 +113,7 @@ public class Long2Long {
 			HashSet<Long> keysWithV2 = inverse.get(v2);
 			if (keysWithV2 == null){
 				keysWithV2 = new HashSet<>();
-				inverse.put(v2, keysWithV2); 
+				inverse.put(v2, keysWithV2);
 			}
 			for (Long l: keysWithV1) {
 				keysWithV2.add(l);

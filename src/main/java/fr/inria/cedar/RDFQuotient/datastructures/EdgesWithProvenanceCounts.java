@@ -20,6 +20,12 @@ public class EdgesWithProvenanceCounts {
 		counts = new HashMap<>();
 	}
 
+	public EdgesWithProvenanceCounts(EdgesWithProvenanceCounts original) {
+		LOGGER.setLevel(Level.INFO);
+		edges = new HashMap<>(original.edges);
+		counts = new HashMap<>(original.counts);
+	}
+
 	public HashMap<Long, HashSet<Long>> get(long s){
 		return edges.get(s);
 	}

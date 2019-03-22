@@ -19,7 +19,6 @@ import fr.inria.cedar.ontosql.rdfdb.dataloading.DataLoading;
 import fr.inria.cedar.ontosql.rdfdb.dataloading.Parameters;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -44,8 +43,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.apache.maven.model.Model;
-import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 
 public class Interface {
 	private static final Logger LOGGER = Logger.getLogger(Interface.class.getName());
@@ -737,13 +734,8 @@ public class Interface {
 	}
 
 	private static void printHelp() {
-		String version;
-		MavenXpp3Reader reader = new MavenXpp3Reader();
-		try {
-			Model model = reader.read(new FileReader("pom.xml"));
-			version = model.getVersion();
-		}
-		catch(Exception ex) {
+		String version = Interface.class.getPackage().getImplementationVersion();
+		if (version == null) {
 			version = "";
 		}
 		final HelpFormatter helpFormatter = new HelpFormatter();
@@ -790,14 +782,9 @@ public class Interface {
 			}
 
 			if (arguments.hasOption(versionOption.getLongOpt())) {
-				String version;
-				MavenXpp3Reader reader = new MavenXpp3Reader();
-				try {
-					Model model = reader.read(new FileReader("pom.xml"));
-					version = model.getVersion();
-				}
-				catch(Exception ex) {
-					version = "unknown";
+				String version = Interface.class.getPackage().getImplementationVersion();
+				if (version == null) {
+					version = "";
 				}
 				System.out.println("RDFQuotient version: " + version);
 				return;

@@ -1,0 +1,23 @@
+mvn clean install -DskipTests
+
+cd demo
+
+./RDFQuotient.sh --load "dataset.filename=dataset1.nt" -lp "conf/loading.properties"
+
+./RDFQuotient.sh --load "dataset.filename=dataset2.nt" -lp "conf/loading.properties"
+
+./RDFQuotient.sh --load "dataset.filename=dataset3.nt" -lp "conf/loading.properties"
+
+./RDFQuotient.sh --summarize "dataset.filename=dataset1.nt" -sp "conf/scenario1w_summarization.properties"
+
+./RDFQuotient.sh --summarize "dataset.filename=dataset1.nt" -sp "conf/scenario1s_summarization.properties"
+
+./RDFQuotient.sh --summarize "dataset.filename=dataset2.nt" -sp "conf/scenario2tw_summarization.properties"
+
+./RDFQuotient.sh --summarize "dataset.filename=dataset2.nt" -sp "conf/scenario2ts_summarization.properties"
+
+./RDFQuotient.sh --summarize "dataset.filename=dataset3.nt" -sp "conf/scenario3_summarization.properties"
+
+./RDFQuotient.sh --summarize "dataset.filename=dataset3.nt" -sp "conf/scenario4_summarization.properties"
+
+./RDFQuotient.sh --summarize "dataset.filename=dataset2.nt" -sp "conf/scenario5_summarization.properties"

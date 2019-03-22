@@ -978,9 +978,10 @@ public class SummaryExport {
 	 * @param bw
 	 * @param triplesToDraw
 	 * @param triplesDrawn
+	 * @param isTypeFirst
 	 * @return the number of triples drawn. This is needed to control how many triples (if any) we need to print from the second group of triples.
 	 */
-	protected long drawTriples(Connection conn, ResultSet rs, BufferedWriter bw, long triplesToDraw, long triplesDrawn){
+	protected long drawTriples(Connection conn, ResultSet rs, BufferedWriter bw, long triplesToDraw, long triplesDrawn, boolean isTypeFirst) {
 		long currentPosition = triplesDrawn;
 		long triplesDrawnInDot = 0;
 		ResultSet userRS = null;
@@ -1050,7 +1051,10 @@ public class SummaryExport {
 				}
 
 				long s = RDF2SQLEncoding.dictionaryEncode(subject);
-				long sRep = summary.getRepresentative(s);
+				long sRep = s;
+				if (!isTypeFirst) {
+					sRep = summary.getRepresentative(s);
+				}
 				//LOGGER.debug("DrawTriples: Encoded " + subject + " into " + s + " whose representative is: "  + sRep);
 
 				long o = RDF2SQLEncoding.dictionaryEncode(object);
@@ -1074,25 +1078,24 @@ public class SummaryExport {
 			try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(summaryDOTFileName)))) {
 				bw.write("digraph g{\n");
 				long triplesToDraw = Math.min(100, summary.triplesSummarizedSoFar);
-				//LOGGER.debug("Writing " + triplesToDraw + " RDF graph triples to DOT");
 				long triplesDrawn = 0;
 				if (summary.isTypeFirst()) {
 					try (ResultSet rs = getTypeTriplesCursorForDotDrawing(conn, triplesToDraw)) {
-						triplesDrawn = drawTriples(conn, rs, bw, triplesToDraw, triplesDrawn);
+						triplesDrawn = drawTriples(conn, rs, bw, triplesToDraw, triplesDrawn, true);
 					}
 					if (triplesDrawn < triplesToDraw){
 						try (ResultSet rs2 = getNonTypeTriplesCursorForDotDrawing(conn, triplesToDraw-triplesDrawn)) {
-							drawTriples(conn, rs2, bw, triplesToDraw, triplesDrawn);
+							drawTriples(conn, rs2, bw, triplesToDraw, triplesDrawn, false);
 						}
 					}
 				}
 				else {
 					try (ResultSet rs = getNonTypeTriplesCursorForDotDrawing(conn, triplesToDraw)) {
-						triplesDrawn = drawTriples(conn, rs, bw, triplesToDraw, triplesDrawn);
+						triplesDrawn = drawTriples(conn, rs, bw, triplesToDraw, triplesDrawn, false);
 					}
 					if (triplesDrawn < triplesToDraw){
 						try (ResultSet rs2 = getTypeTriplesCursorForDotDrawing(conn, triplesToDraw-triplesDrawn)) {
-							drawTriples(conn, rs2, bw, triplesToDraw, triplesDrawn);
+							drawTriples(conn, rs2, bw, triplesToDraw, triplesDrawn, false);
 						}
 					}
 				}
