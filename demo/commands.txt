@@ -22,4 +22,6 @@ rm -r summariesPNG
 
 ./RDFQuotient.sh --summarize "dataset.filename=dataset3.nt" -sp "conf/scenario4_summarization.properties"
 
-./RDFQuotient.sh --summarize "dataset.filename=dataset2.nt" -sp "conf/scenario5_summarization.properties"
+./RDFQuotient.sh --summarize "dataset.filename=dataset3.nt" -sp "conf/scenario5_summarization.properties"
+
+./RDFQuotient.sh --summarize "dataset.filename=dataset2.nt" -sp "conf/scenario6_summarization.properties"

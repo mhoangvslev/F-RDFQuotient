@@ -267,6 +267,28 @@ public class RDF2SQLEncoding {
 		}
 	}
 
+	public static void dropUserTriplesTable() {
+		try {
+			PreparedStatement stmtDropUserTriplesTable = conn.prepareStatement("drop table if exists user_triples;");
+			stmtDropUserTriplesTable.executeUpdate();
+			conn.commit();
+		}
+		catch (SQLException ex) {
+			LOGGER.error(ex);
+		}
+	}
+
+	public static void dropEncodedUserTriplesTable() {
+		try {
+			PreparedStatement stmtDropEncodedUserTriplesTable = conn.prepareStatement("drop table if exists user_encoded_triples;");
+			stmtDropEncodedUserTriplesTable.executeUpdate();
+			conn.commit();
+		}
+		catch (SQLException ex) {
+			LOGGER.error(ex);
+		}
+	}
+
 	public static boolean isSchemaProperty(long p) {
 		return ((p == subPropertyCode) && (subPropertyCode != -1))
 			   || ((p == subClassCode) && (subClassCode != -1))

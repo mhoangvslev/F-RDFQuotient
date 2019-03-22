@@ -83,14 +83,29 @@ public abstract class Traverser {
 		Scanner scanner = new Scanner(System.in);
 		String line = scanner.nextLine();
 		if (line.equals("n")) {
-			LOGGER.info("Type subject of new triple:");
-			String s = scanner.nextLine();
-			LOGGER.info("Type property of new triple:");
-			String p = scanner.nextLine();
-			LOGGER.info("Type object of new triple:");
-			String o = scanner.nextLine();
+			LOGGER.info("Type a new triple:");
+			String userTriple = scanner.nextLine();
 
-			// TODO: validate URIs
+			if (!userTriple.matches(
+				// subject: IRI or blank node
+				"(\\<.*\\>|_:\\p{Alnum}+)" +
+				// property: IRI or blank node
+				"( |\t)(\\<.*\\>|_:\\p{Alnum}+)" +
+				// object: IRI, blank node or literal
+				"( |\t)(\\<.*\\>|_:\\p{Alnum}+|\"(?:[^\"\\\\]|\\\\.)*\")" +
+				// language tag and/or datatype IRI
+				"(@\\p{Alnum}+(\\-\\p{Alnum}+)?|\\^\\^\\<.*\\>)*" +
+				// dot after the triple
+				"( |\t)\\." +
+				// comments
+				"(\\s+#\\s.*)?")) {
+				LOGGER.error("Wrong format of the input triple, retry");
+				return haltStepByStepAndAskForTripleFromUser(typeTriple);
+			}
+			String[] userTripleSplit = userTriple.split("\\s+");
+			String s = userTripleSplit[0];
+			String p = userTripleSplit[1];
+			String o = userTripleSplit[2];
 
 			long sEncoded = -1;
 			long pEncoded = -1;
@@ -168,7 +183,7 @@ public abstract class Traverser {
 		|| numberOfSummaryEdgesSoFar != currentNumberOfSummaryEdges))) {
 			numberOfSummaryNodesSoFar = currentNumberOfSummaryNodes;
 			numberOfSummaryEdgesSoFar = currentNumberOfSummaryEdges;
-			String numberOfTriples = String.format((Locale) null, "%09d", summ.triplesSummarizedSoFar);
+			String numberOfTriples = String.format((Locale) null, "%03d", summ.triplesSummarizedSoFar);
 			summ.drawGraphAndSummary(conn, "_after_" + numberOfTriples + "_triples");
 		}
 	}

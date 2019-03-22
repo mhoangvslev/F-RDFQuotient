@@ -10,6 +10,7 @@ import fr.inria.cedar.RDFQuotient.strong.TwoPassStrongSummary;
 import fr.inria.cedar.RDFQuotient.strong.TwoPassTypedStrongSummary;
 import fr.inria.cedar.RDFQuotient.strong.TypedStrongSummary;
 import fr.inria.cedar.RDFQuotient.util.PostgresIdentifier;
+import fr.inria.cedar.RDFQuotient.util.RDF2SQLEncoding;
 import fr.inria.cedar.RDFQuotient.weak.TwoPassTypedWeakSummary;
 import fr.inria.cedar.RDFQuotient.weak.TwoPassWeakSummary;
 import fr.inria.cedar.RDFQuotient.weak.TwoPassWeakSummaryWithUnionFind;
@@ -603,6 +604,11 @@ public class Interface {
 			LOGGER.info("Summary DOT drawing exported to disk");
 		}
 
+		// clean up
+		if (summarizationProperties.getProperty("summary.step_by_step").equals("true")) {
+			RDF2SQLEncoding.dropUserTriplesTable();
+			RDF2SQLEncoding.dropEncodedUserTriplesTable();
+		}
 		if (closeConnection) {
 			closeDatabaseConnection();
 		}

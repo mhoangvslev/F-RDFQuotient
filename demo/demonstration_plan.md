@@ -27,7 +27,7 @@ Observation: weak and strong summaries differ.
 ## 4. Type-first summarization
 * example on the poster
 
-## 5. Scenario 2: typed weak and typed strong summarization with plain, direct drawing
+## 5. Scenario 2: typed weak and typed strong summarization with plain, step-by-step drawing
 * typed weak summarization  
 $ `./RDFQuotient.sh --summarize "dataset.filename=dataset2.nt" -sp "conf/scenario2tw_summarization.properties"`
 
@@ -36,13 +36,17 @@ $ `./RDFQuotient.sh --summarize "dataset.filename=dataset2.nt" -sp "conf/scenari
 
 Observation: typed weak and typed strong summaries differ.
 
-## 6. Scenario 3: typed strong summarization with split-and-fold-leaves, draw-when-changes drawing
+## 6. Scenario 3: typed strong summarization with plain, when-changes drawing
 * typed strong summarization  
 $ `./RDFQuotient.sh --summarize "dataset.filename=dataset3.nt" -sp "conf/scenario3_summarization.properties"`
 
-## 7. Scenario 4: typed strong summarization with typed generalization and split-and-fold-leaves drawing
+## 6. Scenario 4: typed strong summarization with split-and-fold-leaves, direct drawing
 * typed strong summarization  
 $ `./RDFQuotient.sh --summarize "dataset.filename=dataset3.nt" -sp "conf/scenario4_summarization.properties"`
+
+## 7. Scenario 5: typed strong summarization with typed generalization and split-and-fold-leaves, direct drawing
+* typed strong summarization  
+$ `./RDFQuotient.sh --summarize "dataset.filename=dataset3.nt" -sp "conf/scenario5_summarization.properties"`
 
 ## 8. Summaries from the gallery
 * [bsbm1m](https://project.inria.fr/rdfquotient/summaries-of-bsbm1m-dataset/)
@@ -50,8 +54,8 @@ $ `./RDFQuotient.sh --summarize "dataset.filename=dataset3.nt" -sp "conf/scenari
 * [bsbm100m](https://project.inria.fr/rdfquotient/summaries-of-bsbm100m-dataset/)
 * [foodista](https://project.inria.fr/rdfquotient/summaries-of-foodista-dataset/)
 
-## 9. Scenario 5: incremental strong summarization with user input
+## 9. Scenario 6: incremental strong summarization with user input
 * prepare a text editor from where the user can copy the triple
 
 * strong summarization  
-$ `./RDFQuotient.sh --summarize "dataset.filename=dataset2.nt" -sp "conf/scenario5_summarization.properties"`
+$ `./RDFQuotient.sh --summarize "dataset.filename=dataset2.nt" -sp "conf/scenario6_summarization.properties"`
