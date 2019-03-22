@@ -2,6 +2,8 @@ mvn clean install -DskipTests
 
 cd demo
 
+rm -r summariesPNG
+
 ./RDFQuotient.sh --load "dataset.filename=dataset1.nt" -lp "conf/loading.properties"
 
 ./RDFQuotient.sh --load "dataset.filename=dataset2.nt" -lp "conf/loading.properties"

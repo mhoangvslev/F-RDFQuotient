@@ -1,4 +1,4 @@
-# 20/3/2019 EDBT Demo plan
+# EDBT Demo plan
 
 ## 1. Main concepts
 * RDF framework, RDF graphs
