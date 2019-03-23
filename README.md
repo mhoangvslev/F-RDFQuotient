@@ -12,7 +12,7 @@ An equivalence relation is a binary symmetric, transitive and reflexive relation
 * The quotient of an RDF graph through a given equivalence relation is another graph, having one node for every equivalence class (group of equivalent nodes) of the input graph. 
 * The edges of the quotient summary graph are derived from the input graph edges: whenever the input graph contained an edge a--p-->b, the quotient summary graph contains an edge rep(a)--p-->rep(b), where rep(a), rep(b) denote the summary nodes that correspond to a and to b in the original graph, respectively, and p denotes the edge of the label going from a to b (or, the value of the property connecting a to b in the input graph).
 
-Our software allows to build six different summaries, four which we defined in our [paper](https://hal.inria.fr/hal-01325900v6) and two classical algorithms, namely 1-forward-and-backward bisimulation and 1-forward bisimulation quotients.
+Our software allows to build six different summaries, four defined in our [paper](https://hal.inria.fr/hal-01325900v6) and two classical algorithms, namely 1-forward-and-backward bisimulation and 1-forward bisimulation quotients.
 
 For each of our four summaries, two implementations are available: one "global" (or "two-pass") that needs to read the whole RDF graph before summarizing it, and one "incremental" that summarizes the graph while traversing it and continuously updates the summary.
 
@@ -30,7 +30,7 @@ This leads to a total of 10 algorithms:
 * 1-forward-bisimulation (OneFW or onefw/1fw)
 
 ## Implementation
-Our software is written in **Java** programming language and compiled using Apache **Maven** build automation tool. As a back-end, it uses **Postgres** DBMS for data storage, and **[DOT](https://www.graphviz.org/)** tool for visualizations. The code design focuses on two basic operations: `load` and `summarize`. An RDF graph in **N-Triples format, with no duplicates** can be loaded into Postgres using `load` operation. The RDF graph that has been loaded in the database can be summarized using `summarize` operation. The summary of the RDF graph is stored in Postgres (where subsequent applications can use it from), and in an output NT file. A visualization of a summary is written into a DOT file, and drawn using DOT into a PNG file.
+Our software is written in **Java** and compiled using Apache **Maven** build automation tool. It uses **Postgres** DBMS for data storage, and **[DOT](https://www.graphviz.org/)** tool for visualizations. The code design focuses on two basic operations: `load` and `summarize`. An RDF graph in **N-Triples format, with no duplicates** can be loaded into Postgres using `load` operation. The RDF graph that has been loaded in the database can be summarized using the `summarize` operation. The summary of the RDF graph is stored in Postgres (where subsequent applications can use it from), and in an output NT file. A visualization of a summary is written into a DOT file, and drawn using DOT into a PNG file.
 
 ### Example
 
@@ -43,12 +43,12 @@ where `yourpath` needs to be replaced with the path to the RDF graph file.
 
 ### Experiments with larger datasets
 
-The usage of the code's two main operations can be also understood by looking at our scripts:
+Code usage can be also understood by looking at our scripts:
  
 * [load.sh](https://gitlab.inria.fr/cedar/RDFQuotient/blob/master/scripts/load.sh)
 * [summarize.sh](https://gitlab.inria.fr/cedar/RDFQuotient/blob/master/scripts/summarize.sh)
 
-These primitives allow us easily schedule the computations of the set of experiments for given datasets, e.g.:
+Based on these, more complex summarization experiments can be devised, e.g.:
 
 * [run_cedar001.sh](https://gitlab.inria.fr/cedar/RDFQuotient/blob/master/scripts/run_cedar001.sh)
 * [run_cedar001_shortcut.sh](https://gitlab.inria.fr/cedar/RDFQuotient/blob/master/scripts/run_cedar001_shortcut.sh)
@@ -74,13 +74,13 @@ These primitives allow us easily schedule the computations of the set of experim
 
 ## Download
 ### Jar files (recommended)
-Click on a version number below to download stand-alone jar file.
+Click on a version number below to download standalone jar file.
 
 * [1.8-SNAPSHOT](http://files.inria.fr/cedar/RDFQuotient/RDFQuotient-1.8-SNAPSHOT-with-dependencies.jar) (recommended) current, 1.8 pre-release version, still under development but rather stable, build from March 22, 2019
 * [1.7](http://files.inria.fr/cedar/RDFQuotient/RDFQuotient-1.7-with-dependencies.jar) (legacy code) stable version released on October 19, 2018
 
 ### Building from sources
-The loading process is provided by efficient OntoSQL/RDFDB library developped at CEDAR team. This library is a dependency in our project that is stored in a private repository. However, it does not prevent you from using our code as we provide a compiled jar file.
+The loading process is provided by the OntoSQL/RDFDB library developped in CEDAR team. This library is a dependency in our project that is stored in a private repository. However, it does not prevent you from using our code as we provide a compiled jar file.
 
 In order to build the project:
 
@@ -94,4 +94,4 @@ In order to build the project:
 In step 6, `mvn install` or `mvn clean install` part of the command attempts to first compile the code, and then execute the tests. We use the tests as an automatic means to assert basic correctness of our software. They are run in a controlled environment, where the parameters for a database connection are fixed. If you wish to run the tests and you use non-standard configuration of Postgres or DOT installation, make sure you adjust the configuration used for testing.
 
 ## Troubleshooting
-Thank you for trying out our software. If you encounter any problem with our software, please file an issue in this GitLab project.
+Thank you for trying out our software! If you encounter any problem using it, please file an issue in this GitLab project.
