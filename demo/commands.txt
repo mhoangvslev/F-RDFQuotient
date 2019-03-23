@@ -2,26 +2,38 @@ mvn clean install -DskipTests
 
 cd demo
 
+# clean up PNG files
 rm -r summariesPNG
 
+# load dataset1.nt
 ./RDFQuotient.sh --load "dataset.filename=dataset1.nt" -lp "conf/loading.properties"
 
+# load dataset2.nt
 ./RDFQuotient.sh --load "dataset.filename=dataset2.nt" -lp "conf/loading.properties"
 
+# load dataset3.nt
 ./RDFQuotient.sh --load "dataset.filename=dataset3.nt" -lp "conf/loading.properties"
 
+# Scenario 1: weak summarization with plain, step-by-step drawing
 ./RDFQuotient.sh --summarize "dataset.filename=dataset1.nt" -sp "conf/scenario1w_summarization.properties"
 
+# Scenario 1: strong summarization with plain, step-by-step drawing
 ./RDFQuotient.sh --summarize "dataset.filename=dataset1.nt" -sp "conf/scenario1s_summarization.properties"
 
+# Scenario 2: typed weak summarization with plain, step-by-step drawing
 ./RDFQuotient.sh --summarize "dataset.filename=dataset2.nt" -sp "conf/scenario2tw_summarization.properties"
 
+# Scenario 2: typed strong summarization with plain, step-by-step drawing
 ./RDFQuotient.sh --summarize "dataset.filename=dataset2.nt" -sp "conf/scenario2ts_summarization.properties"
 
+# Scenario 3: typed strong summarization with plain, when-changes drawing
 ./RDFQuotient.sh --summarize "dataset.filename=dataset3.nt" -sp "conf/scenario3_summarization.properties"
 
+# Scenario 4: typed strong summarization with split-and-fold-leaves, direct drawing
 ./RDFQuotient.sh --summarize "dataset.filename=dataset3.nt" -sp "conf/scenario4_summarization.properties"
 
+# Scenario 5: typed strong summarization with typed generalization and split-and-fold-leaves, direct drawing
 ./RDFQuotient.sh --summarize "dataset.filename=dataset3.nt" -sp "conf/scenario5_summarization.properties"
 
+# Scenario 6: incremental strong summarization with user input
 ./RDFQuotient.sh --summarize "dataset.filename=dataset2.nt" -sp "conf/scenario6_summarization.properties"

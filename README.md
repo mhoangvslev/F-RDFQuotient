@@ -41,22 +41,10 @@ Our software is written in **Java** and compiled using Apache **Maven** build au
 
 where `yourpath` needs to be replaced with the path to the RDF graph file.
 
-### Experiments with larger datasets
-
-Code usage can be also understood by looking at our scripts:
- 
-* [load.sh](https://gitlab.inria.fr/cedar/RDFQuotient/blob/master/scripts/load.sh)
-* [summarize.sh](https://gitlab.inria.fr/cedar/RDFQuotient/blob/master/scripts/summarize.sh)
-
-Based on these, more complex summarization experiments can be devised, e.g.:
-
-* [run_cedar001.sh](https://gitlab.inria.fr/cedar/RDFQuotient/blob/master/scripts/run_cedar001.sh)
-* [run_cedar001_shortcut.sh](https://gitlab.inria.fr/cedar/RDFQuotient/blob/master/scripts/run_cedar001_shortcut.sh)
-
 ## IMPORTANT NOTICE
 ### Before using our software
 * read the [license](https://gitlab.inria.fr/cedar/RDFQuotient/blob/master/LICENSE.txt)
-* read the [documentation](https://gitlab.inria.fr/cedar/RDFQuotient/blob/master/documentation.pdf), which contains a detailed description of stand-alone and programmatic interfaces of RDFQuotient tool
+* read the [documentation](https://gitlab.inria.fr/cedar/RDFQuotient/blob/master/documentation.pdf), which contains a detailed description of standalone and programmatic interfaces of RDFQuotient tool
 
 ### Software prerequisites
 * Java >=1.8 must be installed
@@ -77,7 +65,6 @@ Based on these, more complex summarization experiments can be devised, e.g.:
 Click on a version number below to download standalone jar file.
 
 * [1.8-SNAPSHOT](http://files.inria.fr/cedar/RDFQuotient/RDFQuotient-1.8-SNAPSHOT-with-dependencies.jar) (recommended) current, 1.8 pre-release version, still under development but rather stable, build from March 22, 2019
-* [1.7](http://files.inria.fr/cedar/RDFQuotient/RDFQuotient-1.7-with-dependencies.jar) (legacy code) stable version released on October 19, 2018
 
 ### Building from sources
 The loading process is provided by the OntoSQL/RDFDB library developped in CEDAR team. This library is a dependency in our project that is stored in a private repository. However, it does not prevent you from using our code as we provide a compiled jar file.
