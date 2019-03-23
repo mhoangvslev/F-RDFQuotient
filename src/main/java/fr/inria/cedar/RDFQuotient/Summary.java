@@ -1138,24 +1138,12 @@ public class Summary {
 			gatherNodeStatistics();
 			gatherEdgeStatistics();
 		}
-		Long2Long repCopy = null;
-		EdgesWithProvenanceCounts edgesCopy = null;
-		long numberOfEdges = edgesWithProv.numberOfDistinctEdges();
-		if (isTypeFirst() && numberOfEdges == 0) {
-			repCopy = new Long2Long(rep);
-			edgesCopy = new EdgesWithProvenanceCounts(edgesWithProv);
-			representTypeTriplesBeforeData();
-		}
 		String summaryDOTFileName = exporter.getDOTFileName(true, suffix);
 		String summaryPNGFileName = exporter.getPNGFileName(true, suffix);
 		exporter.writeSummaryToDOTFile(conn, summaryDOTFileName, summaryPNGFileName);
 
 		// revert changes
 		summarizationProperties.put("drawing.style", drawingStyle);
-		if (isTypeFirst() && numberOfEdges == 0) {
-			rep = repCopy;
-			edgesWithProv = edgesCopy;
-		}
 	}
 
 	/**

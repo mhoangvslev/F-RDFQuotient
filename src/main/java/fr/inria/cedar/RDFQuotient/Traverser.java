@@ -2,6 +2,8 @@
 
 package fr.inria.cedar.RDFQuotient;
 
+import fr.inria.cedar.RDFQuotient.datastructures.EdgesWithProvenanceCounts;
+import fr.inria.cedar.RDFQuotient.datastructures.Long2Long;
 import fr.inria.cedar.RDFQuotient.datastructures.Triple;
 import fr.inria.cedar.RDFQuotient.util.PostgresIdentifier;
 import fr.inria.cedar.RDFQuotient.util.RDF2SQLEncoding;
@@ -176,6 +178,15 @@ public abstract class Traverser {
 	}
 
 	protected void drawStepByStep(String mode) {
+		Long2Long repCopy = null;
+		EdgesWithProvenanceCounts edgesCopy = null;
+		long numberOfEdges = summ.edgesWithProv.numberOfDistinctEdges();
+		if (summ.isTypeFirst() && numberOfEdges == 0) {
+			repCopy = new Long2Long(summ.rep);
+			edgesCopy = new EdgesWithProvenanceCounts(summ.edgesWithProv);
+			summ.representTypeTriplesBeforeData();
+		}
+
 		long currentNumberOfSummaryNodes = summ.rep.numberOfDistinctValues();
 		long currentNumberOfSummaryEdges = summ.edgesWithProv.numberOfDistinctEdges();
 		if (mode.equals("always") || (mode.equals("when_changes")
@@ -185,6 +196,12 @@ public abstract class Traverser {
 			numberOfSummaryEdgesSoFar = currentNumberOfSummaryEdges;
 			String numberOfTriples = String.format((Locale) null, "%03d", summ.triplesSummarizedSoFar);
 			summ.drawGraphAndSummary(conn, "_after_" + numberOfTriples + "_triples");
+		}
+
+		// revert changes
+		if (summ.isTypeFirst() && numberOfEdges == 0) {
+			summ.rep = repCopy;
+			summ.edgesWithProv = edgesCopy;
 		}
 	}
 

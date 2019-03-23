@@ -41,18 +41,6 @@ Our software is written in **Java** programming language and compiled using Apac
 
 where `yourpath` needs to be replaced with the path to the RDF graph file.
 
-### Experiments with larger datasets
-
-The usage of the code's two main operations can be also understood by looking at our scripts:
- 
-* [load.sh](https://gitlab.inria.fr/cedar/RDFQuotient/blob/master/scripts/load.sh)
-* [summarize.sh](https://gitlab.inria.fr/cedar/RDFQuotient/blob/master/scripts/summarize.sh)
-
-These primitives allow us easily schedule the computations of the set of experiments for given datasets, e.g.:
-
-* [run_cedar001.sh](https://gitlab.inria.fr/cedar/RDFQuotient/blob/master/scripts/run_cedar001.sh)
-* [run_cedar001_shortcut.sh](https://gitlab.inria.fr/cedar/RDFQuotient/blob/master/scripts/run_cedar001_shortcut.sh)
-
 ## IMPORTANT NOTICE
 ### Before using our software
 * read the [license](https://gitlab.inria.fr/cedar/RDFQuotient/blob/master/LICENSE.txt)
@@ -77,7 +65,6 @@ These primitives allow us easily schedule the computations of the set of experim
 Click on a version number below to download stand-alone jar file.
 
 * [1.8-SNAPSHOT](http://files.inria.fr/cedar/RDFQuotient/RDFQuotient-1.8-SNAPSHOT-with-dependencies.jar) (recommended) current, 1.8 pre-release version, still under development but rather stable, build from March 22, 2019
-* [1.7](http://files.inria.fr/cedar/RDFQuotient/RDFQuotient-1.7-with-dependencies.jar) (legacy code) stable version released on October 19, 2018
 
 ### Building from sources
 The loading process is provided by efficient OntoSQL/RDFDB library developped at CEDAR team. This library is a dependency in our project that is stored in a private repository. However, it does not prevent you from using our code as we provide a compiled jar file.
