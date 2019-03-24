@@ -978,10 +978,9 @@ public class SummaryExport {
 	 * @param bw
 	 * @param triplesToDraw
 	 * @param triplesDrawn
-	 * @param isTypeFirst
 	 * @return the number of triples drawn. This is needed to control how many triples (if any) we need to print from the second group of triples.
 	 */
-	protected long drawTriples(Connection conn, ResultSet rs, BufferedWriter bw, long triplesToDraw, long triplesDrawn, boolean isTypeFirst) {
+	protected long drawTriples(Connection conn, ResultSet rs, BufferedWriter bw, long triplesToDraw, long triplesDrawn) {
 		long currentPosition = triplesDrawn;
 		long triplesDrawnInDot = 0;
 		ResultSet userRS = null;
@@ -1042,19 +1041,16 @@ public class SummaryExport {
 					}
 				}
 
-				triplesDrawnInDot++;
-				currentPosition++;
-
 				long p = RDF2SQLEncoding.dictionaryEncode(property);
 				if (summary.genericPropertiesIgnoredInCliques.contains(p)) {
 					continue;
 				}
 
+				triplesDrawnInDot++;
+				currentPosition++;
+
 				long s = RDF2SQLEncoding.dictionaryEncode(subject);
-				long sRep = s;
-				if (!isTypeFirst) {
-					sRep = summary.getRepresentative(s);
-				}
+				long sRep = summary.getRepresentative(s);
 				//LOGGER.debug("DrawTriples: Encoded " + subject + " into " + s + " whose representative is: "  + sRep);
 
 				long o = RDF2SQLEncoding.dictionaryEncode(object);
@@ -1081,21 +1077,21 @@ public class SummaryExport {
 				long triplesDrawn = 0;
 				if (summary.isTypeFirst()) {
 					try (ResultSet rs = getTypeTriplesCursorForDotDrawing(conn, triplesToDraw)) {
-						triplesDrawn = drawTriples(conn, rs, bw, triplesToDraw, triplesDrawn, true);
+						triplesDrawn = drawTriples(conn, rs, bw, triplesToDraw, triplesDrawn);
 					}
 					if (triplesDrawn < triplesToDraw){
 						try (ResultSet rs2 = getNonTypeTriplesCursorForDotDrawing(conn, triplesToDraw-triplesDrawn)) {
-							drawTriples(conn, rs2, bw, triplesToDraw, triplesDrawn, false);
+							drawTriples(conn, rs2, bw, triplesToDraw, triplesDrawn);
 						}
 					}
 				}
 				else {
 					try (ResultSet rs = getNonTypeTriplesCursorForDotDrawing(conn, triplesToDraw)) {
-						triplesDrawn = drawTriples(conn, rs, bw, triplesToDraw, triplesDrawn, false);
+						triplesDrawn = drawTriples(conn, rs, bw, triplesToDraw, triplesDrawn);
 					}
 					if (triplesDrawn < triplesToDraw){
 						try (ResultSet rs2 = getTypeTriplesCursorForDotDrawing(conn, triplesToDraw-triplesDrawn)) {
-							drawTriples(conn, rs2, bw, triplesToDraw, triplesDrawn, false);
+							drawTriples(conn, rs2, bw, triplesToDraw, triplesDrawn);
 						}
 					}
 				}
@@ -1137,8 +1133,7 @@ public class SummaryExport {
 				+ " d1 on t.s = d1.key join " + dictionaryTableName
 				+ " d2 on t.p = d2.key join " + dictionaryTableName
 				+ " d3 on t.o = d3.key where d2.value <> '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>'"
-				+ (summarizationProperties.getProperty("database.deterministic_ordering").equals("false") ? " order by id" : " order by d1.key, d2.key, d3.key")
-				+ " limit " + triplesToDraw;
+				+ (summarizationProperties.getProperty("database.deterministic_ordering").equals("false") ? " order by id" : " order by d1.key, d2.key, d3.key");
 			return conn.createStatement().executeQuery(query);
 		}
 		catch(SQLException e) {
@@ -1161,8 +1156,7 @@ public class SummaryExport {
 				+ " d1 on t.s = d1.key join " + dictionaryTableName
 				+ " d2 on t.p = d2.key join " + dictionaryTableName
 				+ " d3 on t.o = d3.key where d2.value = '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>'"
-				+ (summarizationProperties.getProperty("database.deterministic_ordering").equals("false") ? "" : " order by d1.value, d2.value, d3.value")
-				+ " limit " + triplesToDraw;
+				+ (summarizationProperties.getProperty("database.deterministic_ordering").equals("false") ? "" : " order by d1.value, d2.value, d3.value");
 			return conn.createStatement().executeQuery(query);
 		}
 		catch(SQLException e) {

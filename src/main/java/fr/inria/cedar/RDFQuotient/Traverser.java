@@ -178,10 +178,10 @@ public abstract class Traverser {
 	}
 
 	protected void drawStepByStep(String mode) {
+		long numberOfSummaryEdges = summ.edgesWithProv.numberOfDistinctEdges();
 		Long2Long repCopy = null;
 		EdgesWithProvenanceCounts edgesCopy = null;
-		long numberOfEdges = summ.edgesWithProv.numberOfDistinctEdges();
-		if (summ.isTypeFirst() && numberOfEdges == 0) {
+		if (summ.isTypeFirst() && numberOfSummaryEdges == 0) {
 			repCopy = new Long2Long(summ.rep);
 			edgesCopy = new EdgesWithProvenanceCounts(summ.edgesWithProv);
 			summ.representTypeTriplesBeforeData();
@@ -189,9 +189,10 @@ public abstract class Traverser {
 
 		long currentNumberOfSummaryNodes = summ.rep.numberOfDistinctValues();
 		long currentNumberOfSummaryEdges = summ.edgesWithProv.numberOfDistinctEdges();
-		if (mode.equals("always") || (mode.equals("when_changes")
+		if ((mode.equals("always") || (mode.equals("when_changes")
 		&& (numberOfSummaryNodesSoFar != currentNumberOfSummaryNodes
-		|| numberOfSummaryEdgesSoFar != currentNumberOfSummaryEdges))) {
+		|| numberOfSummaryEdgesSoFar != currentNumberOfSummaryEdges)))
+		&& currentNumberOfSummaryEdges > 0) {
 			numberOfSummaryNodesSoFar = currentNumberOfSummaryNodes;
 			numberOfSummaryEdgesSoFar = currentNumberOfSummaryEdges;
 			String numberOfTriples = String.format((Locale) null, "%03d", summ.triplesSummarizedSoFar);
@@ -199,7 +200,7 @@ public abstract class Traverser {
 		}
 
 		// revert changes
-		if (summ.isTypeFirst() && numberOfEdges == 0) {
+		if (summ.isTypeFirst() && numberOfSummaryEdges == 0) {
 			summ.rep = repCopy;
 			summ.edgesWithProv = edgesCopy;
 		}
@@ -256,6 +257,8 @@ public abstract class Traverser {
 						|| (t.p == rangeCode)) { // schema triple
 							// scanner, o represented in collectSchemaNodes
 							summ.edgesWithProv.addTriple(summ.rep.get(t.s), t.p, summ.rep.get(t.o));
+							summ.triplesSummarizedSoFar++;
+							summ.nonTypeTriplesSummarizedSoFar++;
 						}
 						else { // data triple
 							if (summ.genericPropertiesIgnoredInCliques.contains(t.p)) {
@@ -263,13 +266,10 @@ public abstract class Traverser {
 							}
 							else {
 								summ.handleDataTriple(t);
+								summ.triplesSummarizedSoFar++;
+								summ.nonTypeTriplesSummarizedSoFar++;
 							}
 						}
-						summ.triplesSummarizedSoFar++;
-						if (summ.triplesSummarizedSoFar == 100) {
-							LOGGER.info("DEBUG");
-						}
-						summ.nonTypeTriplesSummarizedSoFar++;
 						if (summ.checkConsistency) {
 							summ.consistencyChecks();
 						}
