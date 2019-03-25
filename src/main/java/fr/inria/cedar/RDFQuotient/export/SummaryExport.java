@@ -53,7 +53,7 @@ public class SummaryExport {
 
 	// one size fits all attribute for drawing
 	private double arrowsize = 0.8;
-	private String schemaNodeLineSuffix = "\" [penwidth=2, fontsize=12, fillcolor=white, fontcolor=black];\n";
+	private String schemaNodeLineSuffix = "\" [penwidth=2, fontsize=12, fillcolor=black, fontcolor=white];\n";
 	private int maxDotLinesPrinted = 1000;
 
 	public SummaryExport(Summary s, Properties summarizationProperties, String dictionaryTableName,
@@ -286,7 +286,7 @@ public class SummaryExport {
 
 		try {
 			try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(summaryDOTFileName)))) {
-				bw.write("digraph g{\n node[color=black, style=filled];\n");
+				bw.write("digraph g{\n node[color=black, shape=box, style=filled];\n"); 
 
 				ArrayList<Triple> summEdges = summary.getSummaryEdges();
 				for (Triple t : summEdges) {
