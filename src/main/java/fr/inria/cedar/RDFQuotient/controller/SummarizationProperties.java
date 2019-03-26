@@ -101,6 +101,9 @@ public class SummarizationProperties extends ConfigurationProperties {
 		properties.put("drawing.dot_file_prefix", "summariesDOT/");
 		properties.put("drawing.png_file_prefix", "summariesPNG/");
 
+		// Whether to draw input RDF graph
+		properties.put("drawing.draw_input_graph", "false");
+
 		// Whether to draw step-by-step drawings, valid options: false, always, when_changes
 		properties.put("drawing.step_by_step", "false");
 

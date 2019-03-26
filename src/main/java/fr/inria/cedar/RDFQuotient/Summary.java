@@ -1168,19 +1168,28 @@ public class Summary {
 
 	/**
 	 * Writes the summary in DOT (.dot format), then also attempts to draw it
-	 * using DOT according to specified drawingStyle adding prefixes to DOT and
-	 * PNG filenames
+	 * using DOT according to specified summaryDrawingStyle adding prefixes to
+	 * DOT and PNG filenames
 	 * @param conn SQL connection
-	 * @param drawingStyle
+	 * @param summaryDrawingStyle
 	 * @return dot filename
 	 */
-	public String writeDecodedSummaryToDOTFile(Connection conn, String drawingStyle) {
+	public String writeDecodedSummaryToDOTFile(Connection conn, String summaryDrawingStyle) {
 		ensureExporter();
 		addIndexesToRepTable(conn);
 
+		if (summarizationProperties.getProperty("drawing.draw_input_graph").equals("true")) {
+			String style = summarizationProperties.getProperty("drawing.style");
+			summarizationProperties.put("drawing.style", "input_graph");
+			String graphDOTFileName = exporter.getDOTFileName(false, "");
+			String graphPNGFileName = exporter.getPNGFileName(false, "");
+			exporter.writeRDFGraphToDOTFile(conn, graphDOTFileName, graphPNGFileName);
+			summarizationProperties.put("drawing.style", style);
+		}
+
 		String summaryDOTFileName = exporter.getDOTFileName();
 		String summaryPNGFileName = exporter.getPNGFileName();
-		switch (drawingStyle) {
+		switch (summaryDrawingStyle) {
 			case "plain":
 				exporter.writeSummaryToDOTFile(conn, summaryDOTFileName, summaryPNGFileName);
 				break;
@@ -1190,6 +1199,8 @@ public class Summary {
 			case "split_and_fold_leaves":
 				exporter.writeSummaryToDOTFileSplitAndFoldLeaves(conn, summaryDOTFileName, summaryPNGFileName);
 				break;
+			default:
+				summaryDOTFileName = null;
 		}
 		return summaryDOTFileName;
 	}

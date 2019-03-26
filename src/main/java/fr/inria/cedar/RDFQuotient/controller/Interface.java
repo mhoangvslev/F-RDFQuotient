@@ -519,18 +519,28 @@ public class Interface {
 			+ (summarizationProperties.getProperty("summary.replace_type_with_most_general_type").equals("true") ? "" : "out")
 			+ " type generalization, on "
 			+ (summarizationProperties.getProperty("summary.summarize_saturated_graph").equals("true") ? "" : "not ")
-			+ "saturated graph";
-		String drawingStyle = summarizationProperties.getProperty("drawing.style");
+			+ "saturated graph, "
+			+ (summarizationProperties.getProperty("drawing.draw_input_graph").equals("true") ? "drawing input RDF graph visualization with DOT" : "no input RDF graph drawing");
+		String stepByStep = summarizationProperties.getProperty("drawing.step_by_step");
+		switch (stepByStep) {
+			case "always":
+				message += ", drawing summary step-by-step";
+				break;
+			case "when_changes":
+				message += ", drawing summary when it changes";
+				break;
+		}
+		String summaryDrawingStyle = summarizationProperties.getProperty("drawing.style");
 		boolean drawingEnabled = false;
-		switch (drawingStyle) {
+		switch (summaryDrawingStyle) {
 			case "plain":
 			case "split_leaves":
 			case "split_and_fold_leaves":
 				drawingEnabled = true;
-				message += ", drawing visualizations with DOT in " + drawingStyle + " layout";
+				message += ", drawing summary visualizations with DOT in " + summaryDrawingStyle + " layout";
 				break;
 			default:
-				message += ", no drawing";
+				message += ", no summary drawing";
 				break;
 		}
 		System.out.println(message);
@@ -600,7 +610,10 @@ public class Interface {
 		String DOTFilename = null;
 		if (drawingEnabled) {
 			LOGGER.info("Exporting summary DOT drawing to disk");
-			DOTFilename = summary.writeDecodedSummaryToDOTFile(databaseConnection, drawingStyle);
+		}
+		// try to draw RDF graph and summary
+		DOTFilename = summary.writeDecodedSummaryToDOTFile(databaseConnection, summaryDrawingStyle);
+		if (drawingEnabled) {
 			LOGGER.info("Summary DOT drawing exported to disk");
 		}
 

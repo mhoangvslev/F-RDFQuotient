@@ -27,7 +27,7 @@ Observation: weak and strong summaries differ.
 ## 4. Type-first summarization
 * example on the poster
 
-## 5. Scenario 2: typed weak and typed strong summarization with plain, step-by-step drawing
+## 5. Scenario 2: typed weak and typed strong summarization with plain drawing
 * typed weak summarization  
 $ `./RDFQuotient.sh --summarize "dataset.filename=dataset2.nt" -sp "conf/scenario2tw_summarization.properties"`
 

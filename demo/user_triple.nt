@@ -1,1 +1,2 @@
-<http://rq.org/node1> <http://rq.org/attendee> <http://rq.org/Pawel> .
+<http://rq.org/Pawel> <http://rq.org/attends> <http://rq.org/node1> .
+<http://rq.org/Pawel> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://rq.org/Atendee> .

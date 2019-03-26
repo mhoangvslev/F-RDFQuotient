@@ -20,10 +20,10 @@ rm -r summariesPNG
 # Scenario 1: strong summarization with plain, step-by-step drawing
 ./RDFQuotient.sh --summarize "dataset.filename=dataset1.nt" -sp "conf/scenario1s_summarization.properties"
 
-# Scenario 2: typed weak summarization with plain, step-by-step drawing
+# Scenario 2: typed weak summarization with plain drawing
 ./RDFQuotient.sh --summarize "dataset.filename=dataset2.nt" -sp "conf/scenario2tw_summarization.properties"
 
-# Scenario 2: typed strong summarization with plain, step-by-step drawing
+# Scenario 2: typed strong summarization with plain drawing
 ./RDFQuotient.sh --summarize "dataset.filename=dataset2.nt" -sp "conf/scenario2ts_summarization.properties"
 
 # Scenario 3: typed strong summarization with plain, when-changes drawing
