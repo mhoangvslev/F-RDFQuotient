@@ -2,35 +2,16 @@
 
 Authors: Ioana Manolescu, Paweł Guzewicz (CEDAR team at Inria Saclay, France), François Goasdoué (Université de Rennes 1 and CEDAR team).
 
-Visit our [project website](https://project.inria.fr/rdfquotient/) for details about the concepts and algorithms.
+Our [project website](https://project.inria.fr/rdfquotient/) has more details about the concepts and algorithms.
 
 ## Description
 This software allows to build a **quotient summary of an RDF graph**, based on  an _equivalence relation_ between the graph nodes.  
 
-An equivalence relation is a binary symmetric, transitive and reflexive relation.  
-
 * The quotient of an RDF graph through a given equivalence relation is another graph, having one node for every equivalence class (group of equivalent nodes) of the input graph. 
 * The edges of the quotient summary graph are derived from the input graph edges: whenever the input graph contained an edge a--p-->b, the quotient summary graph contains an edge rep(a)--p-->rep(b), where rep(a), rep(b) denote the summary nodes that correspond to a and to b in the original graph, respectively, and p denotes the edge of the label going from a to b (or, the value of the property connecting a to b in the input graph).
 
-Our software allows to build six different summaries, four defined in our [paper](https://hal.inria.fr/hal-01325900v6) and two classical algorithms, namely 1-forward-and-backward bisimulation and 1-forward bisimulation quotients.
-
-For each of our four summaries, two implementations are available: one "global" (or "two-pass") that needs to read the whole RDF graph before summarizing it, and one "incremental" that summarizes the graph while traversing it and continuously updates the summary.
-
-This leads to a total of 10 algorithms:
-
-* global-weak (in the code referred to as TwoPassWeak or 2pweak/2pw)
-* incremental-weak (Weak or weak/w)
-* global-strong (TwoPassStrong or 2pstrong/2ps)
-* incremental-strong (Strong or strong/s)
-* global-typed-weak (TwoPassTypedWeak or 2ptypedweak/2ptw)
-* incremental-typed-weak (TypedWeak or typedweak/tw)
-* global-typed-strong (TwoPassTypedStrong or 2ptypedstrong/2pts)
-* incremental-typed-strong (TypedStrong or typedstrong/ts)
-* 1-forward-backward-bisimulation (OneBisim or onefb/1fb)
-* 1-forward-bisimulation (OneFW or onefw/1fw)
-
 ## Implementation
-Our software is written in **Java** and compiled using Apache **Maven** build automation tool. It uses **Postgres** DBMS for data storage, and **[DOT](https://www.graphviz.org/)** tool for visualizations. The code design focuses on two basic operations: `load` and `summarize`. An RDF graph in **N-Triples format, with no duplicates** can be loaded into Postgres using `load` operation. The RDF graph that has been loaded in the database can be summarized using the `summarize` operation. The summary of the RDF graph is stored in Postgres (where subsequent applications can use it from), and in an output NT file. A visualization of a summary is written into a DOT file, and drawn using DOT into a PNG file.
+Our software is written in **Java** and compiled using Apache **Maven** build automation tool. It relies on the **Postgres** DBMS for data storage, and **[DOT](https://www.graphviz.org/)** tool for visualizations. The code design focuses on two basic operations: `load` and `summarize`. An RDF graph in **N-Triples format, with no duplicates** can be loaded into Postgres using `load` operation. The RDF graph that has been loaded in the database can be summarized using the `summarize` operation. The summary of the RDF graph is stored in Postgres (where subsequent applications can use it from), and in an output NT file. A visualization of a summary is written into a DOT file, and drawn using DOT into a PNG file.
 
 ### Example
 
@@ -82,3 +63,21 @@ In step 6, `mvn install` or `mvn clean install` part of the command attempts to 
 
 ## Troubleshooting
 Thank you for trying out our software! If you encounter any problem using it, please file an issue in this GitLab project.
+
+## More technical details
+Our software allows to build six different summaries, four defined in our [paper](https://hal.inria.fr/hal-01325900v6) and two classical algorithms, namely 1-forward-and-backward bisimulation and 1-forward bisimulation quotients.
+
+For each of our four summaries, two implementations are available: one "global" (or "two-pass") that needs to read the whole RDF graph before summarizing it, and one "incremental" that summarizes the graph while traversing it and continuously updates the summary.
+
+This leads to a total of 10 algorithms:
+
+* global-weak (in the code referred to as TwoPassWeak or 2pweak/2pw)
+* incremental-weak (Weak or weak/w)
+* global-strong (TwoPassStrong or 2pstrong/2ps)
+* incremental-strong (Strong or strong/s)
+* global-typed-weak (TwoPassTypedWeak or 2ptypedweak/2ptw)
+* incremental-typed-weak (TypedWeak or typedweak/tw)
+* global-typed-strong (TwoPassTypedStrong or 2ptypedstrong/2pts)
+* incremental-typed-strong (TypedStrong or typedstrong/ts)
+* 1-forward-backward-bisimulation (OneBisim or onefb/1fb)
+* 1-forward-bisimulation (OneFW or onefw/1fw)
