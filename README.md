@@ -22,16 +22,16 @@ Our software is written in **Java** and compiled using Apache **Maven** build au
 
 where `yourpath` needs to be replaced with the path to the RDF graph file.
 
-## IMPORTANT NOTICE
-### Before using our software
-* read the [license](https://gitlab.inria.fr/cedar/RDFQuotient/blob/master/LICENSE.txt)
-* read the [documentation](https://gitlab.inria.fr/cedar/RDFQuotient/blob/master/documentation.pdf), which contains a detailed description of standalone and programmatic interfaces of RDFQuotient tool
+## IMPORTANT INFORMATION
+
+* Software [license](https://gitlab.inria.fr/cedar/RDFQuotient/blob/master/LICENSE.txt)
+* Software [documentation](https://gitlab.inria.fr/cedar/RDFQuotient/blob/master/documentation.pdf), which contains a detailed description of standalone and programmatic interfaces of RDFQuotient tool
 
 ### Software prerequisites
-* Java >=1.8 must be installed
-* Maven >=3.0.5 must be installed if you compile the code from sources
-* Postgres (in any [officially supported](https://www.postgresql.org/support/versioning/) version) must be installed
-* [DOT](https://www.graphviz.org/) must be installed if you wish to enable drawing of the visualization into PNG file
+* Java >=1.8
+* Maven >=3.0.5 if you compile the code from sources
+* Postgres (in any [officially supported](https://www.postgresql.org/support/versioning/) version) 
+* [DOT](https://www.graphviz.org/)  if you wish to draw the visualization into a PNG file
 
 ### Running RDFQuotient
 * Make sure the input RDF graph is written in **N-Triples format** with **no duplicates**
