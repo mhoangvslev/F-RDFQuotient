@@ -286,7 +286,7 @@ public class SummaryExport {
 
 		try {
 			try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(summaryDOTFileName)))) {
-				bw.write("digraph g{\n node[color=black, shape=box, style=filled];\n"); 
+				bw.write("digraph g{\n node[color=black, shape=box, style=filled];\n");
 
 				ArrayList<Triple> summEdges = summary.getSummaryEdges();
 				for (Triple t : summEdges) {
@@ -1261,12 +1261,13 @@ public class SummaryExport {
 	public String getNTSummaryFileName() {
 		String filePathWithoutExtension = Interface.trimExtension(triplesFileName, false);
 		String NTFilenamePrefix = summarizationProperties.getProperty("summary.nt_file_prefix");
-		int lastSlashPostion = filePathWithoutExtension.lastIndexOf("/");
+		String separator = System.getProperty("file.separator");
+		int lastSlashPostion = filePathWithoutExtension.lastIndexOf(separator);
 		String newPath = filePathWithoutExtension.substring(0, lastSlashPostion + 1) + NTFilenamePrefix;
 		String filename = filePathWithoutExtension.substring(lastSlashPostion + 1);
 		filePathWithoutExtension = newPath + filename;
-		if (NTFilenamePrefix.contains("/")) {
-			lastSlashPostion = newPath.lastIndexOf("/");
+		if (NTFilenamePrefix.contains(separator)) {
+			lastSlashPostion = newPath.lastIndexOf(separator);
 			newPath = newPath.substring(0, lastSlashPostion);
 			File f = new File(newPath);
 			f.mkdirs();
@@ -1295,12 +1296,13 @@ public class SummaryExport {
 	public String getDOTFileName(Boolean shortSummaryName, String suffix) {
 		String filePathWithoutExtension = Interface.trimExtension(triplesFileName, false);
 		String DOTFilenamePrefix = summarizationProperties.getProperty("drawing.dot_file_prefix");
-		int lastSlashPostion = filePathWithoutExtension.lastIndexOf("/");
+		String separator = System.getProperty("file.separator");
+		int lastSlashPostion = filePathWithoutExtension.lastIndexOf(separator);
 		String newPath = filePathWithoutExtension.substring(0, lastSlashPostion + 1) + DOTFilenamePrefix;
 		String filename = filePathWithoutExtension.substring(lastSlashPostion + 1);
 		filePathWithoutExtension = newPath + filename;
-		if (DOTFilenamePrefix.contains("/")) {
-			lastSlashPostion = newPath.lastIndexOf("/");
+		if (DOTFilenamePrefix.contains(separator)) {
+			lastSlashPostion = newPath.lastIndexOf(separator);
 			newPath = newPath.substring(0, lastSlashPostion);
 			File f = new File(newPath);
 			f.mkdirs();
@@ -1349,12 +1351,13 @@ public class SummaryExport {
 	public String getPNGFileName(Boolean shortSummaryName, String suffix) {
 		String filePathWithoutExtension = Interface.trimExtension(triplesFileName, false);
 		String PNGFilenamePrefix = summarizationProperties.getProperty("drawing.png_file_prefix");
-		int lastSlashPostion = filePathWithoutExtension.lastIndexOf("/");
+		String separator = System.getProperty("file.separator");
+		int lastSlashPostion = filePathWithoutExtension.lastIndexOf(separator);
 		String newPath = filePathWithoutExtension.substring(0, lastSlashPostion + 1) + PNGFilenamePrefix;
 		String filename = filePathWithoutExtension.substring(lastSlashPostion + 1);
 		filePathWithoutExtension = newPath + filename;
-		if (PNGFilenamePrefix.contains("/")) {
-			lastSlashPostion = newPath.lastIndexOf("/");
+		if (PNGFilenamePrefix.contains(separator)) {
+			lastSlashPostion = newPath.lastIndexOf(separator);
 			newPath = newPath.substring(0, lastSlashPostion);
 			File f = new File(newPath);
 			f.mkdirs();

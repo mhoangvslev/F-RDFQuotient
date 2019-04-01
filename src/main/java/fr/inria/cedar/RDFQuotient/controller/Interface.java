@@ -246,7 +246,8 @@ public class Interface {
 
 	public static String trimExtension(String fileName, boolean trimSlash) {
 		int lastDotPosition = Math.max(0, fileName.lastIndexOf("."));
-		return fileName.substring(trimSlash ? fileName.lastIndexOf("/") + 1 : 0, lastDotPosition);
+		String separator = System.getProperty("file.separator");
+		return fileName.substring(trimSlash ? fileName.lastIndexOf(separator) + 1 : 0, lastDotPosition);
 	}
 
 	private static String deriveDatabaseNameFromFilename(String datasetFilename) {
@@ -509,6 +510,12 @@ public class Interface {
 			System.exit(1);
 		}
 
+		// clean up
+		if (summarizationProperties.getProperty("summary.step_by_step").equals("true")) {
+			RDF2SQLEncoding.dropUserTriplesTable();
+			RDF2SQLEncoding.dropEncodedUserTriplesTable();
+		}
+
 		System.out.println("********************************************************************************");
 		System.out.println(currentDateTime());
 		String message = "Executing summarize operation using "
@@ -617,11 +624,6 @@ public class Interface {
 			LOGGER.info("Summary DOT drawing exported to disk");
 		}
 
-		// clean up
-		if (summarizationProperties.getProperty("summary.step_by_step").equals("true")) {
-			RDF2SQLEncoding.dropUserTriplesTable();
-			RDF2SQLEncoding.dropEncodedUserTriplesTable();
-		}
 		if (closeConnection) {
 			closeDatabaseConnection();
 		}
