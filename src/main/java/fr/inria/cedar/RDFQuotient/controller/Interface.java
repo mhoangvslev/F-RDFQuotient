@@ -510,12 +510,6 @@ public class Interface {
 			System.exit(1);
 		}
 
-		// clean up
-		if (summarizationProperties.getProperty("summary.step_by_step").equals("true")) {
-			RDF2SQLEncoding.dropUserTriplesTable();
-			RDF2SQLEncoding.dropEncodedUserTriplesTable();
-		}
-
 		System.out.println("********************************************************************************");
 		System.out.println(currentDateTime());
 		String message = "Executing summarize operation using "
@@ -726,7 +720,7 @@ public class Interface {
 		mainOptions.addOption(versionOption);
 
 		loadingPropertiesOption = Option.builder("lp")
-			.longOpt("loading-properties")
+			.longOpt("use-loading-properties")
 			.desc("- set loading properties filename")
 			.hasArg(true)
 			.argName("filename")
@@ -734,7 +728,7 @@ public class Interface {
 			.build();
 
 		summarizationPropertiesOption = Option.builder("sp")
-			.longOpt("summarization-properties")
+			.longOpt("use-summarization-properties")
 			.desc("- set summarization properties filename")
 			.hasArg(true)
 			.argName("filename")
@@ -797,12 +791,12 @@ public class Interface {
 		try {
 			final CommandLine arguments = parser.parse(options, args);
 
-			if (arguments.hasOption(helpOption.getLongOpt())) {
+			if (arguments.hasOption(helpOption.getOpt())) {
 				printHelp();
 				return;
 			}
 
-			if (arguments.hasOption(versionOption.getLongOpt())) {
+			if (arguments.hasOption(versionOption.getOpt())) {
 				String version = Interface.class.getPackage().getImplementationVersion();
 				if (version == null) {
 					version = "";
@@ -812,18 +806,18 @@ public class Interface {
 			}
 
 			String loadingPropertiesFilename = LoadingProperties.DEFAULT_LOADING_PROPERTIES_FILENAME;
-			if (arguments.hasOption(loadingPropertiesOption.getLongOpt())) {
-				loadingPropertiesFilename = arguments.getOptionValue(loadingPropertiesOption.getLongOpt());
+			if (arguments.hasOption(loadingPropertiesOption.getOpt())) {
+				loadingPropertiesFilename = arguments.getOptionValue(loadingPropertiesOption.getOpt());
 			}
 
 			String summarizationPropertiesFilename = SummarizationProperties.DEFAULT_SUMMARIZATION_PROPERTIES_FILENAME;
-			if (arguments.hasOption(summarizationPropertiesOption.getLongOpt())) {
-				summarizationPropertiesFilename = arguments.getOptionValue(summarizationPropertiesOption.getLongOpt());
+			if (arguments.hasOption(summarizationPropertiesOption.getOpt())) {
+				summarizationPropertiesFilename = arguments.getOptionValue(summarizationPropertiesOption.getOpt());
 			}
 
-			if (arguments.hasOption(loadOption.getLongOpt())) {
-				Properties commandLineProperties = parseProperties(arguments.getOptionValue(loadOption.getLongOpt()));
-				if (arguments.hasOption(dryRunOption.getLongOpt())) {
+			if (arguments.hasOption(loadOption.getOpt())) {
+				Properties commandLineProperties = parseProperties(arguments.getOptionValue(loadOption.getOpt()));
+				if (arguments.hasOption(dryRunOption.getOpt())) {
 					Properties defaultProperties = LoadingProperties.getDefaultProperties();
 					Properties loadingProperties = reconcileProperties(defaultProperties, loadingPropertiesFilename, commandLineProperties);
 					// derive database name from filename if not specified
@@ -844,9 +838,9 @@ public class Interface {
 				return;
 			}
 
-			if (arguments.hasOption(summarizeOption.getLongOpt())) {
-				Properties commandLineProperties = parseProperties(arguments.getOptionValue(summarizeOption.getLongOpt()));
-				if (arguments.hasOption(dryRunOption.getLongOpt())) {
+			if (arguments.hasOption(summarizeOption.getOpt())) {
+				Properties commandLineProperties = parseProperties(arguments.getOptionValue(summarizeOption.getOpt()));
+				if (arguments.hasOption(dryRunOption.getOpt())) {
 					Properties defaultProperties = SummarizationProperties.getDefaultProperties();
 					Properties summarizationProperties = reconcileProperties(defaultProperties, summarizationPropertiesFilename, commandLineProperties);
 					// derive database name from filename if not specified
@@ -863,9 +857,9 @@ public class Interface {
 				return;
 			}
 
-			if (arguments.hasOption(readOption.getLongOpt())) {
-				Properties commandLineProperties = parseProperties(arguments.getOptionValue(readOption.getLongOpt()));
-				if (arguments.hasOption(dryRunOption.getLongOpt())) {
+			if (arguments.hasOption(readOption.getOpt())) {
+				Properties commandLineProperties = parseProperties(arguments.getOptionValue(readOption.getOpt()));
+				if (arguments.hasOption(dryRunOption.getOpt())) {
 					Properties defaultProperties = LoadingProperties.getDefaultProperties();
 					Properties readingProperties = reconcileProperties(defaultProperties, loadingPropertiesFilename, commandLineProperties);
 					// derive database name from filename if not specified
@@ -886,6 +880,7 @@ public class Interface {
 			printHelp();
 		}
 		catch (ParseException ex) {
+			System.out.println(ex);
 			printHelp();
 		}
 	}

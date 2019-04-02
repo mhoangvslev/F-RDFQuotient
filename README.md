@@ -22,6 +22,10 @@ Our software is written in **Java** and compiled using Apache **Maven** build au
 
 where `yourpath` needs to be replaced with the path to the RDF graph file.
 
+
+### Demo
+A demonstration of the usage of our software can be found under [demo](https://gitlab.inria.fr/cedar/RDFQuotient/blob/master/demo) directory, where scenarios we used are explained in [demonstration plan](https://gitlab.inria.fr/cedar/RDFQuotient/blob/master/demo/demonstration_plan.md), and for convenience, command line calls are also listed in [commands](https://gitlab.inria.fr/cedar/RDFQuotient/blob/master/demo/commands.txt) file.
+
 ## IMPORTANT INFORMATION
 
 * Software [license](https://gitlab.inria.fr/cedar/RDFQuotient/blob/master/LICENSE.txt)
@@ -45,7 +49,7 @@ where `yourpath` needs to be replaced with the path to the RDF graph file.
 ### Jar files (recommended)
 Click on a version number below to download standalone jar file.
 
-* [1.8-SNAPSHOT](http://files.inria.fr/cedar/RDFQuotient/RDFQuotient-1.8-SNAPSHOT-with-dependencies.jar) (recommended) current, 1.8 pre-release version, still under development but rather stable, build from April 1, 2019
+* [1.8-SNAPSHOT](http://files.inria.fr/cedar/RDFQuotient/RDFQuotient-1.8-SNAPSHOT-with-dependencies.jar) (recommended) current, 1.8 pre-release version, still under development but rather stable, build from April 2, 2019
 
 ### Building from sources
 The loading process is provided by the OntoSQL/RDFDB library developped in CEDAR team. This library is a dependency in our project that is stored in a private repository. However, it does not prevent you from using our code as we provide a compiled jar file.
@@ -54,12 +58,10 @@ In order to build the project:
 
 1. Clone this git repository.
 2. Download [OntoSQL jar file](http://files.inria.fr/cedar/RDFQuotient/ontosql-rdfdb-1.0.10-SNAPSHOT-with-dependencies.jar).
-3. Download a [modified pom.xml file](http://files.inria.fr/cedar/RDFQuotient/pom.xml).
-4. Replace the project pom.xml file with the modified pom.xml.
-5. In line 33 of the modified pom.xml, replace `yourpath/ontosql-rdfdb-1.0.10-SNAPSHOT-with-dependencies.jar` with your local path to the OntoSQL jar file.
-6. Run the `mvn clean install -DskipTests` command.
+3. Run `mvn install:install-file -Dfile=yourpath/ontosql-rdfdb-1.0.10-SNAPSHOT-with-dependencies.jar -DgroupId=fr.inria.cedar.ontosql -DartifactId=ontosql-rdfdb -Dversion=1.0.10-SNAPSHOT -Dpackaging=jar` command to install our library in your local maven repository, where `yourpath/ontosql-rdfdb-1.0.10-SNAPSHOT-with-dependencies.jar` needs to be replaced with your local path to the download OntoSQL jar file.
+4. Run `mvn clean install -DskipTests` command.
 
-In step 6, `mvn install` or `mvn clean install` part of the command attempts to first compile the code, and then execute the tests. We use the tests as an automatic means to assert basic correctness of our software. They are run in a controlled environment, where the parameters for a database connection are fixed. If you wish to run the tests and you use non-standard configuration of Postgres or DOT installation, make sure you adjust the configuration used for testing.
+In step 4, `mvn install` or `mvn clean install` part of the command attempts to first compile the code, and then execute the tests. We use the tests as an automatic means to assert basic correctness of our software. They are run in a controlled environment, where the parameters for a database connection are fixed. If you wish to run the tests and you use non-standard configuration of Postgres or DOT installation, make sure you adjust the configuration used for testing.
 
 ## Troubleshooting
 Thank you for trying out our software! If you encounter any problem using it, please file an issue in this GitLab project.

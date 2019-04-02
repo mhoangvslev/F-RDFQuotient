@@ -58,6 +58,7 @@ public abstract class Traverser {
 		catch (SQLException ex) {
 			LOGGER.error(ex);
 		}
+
 		// this is needed to find the constants associated to special RDF properties
 		RDF2SQLEncoding.setUp(conn, summ.dictionaryTableName);
 		typeConstantCode = RDF2SQLEncoding.getTypeCode();
@@ -65,6 +66,10 @@ public abstract class Traverser {
 		subPropertyCode = RDF2SQLEncoding.getSubPropertyCode();
 		domainCode = RDF2SQLEncoding.getDomainCode();
 		rangeCode = RDF2SQLEncoding.getRangeCode();
+
+		// clean up
+		RDF2SQLEncoding.dropUserTriplesTable();
+		RDF2SQLEncoding.dropEncodedUserTriplesTable();
 
 		summ.setUpClassFieldsDependingOnProperties();
 		setupTime = System.currentTimeMillis() - start;
