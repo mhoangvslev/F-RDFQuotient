@@ -49,7 +49,7 @@ A demonstration of the usage of our software can be found under [demo](https://g
 ### Jar files (recommended)
 Click on a version number below to download standalone jar file.
 
-* [1.8-SNAPSHOT](http://files.inria.fr/cedar/RDFQuotient/RDFQuotient-1.8-SNAPSHOT-with-dependencies.jar) (recommended) current, 1.8 pre-release version, still under development but rather stable, build from April 2, 2019
+* [1.8-SNAPSHOT](http://files.inria.fr/cedar/RDFQuotient/RDFQuotient-1.8-SNAPSHOT-with-dependencies.jar) (recommended) current, 1.8 pre-release version, still under development but rather stable, build from April 3, 2019
 
 ### Building from sources
 The loading process is provided by the OntoSQL/RDFDB library developped in CEDAR team. This library is a dependency in our project that is stored in a private repository. However, it does not prevent you from using our code as we provide a compiled jar file.
