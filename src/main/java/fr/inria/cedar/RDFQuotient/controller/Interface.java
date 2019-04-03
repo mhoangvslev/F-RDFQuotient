@@ -10,7 +10,6 @@ import fr.inria.cedar.RDFQuotient.strong.TwoPassStrongSummary;
 import fr.inria.cedar.RDFQuotient.strong.TwoPassTypedStrongSummary;
 import fr.inria.cedar.RDFQuotient.strong.TypedStrongSummary;
 import fr.inria.cedar.RDFQuotient.util.PostgresIdentifier;
-import fr.inria.cedar.RDFQuotient.util.RDF2SQLEncoding;
 import fr.inria.cedar.RDFQuotient.weak.TwoPassTypedWeakSummary;
 import fr.inria.cedar.RDFQuotient.weak.TwoPassWeakSummary;
 import fr.inria.cedar.RDFQuotient.weak.TwoPassWeakSummaryWithUnionFind;
@@ -283,6 +282,11 @@ public class Interface {
 		return ConfigurationProperties.reconcileProperties(ConfigurationProperties.reconcileProperties(defaultProperties, configurationFileProperties), commandLineProperties);
 	}
 
+	private static boolean checkIfFileExists(String filename) {
+		File fileToCheck = new File(filename);
+		return fileToCheck.exists() && fileToCheck.isFile();
+	}
+
 	/*
 		If both configurationFilename and properties are null or point to a
 		file/object that does not contain valid configuration properties,
@@ -322,6 +326,10 @@ public class Interface {
 
 		// derive database name from filename if not specified
 		if (!loadingProperties.containsKey("database.name") || loadingProperties.getProperty("database.name").equals("")) {
+			if (!checkIfFileExists(datasetFilename)) {
+				LOGGER.error("File " + datasetFilename + " does not exist.");
+				System.exit(1);
+			}
 			String databaseName = deriveDatabaseNameFromFilename(datasetFilename);
 			loadingProperties.put("database.name", databaseName);
 		}
@@ -500,6 +508,10 @@ public class Interface {
 
 		// derive database name from filename if not specified
 		if (!summarizationProperties.containsKey("database.name") || summarizationProperties.getProperty("database.name").equals("")) {
+			if (!checkIfFileExists(datasetFilename)) {
+				LOGGER.error("File " + datasetFilename + " does not exist.");
+				System.exit(1);
+			}
 			String databaseName = deriveDatabaseNameFromFilename(datasetFilename);
 			summarizationProperties.put("database.name", databaseName);
 		}
