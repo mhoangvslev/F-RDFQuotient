@@ -20,15 +20,15 @@ for SUMMARY_TYPE in weak strong 2pweak 2pstrong 2pweakunionfind onefb; do
 	for DATASET in bsbm/bsbm1m.nt bsbm/bsbm10m.nt; do
 		# SATURATE + SUMMARIZE
 		# summarize saturated
-		./scripts/summarize.sh $DATASET $SUMMARY_TYPE true false
+		./scripts/summarize.sh $DATASET $SUMMARY_TYPE true false false
 
 		# SHORTCUT
 		# summarize not saturated
-		#./scripts/summarize.sh $DATASET $SUMMARY_TYPE false false
+		#./scripts/summarize.sh $DATASET $SUMMARY_TYPE false false false
 		DATASET=${DATASET%.*}\_$(translate_summary_name $SUMMARY_TYPE).nt
 		# load the summary with saturation
 		./scripts/load.sh $DATASET true
 		# summarize saturated
-		./scripts/summarize.sh $DATASET $SUMMARY_TYPE true split_and_fold_leaves
+		./scripts/summarize.sh $DATASET $SUMMARY_TYPE true false split_and_fold_leaves
 	done
 done
