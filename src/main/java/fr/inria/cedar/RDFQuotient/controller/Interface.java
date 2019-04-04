@@ -323,13 +323,13 @@ public class Interface {
 		Properties loadingProperties = reconcileProperties(defaultProperties, configurationFilename, properties);
 
 		String datasetFilename = loadingProperties.getProperty("dataset.filename");
+		if (!checkIfFileExists(datasetFilename)) {
+			LOGGER.error("File " + datasetFilename + " does not exist.");
+			System.exit(1);
+		}
 
 		// derive database name from filename if not specified
 		if (!loadingProperties.containsKey("database.name") || loadingProperties.getProperty("database.name").equals("")) {
-			if (!checkIfFileExists(datasetFilename)) {
-				LOGGER.error("File " + datasetFilename + " does not exist.");
-				System.exit(1);
-			}
 			String databaseName = deriveDatabaseNameFromFilename(datasetFilename);
 			loadingProperties.put("database.name", databaseName);
 		}
