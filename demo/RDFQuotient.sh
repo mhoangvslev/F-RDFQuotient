@@ -1,3 +1,3 @@
 #!/bin/bash
 
-java -jar ../target/RDFQuotient-1.8-SNAPSHOT-with-dependencies.jar "$@"
+java -jar ../target/RDFQuotient-1.8-with-dependencies.jar "$@"

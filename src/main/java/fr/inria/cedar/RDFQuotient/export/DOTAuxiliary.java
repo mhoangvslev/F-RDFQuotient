@@ -11,6 +11,10 @@ import org.apache.log4j.Logger;
 public class DOTAuxiliary {
 	private static final Logger LOGGER = Logger.getLogger(DOTAuxiliary.class.getName());
 
+	static {
+		LOGGER.setLevel(Level.INFO);
+	}
+
 	public static String[] diverseColorNames = {"antiquewhite1", "aquamarine1",
 											"cornflowerblue", "gold", "tomato", "chartreuse", "cadetblue1",
 											"blueviolet", "lightpink", "magenta", "yellow",
@@ -18,14 +22,11 @@ public class DOTAuxiliary {
 											"lightgoldenrod", "orange", "khaki1", "orangered", "navy",
 											"lightpink", "magenta", "cyan", "firebrick"};
 	public static String[] bwColorNames = {"white"};
-
 	public static String[] ivoryColorNames = {"ivory"};
-
 	public static String[] lightColorNames = {"white", "lightcyan", "ivory", "azure", "lemonchiffon", "mistyrose1",
 											   "lavender", "beige", "aliceblue", "greenyellow",
 											  "thistle", "paleturquoise", "pink", "yellow"};
 	public static TreeSet<String> darkColorNames;
-
 	public static String[] colorNames = diverseColorNames;
 
 	// color index for each summary node (may cycle if there are more
@@ -41,7 +42,6 @@ public class DOTAuxiliary {
 	public HashSet<Long> schemaNodes;
 
 	public DOTAuxiliary(String colorScheme) {
-		LOGGER.setLevel(Level.INFO);
 		// diverse is the default
 		if (colorScheme.toLowerCase().equals("bw")) {
 			colorNames = bwColorNames;

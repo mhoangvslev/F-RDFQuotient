@@ -12,15 +12,18 @@ import org.apache.log4j.Logger;
 
 public class TwoPassWeakSummaryWithUnionFind extends WeakOrTypedWeakSummary {
 	private static final Logger LOGGER = Logger.getLogger(TwoPassWeakSummaryWithUnionFind.class.getName());
-	private final DisjointSetForest disjointSetForest;
 
+	static {
+		LOGGER.setLevel(Level.INFO);
+	}
+
+	private final DisjointSetForest disjointSetForest;
 	private final HashSet<Long> nodes;
 	private final HashMap<Long, TreeSet<Long>> n2i;
 	private final HashMap<Long, TreeSet<Long>> n2o;
 
 	public TwoPassWeakSummaryWithUnionFind(String triplesFileName, String triplesTableName, String encodedTriplesTableName, String dictionaryTableName) {
 		super();
-		LOGGER.setLevel(Level.INFO);
 		this.triplesFileName = triplesFileName;
 		this.triplesTableName = triplesTableName;
 		this.encodedTriplesTableName = encodedTriplesTableName;

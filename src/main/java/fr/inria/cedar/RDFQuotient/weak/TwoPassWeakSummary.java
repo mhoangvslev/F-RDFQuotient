@@ -13,13 +13,16 @@ import org.apache.log4j.Logger;
 public class TwoPassWeakSummary extends WeakOrTypedWeakSummary {
 	private static final Logger LOGGER = Logger.getLogger(TwoPassWeakSummary.class.getName());
 
+	static {
+		LOGGER.setLevel(Level.INFO);
+	}
+
 	private final HashSet<Long> nodes;
 	private final HashMap<Long, HashSet<Long>> n2i;
 	private final HashMap<Long, HashSet<Long>> n2o;
 
 	public TwoPassWeakSummary(String triplesFileName, String triplesTableName, String encodedTriplesTableName, String dictionaryTableName) {
 		super();
-		LOGGER.setLevel(Level.INFO);
 		this.triplesFileName = triplesFileName;
 		this.triplesTableName = triplesTableName;
 		this.encodedTriplesTableName = encodedTriplesTableName;

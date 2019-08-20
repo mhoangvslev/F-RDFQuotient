@@ -13,11 +13,13 @@ import org.apache.log4j.Logger;
 
 public class LoadingProperties extends ConfigurationProperties {
 	private static final Logger LOGGER = Logger.getLogger(LoadingProperties.class.getName());
+	protected static final String DEFAULT_LOADING_PROPERTIES_FILENAME = "conf/loading.properties";
 
-	static final String DEFAULT_LOADING_PROPERTIES_FILENAME = "conf/loading.properties";
+	static {
+		LOGGER.setLevel(Level.INFO);
+	}
 
 	public LoadingProperties() {
-		LOGGER.setLevel(Level.INFO);
 	}
 
 	public static String getDefaultPropertiesFilename() {

@@ -10,9 +10,12 @@ import org.apache.log4j.Logger;
 public class TwoPassStrongSummary extends StrongOrTypedStrongSummary {
 	private static final Logger LOGGER = Logger.getLogger(TwoPassStrongSummary.class.getName());
 
+	static {
+		LOGGER.setLevel(Level.INFO);
+	}
+
 	public TwoPassStrongSummary(String triplesFileName, String triplesTableName, String encodedTriplesTableName, String dictionaryTableName) {
 		super();
-		LOGGER.setLevel(Level.INFO);
 		this.triplesFileName = triplesFileName;
 		this.triplesTableName = triplesTableName;
 		this.encodedTriplesTableName = encodedTriplesTableName;

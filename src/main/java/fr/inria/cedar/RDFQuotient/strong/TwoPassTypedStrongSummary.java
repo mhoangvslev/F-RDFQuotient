@@ -12,11 +12,15 @@ import org.apache.log4j.Logger;
 
 public class TwoPassTypedStrongSummary extends StrongOrTypedStrongSummary {
 	private static final Logger LOGGER = Logger.getLogger(TwoPassTypedStrongSummary.class.getName());
+
+	static {
+		LOGGER.setLevel(Level.INFO);
+	}
+
 	//protected HashMap<Long, HashMap<Long, TreeSet<Long>>> edges;
 
 	public TwoPassTypedStrongSummary(String triplesFileName, String triplesTableName, String encodedTriplesTableName, String dictionaryTableName) {
 		super();
-		LOGGER.setLevel(Level.INFO);
 		this.triplesFileName = triplesFileName;
 		this.triplesTableName = triplesTableName;
 		this.encodedTriplesTableName = encodedTriplesTableName;

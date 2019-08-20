@@ -12,9 +12,12 @@ import org.apache.log4j.Logger;
 public class WeakSummary extends WeakOrTypedWeakSummary {
 	private static final Logger LOGGER = Logger.getLogger(WeakSummary.class.getName());
 
+	static {
+		LOGGER.setLevel(Level.INFO);
+	}
+
 	public WeakSummary(String triplesFileName, String triplesTableName, String encodedTriplesTableName, String dictionaryTableName) {
 		super();
-		LOGGER.setLevel(Level.INFO);
 		this.triplesFileName = triplesFileName;
 		this.triplesTableName = triplesTableName;
 		this.encodedTriplesTableName = encodedTriplesTableName;

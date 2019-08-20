@@ -14,6 +14,10 @@ import org.apache.log4j.Logger;
 public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 	private static final Logger LOGGER = Logger.getLogger(TypedWeakSummary.class.getName());
 
+	static {
+		LOGGER.setLevel(Level.INFO);
+	}
+
 	protected final static char TRS_RP_RO = 21;
 	protected final static char TRS_RP_UO = 22;
 
@@ -28,7 +32,6 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 
 	public TypedWeakSummary(String triplesFileName, String triplesTableName, String encodedTriplesTableName, String dictionaryTableName) {
 		super();
-		LOGGER.setLevel(Level.INFO);
 		this.triplesFileName = triplesFileName;
 		this.triplesTableName = triplesTableName;
 		this.encodedTriplesTableName = encodedTriplesTableName;
@@ -36,7 +39,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		this.isTypeFirst = true;
 		this.isTwoPass = false;
 		cs = new Long2LongSet();
-		acs = new Long2LongSet(); 
+		acs = new Long2LongSet();
 		n2cs = new Long2Long();
 		cs2csID = new HashMap<>();
 		this.summaryTablePrefix = TYPED_WEAK_SUMMARY_PREFIX;
@@ -170,8 +173,8 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		boolean oSchemaNode = sn.contains(t.o);
 
 		char caseNumber = identifyTripleSummarizationCase(sRepresented, sSchemaNode, sTyped, pRepresented, oRepresented, oTyped, oSchemaNode);
-//		LOGGER.debug("\nCase: " + this.showCaseName(caseNumber) + " " + t.toString() + " " + 
-//			RDF2SQLEncoding.dictionaryDecode(t.s) + " " + 
+//		LOGGER.debug("\nCase: " + this.showCaseName(caseNumber) + " " + t.toString() + " " +
+//			RDF2SQLEncoding.dictionaryDecode(t.s) + " " +
 //			RDF2SQLEncoding.dictionaryDecode(t.p) + " " +
 //			RDF2SQLEncoding.dictionaryDecode(t.o));
 		switch (caseNumber) {
@@ -238,8 +241,8 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 				throw new IllegalStateException("This case should not be encountered here");
 		}
 
-		//LOGGER.debug("After processing triple " + t.toString() + ", we have:\n" + this.toString()); 
-		//safetyCheck(); 
+		//LOGGER.debug("After processing triple " + t.toString() + ", we have:\n" + this.toString());
+		//safetyCheck();
 	}
 
 	// -->
@@ -248,7 +251,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 
 	@Override
 	protected void consistencyChecks() {
-		for (Long s: edgesWithProv.keySet()) { // s is a summary node 
+		for (Long s: edgesWithProv.keySet()) { // s is a summary node
 			HashMap<Long, HashSet<Long>> triplesOfThisSubject = edgesWithProv.get(s);
 			if (triplesOfThisSubject == null)
 				throw new IllegalStateException("No triples whose subject is " + s);
@@ -260,10 +263,10 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 							throw new IllegalStateException("Subject " + s + " has more than one edge with label " + p);
 						for (Long o: objectsOfThisSandP) {
 							if (n2cs.getInverse(o) == null) { // untyped o
-								Long sp = ps.get(p); 
+								Long sp = ps.get(p);
 								if (sp == null){
 									throw new IllegalStateException("Null source for property " + p + " (" +
-												RDF2SQLEncoding.dictionaryDecode(p) + ") of untyped node " + s + 
+												RDF2SQLEncoding.dictionaryDecode(p) + ") of untyped node " + s +
 												 " (" +	RDF2SQLEncoding.dictionaryDecode(s) + ")");
 								}
 								else{
@@ -271,10 +274,10 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 										throw new IllegalStateException("Source of " + p + " is not " + s + " but " + sp);
 									}
 								}
-								Long tp = pt.get(p); 
+								Long tp = pt.get(p);
 								if (tp == null){
 									throw new IllegalStateException("Null target for property " + p + " (" +
-												RDF2SQLEncoding.dictionaryDecode(p) + ") incoming untyped node " + o + 
+												RDF2SQLEncoding.dictionaryDecode(p) + ") incoming untyped node " + o +
 												 " (" +	RDF2SQLEncoding.dictionaryDecode(o) + ")");
 								}
 								else{
@@ -291,7 +294,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 	}
 
 	@Override
-	protected String showCaseName(char caseNumber) { 
+	protected String showCaseName(char caseNumber) {
 		switch (caseNumber) {
 			case SELF_SELF:
 				return "SELF_SELF";

@@ -26,10 +26,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Properties;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 public class SummaryExport {
 	private static final Logger LOGGER = Logger.getLogger(SummaryExport.class.getName());
+
+	static {
+		LOGGER.setLevel(Level.INFO);
+	}
 
 	Summary summary;
 	private Properties summarizationProperties;

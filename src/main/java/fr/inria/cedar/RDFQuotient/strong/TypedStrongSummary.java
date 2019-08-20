@@ -13,6 +13,10 @@ import org.apache.log4j.Logger;
 public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	private static final Logger LOGGER = Logger.getLogger(TypedStrongSummary.class.getName());
 
+	static {
+		LOGGER.setLevel(Level.INFO);
+	}
+
 	protected final static char TRS_RP_RO = 21;
 	protected final static char TRS_RP_UO = 22;
 
@@ -27,7 +31,6 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 
 	public TypedStrongSummary(String triplesFileName, String triplesTableName, String encodedTriplesTableName, String dictionaryTableName) {
 		super();
-		LOGGER.setLevel(Level.INFO);
 		this.triplesFileName = triplesFileName;
 		this.triplesTableName = triplesTableName;
 		this.encodedTriplesTableName = encodedTriplesTableName;
@@ -36,7 +39,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		isTypeFirst = true;
 		this.isTwoPass = false;
 		cs = new Long2LongSet();
-		acs = new Long2LongSet(); 
+		acs = new Long2LongSet();
 		n2sc = new Long2Long();
 		n2cs = new Long2Long();
 		cs2csID = new HashMap<>();

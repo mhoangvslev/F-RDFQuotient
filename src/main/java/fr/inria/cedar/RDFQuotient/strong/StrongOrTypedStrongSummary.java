@@ -20,6 +20,10 @@ import org.apache.log4j.Logger;
 public class StrongOrTypedStrongSummary extends Summary {
 	private static final Logger LOGGER = Logger.getLogger(StrongOrTypedStrongSummary.class.getName());
 
+	static {
+		LOGGER.setLevel(Level.INFO);
+	}
+
 	protected Long2LongSet sc; // for each source clique ID, its source clique
 	protected Long2LongSet tc; // for each target clique ID, its target clique
 	protected Long2Long n2sc; // for each data node, its source clique ID
@@ -32,7 +36,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 	protected HashMap<Long, Long2LongSet> triplesByObject; // o-->{p-->{s}}
 	protected long minCliqueID;
 	protected long emptySCCount; // empty source clique number (will never change)
-	protected long emptyTCCount; // empty target clique number (will never change) 
+	protected long emptyTCCount; // empty target clique number (will never change)
 	protected char SOURCE = 0;
 	protected char TARGET = 1;
 
@@ -43,8 +47,8 @@ public class StrongOrTypedStrongSummary extends Summary {
 	protected Long sourceCliqueP;
 	protected Long targetCliqueP;
 
-	// U means unrepresented (so far) 
-	// R means represented (so far) 
+	// U means unrepresented (so far)
+	// R means represented (so far)
 	// TRS means typed (thus, already represented) represented so far
 	// SN means schema node
 	protected final static char SELF_SELF = 1;
@@ -73,7 +77,6 @@ public class StrongOrTypedStrongSummary extends Summary {
 
 	public StrongOrTypedStrongSummary() {
 		super();
-		LOGGER.setLevel(Level.INFO);
 		sc = new Long2LongSet();
 		tc = new Long2LongSet();
 		n2sc = new Long2Long();
@@ -492,7 +495,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		Long newSourceCliqueS = sourceCliqueP;
 		Long newTargetCliqueO = cliqueFusionResult(targetCliqueO, targetCliqueP, TARGET);
 
-		Long repS = getOrCreateSummaryNode(newSourceCliqueS, getEmptyTargetCliqueID()); 
+		Long repS = getOrCreateSummaryNode(newSourceCliqueS, getEmptyTargetCliqueID());
 		Long repO = rep.get(t.o);
 
 		Long newRepS = repS;
@@ -1026,14 +1029,14 @@ public class StrongOrTypedStrongSummary extends Summary {
 
 	/**
 	 * Read-only
-	 * 
+	 *
 	 * We will take the bigger clique's ID.
 	 * An exception is made if one of the cliques is the empty clique: in this case, fusion systematically
 	 * takes the other clique.
 	 * @param c1
 	 * @param c2
 	 * @param code
-	 * @return 
+	 * @return
 	 */
 	protected Long cliqueFusionResult(Long c1, Long c2, char code) {
 		if (code == SOURCE){
@@ -1088,17 +1091,17 @@ public class StrongOrTypedStrongSummary extends Summary {
 		if (param == SOURCE){
 			if (!clique1.equals(this.getEmptySourceCliqueID()) && (!clique1.equals(cliqueNew))){
 				//LOGGER.debug("CLIQUE REPLACE IN UNTYPED, P2, N2 SOURCE: we'll replace " + clique1 + " with " + cliqueNew);
-				toBeReplaced.add(clique1); 
+				toBeReplaced.add(clique1);
 			}
 			if (!clique2.equals(this.getEmptySourceCliqueID()) && (!clique2.equals(cliqueNew))){
 				//LOGGER.debug("CLIQUE REPLACE IN UNTYPED, P2, N2 SOURCE: we'll replace " + clique2 + " with " + cliqueNew);
-				toBeReplaced.add(clique2); 
+				toBeReplaced.add(clique2);
 			}
 		}
 		else if (param == TARGET){
 			if (!clique1.equals(this.getEmptyTargetCliqueID()) && (!clique1.equals(cliqueNew))){
 				//LOGGER.debug("CLIQUE REPLACE IN UNTYPED, P2, N2 TARGET: we'll replace " + clique1 +  " with " + cliqueNew);
-				//LOGGER.debug("CLIQUE REPLACE IN UNTYPED, P2, N2 TARGET: that is " + this.showCliqueAsString(tc.get(clique1)) + " with " + this.showCliqueAsString(tc.get(clique2))); 
+				//LOGGER.debug("CLIQUE REPLACE IN UNTYPED, P2, N2 TARGET: that is " + this.showCliqueAsString(tc.get(clique1)) + " with " + this.showCliqueAsString(tc.get(clique2)));
 				toBeReplaced.add(clique1);
 			}
 			if (!clique2.equals(this.getEmptyTargetCliqueID()) && (!clique2.equals(cliqueNew))){
@@ -1106,7 +1109,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 				toBeReplaced.add(clique2);
 			}
 		}
-		// apply: 
+		// apply:
 		for (Long oldClique: toBeReplaced) {
 			// now we replace just the nodes in untyped (not the cliques yet),
 			// because the nodes are at the lowest (value) level
@@ -1122,21 +1125,21 @@ public class StrongOrTypedStrongSummary extends Summary {
 
 	// modifies sc, tc, n2sc, n2tc (NOT untyped nodes)
 	// physically moves properties of the old clique into the new clique,
-	// replace old clique with new clique in n2tc (or n2sc), 
+	// replace old clique with new clique in n2tc (or n2sc),
 	// remove the old clique from sc or tc
 	protected void fuseCliqueInto(Long oldClique, Long newClique, char param){
 		if (oldClique.equals(newClique)){
-			return; 
+			return;
 		}
 		if (param == SOURCE){
-			this.sc.get(newClique).addAll(this.sc.get(oldClique)); 
+			this.sc.get(newClique).addAll(this.sc.get(oldClique));
 			if (!oldClique.equals(this.getEmptySourceCliqueID())){ // if oldClique is empty, it should not be replaced/removed!
 				n2sc.replaceValue(oldClique, newClique);
 				this.sc.remove(oldClique);
 			}
 		}
 		else if (param == TARGET){
-			this.tc.get(newClique).addAll(this.tc.get(oldClique)); 
+			this.tc.get(newClique).addAll(this.tc.get(oldClique));
 			if (!oldClique.equals(this.getEmptyTargetCliqueID())){ // if oldClique is empty, it should not be replaced/removed!
 				n2tc.replaceValue(oldClique, newClique);
 				this.tc.remove(oldClique);
@@ -1147,7 +1150,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 	// modifies only untyped
 	protected void replaceCliqueInUntyped(Long oldClique, Long newClique, char param, ArrayList<ReplacementSpecification> nodeReps){
 		if (oldClique.equals(newClique)) {
-			return; 
+			return;
 		}
 		if (param == TARGET) { // we find all occurrences of the old cliques (in the 2nd level), remove them and replace with the new clique
 			HashSet<Triple> replacements = untypedSummaryNodes.replaceAt2ndLevel(oldClique, newClique);
@@ -1206,7 +1209,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 			}
 			if (inverseRep.size() == 1) { // there was only one node with this representative, and empty sourceClique.
 				for (Long l: inverseRep) {
-					if (l.equals(s)) { // but it is exactly 
+					if (l.equals(s)) { // but it is exactly
 						return true;
 					}
 				}
@@ -1229,7 +1232,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 			return node;
 		}
 		else {
-			node = getNextSummaryNode(); // from the Summary class; 
+			node = getNextSummaryNode(); // from the Summary class;
 			untypedSummaryNodes.add(sourceClique, targetClique, node);
 			return node;
 		}
@@ -1245,7 +1248,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 			sc.put(minCliqueID, emptySC);
 			minCliqueID--;
 		}
-		else // the empty source clique has already been created, just copy it 
+		else // the empty source clique has already been created, just copy it
 			res = emptySCCount;
 		return res;
 	}
@@ -1263,7 +1266,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		actualSourceClique.add(p);
 		sc.put(res, actualSourceClique);
 		p2sc.put(p, res);
-		//LOGGER.debug("NEW SOURCE CLIQUE FOR " + p+ "(" + RDF2SQLEncoding.dictionaryDecode(p) + "): " + res);  
+		//LOGGER.debug("NEW SOURCE CLIQUE FOR " + p+ "(" + RDF2SQLEncoding.dictionaryDecode(p) + "): " + res);
 		minCliqueID--;
 		return res;
 	}
@@ -1283,7 +1286,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		tc.put(targetCliqueID, actualTargetClique);
 		p2tc.put(p, targetCliqueID);
 		//LOGGER.debug("Added the new target clique " + targetCliqueID + " which is [" + p + "]");
-		//LOGGER.debug("NEW TARGET CLIQUE FOR " + p+ "(" + RDF2SQLEncoding.dictionaryDecode(p) + "): " + targetCliqueID);  
+		//LOGGER.debug("NEW TARGET CLIQUE FOR " + p+ "(" + RDF2SQLEncoding.dictionaryDecode(p) + "): " + targetCliqueID);
 		minCliqueID--;
 		return targetCliqueID;
 	}
@@ -1299,7 +1302,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 			tc.put(minCliqueID, emptyTC);
 			minCliqueID--;
 		}
-		else // the empty source clique has already been created, just copy it 
+		else // the empty source clique has already been created, just copy it
 			res = emptyTCCount;
 		return res;
 	}
@@ -1342,7 +1345,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 			Long ntc = n2tc.get(dataNode);
 			HashMap<Long, Long> tc2Nodes = untypedSummaryNodes.get(nsc);
 			if (tc2Nodes == null) {
-				msg += "untypedSummaryNodes has no (target clique, node) pairs on source clique " + nsc + " of node " + dataNode + "(" + RDF2SQLEncoding.dictionaryDecode(dataNode) + ")"; 
+				msg += "untypedSummaryNodes has no (target clique, node) pairs on source clique " + nsc + " of node " + dataNode + "(" + RDF2SQLEncoding.dictionaryDecode(dataNode) + ")";
 				//LOGGER.debug(msg);
 				throw new IllegalStateException(msg);
 			}
@@ -1358,7 +1361,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 				throw new IllegalStateException(msg);
 			}
 		}
-		Long totalEdgeCount = edgesWithProv.totalEdgeCount(); 
+		Long totalEdgeCount = edgesWithProv.totalEdgeCount();
 		if (!totalEdgeCount.equals(triplesSummarizedSoFar)){
 			msg = "In edges we have a total of " + totalEdgeCount + " edges while we have summarized so far " + triplesSummarizedSoFar + " triples";
 			throw new IllegalStateException(msg);
@@ -1422,9 +1425,9 @@ public class StrongOrTypedStrongSummary extends Summary {
 		for (Long node: triplesByObject.keySet()){
 			sb.append(node).append("<~~");
 			Long2LongSet edgesOfNode = triplesByObject.get(node);
-			sb.append(edgesOfNode.toString()).append(" "); 
+			sb.append(edgesOfNode.toString()).append(" ");
 		}
-		return new String(sb); 
+		return new String(sb);
 	}
 
 	protected String showTriplesBySubject(){
@@ -1432,14 +1435,14 @@ public class StrongOrTypedStrongSummary extends Summary {
 		for (Long node: triplesBySubject.keySet()){
 			sb.append(node).append("~~>");
 			Long2LongSet edgesOfNode = triplesBySubject.get(node);
-			sb.append(edgesOfNode.toString()).append(" "); 
+			sb.append(edgesOfNode.toString()).append(" ");
 		}
-		return new String(sb); 
+		return new String(sb);
 	}
 
 	@Override
 	public void display() {
-		System.out.println("=== SUMMARY " + this.getClass().getName() + "\nSource cliques: " + sc.toString());
+		System.out.println("=== SUMMARY " + this.getClass().getSimpleName() + "\nSource cliques: " + sc.toString());
 		System.out.println("Target cliques: " + tc.toString());
 		System.out.println("Data nodes to source cliques: " + n2sc.toString());
 		System.out.println("Data nodes to target cliques: " + n2tc.toString());

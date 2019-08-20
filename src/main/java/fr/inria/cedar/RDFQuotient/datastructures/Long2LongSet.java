@@ -11,10 +11,14 @@ import org.apache.log4j.Logger;
 
 public class Long2LongSet {
 	private static final Logger LOGGER = Logger.getLogger(Long2LongSet.class.getName());
-	final HashMap<Long, TreeSet<Long>> map;
+
+	static {
+		LOGGER.setLevel(Level.INFO);
+	}
+
+	protected final HashMap<Long, TreeSet<Long>> map;
 
 	public Long2LongSet() {
-		LOGGER.setLevel(Level.INFO);
 		map = new HashMap<>();
 	}
 

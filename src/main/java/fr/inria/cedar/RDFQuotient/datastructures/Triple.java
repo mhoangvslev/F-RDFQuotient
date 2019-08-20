@@ -15,12 +15,15 @@ import org.apache.log4j.Logger;
 public class Triple implements Comparable {
 	private static final Logger LOGGER = Logger.getLogger(Triple.class.getName());
 
+	static {
+		LOGGER.setLevel(Level.INFO);
+	}
+
 	public final long s;
 	public final long p;
 	public final long o;
 
 	public Triple(long s, long p, long o) {
-		LOGGER.setLevel(Level.INFO);
 		this.s = s;
 		this.o = o;
 		this.p = p;
@@ -55,29 +58,29 @@ public class Triple implements Comparable {
 	@Override
 	public int compareTo(Object o) {
 		if (o.getClass() == this.getClass()){
-			Triple ot = (Triple)o; 
+			Triple ot = (Triple)o;
 			if (this.s < ot.s){
-				return -1; 
+				return -1;
 			}
 			if (this.s > ot.s){
-				return 1; 
+				return 1;
 			}
 			if (this.p < ot.p){
-				return -1; 
+				return -1;
 			}
 			if (this.p > ot.p){
-				return 1; 
+				return 1;
 			}
 			if (this.o < ot.o){
-				return -1; 
+				return -1;
 			}
 			if (this.o > ot.o){
-				return 1; 
+				return 1;
 			}
-			return 0; 
+			return 0;
 		}
 		else{
-			return -1; 
+			return -1;
 		}
 	}
 }

@@ -11,17 +11,20 @@ import org.apache.log4j.Logger;
 
 public class EdgesWithProvenanceCounts {
 	private static final Logger LOGGER = Logger.getLogger(EdgesWithProvenanceCounts.class.getName());
+
+	static {
+		LOGGER.setLevel(Level.INFO);
+	}
+
 	protected HashMap<Long, HashMap<Long, HashSet<Long>>> edges;
 	protected HashMap<Long, HashMap<Long, HashMap<Long, Long>>> counts;
 
 	public EdgesWithProvenanceCounts(){
-		LOGGER.setLevel(Level.INFO);
 		edges = new HashMap<>();
 		counts = new HashMap<>();
 	}
 
 	public EdgesWithProvenanceCounts(EdgesWithProvenanceCounts original) {
-		LOGGER.setLevel(Level.INFO);
 		edges = new HashMap<>(original.edges);
 		counts = new HashMap<>(original.counts);
 	}

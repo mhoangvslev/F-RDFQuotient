@@ -18,6 +18,10 @@ import org.apache.log4j.Logger;
 public class ObjectAnalysis {
 	private static final Logger LOGGER = Logger.getLogger(ObjectAnalysis.class.getName());
 
+	static {
+		LOGGER.setLevel(Level.INFO);
+	}
+
 	private long objectNo; // the number of distinct subjects of data triples
 	private long typedNo; // the number of distinct subjects of type triples
 	private long typedObjectNo; // the number of distinct subjects of data triples and typed triple
@@ -30,7 +34,6 @@ public class ObjectAnalysis {
 	}
 
 	public void analyze(String datasetFilename) throws IOException {
-		LOGGER.setLevel(Level.INFO);
 		System.out.println("############################################");
 		System.out.println("Analysis of " + datasetFilename);
 		System.out.println("#############################################");

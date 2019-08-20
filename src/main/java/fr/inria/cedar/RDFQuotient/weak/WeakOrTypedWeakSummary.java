@@ -12,6 +12,11 @@ import org.apache.log4j.Logger;
 
 public class WeakOrTypedWeakSummary extends Summary {
 	private static final Logger LOGGER = Logger.getLogger(WeakOrTypedWeakSummary.class.getName());
+
+	static {
+		LOGGER.setLevel(Level.INFO);
+	}
+
 	protected final HashMap<Long, Long> ps; // for each property, the property source
 	protected final HashMap<Long, Long> pt; // for each property, the property target
 
@@ -20,8 +25,8 @@ public class WeakOrTypedWeakSummary extends Summary {
 	protected Long sourceP;
 	protected Long targetP;
 
-	// U means unrepresented (so far) 
-	// R means represented (so far) 
+	// U means unrepresented (so far)
+	// R means represented (so far)
 	// TRS means typed (thus, already represented) represented so far
 	// SN means schema node
 	protected final static char SELF_SELF = 1;
@@ -50,7 +55,6 @@ public class WeakOrTypedWeakSummary extends Summary {
 
 	public WeakOrTypedWeakSummary() {
 		super();
-		LOGGER.setLevel(Level.INFO);
 		ps = new HashMap<>();
 		pt = new HashMap<>();
 	}
@@ -138,10 +142,10 @@ public class WeakOrTypedWeakSummary extends Summary {
 	}
 
 	protected void handleDataTriple_US_UP_RO(Triple t) {
-		// only the object has been seen so far: it must have been seen as the target of *another* property.  
-		// We need to: mark the target of p as the target of that property: 
+		// only the object has been seen so far: it must have been seen as the target of *another* property.
+		// We need to: mark the target of p as the target of that property:
 		targetP = rep.get(t.o);
-		// create source for p; represent the subject by that source; 
+		// create source for p; represent the subject by that source;
 		sourceP = getNextSummaryNode();
 		rep.put(t.s, sourceP);
 		ps.put(t.p, sourceP);
@@ -149,10 +153,10 @@ public class WeakOrTypedWeakSummary extends Summary {
 		edgesWithProv.addTriple(sourceP, t.p, targetP);
 	}
 
-	// the property and the object have been seen, not the subject. 
+	// the property and the object have been seen, not the subject.
 	// In this case we must:
 	// - represent the subject by the source of the property (if not empty)
-	// - fuse the target of p (if not empty) with the representative of o. 
+	// - fuse the target of p (if not empty) with the representative of o.
 	protected void handleDataTriple_US_RP_RO(Triple t) {
 		if (sourceP == null) {
 			sourceP = getNextSummaryNode();
@@ -175,14 +179,14 @@ public class WeakOrTypedWeakSummary extends Summary {
 			}
 			applySubstitutions(subs);
 		}
-		else { // target of p was null, just take repO as target 
+		else { // target of p was null, just take repO as target
 			pt.put(t.p, repO);
 		}
 		edgesWithProv.addTriple(addedTripleSource, t.p, addedTripleTarget);
 	}
 
 	// the subject and property have been represented, not the object. In this case we must:
-	// - fuse the source of p (if not null) with the representative of s. 
+	// - fuse the source of p (if not null) with the representative of s.
 	// - represent the object by the target of the property (if not null), otherwise create a new node for this
 	protected void handleDataTriple_RS_RP_UO(Triple t) {
 		Long addedTripleSource = repS;
@@ -210,7 +214,7 @@ public class WeakOrTypedWeakSummary extends Summary {
 		}
 		else { // p may have empty source if so far we only found it on typed nodes
 			// here, s is represented and untyped. Thus, we put p's source on s' representative.
-			//LOGGER.debug("RS_RP_UO: source of " +  t.p + " is: " + repS); 
+			//LOGGER.debug("RS_RP_UO: source of " +  t.p + " is: " + repS);
 			ps.put(t.p, repS);
 		}
 		edgesWithProv.addTriple(addedTripleSource, t.p, addedTripleTarget);
@@ -449,7 +453,7 @@ public class WeakOrTypedWeakSummary extends Summary {
 	public void display() {
 		System.out.println("SUMMARY " + this.getClass().getName());
 		edgesWithProv.display();
-		System.out.println("REPRESENTATION: " + rep.toString()); 
+		System.out.println("REPRESENTATION: " + rep.toString());
 		System.out.println("PROPERTY SOURCES: ");
 		for (Long p: ps.keySet()){
 			System.out.println(p + " (" + RDF2SQLEncoding.dictionaryDecode(p) + ") => " + ps.get(p));

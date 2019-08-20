@@ -13,13 +13,16 @@ import org.apache.log4j.Logger;
 public class OneFWSummary extends Summary {
 	private static final Logger LOGGER = Logger.getLogger(OneFWSummary.class.getName());
 
+	static {
+		LOGGER.setLevel(Level.INFO);
+	}
+
 	private final HashMap<Long, TreeSet<Long>> n2op; // node to outgoing property set
 	private final HashMap<TreeSet<Long>, Long> op2sn; // outgoing property set to summary node
-	HashSet<Long> leaves; 
-	
+	HashSet<Long> leaves;
+
 	public OneFWSummary(String triplesFileName, String triplesTableName, String encodedTriplesTableName, String dictionaryTableName) {
 		super();
-		LOGGER.setLevel(Level.INFO);
 		this.triplesFileName = triplesFileName;
 		this.triplesTableName = triplesTableName;
 		this.encodedTriplesTableName = encodedTriplesTableName;
@@ -29,7 +32,7 @@ public class OneFWSummary extends Summary {
 		this.isTwoPass = true;
 		this.n2op = new HashMap<>();
 		this.op2sn = new HashMap<>();
-		this.leaves = new HashSet<>(); 
+		this.leaves = new HashSet<>();
 	}
 
 	@Override
@@ -47,9 +50,9 @@ public class OneFWSummary extends Summary {
 			n2op.put(t.s, previousPOS);
 		}
 		previousPOS.add(t.p);
-		//LOGGER.info(t.s + " " + RDF2SQLEncoding.dictionaryDecode(t.s) + " has property " + t.p + " " + RDF2SQLEncoding.dictionaryDecode(t.p)); 
+		//LOGGER.info(t.s + " " + RDF2SQLEncoding.dictionaryDecode(t.s) + " has property " + t.p + " " + RDF2SQLEncoding.dictionaryDecode(t.p));
 		//LOGGER.info("Properties of " + t.s + " are: " + previousPOS);
-		
+
 		//add o as a leaf unless it is known to have triples
 		if (n2op.get(t.o) == null) {
 			leaves.add(t.o);
@@ -57,8 +60,8 @@ public class OneFWSummary extends Summary {
 		}
 		else {
 			if (n2op.get(t.o).isEmpty()) {
-				leaves.add(t.o); 
-				//LOGGER.info(t.o + " " + RDF2SQLEncoding.dictionaryDecode(t.o) + " is a leaf"); 
+				leaves.add(t.o);
+				//LOGGER.info(t.o + " " + RDF2SQLEncoding.dictionaryDecode(t.o) + " is a leaf");
 			}
 		}
 	}
@@ -82,7 +85,7 @@ public class OneFWSummary extends Summary {
 			}
 		}
 //		// all nodes with incoming but not outgoing edges (those with both are covered above):
-		Long leafSummaryNode = createSummaryNode(new TreeSet<>()); 
+		Long leafSummaryNode = createSummaryNode(new TreeSet<>());
 		for (Long n: leaves) {
 			// LOGGER.info("REPRESENTED LEAF NODE " + RDF2SQLEncoding.dictionaryDecode(n) + " BY " + leafSummaryNode);
 			rep.put(n, leafSummaryNode);
@@ -114,7 +117,7 @@ public class OneFWSummary extends Summary {
 			}
 			rep.put(t.o, repO);
 		}
-		// Commented this out since the Traverser (also) adds the triple. 
+		// Commented this out since the Traverser (also) adds the triple.
 		// this.edgesWithProv.addTriple(repS, t.p, repO);
 	}
 

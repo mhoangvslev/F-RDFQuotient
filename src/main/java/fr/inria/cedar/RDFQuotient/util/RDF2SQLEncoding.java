@@ -33,6 +33,10 @@ public class RDF2SQLEncoding {
 	private static PreparedStatement stmtDecode;
 	private static PreparedStatement stmtEncode;
 
+	static {
+		LOGGER.setLevel(Level.INFO);
+	}
+
 	public RDF2SQLEncoding() {
 	}
 
@@ -43,7 +47,6 @@ public class RDF2SQLEncoding {
 	 * @param dictionaryTableName
 	 */
 	public static void setUp(Connection givenConn, String dictionaryTableName) {
-		LOGGER.setLevel(Level.INFO);
 		conn = givenConn;
 		try {
 			stmtDecode = conn.prepareStatement("select value from " + PostgresIdentifier.escapedQuotedId(dictionaryTableName) + " where key=?");

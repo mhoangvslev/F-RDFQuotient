@@ -9,8 +9,11 @@ import org.apache.log4j.Logger;
 public class CustomSummarization {
 	private static final Logger LOGGER = Logger.getLogger(CustomSummarization.class.getName());
 
-	public static void loadAndSummarize(String datasetFilename, String summaryType){
+	static {
 		LOGGER.setLevel(Level.INFO);
+	}
+
+	public static void loadAndSummarize(String datasetFilename, String summaryType){
 		Properties loadingProperties = LoadingProperties.getDefaultProperties();
 		loadingProperties.put("dataset.filename", datasetFilename);
 		loadingProperties.put("statistics.export_to_csv_file", "false");

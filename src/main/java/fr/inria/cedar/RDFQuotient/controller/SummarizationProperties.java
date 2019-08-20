@@ -13,11 +13,13 @@ import org.apache.log4j.Logger;
 
 public class SummarizationProperties extends ConfigurationProperties {
 	private static final Logger LOGGER = Logger.getLogger(SummarizationProperties.class.getName());
+	protected static final String DEFAULT_SUMMARIZATION_PROPERTIES_FILENAME = "conf/summarization.properties";
 
-	static final String DEFAULT_SUMMARIZATION_PROPERTIES_FILENAME = "conf/summarization.properties";
+	static {
+		LOGGER.setLevel(Level.INFO);
+	}
 
 	public SummarizationProperties() {
-		LOGGER.setLevel(Level.INFO);
 	}
 
 	public static String getDefaultPropertiesFilename() {

@@ -60,6 +60,10 @@ public class Interface {
 	private static long summarySavingToDiskTime;
 	private static long summarySavingInPostgresTime;
 
+	static {
+		LOGGER.setLevel(Level.INFO);
+	}
+
 	public Interface() {
 	}
 
@@ -789,8 +793,6 @@ public class Interface {
 	}
 
 	public static void main(String[] args) {
-		LOGGER.setLevel(Level.INFO);
-
 		setUpCommandLineInterface();
 		databaseConnection = null;
 

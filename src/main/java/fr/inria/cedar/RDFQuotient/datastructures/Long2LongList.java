@@ -11,12 +11,16 @@ import org.apache.log4j.Logger;
 
 public class Long2LongList {
 	private static final Logger LOGGER = Logger.getLogger(Long2LongList.class.getName());
+
+	static {
+		LOGGER.setLevel(Level.INFO);
+	}
+
 	// clique ID --> set of properties
 	// or: class set ID --> set of types
-	final HashMap<Long, ArrayList<Long>> map;
+	protected final HashMap<Long, ArrayList<Long>> map;
 
 	public Long2LongList() {
-		LOGGER.setLevel(Level.INFO);
 		map = new HashMap<>();
 	}
 

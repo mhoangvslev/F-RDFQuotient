@@ -10,19 +10,22 @@ import org.apache.log4j.Logger;
 
 public class Long2Long {
 	private static final Logger LOGGER = Logger.getLogger(Long2Long.class.getName());
+
+	static {
+		LOGGER.setLevel(Level.INFO);
+	}
+
 	// from the node to the ID of its clique
-	final HashMap<Long, Long> map;
+	protected final HashMap<Long, Long> map;
 	// from the ID of a clique, to the list of IDs of all the nodes
-	final HashMap<Long, HashSet<Long>> inverse;
+	protected final HashMap<Long, HashSet<Long>> inverse;
 
 	public Long2Long() {
-		LOGGER.setLevel(Level.INFO);
 		map = new HashMap<>();
 		inverse = new HashMap<>();
 	}
 
 	public Long2Long(Long2Long original) {
-		LOGGER.setLevel(Level.INFO);
 		map = new HashMap<>(original.map);
 		inverse = new HashMap<>(original.inverse);
 	}

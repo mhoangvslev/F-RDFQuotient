@@ -9,14 +9,16 @@ import org.apache.log4j.Logger;
 
 public class EdgeTransferSpecification {
 	private static final Logger LOGGER = Logger.getLogger(EdgeTransferSpecification.class.getName());
-
 	private static final char SOURCE = 0;
 	private static final char TARGET = 1;
+
+	static {
+		LOGGER.setLevel(Level.INFO);
+	}
 
 	private HashMap<Long, HashMap<Long, HashSet<Long>>> edgesToTransfer;
 
 	public EdgeTransferSpecification() {
-		LOGGER.setLevel(Level.INFO);
 		edgesToTransfer = new HashMap<>();
 	}
 

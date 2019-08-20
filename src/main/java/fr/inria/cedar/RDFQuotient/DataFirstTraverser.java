@@ -14,9 +14,12 @@ import org.apache.log4j.Logger;
 public class DataFirstTraverser extends Traverser {
 	private static final Logger LOGGER = Logger.getLogger(DataFirstTraverser.class.getName());
 
+	static {
+		LOGGER.setLevel(Level.INFO);
+	}
+
 	public DataFirstTraverser(Summary summ, Connection conn) {
 		super(summ, conn);
-		LOGGER.setLevel(Level.INFO);
 	}
 
 	@Override

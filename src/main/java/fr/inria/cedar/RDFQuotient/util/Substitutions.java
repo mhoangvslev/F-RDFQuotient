@@ -23,6 +23,11 @@ import org.apache.log4j.Logger;
  */
 public class Substitutions {
 	private static final Logger LOGGER = Logger.getLogger(Substitutions.class.getName());
+
+	static {
+		LOGGER.setLevel(Level.INFO);
+	}
+
 	private final ArrayList<Long> l1;
 	private final ArrayList<Long> l2;
 	private HashMap<Long, Long> substitutions;
@@ -32,14 +37,13 @@ public class Substitutions {
 	 * Second and fourth go into list2
 	 * If the four values are different:
 	 * - The smallest among l1[0] (thus l11) and l2[0] (this l21) will replace the other;
-	 * - the smallest among l1[1] (thus l12) and l2[1] (thus l22) will replace the other. 
+	 * - the smallest among l1[1] (thus l12) and l2[1] (thus l22) will replace the other.
 	 * @param l11
 	 * @param l21
 	 * @param l12
 	 * @param l22
 	 */
 	public Substitutions(Long l11, Long l21, Long l12, Long l22) {
-		LOGGER.setLevel(Level.INFO);
 		l1 = new ArrayList<>();
 		l1.add(l11);
 		l1.add(l12);
@@ -51,12 +55,11 @@ public class Substitutions {
 	}
 
 	/**
-	 * 
+	 *
 	 * @param l1 First number list
-	 * @param l2 Second number list 
+	 * @param l2 Second number list
 	 */
 	public Substitutions(ArrayList<Long> l1, ArrayList<Long> l2) {
-		LOGGER.setLevel(Level.INFO);
 		this.l1 = l1;
 		this.l2 = l2;
 		computeSubstitutions();
@@ -68,7 +71,6 @@ public class Substitutions {
 	 * @param n2
 	 */
 	public Substitutions(Long n1, Long n2) {
-		LOGGER.setLevel(Level.INFO);
 		//LOGGER.debug("Substitution: first: " + n1 + " second: " + n2);
 		l1 = new ArrayList<>();
 		l1.add(n1);
@@ -85,7 +87,7 @@ public class Substitutions {
 			//LOGGER.debug("Comparing " + n1 + " " + n2); // lists are compared PAIRWISE, l1[0] with l2[0], then l1[1] with l2[1]
 			// thus if the four values are different
 			// * the smallest among l1[0] and l2[0] will replace the other;
-			// * the smallest among l1[1] and l2[1] will replace the other. 
+			// * the smallest among l1[1] and l2[1] will replace the other.
 			Long n1aux = substitutions.get(n1);
 			Long n2aux = substitutions.get(n2);
 			if (n1 > n2) { // we should replace n1 by n2,
@@ -165,7 +167,7 @@ public class Substitutions {
 		for (Long l: l2){
 			sb.append(l).append(" ");
 		}
-		sb.append("] leads to: "); 
+		sb.append("] leads to: ");
 		for (Long k: substitutions.keySet())
 			sb.append(k).append("->").append(substitutions.get(k)).append(";");
 		return new String(sb);

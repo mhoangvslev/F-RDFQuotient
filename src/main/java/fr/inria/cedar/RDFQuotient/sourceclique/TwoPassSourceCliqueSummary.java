@@ -2,25 +2,23 @@
 
 package fr.inria.cedar.RDFQuotient.sourceclique;
 
-import java.util.HashMap;
-import java.util.TreeSet;
-
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-
 import fr.inria.cedar.RDFQuotient.datastructures.Triple;
 import fr.inria.cedar.RDFQuotient.strong.StrongOrTypedStrongSummary;
+import java.util.HashMap;
+import java.util.TreeSet;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 /**
  * This is an attempt at a two-pass summarization that considers two nodes are equivalent if they have
  * the same source clique, regardless of their target clique.
- * 
+ *
  * The class is not finished. It is based on StrongOrTypedStrongSummary, but it appears likely that more
- * methods from that class should be overwritten to ensure that we get the desired behavior. 
+ * methods from that class should be overwritten to ensure that we get the desired behavior.
  * At a minimum, checks are needed to makes sure the "target clique" part of the code is not actually used.
- * 
+ *
  * TODO finalize this class.
- * 
+ *
  * @author ioanamanolescu
  * Dec 17, 2018
  *
@@ -28,13 +26,16 @@ import fr.inria.cedar.RDFQuotient.strong.StrongOrTypedStrongSummary;
 public class TwoPassSourceCliqueSummary extends StrongOrTypedStrongSummary{
 	private static final Logger LOGGER = Logger.getLogger(TwoPassSourceCliqueSummary.class.getName());
 
+	static {
+		LOGGER.setLevel(Level.INFO);
+	}
+
 	// this should be used instead of untypedSummaryNodes in the superclass
 	HashMap<Long, Long> untypedNodesBySC;
-	
+
 	public TwoPassSourceCliqueSummary(String triplesFileName, String triplesTableName, String encodedTriplesTableName, String dictionaryTableName) {
 		super();
-		untypedNodesBySC = new HashMap<Long, Long>();
-		LOGGER.setLevel(Level.INFO);
+		untypedNodesBySC = new HashMap<>();
 		this.triplesFileName = triplesFileName;
 		this.triplesTableName = triplesTableName;
 		this.encodedTriplesTableName = encodedTriplesTableName;
@@ -96,17 +97,17 @@ public class TwoPassSourceCliqueSummary extends StrongOrTypedStrongSummary{
 		if (param == SOURCE){
 			if (!clique1.equals(this.getEmptySourceCliqueID()) && (!clique1.equals(cliqueNew))){
 				//LOGGER.debug("CLIQUE REPLACE IN UNTYPED, P2, N2 SOURCE: we'll replace " + clique1 + " with " + cliqueNew);
-				toBeReplaced.add(clique1); 
+				toBeReplaced.add(clique1);
 			}
 			if (!clique2.equals(this.getEmptySourceCliqueID()) && (!clique2.equals(cliqueNew))){
 				//LOGGER.debug("CLIQUE REPLACE IN UNTYPED, P2, N2 SOURCE: we'll replace " + clique2 + " with " + cliqueNew);
-				toBeReplaced.add(clique2); 
+				toBeReplaced.add(clique2);
 			}
 		}
 		else if (param == TARGET){
 			// nothing
 		}
-		// apply: 
+		// apply:
 		for (Long oldClique: toBeReplaced) {
 			replaceCliqueInP2(oldClique, cliqueNew, param);
 			replaceCliqueInN2(oldClique, cliqueNew, param);
@@ -130,22 +131,21 @@ public class TwoPassSourceCliqueSummary extends StrongOrTypedStrongSummary{
 			rep.put(t.o, getOrCreateSummaryNode(sourceCliqueO));
 		}
 	}
-	
+
 	/**
 	 * Creates a new (untyped) summary node and inserts it into untypedNodesBySC
 	 *
 	 * @param sourceClique
-	 * @param targetClique
 	 *
 	 * @return
 	 */
 	protected Long getOrCreateSummaryNode(Long sourceClique) {
-		Long node = untypedNodesBySC.get(sourceClique); 
+		Long node = untypedNodesBySC.get(sourceClique);
 		if (node != null) {
 			return node;
 		}
 		else {
-			node = getNextSummaryNode(); // from the Summary class; 
+			node = getNextSummaryNode(); // from the Summary class;
 			untypedNodesBySC.put(sourceClique, node);
 			return node;
 		}

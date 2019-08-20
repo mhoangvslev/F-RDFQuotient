@@ -20,6 +20,10 @@ import org.apache.log4j.Logger;
 public abstract class Traverser {
 	private static final Logger LOGGER = Logger.getLogger(Traverser.class.getName());
 
+	static {
+		LOGGER.setLevel(Level.INFO);
+	}
+
 	protected final Summary summ;
 	protected final Connection conn;
 	protected long setupTime;
@@ -33,7 +37,6 @@ public abstract class Traverser {
 	protected long numberOfSummaryEdgesSoFar;
 
 	public Traverser(Summary summ, Connection conn) {
-		LOGGER.setLevel(Level.INFO);
 		this.summ = summ;
 		this.conn = conn;
 		numberOfSummaryNodesSoFar = 0;

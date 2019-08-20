@@ -9,9 +9,12 @@ import org.apache.log4j.Logger;
 public class TypeFirstTwoPassTraverser extends TypeFirstTraverser {
 	private static final Logger LOGGER = Logger.getLogger(TypeFirstTwoPassTraverser.class.getName());
 
+	static {
+		LOGGER.setLevel(Level.INFO);
+	}
+
 	public TypeFirstTwoPassTraverser(Summary summ, Connection conn) {
 		super(summ, conn);
-		LOGGER.setLevel(Level.INFO);
 	}
 
 	@Override

@@ -33,6 +33,10 @@ public class Summary {
 	private static final Logger LOGGER = Logger.getLogger(Summary.class.getName());
 	protected static final SimpleDateFormat SD_FORMAT = new SimpleDateFormat("yyyyMMdd_HHmmss");
 
+	static {
+		LOGGER.setLevel(Level.INFO);
+	}
+
 	protected HashSet<Triple> genericPropertyTriples = new HashSet<>();
 	protected Long2Long rep; // representation function
 	protected HashSet<Long> sn; // schema nodes
@@ -123,7 +127,6 @@ public class Summary {
 	HashMap<Long, HashSet<Long>> generalizers;
 
 	public Summary() {
-		LOGGER.setLevel(Level.INFO);
 		summaryTablePrefix = ROOT_SUMMARY_PREFIX;
 		typeOnlyNodeAlreadySeen = false;
 		sn = new HashSet<>();
@@ -931,7 +934,7 @@ public class Summary {
 		this.repTableName = newSummaryTableNameRep;
 		String newSummaryTableNameEdges = newTableName + "_edges";
 		String newSummaryTableNameNodeStats = newTableName + "_nodeStats";
-		LOGGER.info("Saving " + this.getClass().getName() + " summary edges in Postgres in table: " + newSummaryTableNameEdges);
+		LOGGER.info("Saving " + this.getClass().getSimpleName() + " edges in Postgres in table: " + newSummaryTableNameEdges);
 
 		Statement stmt;
 		try {
@@ -945,7 +948,7 @@ public class Summary {
 		HashMap<Long, Long> summaryNodeStatisticsForDB = null;
 		HashMap<Triple, Long> summaryEdgeStatisticsForDB = null;
 		if (saveRepresentationFunctionAndNodeStatistics) {
-			LOGGER.info("Saving " + this.getClass().getName() + " rep and node statistics in Postgres in tables: " + newSummaryTableNameRep + " and " + newSummaryTableNameNodeStats);
+			LOGGER.info("Saving " + this.getClass().getSimpleName() + " representation function and node statistics in Postgres in tables: " + newSummaryTableNameRep + " and " + newSummaryTableNameNodeStats);
 			// save representation function and also compute summary node statistics
 			try {
 				long start = System.currentTimeMillis();

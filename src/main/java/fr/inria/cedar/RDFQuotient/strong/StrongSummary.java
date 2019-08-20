@@ -9,9 +9,12 @@ import org.apache.log4j.Logger;
 public class StrongSummary extends StrongOrTypedStrongSummary {
 	private static final Logger LOGGER = Logger.getLogger(StrongSummary.class.getName());
 
+	static {
+		LOGGER.setLevel(Level.INFO);
+	}
+
 	public StrongSummary(String triplesFileName, String triplesTableName, String encodedTriplesTableName, String dictionaryTableName) {
 		super();
-		LOGGER.setLevel(Level.INFO);
 		this.triplesFileName = triplesFileName;
 		this.triplesTableName = triplesTableName;
 		this.encodedTriplesTableName = encodedTriplesTableName;
