@@ -425,7 +425,7 @@ public class SummaryExport {
 					(summary.generalizeTypes()?" (generalize types) ":"") +
 							" of " +
 					triplesFileName + " (" +
-					summary.triplesSummarizedSoFar + " triples)\"\n");
+					summary.getTriplesSummarizedSoFar() + " triples)\"\n");
 					bw.write("labelloc=top; labeljust=center;\n");
 				}
 				bw.write("}\n");
@@ -614,7 +614,7 @@ public class SummaryExport {
 				//LOGGER.info(t.o + " is a leaf");
 			}
 		}
-		summary.numberOfLeaves = leaves.size();
+		summary.setNumberOfLeaves(leaves.size());
 		// now we know who the leaves are, we just have to draw all this
 		HashSet<Long> sn = summary.getSchemaNodes();
 		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
@@ -756,7 +756,7 @@ public class SummaryExport {
 					(summary.generalizeTypes()?" (generalize types) ":"") +
 							" (split leaves) of " +
 					triplesFileName + " (" +
-					summary.triplesSummarizedSoFar + " triples)\"\n");
+					summary.getTriplesSummarizedSoFar() + " triples)\"\n");
 					bw.write("labelloc=top; labeljust=center;\n");
 				}
 				bw.write("}\n");
@@ -796,7 +796,7 @@ public class SummaryExport {
 				//LOGGER.info(t.o + " is a leaf");
 			}
 		}
-		summary.numberOfLeaves = leaves.size();
+		summary.setNumberOfLeaves(leaves.size());
 		Long2LongSet children = new Long2LongSet(); // for each parent of a leaf node, all its leaf children
 		for (Triple t: this.summary.getSummaryEdges()) {
 			if (leaves.contains(t.o)) {
@@ -921,7 +921,7 @@ public class SummaryExport {
 						(summary.generalizeTypes()?" (generalize types) ":"") +
 								" of " +
 						triplesFileName + " (" +
-						summary.triplesSummarizedSoFar + " triples): " +
+						summary.getTriplesSummarizedSoFar() + " triples): " +
 						entities.size() + " nodes, " + entityEdgeCount + " edges\"\n");
 						bw.write("labelloc=top; labeljust=center;\n");
 				}
@@ -963,7 +963,7 @@ public class SummaryExport {
 					(summary.generalizeTypes()?" (generalize types) ":"") +
 							" of " +
 					triplesFileName + " (" +
-					summary.triplesSummarizedSoFar + " triples)\"\n");
+					summary.getTriplesSummarizedSoFar() + " triples)\"\n");
 					bw.write("labelloc=top; labeljust=center;\n");
 				}
 				bw.write("}\n");
@@ -1047,7 +1047,7 @@ public class SummaryExport {
 				}
 
 				long p = RDF2SQLEncoding.dictionaryEncode(property);
-				if (summary.genericPropertiesIgnoredInCliques.contains(p)) {
+				if (summary.getGenericPropertiesIgnoredInCliques().contains(p)) {
 					continue;
 				}
 
@@ -1078,7 +1078,7 @@ public class SummaryExport {
 		try {
 			try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(summaryDOTFileName)))) {
 				bw.write("digraph g{\n");
-				long triplesToDraw = Math.min(100, summary.triplesSummarizedSoFar);
+				long triplesToDraw = Math.min(100, summary.getTriplesSummarizedSoFar());
 				long triplesDrawn = 0;
 				if (summary.isTypeFirst()) {
 					try (ResultSet rs = getTypeTriplesCursorForDotDrawing(conn, triplesToDraw)) {
@@ -1103,7 +1103,7 @@ public class SummaryExport {
 				if (drawGraphLabel) {
 					bw.write("fontsize=12; label=\"RDF graph " +
 					triplesFileName + " (" +
-					summary.triplesSummarizedSoFar + " triples)\"\n");
+					summary.getTriplesSummarizedSoFar() + " triples)\"\n");
 					bw.write("labelloc=top; labeljust=center;\n");
 				}
 				bw.write("}\n");

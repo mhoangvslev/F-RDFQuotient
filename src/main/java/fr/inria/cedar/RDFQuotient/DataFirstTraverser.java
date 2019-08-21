@@ -25,10 +25,10 @@ public class DataFirstTraverser extends Traverser {
 	@Override
 	protected void typePass() {
 		long start = System.currentTimeMillis();
-		String getTypedTriplesString = ("select *  from " + PostgresIdentifier.escapedQuotedId(summ.encodedTriplesTableName) + " where p = " + typeConstantCode);
+		String getTypedTriplesString = ("select * from " + PostgresIdentifier.escapedQuotedId(summ.encodedTriplesTableName) + " where p = " + typeConstantCode);
 		try {
 			try (Statement getTypedTriples = conn.createStatement()) {
-				getTypedTriples.setFetchSize(1000);
+				getTypedTriples.setFetchSize(10000);
 				try (ResultSet rs = getTypedTriples.executeQuery(getTypedTriplesString)) {
 					do {
 						Triple t = null;
@@ -56,7 +56,7 @@ public class DataFirstTraverser extends Traverser {
 						if (summ.checkConsistency) {
 							summ.consistencyChecks();
 						}
-						if (!summ.drawStepByStep.equals("false")) {
+						if (summ.drawStepByStep.equals("true")) {
 							drawStepByStep(summ.drawStepByStep);
 						}
 					}
@@ -81,8 +81,7 @@ public class DataFirstTraverser extends Traverser {
 		typePass();
 		genericPropertyTriplesPass();
 
-		summ.allTriplesSummarizationTime = setupTime + summ.schemaNodesCollectionTime /*+ summ.classSetCreationTime*/ + summ.nonTypeTriplesSummarizationTime + summ.typeTriplesSummarizationTime;
-		LOGGER.info("Summarized " + summ.triplesSummarizedSoFar + " input triples, created summary of size " + summ.edgesWithProv.getSummaryEdges().size()
-			+ " triples overall in " + summ.allTriplesSummarizationTime + " ms");
+		summ.allTriplesSummarizationTime = setupTime + summ.schemaNodesCollectionTime + summ.nonTypeTriplesSummarizationTime + summ.typeTriplesSummarizationTime + summ.genericPropertyTriplesSummarizationTime;
+		LOGGER.info("Summarized " + summ.triplesSummarizedSoFar + " input triples, created summary of size " + summ.edgesWithProv.getSummaryEdges().size() + " triples overall in " + summ.allTriplesSummarizationTime + " ms");
 	}
 }

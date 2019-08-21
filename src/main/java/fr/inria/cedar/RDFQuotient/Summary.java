@@ -67,6 +67,7 @@ public class Summary {
 	// summaryTablePrefix must be instantiated with a specific string for each summary type, so that each summary is saved as separated Postgres tables
 	protected String summaryTablePrefix;
 	protected boolean isTypeFirst = false;
+	protected boolean isDataAndType = true;
 	protected boolean isTwoPass = false;
 	protected static String ROOT_SUMMARY_PREFIX = "";
 	protected static String WEAK_SUMMARY_PREFIX = "w";
@@ -79,6 +80,9 @@ public class Summary {
 	protected static String TWO_PASS_SOURCE_SUMMARY_PREFIX = "2sc";
 	protected static String TWO_PASS_TYPED_WEAK_SUMMARY_PREFIX = "2ptw";
 	protected static String TWO_PASS_TYPED_STRONG_SUMMARY_PREFIX = "2pts";
+	protected static String TYPED_SUMMARY_PREFIX = "t";
+	protected static String TWO_PASS_INPUT_OUTPUT_AND_TYPED_SUMMARY_PREFIX = "2pioat";
+	protected static String TWO_PASS_FORWARD_BACKWARD_BISIMULATION = "2pfb";
 	protected static String ONEFB_SUMMARY_PREFIX = "1fb";
 	protected static String ONEFW_SUMMARY_PREFIX = "1fw";
 
@@ -94,37 +98,42 @@ public class Summary {
 	protected boolean gatherStatistics = false;
 
 	// statistics
-	public long triplesSummarizedSoFar = 0;
+	protected long triplesSummarizedSoFar = 0;
 	protected long typeTriplesSummarizedSoFar = 0;
 	protected long nonTypeTriplesSummarizedSoFar = 0;
+	protected long dataAndTypeTriplesSummarizedSoFar = 0;
+
 	protected long schemaNodesCollectionTime = 0;
-	protected long summaryEdgesSavingTime = 0;
-	protected long representationFunctionSavingTime = 0;
 	protected long classSetCreationTime = 0;
 	protected long typeTriplesSummarizationTime = 0;
+	protected long dataAndTypeTriplesSummarizationTime = 0;
+	protected long genericPropertyTriplesSummarizationTime = 0;
 	protected long nonTypeTriplesSummarizationTime = 0;
 	protected long allTriplesSummarizationTime = 0;
+
+	protected long representationFunctionSavingTime = 0;
+	protected long summaryEdgesSavingTime = 0;
 	// for each summary node, the number of graph nodes it represented
 	protected HashMap<Long, Long> summaryNodeStatistics;
 	// for each summary edge, the number of graph edge it represented
 	protected HashMap<Triple, Long> summaryEdgeStatistics;
-	public long numberOfLeaves;
+	protected long numberOfLeaves;
 
 	// exporter utility
 	protected SummaryExport exporter;
 
 	// properties to ignore when building cliques
-	public HashSet<Long> genericPropertiesIgnoredInCliques;
+	protected HashSet<Long> genericPropertiesIgnoredInCliques;
 	protected HashMap<Long, Long> sourcesOfGenericPropertiesIgnoredInCliques;
 	protected HashMap<Long, Long> targetsOfGenericPropertiesIgnoredInCliques;
 
 	// in type triples, whether to replace the type with the most general type
 	protected boolean replaceTypeWithMostGeneralType = false;
-	HashMap<Long, Long> topClass; //for each class, its most general superclass (or itself if nothing else is found)
-	HashMap<Long, HashSet<Long>> topClasses; //for each class, the set of its most general superclasses (or itself if nothing else is found)
+	protected HashMap<Long, Long> topClass; //for each class, its most general superclass (or itself if nothing else is found)
+	protected HashMap<Long, HashSet<Long>> topClasses; //for each class, the set of its most general superclasses (or itself if nothing else is found)
 
-	HashMap<Long, HashMap<Long, Long>> summaryNodeToActualTypeToCardinality;
-	HashMap<Long, HashSet<Long>> generalizers;
+	protected HashMap<Long, HashMap<Long, Long>> summaryNodeToActualTypeToCardinality;
+	protected HashMap<Long, HashSet<Long>> generalizers;
 
 	public Summary() {
 		summaryTablePrefix = ROOT_SUMMARY_PREFIX;
@@ -589,18 +598,18 @@ public class Summary {
 	public void gatherNodeStatistics() {
 		summaryNodeStatistics.clear();
 		for (Long l: rep.getKeys()){
-			Long sn = rep.get(l);
-			Long existingSnCount = summaryNodeStatistics.get(sn);
-			if (existingSnCount == null){
-				existingSnCount = 1L;
+			Long schemaNode = rep.get(l);
+			Long existingSchemaNodeCount = summaryNodeStatistics.get(schemaNode);
+			if (existingSchemaNodeCount == null){
+				existingSchemaNodeCount = 1L;
 			}
 			else{
-				existingSnCount = (existingSnCount + 1L);
+				existingSchemaNodeCount = (existingSchemaNodeCount + 1L);
 			}
-			//if (this.sn.contains(sn)) {
-			//	System.out.println("Schema node " + sn + " represented " + existingSnCount + " nodes");
+			//if (sn.contains(schemaNode)) {
+			//	System.out.println("Schema node " + schemaNode + " represented " + existingSnCount + " nodes");
 			//}
-			summaryNodeStatistics.put(sn, existingSnCount);
+			summaryNodeStatistics.put(schemaNode, existingSchemaNodeCount);
 		}
 	}
 
@@ -619,26 +628,41 @@ public class Summary {
 	 * @param conn
 	 */
 	public void summarizeFromPostgres(Connection conn) {
-		if (isTypeFirst) {
+		if (isDataAndType) {
 			if (isTwoPass) {
-				traverser = new TypeFirstTwoPassTraverser(this, conn);
+				traverser = new DataAndTypeTraverser(this, conn);
 			}
 			else {
-				traverser = new TypeFirstTraverser(this, conn);
+				traverser = new DataAndTypeTwoPassTraverser(this, conn);
 			}
 		}
 		else {
-			if (isTwoPass) {
-				traverser = new DataFirstTwoPassTraverser(this, conn);
+			if (isTypeFirst) {
+				if (isTwoPass) {
+					traverser = new TypeFirstTwoPassTraverser(this, conn);
+				}
+				else {
+					traverser = new TypeFirstTraverser(this, conn);
+				}
 			}
 			else {
-				traverser = new DataFirstTraverser(this, conn);
+				if (isTwoPass) {
+					traverser = new DataFirstTwoPassTraverser(this, conn);
+				}
+				else {
+					traverser = new DataFirstTraverser(this, conn);
+				}
 			}
 		}
+
 		traverser.traverseAllTriples();
 	}
 
 	protected void handleDataTriple(Triple t) {
+		throw new IllegalStateException("Not implemented at this level");
+	}
+
+	protected void handleDataOrTypeTriple(Triple t) {
 		throw new IllegalStateException("Not implemented at this level");
 	}
 
@@ -710,7 +734,7 @@ public class Summary {
 	 */
 	protected void handleTypeTripleBeforeData(Triple t) {
 		if (sn.contains(t.s)) { // schemaNode rdf:type classNode, represent right away
-			// s, o already represented in collectSchemaNodes
+			// s and o already represented in collectSchemaNodes
 			edgesWithProv.addTriple(rep.get(t.s), t.p, rep.get(t.o));
 			return;
 		}
@@ -727,7 +751,7 @@ public class Summary {
 		}
 		Long repS = n2cs.get(t.s);
 		boolean firstSightS = (repS == null);
-		TreeSet<Long> sClassSet = null; // the types according to which t.s will be represented
+		TreeSet<Long> sClassSet; // the types according to which t.s will be represented
 
 		if (firstSightS) {
 			sClassSet = new TreeSet<>();
@@ -898,11 +922,19 @@ public class Summary {
 		throw new IllegalStateException("Not implemented at this level");
 	}
 
+	protected void classifyDataOrTypeTriple(Triple t) {
+		throw new IllegalStateException("Not implemented at this level");
+	}
+
 	protected void classificationPostProcessing() {
 		throw new IllegalStateException("Not implemented at this level");
 	}
 
 	protected void representDataTriple(Triple t) {
+		throw new IllegalStateException("Not implemented at this level");
+	}
+
+	protected void representDataOrTypeTriple(Triple t) {
 		throw new IllegalStateException("Not implemented at this level");
 	}
 
@@ -1215,6 +1247,18 @@ public class Summary {
 		System.out.println("=======");
 	}
 
+	public Long getTriplesSummarizedSoFar() {
+		return triplesSummarizedSoFar;
+	}
+
+	public HashSet<Long> getGenericPropertiesIgnoredInCliques() {
+		return genericPropertiesIgnoredInCliques;
+	}
+
+	public void setNumberOfLeaves(long newNumberOfLeaves) {
+		numberOfLeaves = newNumberOfLeaves;
+	}
+
 	protected final String getSummaryTriplesSQLQuery() {
 		return "select * from " + PostgresIdentifier.escapedQuotedId(edgeTableName) + ";";
 	}
@@ -1248,11 +1292,14 @@ public class Summary {
 		stats.put("classSetCreationTime", Long.toString(classSetCreationTime));
 		stats.put("typeTriplesSummarizationTime", Long.toString(typeTriplesSummarizationTime));
 		stats.put("nonTypeTriplesSummarizationTime", Long.toString(nonTypeTriplesSummarizationTime));
+		stats.put("dataAndTypeTriplesCollectionTime", Long.toString(dataAndTypeTriplesSummarizationTime));
+		stats.put("genericPropertyTriplesSummarizationTime", Long.toString(genericPropertyTriplesSummarizationTime));
 		stats.put("allTriplesSummarizationTime", Long.toString(allTriplesSummarizationTime));
 
 		stats.put("inputGraphSize", Long.toString(triplesSummarizedSoFar));
 		stats.put("inputGraphTypeTriples", Long.toString(typeTriplesSummarizedSoFar));
 		stats.put("inputGraphNonTypeTriples", Long.toString(nonTypeTriplesSummarizedSoFar));
+		stats.put("dataAndTypeTriplesSummarizedSoFar", Long.toString(dataAndTypeTriplesSummarizedSoFar));
 		stats.put("outputGraphSize", Integer.toString(edgesWithProv.getSummaryEdges().size()));
 
 		stats.put("inputGraphNumberOfNodes", Long.toString(rep.numberOfKeys()));

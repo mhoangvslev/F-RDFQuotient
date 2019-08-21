@@ -29,6 +29,7 @@ public class TwoPassWeakSummary extends WeakOrTypedWeakSummary {
 		this.dictionaryTableName = dictionaryTableName;
 		this.summaryTablePrefix = TWO_PASS_WEAK_SUMMARY_PREFIX;
 		this.isTypeFirst = false;
+		this.isDataAndType = false;
 		this.isTwoPass = true;
 		n2i = new HashMap<>();
 		n2o = new HashMap<>();

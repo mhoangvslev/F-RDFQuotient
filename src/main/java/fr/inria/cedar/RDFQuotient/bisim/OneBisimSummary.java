@@ -28,6 +28,7 @@ public class OneBisimSummary extends Summary{
 		this.dictionaryTableName = dictionaryTableName;
 		this.summaryTablePrefix = ONEFB_SUMMARY_PREFIX;
 		this.isTypeFirst = false;
+		this.isDataAndType = false;
 		this.isTwoPass = true;
 		this.n2ip = new HashMap<>();
 		this.n2op = new HashMap<>();

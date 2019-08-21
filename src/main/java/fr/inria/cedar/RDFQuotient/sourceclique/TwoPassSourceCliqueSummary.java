@@ -42,6 +42,7 @@ public class TwoPassSourceCliqueSummary extends StrongOrTypedStrongSummary{
 		this.dictionaryTableName = dictionaryTableName;
 		this.summaryTablePrefix = TWO_PASS_SOURCE_SUMMARY_PREFIX;
 		this.isTypeFirst = false;
+		this.isDataAndType = false;
 		this.isTwoPass = true;
 	}
 

@@ -29,6 +29,7 @@ public class OneFWSummary extends Summary {
 		this.dictionaryTableName = dictionaryTableName;
 		this.summaryTablePrefix = ONEFW_SUMMARY_PREFIX;
 		this.isTypeFirst = false;
+		this.isDataAndType = false;
 		this.isTwoPass = true;
 		this.n2op = new HashMap<>();
 		this.op2sn = new HashMap<>();

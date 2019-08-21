@@ -24,6 +24,7 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 		this.dictionaryTableName = dictionaryTableName;
 		this.summaryTablePrefix = WEAK_SUMMARY_PREFIX;
 		this.isTypeFirst = false;
+		this.isDataAndType = false;
 		this.isTwoPass = false;
 	}
 

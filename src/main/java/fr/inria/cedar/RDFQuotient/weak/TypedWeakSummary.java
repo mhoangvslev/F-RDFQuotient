@@ -37,6 +37,7 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		this.encodedTriplesTableName = encodedTriplesTableName;
 		this.dictionaryTableName = dictionaryTableName;
 		this.isTypeFirst = true;
+		this.isDataAndType = false;
 		this.isTwoPass = false;
 		cs = new Long2LongSet();
 		acs = new Long2LongSet();

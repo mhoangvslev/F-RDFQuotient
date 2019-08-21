@@ -3,8 +3,11 @@
 package fr.inria.cedar.RDFQuotient.controller;
 
 import fr.inria.cedar.RDFQuotient.Summary;
+import fr.inria.cedar.RDFQuotient.bisim.ForwardBackwardBisimulationSummary;
 import fr.inria.cedar.RDFQuotient.bisim.OneBisimSummary;
 import fr.inria.cedar.RDFQuotient.bisim.OneFWSummary;
+import fr.inria.cedar.RDFQuotient.dataAndType.InputOutputAndTypedSummary;
+import fr.inria.cedar.RDFQuotient.dataAndType.TypedSummary;
 import fr.inria.cedar.RDFQuotient.strong.StrongSummary;
 import fr.inria.cedar.RDFQuotient.strong.TwoPassStrongSummary;
 import fr.inria.cedar.RDFQuotient.strong.TwoPassTypedStrongSummary;
@@ -15,6 +18,7 @@ import fr.inria.cedar.RDFQuotient.weak.TwoPassWeakSummary;
 import fr.inria.cedar.RDFQuotient.weak.TwoPassWeakSummaryWithUnionFind;
 import fr.inria.cedar.RDFQuotient.weak.TypedWeakSummary;
 import fr.inria.cedar.RDFQuotient.weak.WeakSummary;
+import fr.inria.cedar.ontosql.db.UnsupportedDatabaseEngineException;
 import fr.inria.cedar.ontosql.rdfdb.dataloading.DataLoading;
 import fr.inria.cedar.ontosql.rdfdb.dataloading.Parameters;
 import java.io.File;
@@ -369,7 +373,7 @@ public class Interface {
 			DataLoading.process(datasets, loadingProperties);
 			LOGGER.info("Graph loaded to Postgres");
 		}
-		catch (Exception ex) {
+		catch (UnsupportedDatabaseEngineException | FileNotFoundException ex) {
 			LOGGER.error("Could not load dataset " + ex);
 			System.exit(1);
 		}
@@ -412,7 +416,12 @@ public class Interface {
 					break;
 				case "onefb":
 				case "onefw":
+				case "2pbisim":
 					message += typeGeneralization + "bisimulation-based summaries. ";
+					break;
+				case "typed":
+				case "inputoutput":
+					message += typeGeneralization + "data-and-type summaries. ";
 					break;
 			}
 		}
@@ -461,6 +470,12 @@ public class Interface {
 				return new OneBisimSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 			case "onefw":
 				return new OneFWSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
+			case "2pbisim":
+				return new ForwardBackwardBisimulationSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
+			case "typed":
+				return new TypedSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
+			case "inputoutput":
+				return new InputOutputAndTypedSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 		}
 		throw new IllegalArgumentException("Wrong summary identifier: " + summaryType);
 	}
@@ -624,12 +639,11 @@ public class Interface {
 			LOGGER.info("Loading configuration exported to disk");
 		}
 
-		String DOTFilename = null;
 		if (drawingEnabled) {
 			LOGGER.info("Exporting summary DOT drawing to disk");
 		}
 		// try to draw RDF graph and summary
-		DOTFilename = summary.writeDecodedSummaryToDOTFile(databaseConnection, summaryDrawingStyle);
+		String DOTFilename = summary.writeDecodedSummaryToDOTFile(databaseConnection, summaryDrawingStyle);
 		if (drawingEnabled) {
 			LOGGER.info("Summary DOT drawing exported to disk");
 		}

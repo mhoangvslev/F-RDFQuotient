@@ -36,7 +36,8 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 		this.encodedTriplesTableName = encodedTriplesTableName;
 		this.dictionaryTableName = dictionaryTableName;
 		this.summaryTablePrefix = TYPED_STRONG_SUMMARY_PREFIX;
-		isTypeFirst = true;
+		this.isTypeFirst = true;
+		this.isDataAndType = false;
 		this.isTwoPass = false;
 		cs = new Long2LongSet();
 		acs = new Long2LongSet();
