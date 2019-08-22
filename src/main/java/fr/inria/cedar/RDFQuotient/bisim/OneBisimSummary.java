@@ -141,9 +141,4 @@ public class OneBisimSummary extends Summary{
 		}
 		return (o2n.get(nop));
 	}
-
-	@Override
-	protected void consistencyChecks() {
-		// TODO Auto-generated method stub
-	}
 }

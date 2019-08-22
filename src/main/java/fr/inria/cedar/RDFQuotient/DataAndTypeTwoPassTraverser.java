@@ -86,7 +86,7 @@ public class DataAndTypeTwoPassTraverser extends DataAndTypeTraverser {
 							&& (t.p != subPropertyCode)
 							&& (t.p != domainCode)
 							&& (t.p != rangeCode)) { // data triple
-							summ.representDataTriple(t);
+							summ.representDataOrTypeTriple(t);
 							summ.edgesWithProv.addTriple(summ.rep.get(t.s), t.p, summ.rep.get(t.o));
 						}
 						summ.triplesSummarizedSoFar++;

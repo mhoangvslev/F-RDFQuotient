@@ -131,9 +131,4 @@ public class OneFWSummary extends Summary {
 	private Long getSummaryNode(TreeSet<Long> nop) {
 		return (op2sn.get(nop));
 	}
-
-	@Override
-	protected void consistencyChecks() {
-		// TODO Auto-generated method stub
-	}
 }

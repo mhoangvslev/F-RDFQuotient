@@ -25,35 +25,33 @@ public class TypedSummary extends Summary {
 		this.summaryTablePrefix = TWO_PASS_WEAK_SUMMARY_PREFIX;
 		this.isTypeFirst = true;
 		this.isDataAndType = false;
-		this.isTwoPass = true;
+		this.isTwoPass = false;
 		untypedNodesSummaryNode = getNextSummaryNode();
 	}
 
 	@Override
-	protected void handleTypeTripleBeforeData(Triple t) {
+	protected void representTypeTripleAfterData(Triple t) {
 		throw new IllegalStateException("This method does not belong to " + this.getClass().getName());
 	}
 
 	@Override
-	protected void classifyDataTriple(Triple t) {
-		// TODO
-	}
+	protected void handleDataTriple(Triple t) {
+		//LOGGER.debug("### Data triple: " + t.toString());
 
-	@Override
-	protected void classificationPostProcessing() {
-		// TODO
-	}
+		boolean sTyped = n2cs.get(t.s) != null;
+		boolean sSchemaNode = sn.contains(t.s);
+		boolean oTyped = n2cs.get(t.o) != null;
+		boolean oSchemaNode = sn.contains(t.o);
 
-	@Override
-	protected void representDataTriple(Triple t) {
 		// schema nodes already represented in collectSchemaNodes
-		/*if (!sn.contains(t.s)) {
-			repS = ps.get(t.p);
-			rep.put(t.s, repS);
+		// typed nodes already represented in typePass
+		if (!sSchemaNode && !sTyped) {
+			rep.put(t.s, untypedNodesSummaryNode);
 		}
-		if (!sn.contains(t.o)) {
-			repO = pt.get(t.p);
-			rep.put(t.o, repO);
-		}*/
+		if (!oSchemaNode && !oTyped) {
+			rep.put(t.o, untypedNodesSummaryNode);
+		}
+
+		edgesWithProv.addTriple(rep.get(t.s), t.p, rep.get(t.o));
 	}
 }

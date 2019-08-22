@@ -2,12 +2,12 @@
 
 package fr.inria.cedar.RDFQuotient.dataAndType;
 
-import fr.inria.cedar.RDFQuotient.Summary;
+import fr.inria.cedar.RDFQuotient.bisim.OneBisimSummary;
 import fr.inria.cedar.RDFQuotient.datastructures.Triple;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
-public class InputOutputAndTypedSummary extends Summary {
+public class InputOutputAndTypedSummary extends OneBisimSummary {
 	private static final Logger LOGGER = Logger.getLogger(InputOutputAndTypedSummary.class.getName());
 
 	static {
@@ -15,7 +15,7 @@ public class InputOutputAndTypedSummary extends Summary {
 	}
 
 	public InputOutputAndTypedSummary(String triplesFileName, String triplesTableName, String encodedTriplesTableName, String dictionaryTableName) {
-		super();
+		super(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 		this.triplesFileName = triplesFileName;
 		this.triplesTableName = triplesTableName;
 		this.encodedTriplesTableName = encodedTriplesTableName;
@@ -27,30 +27,22 @@ public class InputOutputAndTypedSummary extends Summary {
 	}
 
 	@Override
+	protected void representTypeTripleAfterData(Triple t) {
+		throw new IllegalStateException("This method does not belong to " + this.getClass().getName());
+	}
+
+	@Override
 	protected void handleTypeTripleBeforeData(Triple t) {
 		throw new IllegalStateException("This method does not belong to " + this.getClass().getName());
 	}
 
 	@Override
-	protected void classifyDataTriple(Triple t) {
-		// TODO
+	protected void classifyDataOrTypeTriple(Triple t) {
+		super.classifyDataTriple(t);
 	}
 
 	@Override
-	protected void classificationPostProcessing() {
-		// TODO
-	}
-
-	@Override
-	protected void representDataTriple(Triple t) {
-		// schema nodes already represented in collectSchemaNodes
-		/*if (!sn.contains(t.s)) {
-			repS = ps.get(t.p);
-			rep.put(t.s, repS);
-		}
-		if (!sn.contains(t.o)) {
-			repO = pt.get(t.p);
-			rep.put(t.o, repO);
-		}*/
+	protected void representDataOrTypeTriple(Triple t) {
+		super.representDataTriple(t);
 	}
 }

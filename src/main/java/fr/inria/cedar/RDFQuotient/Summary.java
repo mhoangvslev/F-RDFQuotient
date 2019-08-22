@@ -836,6 +836,7 @@ public class Summary {
 			}
 		}
 	}
+
 	// helper
 	private String decodeTopTypes(HashSet<Long> topClassesOfO) {
 		StringBuffer sb = new StringBuffer();
@@ -844,6 +845,7 @@ public class Summary {
 		}
 		return new String(sb);
 	}
+
 	/**
 	 * Added on Dec 21, 2018
 	 * @param hm1 a Long->Long map
@@ -882,6 +884,7 @@ public class Summary {
 		}
 		return res;
 	}
+
 	/**
 	 * This method adds the type triples in the summary, based on the structures previously filled in while traversing those triples.
 	 * It is called only once and will output all the type triples of the summary.
