@@ -83,12 +83,14 @@ public class ForwardBackwardBisimulationSummary extends Summary {
 			return inputGraphNodesRepresented.size();
 		}
 
-		public HashMap<Long, ArrayList<Long>> getNextHopNodesThroughOutgoingNonTypeProperties() {
+		// node -> property -> set of nodes
+		public HashMap<Long, HashMap<Long, HashSet<Long>>> getNextHopNodesThroughOutgoingNonTypeProperties() {
 			// TODO
 			return null;
 		}
 
-		public HashMap<Long, ArrayList<Long>> getNextHopNodesThroughIncomingNonTypeProperties() {
+		// node -> property -> set of nodes
+		public HashMap<Long, HashMap<Long, HashSet<Long>>> getNextHopNodesThroughIncomingNonTypeProperties() {
 			// TODO
 			return null;
 		}
@@ -179,13 +181,11 @@ public class ForwardBackwardBisimulationSummary extends Summary {
 		do {
 			equivalenceClassesNewQueue.clear();
 			for (EquivalenceClass equivalenceClass: equivalenceClassesQueue) {
+				equivalenceClassesNewClasses.clear();
 				// outgoing non-type properties
-				equivalenceClassesNewClasses.clear();
-				// TODO
-				equivalenceClassesNewQueue.addAll(equivalenceClassesNewClasses);
-
+				HashMap<Long, HashMap<Long, HashSet<Long>>> nodesInNextOutgoingHopByProperty = equivalenceClass.getNextHopNodesThroughOutgoingNonTypeProperties();
 				// incoming non-type properties
-				equivalenceClassesNewClasses.clear();
+				HashMap<Long, HashMap<Long, HashSet<Long>>> nodesInNextIncomingHopByProperty = equivalenceClass.getNextHopNodesThroughOutgoingNonTypeProperties();
 				// TODO
 				equivalenceClassesNewQueue.addAll(equivalenceClassesNewClasses);
 			}
