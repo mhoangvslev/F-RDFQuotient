@@ -67,7 +67,7 @@ public class Summary {
 	// summaryTablePrefix must be instantiated with a specific string for each summary type, so that each summary is saved as separated Postgres tables
 	protected String summaryTablePrefix;
 	protected boolean isTypeFirst = false;
-	protected boolean isDataAndType = true;
+	protected boolean isDataAndType = false;
 	protected boolean isTwoPass = false;
 	protected static String ROOT_SUMMARY_PREFIX = "";
 	protected static String WEAK_SUMMARY_PREFIX = "w";
@@ -630,10 +630,10 @@ public class Summary {
 	public void summarizeFromPostgres(Connection conn) {
 		if (isDataAndType) {
 			if (isTwoPass) {
-				traverser = new DataAndTypeTraverser(this, conn);
+				traverser = new DataAndTypeTwoPassTraverser(this, conn);
 			}
 			else {
-				traverser = new DataAndTypeTwoPassTraverser(this, conn);
+				traverser = new DataAndTypeTraverser(this, conn);
 			}
 		}
 		else {

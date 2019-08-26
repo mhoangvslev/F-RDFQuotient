@@ -48,15 +48,19 @@ public class ForwardBackwardBisimulationSummary extends Summary {
 				return true;
 			}
 
+			if (obj == null) {
+				return false;
+			}
+
 			if (!(obj instanceof NodeSignature)) {
 				return false;
 			}
 
-			NodeSignature o = (NodeSignature) obj;
+			final NodeSignature o = (NodeSignature) obj;
 
-			return outgoingNonTypeProperties.equals(o.outgoingNonTypeProperties)
-				&& incomingNonTypeProperties.equals(o.incomingNonTypeProperties)
-				&& typeProperties.equals(o.typeProperties);
+			return Objects.equals(this.outgoingNonTypeProperties, o.outgoingNonTypeProperties)
+				&& Objects.equals(this.incomingNonTypeProperties, o.incomingNonTypeProperties)
+				&& Objects.equals(this.typeProperties, o.typeProperties);
 		}
 
 		@Override
@@ -65,6 +69,7 @@ public class ForwardBackwardBisimulationSummary extends Summary {
 			hash = 59 * hash + Objects.hashCode(this.outgoingNonTypeProperties);
 			hash = 59 * hash + Objects.hashCode(this.incomingNonTypeProperties);
 			hash = 59 * hash + Objects.hashCode(this.typeProperties);
+
 			return hash;
 		}
 	}
@@ -73,6 +78,7 @@ public class ForwardBackwardBisimulationSummary extends Summary {
 		protected HashSet<Long> inputGraphNodesRepresented;
 
 		public EquivalenceClass(HashSet<Long> nodes) {
+			inputGraphNodesRepresented = nodes;
 		}
 
 		public HashSet<Long> getNodes() {
@@ -85,41 +91,109 @@ public class ForwardBackwardBisimulationSummary extends Summary {
 
 		// node -> property -> set of nodes
 		public HashMap<Long, HashMap<Long, HashSet<Long>>> getNextHopNodesThroughOutgoingNonTypeProperties() {
-			// TODO
-			return null;
+			HashMap<Long, HashMap<Long, HashSet<Long>>> result = new HashMap<>();
+			for (Long node: inputGraphNodesRepresented) {
+				if (nodeToNextHopNodesByOutgoingNonSchemaProperty.containsKey(node)) {
+					if (!result.containsKey(node)) {
+						result.put(node, new HashMap<>());
+					}
+					for (Long property: nodeToNextHopNodesByOutgoingNonSchemaProperty.get(node).keySet()) {
+						result.get(node).put(property, nodeToNextHopNodesByOutgoingNonSchemaProperty.get(node).get(property));
+					}
+				}
+			}
+
+			return result;
 		}
 
 		// node -> property -> set of nodes
 		public HashMap<Long, HashMap<Long, HashSet<Long>>> getNextHopNodesThroughIncomingNonTypeProperties() {
-			// TODO
-			return null;
+			HashMap<Long, HashMap<Long, HashSet<Long>>> result = new HashMap<>();
+			for (Long node: inputGraphNodesRepresented) {
+				if (nodeToPreviousHopNodesByIncomingNonSchemaProperties.containsKey(node)) {
+					if (!result.containsKey(node)) {
+						result.put(node, new HashMap<>());
+					}
+					for (Long property: nodeToPreviousHopNodesByIncomingNonSchemaProperties.get(node).keySet()) {
+						result.get(node).put(property, nodeToPreviousHopNodesByIncomingNonSchemaProperties.get(node).get(property));
+					}
+				}
+			}
+
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj) {
+				return true;
+			}
+			if (obj == null) {
+				return false;
+			}
+			if (!(obj instanceof EquivalenceClass)) {
+				return false;
+			}
+
+			final EquivalenceClass other = (EquivalenceClass) obj;
+
+			return Objects.equals(this.inputGraphNodesRepresented, other.inputGraphNodesRepresented);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hashCode(inputGraphNodesRepresented);
+		}
+	}
+
+	protected class NeighborhoodEquivalencePattern {
+		protected Boolean direction; // forward: true, backward: false
+		protected Long property;
+		protected HashSet<EquivalenceClass> setOfEquivalenceClasses;
+
+		public NeighborhoodEquivalencePattern(Boolean direction, Long property, HashSet<EquivalenceClass> setOfEquivalenceClasses) {
+			this.direction = direction;
+			this.property = property;
+			this.setOfEquivalenceClasses = setOfEquivalenceClasses;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj == this) {
+				return true;
+			}
+
+			if (!(obj instanceof NeighborhoodEquivalencePattern)) {
+				return false;
+			}
+
+			final NeighborhoodEquivalencePattern o = (NeighborhoodEquivalencePattern) obj;
+
+			return Objects.equals(this.direction, o.direction)
+				&& Objects.equals(this.property, o.property)
+				&& Objects.equals(this.setOfEquivalenceClasses, o.setOfEquivalenceClasses);
+		}
+
+		@Override
+		public int hashCode() {
+			int hash = 3;
+			hash = 59 * hash + Objects.hashCode(this.direction);
+			hash = 59 * hash + Objects.hashCode(this.property);
+			hash = 59 * hash + Objects.hashCode(this.property);
+
+			return hash;
 		}
 	}
 
 	protected long typeConstantCode;
 	protected HashSet<Long> allNonSchemaNodes;
-	protected HashMap<Long, HashSet<Long>> nodeToNextHopNodesByOutgoingNonSchemaProperty;
-	protected HashMap<Long, HashSet<Long>> nodeToPreviousHopNodesByIncomingNonSchemaProperties;
+	protected HashMap<Long, HashMap<Long, HashSet<Long>>> nodeToNextHopNodesByOutgoingNonSchemaProperty;
+	protected HashMap<Long, HashMap<Long, HashSet<Long>>> nodeToPreviousHopNodesByIncomingNonSchemaProperties;
 	protected HashMap<Long, HashSet<Long>> nodeToSetOfTypes;
 	protected HashMap<NodeSignature, HashSet<Long>> nodeSignatureToNodes;
+	protected ArrayList<EquivalenceClass> equivalenceClasses;
+	protected HashMap<Long, EquivalenceClass> nodeToEquivalenceClass;
 	protected HashMap<Long, Long> nodeToEquivalenceClassID;
-
-	protected void constructNodeToSignatureMapping() {
-		HashSet<Long> outgoingNonTypeProperties;
-		HashSet<Long> incomingNonTypeProperties;
-		HashSet<Long> typeProperties;
-		for (Long node: allNonSchemaNodes) {
-			outgoingNonTypeProperties = nodeToNextHopNodesByOutgoingNonSchemaProperty.get(node);
-			incomingNonTypeProperties = nodeToPreviousHopNodesByIncomingNonSchemaProperties.get(node);
-			typeProperties = nodeToSetOfTypes.get(node);
-
-			NodeSignature signature = new NodeSignature(outgoingNonTypeProperties, incomingNonTypeProperties, typeProperties);
-			if (!nodeSignatureToNodes.containsKey(signature)) {
-				nodeSignatureToNodes.put(signature, new HashSet<>());
-			}
-			nodeSignatureToNodes.get(signature).add(node);
-		}
-	}
 
 	public ForwardBackwardBisimulationSummary(String triplesFileName, String triplesTableName, String encodedTriplesTableName, String dictionaryTableName) {
 		super();
@@ -137,6 +211,8 @@ public class ForwardBackwardBisimulationSummary extends Summary {
 		nodeToPreviousHopNodesByIncomingNonSchemaProperties = new HashMap<>();
 		nodeToSetOfTypes = new HashMap<>();
 		nodeSignatureToNodes = new HashMap<>();
+		equivalenceClasses = new ArrayList<>();
+		nodeToEquivalenceClass = new HashMap<>();
 	}
 
 	@Override
@@ -150,12 +226,18 @@ public class ForwardBackwardBisimulationSummary extends Summary {
 	}
 
 	@Override
-	protected void classifyDataTriple(Triple t) {
+	protected void classifyDataOrTypeTriple(Triple t) {
 		if (!nodeToNextHopNodesByOutgoingNonSchemaProperty.containsKey(t.s)) {
-			nodeToNextHopNodesByOutgoingNonSchemaProperty.put(t.s, new HashSet<>());
+			nodeToNextHopNodesByOutgoingNonSchemaProperty.put(t.s, new HashMap<>());
+		}
+		if (!nodeToNextHopNodesByOutgoingNonSchemaProperty.get(t.s).containsKey(t.p)) {
+			nodeToNextHopNodesByOutgoingNonSchemaProperty.get(t.s).put(t.p, new HashSet<>());
 		}
 		if (!nodeToPreviousHopNodesByIncomingNonSchemaProperties.containsKey(t.o)) {
-			nodeToPreviousHopNodesByIncomingNonSchemaProperties.put(t.o, new HashSet<>());
+			nodeToPreviousHopNodesByIncomingNonSchemaProperties.put(t.o, new HashMap<>());
+		}
+		if (!nodeToPreviousHopNodesByIncomingNonSchemaProperties.get(t.o).containsKey(t.p)) {
+			nodeToPreviousHopNodesByIncomingNonSchemaProperties.get(t.o).put(t.p, new HashSet<>());
 		}
 		if (!nodeToSetOfTypes.containsKey(t.s)) {
 			nodeToSetOfTypes.put(t.s, new HashSet<>());
@@ -168,68 +250,180 @@ public class ForwardBackwardBisimulationSummary extends Summary {
 			nodeToSetOfTypes.get(t.s).add(t.o);
 		}
 		else {
-			nodeToNextHopNodesByOutgoingNonSchemaProperty.get(t.s).add(t.o);
-			nodeToPreviousHopNodesByIncomingNonSchemaProperties.get(t.o).add(t.s);
+			nodeToNextHopNodesByOutgoingNonSchemaProperty.get(t.s).get(t.p).add(t.o);
+			nodeToPreviousHopNodesByIncomingNonSchemaProperties.get(t.o).get(t.p).add(t.s);
 			allNonSchemaNodes.add(t.o);
 		}
 	}
 
-	ArrayList<EquivalenceClass> findFixpointOfEquivalenceClasses(ArrayList<EquivalenceClass> equivalenceClassesQueue) {
-		boolean splitClass = false;
-		ArrayList<EquivalenceClass> equivalenceClassesNewQueue = new ArrayList<>();
-		ArrayList<EquivalenceClass> equivalenceClassesNewClasses = new ArrayList<>();
-		do {
-			equivalenceClassesNewQueue.clear();
-			for (EquivalenceClass equivalenceClass: equivalenceClassesQueue) {
-				equivalenceClassesNewClasses.clear();
-				// outgoing non-type properties
-				HashMap<Long, HashMap<Long, HashSet<Long>>> nodesInNextOutgoingHopByProperty = equivalenceClass.getNextHopNodesThroughOutgoingNonTypeProperties();
-				// incoming non-type properties
-				HashMap<Long, HashMap<Long, HashSet<Long>>> nodesInNextIncomingHopByProperty = equivalenceClass.getNextHopNodesThroughOutgoingNonTypeProperties();
-				// TODO
-				equivalenceClassesNewQueue.addAll(equivalenceClassesNewClasses);
+	protected void constructNodeSignatureToNodesMapping() {
+		HashSet<Long> outgoingNonTypeProperties;
+		HashSet<Long> incomingNonTypeProperties;
+		HashSet<Long> typeProperties;
+		for (Long node: allNonSchemaNodes) {
+			outgoingNonTypeProperties = new HashSet<>();
+			if (nodeToNextHopNodesByOutgoingNonSchemaProperty.containsKey(node)) {
+				outgoingNonTypeProperties.addAll(nodeToNextHopNodesByOutgoingNonSchemaProperty.get(node).keySet());
 			}
-			equivalenceClassesQueue = equivalenceClassesNewQueue;
-		}
-		while(!splitClass);
 
-		return equivalenceClassesQueue;
+			incomingNonTypeProperties = new HashSet<>();
+			if (nodeToPreviousHopNodesByIncomingNonSchemaProperties.containsKey(node)) {
+				incomingNonTypeProperties.addAll(nodeToPreviousHopNodesByIncomingNonSchemaProperties.get(node).keySet());
+			}
+
+			typeProperties = nodeToSetOfTypes.get(node);
+
+			NodeSignature signature = new NodeSignature(outgoingNonTypeProperties, incomingNonTypeProperties, typeProperties);
+			if (!nodeSignatureToNodes.containsKey(signature)) {
+				nodeSignatureToNodes.put(signature, new HashSet<>());
+			}
+			nodeSignatureToNodes.get(signature).add(node);
+		}
 	}
 
-	protected HashMap<Long, Long> findNodeToEquivalenceClassIDMapping(ArrayList<EquivalenceClass> equivalenceClasses) {
-		HashMap<EquivalenceClass, Long> equivalenceClassToID = new HashMap<>();
-		HashMap<Long, Long> nodeToEquivalenceClassMapping = new HashMap<>();
+	protected HashMap<Long, HashMap<Long, HashSet<EquivalenceClass>>> findEquivalenceClassSetsByProperty(HashMap<Long, HashMap<Long, HashSet<Long>>> nodesInNextOutgoingHopByProperty) {
+		HashMap<Long, HashMap<Long, HashSet<EquivalenceClass>>> result = new HashMap<>();
 
-		Long equivalenceClassID;
+		for (Long node: nodesInNextOutgoingHopByProperty.keySet()) {
+			if (!result.containsKey(node)) {
+				result.put(node, new HashMap<>());
+			}
+			for (Long property: nodesInNextOutgoingHopByProperty.get(node).keySet()) {
+				if (!result.get(node).containsKey(property)) {
+					result.get(node).put(property, new HashSet<>());
+				}
+				result.get(node).get(property).add(nodeToEquivalenceClass.get(node));
+			}
+		}
+
+		return result;
+	}
+
+	protected HashSet<EquivalenceClass> splitEquivalenceClass(
+		HashSet<Long> nodes,
+		HashMap<Long, HashMap<Long, HashSet<EquivalenceClass>>> outgoingNodeClasses,
+		HashMap<Long, HashMap<Long, HashSet<EquivalenceClass>>> incomingNodeClasses
+	) {
+		// key: HashSet<Triple<Long, HashSet<EquivalenceClass>>>
+		// set of combinations (direction (of the property), property, set of equivalence classes of the nodes reached through property)
+		// value: HashSet<Long>
+		// set of nodes with the same key
+		HashMap<HashSet<NeighborhoodEquivalencePattern>, HashSet<Long>> setOfNodeCharacteristicsToSetOfNodes = new HashMap<>();
+
+		HashSet<NeighborhoodEquivalencePattern> setOfNeighborhoodPatterns;
+		for (Long node: nodes) {
+			setOfNeighborhoodPatterns = new HashSet<>();
+
+			// gather neighborhood patterns
+			if (outgoingNodeClasses.containsKey(node)) {
+				for (Long property: outgoingNodeClasses.get(node).keySet()) {
+					setOfNeighborhoodPatterns.add(new NeighborhoodEquivalencePattern(Boolean.TRUE, property, outgoingNodeClasses.get(node).get(property)));
+				}
+			}
+			if (incomingNodeClasses.containsKey(node)) {
+				for (Long property: incomingNodeClasses.get(node).keySet()) {
+					setOfNeighborhoodPatterns.add(new NeighborhoodEquivalencePattern(Boolean.FALSE, property, incomingNodeClasses.get(node).get(property)));
+				}
+			}
+
+			// add the node to its group
+			if (!setOfNodeCharacteristicsToSetOfNodes.containsKey(setOfNeighborhoodPatterns)) {
+				setOfNodeCharacteristicsToSetOfNodes.put(setOfNeighborhoodPatterns, new HashSet<>());
+			}
+			setOfNodeCharacteristicsToSetOfNodes.get(setOfNeighborhoodPatterns).add(node);
+		}
+
+		HashSet<EquivalenceClass> result = new HashSet<>();
+		EquivalenceClass equivalenceClass;
+		HashSet<Long> setOfNodesInEquivalenceClass;
+		for (HashSet<NeighborhoodEquivalencePattern> setOfNodeCharacteristics: setOfNodeCharacteristicsToSetOfNodes.keySet()) {
+			setOfNodesInEquivalenceClass = setOfNodeCharacteristicsToSetOfNodes.get(setOfNodeCharacteristics);
+			equivalenceClass = new EquivalenceClass(setOfNodesInEquivalenceClass);
+			result.add(equivalenceClass);
+			for (Long node: setOfNodesInEquivalenceClass) {
+				nodeToEquivalenceClass.put(node, equivalenceClass);
+			}
+		}
+
+		return result;
+	}
+
+	protected void findFixpointOfEquivalenceClasses() {
+		boolean splitClass = false;
+		ArrayList<EquivalenceClass> equivalenceClassesQueue = new ArrayList<>();
+		HashSet<Long> equivalenceClassNodes;
+		HashMap<Long, HashMap<Long, HashSet<Long>>> nodesInNextOutgoingHopByProperty;
+		HashMap<Long, HashMap<Long, HashSet<Long>>> nodesInNextIncomingHopByProperty;
+		HashMap<Long, HashMap<Long, HashSet<EquivalenceClass>>> equivalenceClassSetsInNextOutgoingHopByProperty;
+		HashMap<Long, HashMap<Long, HashSet<EquivalenceClass>>> equivalenceClassSetsInNextIncomingHopByProperty;
+		do {
+			equivalenceClassesQueue.clear();
+			for (EquivalenceClass equivalenceClass: equivalenceClasses) {
+				equivalenceClassNodes = equivalenceClass.getNodes();
+
+				// outgoing non-type properties
+				nodesInNextOutgoingHopByProperty = equivalenceClass.getNextHopNodesThroughOutgoingNonTypeProperties();
+				// incoming non-type properties
+				nodesInNextIncomingHopByProperty = equivalenceClass.getNextHopNodesThroughIncomingNonTypeProperties();
+
+				// identify equivalence class sets among the nodes in nodesInNextOutgoingHopByProperty
+				equivalenceClassSetsInNextOutgoingHopByProperty = findEquivalenceClassSetsByProperty(nodesInNextOutgoingHopByProperty);
+				// identify equivalence class sets among the nodes in nodesInNextIncomingHopByProperty
+				equivalenceClassSetsInNextIncomingHopByProperty = findEquivalenceClassSetsByProperty(nodesInNextIncomingHopByProperty);
+
+				// split this equivalence class
+				equivalenceClassesQueue.addAll(
+					splitEquivalenceClass(
+						equivalenceClassNodes,
+						equivalenceClassSetsInNextOutgoingHopByProperty,
+						equivalenceClassSetsInNextIncomingHopByProperty
+					)
+				);
+			}
+			equivalenceClasses = equivalenceClassesQueue;
+		}
+		while(!splitClass);
+	}
+
+	protected HashMap<Long, Long> findNodeToEquivalenceClassIDMapping() {
+		HashMap<EquivalenceClass, Long> equivalenceClassToID = new HashMap<>();
+		HashMap<Long, Long> nodeToEquivalenceClassIDMapping = new HashMap<>();
+
 		for (EquivalenceClass equivalenceClass: equivalenceClasses) {
 			if (!equivalenceClassToID.containsKey(equivalenceClass)) {
 				equivalenceClassToID.put(equivalenceClass, getNextSummaryNode());
 			}
-			equivalenceClassID = equivalenceClassToID.get(equivalenceClass);
-			for (Long node: equivalenceClass.getNodes()) {
-				nodeToEquivalenceClassMapping.put(node, equivalenceClassID);
-			}
 		}
 
-		return nodeToEquivalenceClassMapping;
+		Long equivalenceClassID;
+		for (Long node: nodeToEquivalenceClass.keySet()) {
+			equivalenceClassID = equivalenceClassToID.get(nodeToEquivalenceClass.get(node));
+			nodeToEquivalenceClassIDMapping.put(node, equivalenceClassID);
+		}
+
+		return nodeToEquivalenceClassIDMapping;
 	}
 
 	@Override
 	protected void classificationPostProcessing() {
-		constructNodeToSignatureMapping();
+		constructNodeSignatureToNodesMapping();
 
-		ArrayList<EquivalenceClass> equivalenceClasses = new ArrayList<>();
+		EquivalenceClass ec;
 		for (NodeSignature nodeSignature: nodeSignatureToNodes.keySet()) {
-			equivalenceClasses.add(new EquivalenceClass(nodeSignatureToNodes.get(nodeSignature)));
+			ec = new EquivalenceClass(nodeSignatureToNodes.get(nodeSignature));
+			equivalenceClasses.add(ec);
+			for (Long node: ec.getNodes()) {
+				nodeToEquivalenceClass.put(node, ec);
+			}
 		}
 
-		equivalenceClasses = findFixpointOfEquivalenceClasses(equivalenceClasses);
+		findFixpointOfEquivalenceClasses();
 
-		nodeToEquivalenceClassID = findNodeToEquivalenceClassIDMapping(equivalenceClasses);
+		nodeToEquivalenceClassID = findNodeToEquivalenceClassIDMapping();
 	}
 
 	@Override
-	protected void representDataTriple(Triple t) {
+	protected void representDataOrTypeTriple(Triple t) {
 		// schema nodes already represented in collectSchemaNodes
 		if (!sn.contains(t.s)) {
 			rep.put(t.s, nodeToEquivalenceClassID.get(t.s));
