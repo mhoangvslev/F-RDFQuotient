@@ -349,15 +349,16 @@ public class ForwardBackwardBisimulationSummary extends Summary {
 	}
 
 	protected void findFixpointOfEquivalenceClasses() {
-		boolean splitClass = false;
-		ArrayList<EquivalenceClass> equivalenceClassesQueue = new ArrayList<>();
+		boolean splitClass;
+		ArrayList<EquivalenceClass> equivalenceClassesQueue;
 		HashSet<Long> equivalenceClassNodes;
 		HashMap<Long, HashMap<Long, HashSet<Long>>> nodesInNextOutgoingHopByProperty;
 		HashMap<Long, HashMap<Long, HashSet<Long>>> nodesInNextIncomingHopByProperty;
 		HashMap<Long, HashMap<Long, HashSet<EquivalenceClass>>> equivalenceClassSetsInNextOutgoingHopByProperty;
 		HashMap<Long, HashMap<Long, HashSet<EquivalenceClass>>> equivalenceClassSetsInNextIncomingHopByProperty;
 		do {
-			equivalenceClassesQueue.clear();
+			splitClass = false;
+			equivalenceClassesQueue = new ArrayList<>();
 			for (EquivalenceClass equivalenceClass: equivalenceClasses) {
 				equivalenceClassNodes = equivalenceClass.getNodes();
 
@@ -371,18 +372,19 @@ public class ForwardBackwardBisimulationSummary extends Summary {
 				// identify equivalence class sets among the nodes in nodesInNextIncomingHopByProperty
 				equivalenceClassSetsInNextIncomingHopByProperty = findEquivalenceClassSetsByProperty(nodesInNextIncomingHopByProperty);
 
-				// split this equivalence class
-				equivalenceClassesQueue.addAll(
-					splitEquivalenceClass(
-						equivalenceClassNodes,
-						equivalenceClassSetsInNextOutgoingHopByProperty,
-						equivalenceClassSetsInNextIncomingHopByProperty
-					)
+				HashSet<EquivalenceClass> newEquivalenceClasses = splitEquivalenceClass(
+					equivalenceClassNodes,
+					equivalenceClassSetsInNextOutgoingHopByProperty,
+					equivalenceClassSetsInNextIncomingHopByProperty
 				);
+				splitClass = splitClass || (newEquivalenceClasses.size() > 1);
+
+				// split this equivalence class
+				equivalenceClassesQueue.addAll(newEquivalenceClasses);
 			}
 			equivalenceClasses = equivalenceClassesQueue;
 		}
-		while(!splitClass);
+		while (splitClass);
 	}
 
 	protected HashMap<Long, Long> findNodeToEquivalenceClassIDMapping() {
