@@ -58,7 +58,7 @@ public class SummarizationProperties extends ConfigurationProperties {
 		properties.put("summary.omit_generic_properties_from_cliques", "true");
 
 		// Which generic properties to use: comma-separated values
-		properties.put("summary.generic_properties", "<http://www.w3.org/2000/01/rdf-schema#label>,<http://www.w3.org/2000/01/rdf-schema#comment>,<http://www.w3.org/1999/02/22-rdf-syntax-ns#value>,<http://www.w3.org/2002/07/owl#sameAs>");
+		properties.put("summary.generic_properties", "<http://www.w3.org/2000/01/rdf-schema#label>,<http://www.w3.org/2000/01/rdf-schema#comment>,<http://www.w3.org/1999/02/22-rdf-syntax-ns#value>,<http://www.w3.org/2002/07/owl#sameAs>,<http://rq.org/nodeSupport>,<http://rq.org/edgeSupport>,<http://rq.org/edge>,<http://rq.org/reifiedEdgeSubject>,<http://rq.org/reifiedEdgeProperty>,<http://rq.org/reifiedEdgeObject>");
 
 		// In type triples, whether to replace the type with the most general type
 		properties.put("summary.replace_type_with_most_general_type", "true");

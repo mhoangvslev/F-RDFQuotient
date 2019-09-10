@@ -300,11 +300,16 @@ public class SummaryExport {
 						break; // skips the rest of the drawing -- this would be too large
 					}
 
-					String subject, property, object, subjectInDot, propertyInDot, objectInDot;
+					// skip drawing of generic properties
+					if (summary.getGenericPropertiesIgnoredInCliques().contains(t.p)) {
+						continue;
+					}
+
+					String subject, property, object, subjectInDot, propertyInDot = null, objectInDot;
 					// in all cases, edge labels are preserved:
 					property = RDF2SQLEncoding.dictionaryDecode(t.p);
-					propertyInDot = getVeryShortForDot(property.replaceAll("\"", ""));
 					//System.out.println("Property: " + property);
+
 					if (RDF2SQLEncoding.isDataProperty(t.p)) { // data
 						subjectInDot = getVeryShortLabelForSummaryDataSubject(t.s, sn);
 						if (sn.contains(t.s)) {// The subject is a schema node -- this can happen
@@ -319,8 +324,11 @@ public class SummaryExport {
 								dotLinesPrinted++;
 							}
 						}
+
+						propertyInDot = getVeryShortForDot(property.replaceAll("\"", ""));
+
 						objectInDot = getVeryShortLabelForSummaryDataSubject(t.o, sn);
-						if (sn.contains(t.o)) {// The subject is a schema node -- this can happen
+						if (sn.contains(t.o)) {// The object is a schema node -- this can happen
 							if (dax.unknownSchemaNode(t.o)){
 								bw.write("\"" + objectInDot + schemaNodeLineSuffix);
 								dotLinesPrinted++;
@@ -332,8 +340,8 @@ public class SummaryExport {
 								dotLinesPrinted++;
 							}
 						}
-
-					} else if (RDF2SQLEncoding.isSchemaProperty(t.p)) { // schema
+					}
+					else if (RDF2SQLEncoding.isSchemaProperty(t.p)) { // schema
 						//System.out.println("Schema triple\n");
 						subject = getVeryShortForDot(RDF2SQLEncoding.dictionaryDecode(t.s));
 						//subject = RDF2SQLEncoding.dictionaryDecode(t.s);
@@ -341,18 +349,23 @@ public class SummaryExport {
 						if (gatherStatistics){
 							subjectInDot = subjectInDot + " (" + summary.getRepresentedNodeNumber(t.s) + ")";
 						}
+
 						if (t.p == RDF2SQLEncoding.getSubClassCode()){
 							propertyInDot = "subClass";
 						}
-						if (t.p == RDF2SQLEncoding.getSubPropertyCode()){
+						else if (t.p == RDF2SQLEncoding.getSubPropertyCode()){
 							propertyInDot = "subProperty";
 						}
-						if (t.p == RDF2SQLEncoding.getDomainCode()){
+						else if (t.p == RDF2SQLEncoding.getDomainCode()){
 							propertyInDot = "domain";
 						}
-						if (t.p == RDF2SQLEncoding.getRangeCode()){
+						else if (t.p == RDF2SQLEncoding.getRangeCode()){
 							propertyInDot = "range";
 						}
+						else {
+							LOGGER.error("Schema property without dictionary encoding.");
+						}
+
 						object = getVeryShortForDot(RDF2SQLEncoding.dictionaryDecode(t.o));
 						//object = RDF2SQLEncoding.dictionaryDecode(t.o);
 						objectInDot = object.replaceAll("\"", "");
@@ -367,7 +380,8 @@ public class SummaryExport {
 							bw.write("\"" + objectInDot + schemaNodeLineSuffix);
 							dotLinesPrinted++;
 						}
-					} else { // type triples
+					}
+					else { // type triples
 						//System.out.println("Type triple\n");
 						subjectInDot = getVeryShortLabelForSummaryDataSubject(t.s, sn);
 						if (sn.contains(t.s)) {// The subject is a schema node -- this can happen
@@ -382,24 +396,14 @@ public class SummaryExport {
 								dotLinesPrinted++;
 							}
 						}
+
+						propertyInDot = "rdf:type";
+
 						object = getVeryShortForDot(RDF2SQLEncoding.dictionaryDecode(t.o));
 						//object = RDF2SQLEncoding.dictionaryDecode(t.o);
 						objectInDot = object.replaceAll("\"", "");
 						if (gatherStatistics){
 							objectInDot = objectInDot + " (" + summary.getRepresentedNodeNumber(t.o) + ")";
-						}
-						propertyInDot = "rdf:type";
-						if (sn.contains(t.s)){
-							if (dax.unknownSchemaNode(t.s)){
-								bw.write("\"" + subjectInDot + schemaNodeLineSuffix);
-								dotLinesPrinted++;
-							}
-						}
-						else{
-							if (dax.unknownSummaryNode(t.s)){
-								writeNodeToDot(bw, t.s, subjectInDot);
-								dotLinesPrinted++;
-							}
 						}
 						if (sn.contains(t.o)){
 							if (dax.unknownSchemaNode(t.o)){
@@ -411,15 +415,17 @@ public class SummaryExport {
 							throw new IllegalStateException("Type not part of the schema nodes: ");
 						}
 					}
+
 					// write the triple in all cases:
 					//System.out.println("Writing " + subjectInDot + " -> " + objectInDot);
-					bw.write("\"" + subjectInDot + "\"" + " -> \"" + objectInDot + "\" [arrowsize=" + arrowsize +", arrowhead=vee, fontsize=12, label=\"" + propertyInDot);
+					bw.write("\"" + subjectInDot + "\"" + " -> \"" + objectInDot + "\" [arrowsize=" + arrowsize + ", arrowhead=vee, fontsize=12, label=\"" + propertyInDot);
 					if (gatherStatistics){
 						bw.write(" (" + summary.getRepresentedTripleNumber(t) + ")");
 					}
 					bw.write("\"];\n");
 					dotLinesPrinted++;
 				}
+
 				if (drawGraphLabel) {
 					bw.write("fontsize=12; label=\"" + summary.getClass().getSimpleName() +
 					(summary.generalizeTypes()?" (generalize types) ":"") +

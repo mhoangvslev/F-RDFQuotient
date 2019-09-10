@@ -295,9 +295,8 @@ public class Summary {
 			databaseHandler.createIndex(PostgresIdentifier.escapedQuotedId(repTableName), PostgresIdentifier.escapedQuotedId(indexName), attrs);
 		}
 		catch (SQLException ex) {
-			//TODO fix me
 			LOGGER.error("Couldn't create index " + indexName + " on " + repTableName + " " + ex);
-			//return; TODO this used to return
+			return;
 		}
 		attrs.clear();
 		indexName = repTableName + "_i_sg";
@@ -323,18 +322,27 @@ public class Summary {
 		if (typeConstantCode != -1){
 			maxClassOrPropertyCode = this.maxO(conn, typeConstantCode);
 		}
+
 		long subClassCode = RDF2SQLEncoding.getSubClassCode();
 		if (subClassCode != -1){
 			maxClassOrPropertyCode = Math.max(maxClassOrPropertyCode, this.maxSPO(conn, subClassCode));
 		}
+
+		long subPropertyCode = RDF2SQLEncoding.getSubPropertyCode();
+		if (subPropertyCode != -1){
+			maxClassOrPropertyCode = Math.max(maxClassOrPropertyCode, this.maxSPO(conn, subPropertyCode));
+		}
+
 		long domainCode = RDF2SQLEncoding.getDomainCode();
 		if (domainCode != -1){
 			maxClassOrPropertyCode = Math.max(maxClassOrPropertyCode, this.maxSPO(conn, domainCode));
 		}
+
 		long rangeCode = RDF2SQLEncoding.getRangeCode();
 		if (rangeCode != -1){
 			maxClassOrPropertyCode = Math.max(maxClassOrPropertyCode, this.maxSPO(conn, domainCode));
 		}
+
 		this.jumpSummaryNodeCount(maxClassOrPropertyCode + 1);
 	}
 
@@ -457,7 +465,6 @@ public class Summary {
 				}
 			}
 		}
-
 		catch (SQLException e) {
 			throw new IllegalStateException("Postgres error encountered while collecting schema nodes " + e.toString());
 		}

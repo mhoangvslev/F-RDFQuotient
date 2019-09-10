@@ -107,7 +107,7 @@ public class ForwardBackwardBisimulationSummary extends Summary {
 		}
 
 		// node -> property -> set of nodes
-		public HashMap<Long, HashMap<Long, HashSet<Long>>> getNextHopNodesThroughIncomingNonTypeProperties() {
+		public HashMap<Long, HashMap<Long, HashSet<Long>>> getPreviousHopNodesThroughIncomingNonTypeProperties() {
 			HashMap<Long, HashMap<Long, HashSet<Long>>> result = new HashMap<>();
 			for (Long node: inputGraphNodesRepresented) {
 				if (nodeToPreviousHopNodesByIncomingNonSchemaProperties.containsKey(node)) {
@@ -352,10 +352,10 @@ public class ForwardBackwardBisimulationSummary extends Summary {
 		boolean splitClass;
 		ArrayList<EquivalenceClass> equivalenceClassesQueue;
 		HashSet<Long> equivalenceClassNodes;
-		HashMap<Long, HashMap<Long, HashSet<Long>>> nodesInNextOutgoingHopByProperty;
-		HashMap<Long, HashMap<Long, HashSet<Long>>> nodesInNextIncomingHopByProperty;
-		HashMap<Long, HashMap<Long, HashSet<EquivalenceClass>>> equivalenceClassSetsInNextOutgoingHopByProperty;
-		HashMap<Long, HashMap<Long, HashSet<EquivalenceClass>>> equivalenceClassSetsInNextIncomingHopByProperty;
+		HashMap<Long, HashMap<Long, HashSet<Long>>> nodesInNextHopByProperty;
+		HashMap<Long, HashMap<Long, HashSet<Long>>> nodesInPreviousHopByProperty;
+		HashMap<Long, HashMap<Long, HashSet<EquivalenceClass>>> equivalenceClassSetsInNextHopByProperty;
+		HashMap<Long, HashMap<Long, HashSet<EquivalenceClass>>> equivalenceClassSetsInPreviousHopByProperty;
 		do {
 			splitClass = false;
 			equivalenceClassesQueue = new ArrayList<>();
@@ -363,19 +363,19 @@ public class ForwardBackwardBisimulationSummary extends Summary {
 				equivalenceClassNodes = equivalenceClass.getNodes();
 
 				// outgoing non-type properties
-				nodesInNextOutgoingHopByProperty = equivalenceClass.getNextHopNodesThroughOutgoingNonTypeProperties();
+				nodesInNextHopByProperty = equivalenceClass.getNextHopNodesThroughOutgoingNonTypeProperties();
 				// incoming non-type properties
-				nodesInNextIncomingHopByProperty = equivalenceClass.getNextHopNodesThroughIncomingNonTypeProperties();
+				nodesInPreviousHopByProperty = equivalenceClass.getPreviousHopNodesThroughIncomingNonTypeProperties();
 
 				// identify equivalence class sets among the nodes in nodesInNextOutgoingHopByProperty
-				equivalenceClassSetsInNextOutgoingHopByProperty = findEquivalenceClassSetsByProperty(nodesInNextOutgoingHopByProperty);
+				equivalenceClassSetsInNextHopByProperty = findEquivalenceClassSetsByProperty(nodesInNextHopByProperty);
 				// identify equivalence class sets among the nodes in nodesInNextIncomingHopByProperty
-				equivalenceClassSetsInNextIncomingHopByProperty = findEquivalenceClassSetsByProperty(nodesInNextIncomingHopByProperty);
+				equivalenceClassSetsInPreviousHopByProperty = findEquivalenceClassSetsByProperty(nodesInPreviousHopByProperty);
 
 				HashSet<EquivalenceClass> newEquivalenceClasses = splitEquivalenceClass(
 					equivalenceClassNodes,
-					equivalenceClassSetsInNextOutgoingHopByProperty,
-					equivalenceClassSetsInNextIncomingHopByProperty
+					equivalenceClassSetsInNextHopByProperty,
+					equivalenceClassSetsInPreviousHopByProperty
 				);
 				splitClass = splitClass || (newEquivalenceClasses.size() > 1);
 
@@ -408,6 +408,7 @@ public class ForwardBackwardBisimulationSummary extends Summary {
 
 	@Override
 	protected void classificationPostProcessing() {
+		// 1-fb, initial step
 		constructNodeSignatureToNodesMapping();
 
 		EquivalenceClass ec;
