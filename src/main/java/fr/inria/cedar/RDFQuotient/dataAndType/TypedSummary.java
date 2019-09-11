@@ -3,7 +3,10 @@
 package fr.inria.cedar.RDFQuotient.dataAndType;
 
 import fr.inria.cedar.RDFQuotient.Summary;
+import fr.inria.cedar.RDFQuotient.datastructures.Long2Long;
+import fr.inria.cedar.RDFQuotient.datastructures.Long2LongSet;
 import fr.inria.cedar.RDFQuotient.datastructures.Triple;
+import java.util.HashMap;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
@@ -26,6 +29,10 @@ public class TypedSummary extends Summary {
 		this.isTypeFirst = true;
 		this.isDataAndType = false;
 		this.isTwoPass = false;
+		cs = new Long2LongSet();
+		acs = new Long2LongSet();
+		n2cs = new Long2Long();
+		cs2csID = new HashMap<>();
 		untypedNodesSummaryNode = getNextSummaryNode();
 	}
 
