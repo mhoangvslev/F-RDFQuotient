@@ -10,6 +10,11 @@ cedar001
 	nobel
 	nobelprizes_uniq
 
+cedar002
+	dblp_large_uniq_onto
+	bsbm100m
+	bsbm138m
+
 cedar003
 	bsbm1m
 	bsbm10m
@@ -26,13 +31,13 @@ cedar004
 
 cedar005
 		dblp_large_uniq
-	dblp_large_uniq_onto
+		dblp_large_uniq_onto
 		lubm100m
 
 cedar006
 		bsbm10m
-	bsbm100m
-	bsbm138m
+		bsbm100m
+		bsbm138m
 		lubm1m
 		lubm10m
 
