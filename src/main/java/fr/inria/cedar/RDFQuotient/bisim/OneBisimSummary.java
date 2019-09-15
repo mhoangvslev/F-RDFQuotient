@@ -26,7 +26,7 @@ public class OneBisimSummary extends Summary{
 		this.triplesTableName = triplesTableName;
 		this.encodedTriplesTableName = encodedTriplesTableName;
 		this.dictionaryTableName = dictionaryTableName;
-		this.summaryTablePrefix = ONEFB_SUMMARY_PREFIX;
+		this.summaryTablePrefix = TWO_PASS_ONEFB_SUMMARY_PREFIX;
 		this.isTypeFirst = false;
 		this.isDataAndType = false;
 		this.isTwoPass = true;

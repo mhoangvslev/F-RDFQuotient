@@ -30,8 +30,8 @@ public class CustomSummarization {
 
 	public static void main(String[] argv) {
 		String directory = "src/test/resources/rdf-nt-files/";
-		String[] fileNames = new String[] {"journal-running-example"};//{"test-15", "conference", "enelshops", "foodista", "frenchpolitics", "lubm1m", "mondial", "nasa", "nobelprizes", "pokedex", "bsbm1m", "watdiv10m"};
-		String [] summaryTypes = new String[] {"typed", "inputoutput", "2pbisim"}; //, "strong", "typedweak", "typedstrong", "onefb", "onefw"};
+		String[] fileNames = new String[] {"journal-running-example"};
+		String [] summaryTypes = new String[] {"typed", "2pinputoutput", "2pbisim"};
 		for (String fileName: fileNames) {
 			for (String summaryType: summaryTypes) {
 				loadAndSummarize(directory + fileName + ".nt", summaryType);

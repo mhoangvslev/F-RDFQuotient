@@ -27,7 +27,7 @@ public class OneFWSummary extends Summary {
 		this.triplesTableName = triplesTableName;
 		this.encodedTriplesTableName = encodedTriplesTableName;
 		this.dictionaryTableName = dictionaryTableName;
-		this.summaryTablePrefix = ONEFW_SUMMARY_PREFIX;
+		this.summaryTablePrefix = TWO_PASS_ONEFW_SUMMARY_PREFIX;
 		this.isTypeFirst = false;
 		this.isDataAndType = false;
 		this.isTwoPass = true;

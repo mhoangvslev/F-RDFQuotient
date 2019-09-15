@@ -414,13 +414,13 @@ public class Interface {
 				case "2pstrong":
 					message += typeGeneralization + "strong summaries. ";
 					break;
-				case "onefb":
-				case "onefw":
+				case "2ponefb":
+				case "2ponefw":
 				case "2pbisim":
 					message += typeGeneralization + "bisimulation-based summaries. ";
 					break;
 				case "typed":
-				case "inputoutput":
+				case "2pinputoutput":
 					message += typeGeneralization + "data-and-type summaries. ";
 					break;
 			}
@@ -450,32 +450,32 @@ public class Interface {
 		switch (summaryType) {
 			case "weak":
 				return new WeakSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
+			case "strong":
+				return new StrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
+			case "typedweak":
+				return new TypedWeakSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
+			case "typedstrong":
+				return new TypedStrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 			case "2pweak":
 				return new TwoPassWeakSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 			case "2pweakunionfind":
 				return new TwoPassWeakSummaryWithUnionFind(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
-			case "strong":
-				return new StrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 			case "2pstrong":
 				return new TwoPassStrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
-			case "typedweak":
-				return new TypedWeakSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 			case "2ptypedweak":
 				return new TwoPassTypedWeakSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
-			case "typedstrong":
-				return new TypedStrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 			case "2ptypedstrong":
 				return new TwoPassTypedStrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
-			case "onefb":
-				return new OneBisimSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
-			case "onefw":
-				return new OneFWSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
-			case "2pbisim":
-				return new ForwardBackwardBisimulationSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 			case "typed":
 				return new TypedSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
-			case "inputoutput":
+			case "2ponefw":
+				return new OneFWSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
+			case "2ponefb":
+				return new OneBisimSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
+			case "2pinputoutput":
 				return new InputOutputAndTypedSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
+			case "2pbisim":
+				return new ForwardBackwardBisimulationSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 		}
 		throw new IllegalArgumentException("Wrong summary identifier: " + summaryType);
 	}
@@ -527,10 +527,6 @@ public class Interface {
 
 		// derive database name from filename if not specified
 		if (!summarizationProperties.containsKey("database.name") || summarizationProperties.getProperty("database.name").equals("")) {
-			if (!checkIfFileExists(datasetFilename)) {
-				LOGGER.error("File " + datasetFilename + " does not exist.");
-				System.exit(1);
-			}
 			String databaseName = deriveDatabaseNameFromFilename(datasetFilename);
 			summarizationProperties.put("database.name", databaseName);
 		}

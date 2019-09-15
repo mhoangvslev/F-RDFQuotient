@@ -77,14 +77,14 @@ public class Summary {
 	protected static String TWO_PASS_WEAK_SUMMARY_PREFIX = "2pw";
 	protected static String TWO_PASS_WEAK_SUMMARY_WITH_UNION_FIND_PREFIX = "2pwuf";
 	protected static String TWO_PASS_STRONG_SUMMARY_PREFIX = "2ps";
-	protected static String TWO_PASS_SOURCE_SUMMARY_PREFIX = "2sc";
 	protected static String TWO_PASS_TYPED_WEAK_SUMMARY_PREFIX = "2ptw";
 	protected static String TWO_PASS_TYPED_STRONG_SUMMARY_PREFIX = "2pts";
+	protected static String TWO_PASS_SOURCE_SUMMARY_PREFIX = "2psc";
 	protected static String TYPED_SUMMARY_PREFIX = "t";
+	protected static String TWO_PASS_ONEFW_SUMMARY_PREFIX = "2p1fw";
+	protected static String TWO_PASS_ONEFB_SUMMARY_PREFIX = "2p1fb";
 	protected static String TWO_PASS_INPUT_OUTPUT_AND_TYPED_SUMMARY_PREFIX = "2pioat";
 	protected static String TWO_PASS_FORWARD_BACKWARD_BISIMULATION = "2pfb";
-	protected static String ONEFB_SUMMARY_PREFIX = "1fb";
-	protected static String ONEFW_SUMMARY_PREFIX = "1fw";
 
 	protected String triplesFileName = "";
 	protected String triplesTableName = "";

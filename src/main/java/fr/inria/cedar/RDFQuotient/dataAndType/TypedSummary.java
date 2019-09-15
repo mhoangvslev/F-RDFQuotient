@@ -25,7 +25,7 @@ public class TypedSummary extends Summary {
 		this.triplesTableName = triplesTableName;
 		this.encodedTriplesTableName = encodedTriplesTableName;
 		this.dictionaryTableName = dictionaryTableName;
-		this.summaryTablePrefix = TWO_PASS_WEAK_SUMMARY_PREFIX;
+		this.summaryTablePrefix = TYPED_SUMMARY_PREFIX;
 		this.isTypeFirst = true;
 		this.isDataAndType = false;
 		this.isTwoPass = false;
