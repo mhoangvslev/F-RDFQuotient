@@ -11,12 +11,12 @@ translate_summary_name() {
 		echo "2ps"
 	elif [ "$1" = "2pweakunionfind" ]; then
 		echo "2pwuf"
-	elif [ "$1" = "onefb" ]; then
+	elif [ "$1" = "2ponefb" ]; then
 		echo "1fb"
 	fi
 }
 
-for SUMMARY_TYPE in weak strong 2pweak 2pstrong 2pweakunionfind onefb; do
+for SUMMARY_TYPE in weak strong 2pweak 2pstrong 2pweakunionfind 2ponefb; do
 	DATASET=bsbm/bsbm138m.nt
 	# SATURATE + SUMMARIZE
 	# summarize saturated
