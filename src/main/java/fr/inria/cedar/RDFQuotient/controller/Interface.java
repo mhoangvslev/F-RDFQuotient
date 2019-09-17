@@ -480,9 +480,8 @@ public class Interface {
 		throw new IllegalArgumentException("Wrong summary identifier: " + summaryType);
 	}
 
-	private static void exportSummarizationStatisticsToDisk(Properties summarizationProperties) {
-		String datasetFilename = summarizationProperties.getProperty("dataset.filename");
-		String csvFileName = trimExtension(datasetFilename, false) + "-summarization-statistics.csv";
+	private static void exportSummarizationStatisticsToDisk(Properties summarizationProperties, String summaryNTFilename) {
+		String csvFileName = trimExtension(summaryNTFilename, false) + "-summarization-statistics.csv";
 		LOGGER.info("Summarization statistics written to CSV file " + csvFileName);
 		try (PrintWriter pw = new PrintWriter(new File(csvFileName))) {
 			HashMap<String, String> statistics = summary.getRunStatistics();
@@ -508,10 +507,9 @@ public class Interface {
 		}
 	}
 
-	private static void exportSummarizationConfigurationToDisk(Properties summarizationProperties) {
-		String datasetFilename = summarizationProperties.getProperty("dataset.filename");
-		String propertiesFilename = trimExtension(datasetFilename, false) + "-summarization-configuration.properties";
-		LoadingProperties.writePropertiesFile(summarizationProperties, propertiesFilename);
+	private static void exportSummarizationConfigurationToDisk(Properties summarizationProperties, String summaryNTFilename) {
+		String propertiesFilename = trimExtension(summaryNTFilename, false) + "-summarization-configuration.properties";
+		SummarizationProperties.writePropertiesFile(summarizationProperties, propertiesFilename);
 	}
 
 	/*
@@ -625,13 +623,13 @@ public class Interface {
 
 		if (summarizationProperties.getProperty("statistics.export_to_csv_file").equals("true")) {
 			LOGGER.info("Exporting summarization statistics to disk");
-			exportSummarizationStatisticsToDisk(summarizationProperties);
+			exportSummarizationStatisticsToDisk(summarizationProperties, NTFilename);
 			LOGGER.info("Summarization statistics exported to disk");
 		}
 
 		if (summarizationProperties.getProperty("configuration.export_to_disk").equals("true")) {
 			LOGGER.info("Exporting loading configuration to disk");
-			exportSummarizationConfigurationToDisk(summarizationProperties);
+			exportSummarizationConfigurationToDisk(summarizationProperties, NTFilename);
 			LOGGER.info("Loading configuration exported to disk");
 		}
 
