@@ -292,7 +292,9 @@ public class ForwardBackwardBisimulationSummary extends Summary {
 				if (!result.get(node).containsKey(property)) {
 					result.get(node).put(property, new HashSet<>());
 				}
-				result.get(node).get(property).add(nodeToEquivalenceClass.get(node));
+				for (Long objectNode: nodesInNextOutgoingHopByProperty.get(node).get(property)) {
+					result.get(node).get(property).add(nodeToEquivalenceClass.get(objectNode));
+				}
 			}
 		}
 

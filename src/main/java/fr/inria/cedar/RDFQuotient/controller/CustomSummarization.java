@@ -24,13 +24,14 @@ public class CustomSummarization {
 		summarizationProperties.put("summary.replace_type_with_most_general_type", "false");
 		summarizationProperties.put("drawing.style", "plain");
 		summarizationProperties.put("statistics.export_to_csv_file", "false");
+		summarizationProperties.put("drawing.draw_input_graph", "true");
 
 		Interface.loadAndSummarize(loadingProperties, summarizationProperties);
 	}
 
 	public static void main(String[] argv) {
 		String directory = "src/test/resources/rdf-nt-files/";
-		String[] fileNames = new String[] {"journal-running-example"};
+		String[] fileNames = new String[] {"bisimulation-test-example"};
 		String [] summaryTypes = new String[] {"typed", "2pinputoutput", "2pbisim"};
 		for (String fileName: fileNames) {
 			for (String summaryType: summaryTypes) {
