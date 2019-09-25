@@ -11,9 +11,9 @@ cedar001
 	nobelprizes_uniq
 
 cedar002
-	dblp_large_uniq_onto
 	bsbm100m
 	bsbm138m
+	dblp_large_uniq_onto
 
 cedar003
 	bsbm1m
