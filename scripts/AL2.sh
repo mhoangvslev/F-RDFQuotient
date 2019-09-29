@@ -3,6 +3,7 @@
 # w, s, tw, ts, 2p1fb
 dataset=$1
 summaries=$2" "$3" "$4" "$5" "$6
+logfile=$dataset"_AL_2".log
 
 for summary_edges in $summaries; do
 	query="WITH input_graph_patterns AS (
@@ -37,6 +38,6 @@ for summary_edges in $summaries; do
 			INTERSECT
 		SELECT p1, p2 FROM summary_patterns GROUP BY p1, p2, connection_type
 	) AS q;"
-	echo $query
-	psql -U postgres -d $dataset -c $query | tee -a $dataset"AL_2".log
+	echo "$query" | tee -a $logfile
+	psql -U postgres -d $dataset -c "$query" | tee -a $logfile
 done
