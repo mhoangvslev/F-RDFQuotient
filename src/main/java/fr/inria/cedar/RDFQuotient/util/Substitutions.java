@@ -181,7 +181,7 @@ public class Substitutions {
 		return substitutions.keySet();
 	}
 
-	public static void main(String[] argv){
+	public static void main(String[] args){
 		Substitutions s = new Substitutions(1L, 2L, 3L, 5L);
 		//LOGGER.debug(s.toString());
 		Substitutions s2 = new Substitutions(1L, 3L, 3L, 5L);

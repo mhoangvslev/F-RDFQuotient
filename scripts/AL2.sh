@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# it can be a slow query for bigger datasets
 # w, s, tw, ts, 2p1fb
 dataset=$1
 summaries=$2" "$3" "$4" "$5" "$6

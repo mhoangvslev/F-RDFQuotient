@@ -217,7 +217,7 @@ public class Summary {
 		}
 		//LOGGER.info("Trying to read summary from Postgres");
 		Statement stmt = conn.createStatement();
-		try{
+		try {
 			ResultSet rs = stmt.executeQuery("select name from saved_summary_table_names where role='dictionary';");
 			if (rs.next()){
 				this.dictionaryTableName = rs.getString(1);

@@ -221,7 +221,7 @@ public class ObjectAnalysis {
 		}
 	}
 
-	public static void main(String[] argv) throws IOException {
+	public static void main(String[] args) throws IOException {
 		ObjectAnalysis o = new ObjectAnalysis();
 		String[] fileNames = new String[] {"lubm10m"}; //{"lubm10m", "frenchpolitics", "lubm1m", "mondial", "nasa", "nobelprizes", "pokedex", "bsbm1m", "watdiv10m"};
 		String directory = "src/test/resources/rdf-nt-files/";

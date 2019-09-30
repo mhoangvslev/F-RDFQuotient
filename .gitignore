@@ -3,6 +3,8 @@
 /.project
 /target/
 /.settings/
+nb-configuration.xml
+nbactions.xml
 .DS_Store
 .ipynb_checkpoints
 /src/test/resources/*/*.nt

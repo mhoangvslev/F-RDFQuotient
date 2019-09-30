@@ -29,10 +29,10 @@ public class CustomSummarization {
 		Interface.loadAndSummarize(loadingProperties, summarizationProperties);
 	}
 
-	public static void main(String[] argv) {
+	public static void main(String[] args) {
 		String directory = "src/test/resources/rdf-nt-files/";
 		String[] fileNames = new String[] {"bisimulation-test-example"};
-		String [] summaryTypes = new String[] {"typed", "2pinputoutput", "2pbisim"};
+		String[] summaryTypes = new String[] {"typed", "2pinputoutput", "2pbisim"};
 		for (String fileName: fileNames) {
 			for (String summaryType: summaryTypes) {
 				loadAndSummarize(directory + fileName + ".nt", summaryType);
