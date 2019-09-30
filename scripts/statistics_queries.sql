@@ -102,6 +102,7 @@ summary_patterns AS (
 	FROM summary_edges e1
 	JOIN summary_edges e2 ON e1.s = e2.s
 )
+-- fix count(*): should be count distinct in the denominator
 SELECT CAST(count(*) AS float) / CAST((SELECT count(*) FROM summary_patterns) AS float) AS AL_2
 FROM (
 	SELECT p1, p2 FROM input_graph_patterns GROUP BY p1, p2, connection_type
