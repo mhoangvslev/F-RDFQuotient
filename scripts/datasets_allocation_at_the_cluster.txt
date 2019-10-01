@@ -32,14 +32,11 @@ cedar004
 cedar005
 		dblp_large_uniq
 		dblp_large_uniq_onto
-		lubm100m
 
 cedar006
 		bsbm10m
 		bsbm100m
 		bsbm138m
-		lubm1m
-		lubm10m
 
 cedar007
 		bsbm100m
