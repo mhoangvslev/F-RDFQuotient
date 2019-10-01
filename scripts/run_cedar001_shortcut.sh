@@ -17,7 +17,7 @@ translate_summary_name() {
 }
 
 for SUMMARY_TYPE in weak strong 2pweak 2pstrong 2pweakunionfind 2ponefb; do
-	for DATASET in springer/conference.nt nobel/nobel.nt insee/insee_geo.nt; do
+	for DATASET in springer/conference.nt nobel/nobel.nt nobelprizes/nobelprizes_uniq.nt insee/insee_geo.nt; do
 		# SATURATE + SUMMARIZE
 		# summarize saturated
 		./scripts/summarize.sh $DATASET $SUMMARY_TYPE true false false
