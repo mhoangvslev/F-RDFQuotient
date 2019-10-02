@@ -77,6 +77,7 @@ public class Accuracy {
 
 	// boolean query
 	static protected boolean summaryPatternExistsInInputGraphPatterns(
+		String encodedTriplesTableName,
 		String summaryPatternP1,
 		String summaryPatternP2,
 		String summaryPatternConnectionType
@@ -87,24 +88,24 @@ public class Accuracy {
 			switch (summaryPatternConnectionType) {
 				case "os":
 					query = "SELECT * " +
-							"FROM encoded_triples e1 " +
-							"JOIN encoded_triples e2 ON e1.o = e2.s " +
+							"FROM " + encodedTriplesTableName + " e1 " +
+							"JOIN " + encodedTriplesTableName + " e2 ON e1.o = e2.s " +
 							"WHERE e1.p = " + summaryPatternP1 +
 							" AND e2.p = " + summaryPatternP2 +
 							" LIMIT 1";
 					break;
 				case "oo":
 					query = "SELECT * " +
-							"FROM encoded_triples e1 " +
-							"JOIN encoded_triples e2 ON e1.o = e2.o " +
+							"FROM " + encodedTriplesTableName + " e1 " +
+							"JOIN " + encodedTriplesTableName + " e2 ON e1.o = e2.o " +
 							"WHERE e1.p = " + summaryPatternP1 +
 							" AND e2.p = " + summaryPatternP2 +
 							" LIMIT 1";
 					break;
 				case "ss":
 					query = "SELECT * " +
-							"FROM encoded_triples e1 " +
-							"JOIN encoded_triples e2 ON e1.s = e2.s " +
+							"FROM " + encodedTriplesTableName + " e1 " +
+							"JOIN " + encodedTriplesTableName + " e2 ON e1.s = e2.s " +
 							"WHERE e1.p = " + summaryPatternP1 +
 							" AND e2.p = " + summaryPatternP2 +
 							" LIMIT 1";
@@ -125,6 +126,7 @@ public class Accuracy {
 
 	static public void main(String[] args) {
 		String databaseName = args[0];
+		String encodedTriplesTableName = args[1];
 		String summaryEdgesTableName;
 		String summaryPatternsTableName;
 		ResultSet summaryPatterns;
@@ -139,7 +141,7 @@ public class Accuracy {
 		connection = Interface.getOrEstablishNewDatabaseConnection(properties);
 
 		System.out.println("dataset" + "," + "summary_edges" + "," + "AL_2_accuracy");
-		for (int i = 1; i < args.length; i++) {
+		for (int i = 2; i < args.length; i++) {
 			summaryEdgesTableName = args[i];
 			summaryPatternsTableName = createSummaryPatternsTable(summaryEdgesTableName);
 			summaryPatterns = getSummaryPatterns(summaryPatternsTableName);
@@ -148,7 +150,7 @@ public class Accuracy {
 					summaryPatternP1 = summaryPatterns.getString("p1");
 					summaryPatternP2 = summaryPatterns.getString("p2");
 					summaryPatternConnectionType = summaryPatterns.getString("connection_type");
-					if (summaryPatternExistsInInputGraphPatterns(summaryPatternP1, summaryPatternP2, summaryPatternConnectionType)) {
+					if (summaryPatternExistsInInputGraphPatterns(encodedTriplesTableName, summaryPatternP1, summaryPatternP2, summaryPatternConnectionType)) {
 						numberOfTruePositives++;
 					}
 					numberOfSummaryPatterns++;
