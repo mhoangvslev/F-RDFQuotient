@@ -75,6 +75,16 @@ where s not in (select * from schema_nodes)
 -- number of only data triples in the summary
 with schema_nodes as (select distinct s as sn from summary_edges where p = (select key from dictionary where value = '<http://www.w3.org/2000/01/rdf-schema#subClassOf>') or p = (select key from dictionary where value = '<http://www.w3.org/2000/01/rdf-schema#subPropertyOf>') or p = (select key from dictionary where value = '<http://www.w3.org/2000/01/rdf-schema#domain>') or p = (select key from dictionary where value = '<http://www.w3.org/2000/01/rdf-schema#range>') union select distinct o as sn from summary_edges where p = (select key from dictionary where value = '<http://www.w3.org/2000/01/rdf-schema#subClassOf>') or p = (select key from dictionary where value = '<http://www.w3.org/2000/01/rdf-schema#subPropertyOf>') or p = (select key from dictionary where value = '<http://www.w3.org/2000/01/rdf-schema#domain>') or p = (select key from dictionary where value = '<http://www.w3.org/2000/01/rdf-schema#range>') or p = (select key from dictionary where value = '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>') union select distinct s as sn from summary_edges where p = (select key from dictionary where value = '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>') and (o = (select key from dictionary where value = '<http://www.w3.org/2000/01/rdf-schema#Class>') or o = (select key from dictionary where value = '<http://www.w3.org/2000/01/rdf-schema#Property>'))) select count(*) from summary_edges where s not in (select * from schema_nodes) and o not in (select * from schema_nodes);
 
+-- number of summary edges after inlining
+SELECT count(*) FROM (
+	SELECT DISTINCT e1.s, e1.p, e1.o
+	FROM summary_edges e1
+	WHERE e1.o in (
+		SELECT e2.s
+		FROM summary_edges e2
+	)
+) AS q;
+
 -- AL_2 accuracy (slow)
 WITH input_graph_patterns AS (
 	SELECT e1.p AS p1, e2.p AS p2, 'os' AS connection_type
