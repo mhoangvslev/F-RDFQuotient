@@ -133,8 +133,8 @@ public class Accuracy {
 		String summaryPatternP1;
 		String summaryPatternP2;
 		String summaryPatternConnectionType;
-		long numberOfSummaryPatterns = 0;
-		long numberOfTruePositives = 0;
+		long numberOfSummaryPatterns;
+		long numberOfTruePositives;
 
 		Properties properties = LoadingProperties.getDefaultProperties();
 		properties.put("database.name", databaseName);
@@ -142,6 +142,8 @@ public class Accuracy {
 
 		System.out.println("dataset" + "," + "summary_edges" + "," + "AL_2_accuracy");
 		for (int i = 2; i < args.length; i++) {
+			numberOfSummaryPatterns = 0;
+			numberOfTruePositives = 0;
 			summaryEdgesTableName = args[i];
 			summaryPatternsTableName = createSummaryPatternsTable(summaryEdgesTableName);
 			summaryPatterns = getSummaryPatterns(summaryPatternsTableName);
