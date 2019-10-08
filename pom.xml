@@ -10,7 +10,7 @@
 	<packaging>jar</packaging>
 
 	<name>RDFQuotient</name>
-	<url>https://project.inria.fr/rdfquotient/</url>
+	<url>https://rdfquotient.inria.fr/</url>
 	<description>This software allows to build a quotient summary of an RDF graph, based on  an equivalence relation between the graph nodes.</description>
 	<inceptionYear>2018</inceptionYear>
 	<organization>
@@ -77,6 +77,10 @@
 			<id>cedarcommons-private-release</id>
 			<name>CEDAR-commons MVN release repo</name>
 			<url>http://maven.inria.fr/artifactory/cedarcommons-private-release</url>
+			<snapshots>
+				<enabled>true</enabled>
+				<updatePolicy>always</updatePolicy>
+			</snapshots>
 		</repository>
 	</repositories>
 
