@@ -25,6 +25,7 @@ for SUMMARY_TYPE in weak strong 2pweak 2pstrong 2pweakunionfind 2ponefb; do
 		# SHORTCUT
 		# summarize not saturated
 		#./scripts/summarize.sh $DATASET $SUMMARY_TYPE false false false
+		DATASET=${DATASET%/*}\/summariesNT\/${DATASET##*/}
 		DATASET=${DATASET%.*}\_$(translate_summary_name $SUMMARY_TYPE).nt
 		# load the summary with saturation
 		./scripts/load.sh $DATASET true
