@@ -19,13 +19,10 @@ cedar003
 	bsbm1m
 	bsbm10m
 	dbpedia_persondata_en_uniq
-	lubm1m
-	lubm10m
 		watdiv10m
 	watdiv10m_onto
 
 cedar004
-	lubm100m
 		watdiv100m
 	watdiv100m_onto
 
@@ -40,3 +37,6 @@ cedar006
 
 cedar007
 		bsbm100m
+	lubm1m
+	lubm10m
+	lubm100m

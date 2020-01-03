@@ -20,7 +20,7 @@ for SUMMARY_TYPE in weak strong 2pweak 2pstrong 2pweakunionfind 2ponefb; do
 	for DATASET in bsbm/bsbm1m.nt bsbm/bsbm10m.nt; do
 		# SATURATE + SUMMARIZE
 		# summarize saturated
-		./scripts/summarize.sh $DATASET $SUMMARY_TYPE true false false
+		#./scripts/summarize.sh $DATASET $SUMMARY_TYPE true false false
 
 		# SHORTCUT
 		# summarize not saturated
