@@ -8,6 +8,7 @@ cedar001
 	insee_geo
 	nasa
 	nobel
+	nobelprize_org_uniq_onto
 	nobelprizes_uniq
 
 cedar002
@@ -37,6 +38,6 @@ cedar006
 
 cedar007
 		bsbm100m
-	lubm1m
-	lubm10m
-	lubm100m
+	lubm1m_uniq_onto
+	lubm10m_uniq_onto
+	lubm100m_uniq_onto

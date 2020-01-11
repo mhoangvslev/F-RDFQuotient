@@ -1066,7 +1066,7 @@ public class Summary {
 					//	stmt.executeUpdate("create index indSummaryS on encoded_summary(s);");
 					conn.commit();
 					Long summaryNodeStatsSavingTime = System.currentTimeMillis() - start;
-					LOGGER.info("Saved " + summaryNodeStatistics.size() + " node statistics in " + summaryNodeStatsSavingTime + " ms");
+					LOGGER.info("Saved " + summaryNodeStatisticsForDB.size() + " node statistics in " + summaryNodeStatsSavingTime + " ms");
 				}
 			}
 			catch (SQLException e) {

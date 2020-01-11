@@ -17,7 +17,7 @@ translate_summary_name() {
 }
 
 for SUMMARY_TYPE in weak strong 2pweak 2pstrong 2pweakunionfind 2ponefb; do
-	for DATASET in lubm/lubm1m.nt lubm/lubm10m.nt lubm/lubm100m.nt; do
+	for DATASET in lubm/lubm1m_uniq_onto.nt lubm/lubm10m_uniq_onto.nt lubm/lubm100m_uniq_onto.nt; do
 		# SATURATE + SUMMARIZE
 		# summarize saturated
 		#./scripts/summarize.sh $DATASET $SUMMARY_TYPE true false false
