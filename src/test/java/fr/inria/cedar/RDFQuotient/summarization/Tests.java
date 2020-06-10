@@ -20,7 +20,7 @@ public class Tests {
 		Properties loadingProperties = LoadingProperties.getDefaultProperties();
 		loadingProperties.put("dataset.filename", datasetFilename);
 		loadingProperties.put("database.deterministic_ordering", "true");
-		loadingProperties.put("saturation.enable", "false");
+		loadingProperties.put("saturation.type", "NONE");
 		loadingProperties.put("statistics.export_to_csv_file", "false");
 		loadingProperties.put("configuration.export_to_disk", "false");
 
@@ -47,7 +47,7 @@ public class Tests {
 		Properties loadingProperties = LoadingProperties.getDefaultProperties();
 		loadingProperties.put("dataset.filename", datasetFilename);
 		loadingProperties.put("database.deterministic_ordering", "true");
-		loadingProperties.put("saturation.enable", "true");
+		loadingProperties.put("saturation.type", "RDFS_SAT");
 		loadingProperties.put("statistics.export_to_csv_file", "false");
 		loadingProperties.put("configuration.export_to_disk", "false");
 

@@ -57,7 +57,7 @@ public class LoadingProperties extends ConfigurationProperties {
 
 		properties.put("dictionary.fetch_size", "1000");
 
-		properties.put("saturation.enable", "false");
+		properties.put("saturation.type", "NONE");
 
 		properties.put("database.encoded_saturated_triples_table_name", "encoded_saturated_triples");
 

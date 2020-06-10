@@ -266,7 +266,7 @@ public class Interface {
 		String csvFilename = trimExtension(datasetFilename, false) + "-loading-statistics.csv";
 		LOGGER.info("Loading statistics written to file " + csvFilename);
 		long loadingTime = DataLoading.timeExecutionPerProcess.get("LoadTriplesToDatabase");
-		long saturationTime = (loadingProperties.getProperty("saturation.enable").equals("true")) ? DataLoading.timeExecutionPerProcess.get("RDFGraphSaturator") : 0L;
+		long saturationTime = (!loadingProperties.getProperty("saturation.type").equals("NONE")) ? DataLoading.timeExecutionPerProcess.get("RDFGraphSaturator") : 0L;
 		try (PrintWriter pw = new PrintWriter(new File(csvFilename))) {
 			StringBuilder sb = new StringBuilder();
 			sb.append("loadingTime,saturationTime\n");
@@ -347,7 +347,7 @@ public class Interface {
 		System.out.println("Executing load operation using "
 			+ loadingProperties.getProperty("database.name")
 			+ " database with saturation "
-			+ (loadingProperties.getProperty("saturation.enable").equals("true") ? "enabled" : "disabled"));
+			+ (loadingProperties.getProperty("saturation.type").equals("NONE") ? "disabled" : "enabled"));
 		System.out.println("********************************************************************************");
 
 		// check if loading properties are correct
@@ -925,12 +925,12 @@ public class Interface {
 				throw new IllegalArgumentException("No shortcut for typed summaries");
 		}
 
-		loadingProperties.put("saturation.enable", "false");
+		loadingProperties.put("saturation.type", "NONE");
 		load(null, loadingProperties, false);
 		summarizationProperties.put("summary.summarize_saturated_graph", "false");
 		HashMap<String, String> names = summarize(null, summarizationProperties, true);
 
-		loadingProperties.put("saturation.enable", "true");
+		loadingProperties.put("saturation.type", "RDFS_SAT");
 		loadingProperties.put("database.name", "");
 		loadingProperties.put("dataset.filename", names.get("NTFilename"));
 		summarizationProperties.put("database.name", "");
