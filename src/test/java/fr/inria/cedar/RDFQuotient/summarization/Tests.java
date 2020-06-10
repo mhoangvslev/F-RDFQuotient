@@ -47,7 +47,7 @@ public class Tests {
 		Properties loadingProperties = LoadingProperties.getDefaultProperties();
 		loadingProperties.put("dataset.filename", datasetFilename);
 		loadingProperties.put("database.deterministic_ordering", "true");
-		loadingProperties.put("saturation.type", "RDFS_SAT");
+		loadingProperties.put("saturation.type", "ASSERTION_SAT");
 		loadingProperties.put("statistics.export_to_csv_file", "false");
 		loadingProperties.put("configuration.export_to_disk", "false");
 

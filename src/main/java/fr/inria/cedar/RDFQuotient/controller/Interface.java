@@ -930,7 +930,7 @@ public class Interface {
 		summarizationProperties.put("summary.summarize_saturated_graph", "false");
 		HashMap<String, String> names = summarize(null, summarizationProperties, true);
 
-		loadingProperties.put("saturation.type", "RDFS_SAT");
+		loadingProperties.put("saturation.type", "ASSERTION_SAT");
 		loadingProperties.put("database.name", "");
 		loadingProperties.put("dataset.filename", names.get("NTFilename"));
 		summarizationProperties.put("database.name", "");
