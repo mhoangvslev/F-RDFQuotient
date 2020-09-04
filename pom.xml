@@ -27,7 +27,7 @@
 		<dependency>
 			<groupId>fr.inria.cedar.ontosql</groupId>
 			<artifactId>ontosql-rdfdb</artifactId>
-			<version>1.0.11-SNAPSHOT</version>
+			<version>1.0.12-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.postgresql</groupId>
