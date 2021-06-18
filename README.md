@@ -71,19 +71,21 @@ Credits for the Docker file go to Matteo Lissandrini.
 Thank you for trying out our software! If you encounter any problem using it, please file an issue in this GitLab project.
 
 ## More technical details
-Our software enables building six different summaries, four defined in our [paper](https://hal.inria.fr/hal-01325900v6), and two classical algorithms, namely 1-forward-and-backward bisimulation and 1-forward bisimulation quotients.
+Our software enables building eight different summaries, four defined in our [paper](https://hal.inria.fr/hal-02530206v2), and four classical algorithms, namely typed, input-output and typed, 1-forwardd bisimulation, and 1-forward-and-backwar bisimulation quotients.
 
 For each of our four summaries, two implementations are available: one "global" (or "two-pass") that needs to read the whole RDF graph before summarizing it, and one "incremental" that summarizes the graph while traversing it and continuously updates the summary.
 
-This leads to a total of 10 algorithms:
+This leads to a total of 12 algorithms:
 
-* global-weak (in the code referred to as TwoPassWeak or 2pweak/2pw)
-* incremental-weak (Weak or weak/w)
-* global-strong (TwoPassStrong or 2pstrong/2ps)
-* incremental-strong (Strong or strong/s)
-* global-typed-weak (TwoPassTypedWeak or 2ptypedweak/2ptw)
-* incremental-typed-weak (TypedWeak or typedweak/tw)
-* global-typed-strong (TwoPassTypedStrong or 2ptypedstrong/2pts)
-* incremental-typed-strong (TypedStrong or typedstrong/ts)
-* 1-forward-backward-bisimulation (OneBisim or onefb/1fb)
-* 1-forward-bisimulation (OneFW or onefw/1fw)
+* typed (TypedSummary or typed/t)
+* input-output and typed (InputOutputAndTypedSummary or 2pinputoutput/2pioat)
+* 1-forward-bisimulation (OneFWSummary or 2ponefw/2p1fw)
+* 1-forward-backward-bisimulation (OneBisimSummary or 2ponefb/2p1fb)
+* global-strong (TwoPassStrongSummary or 2pstrong/2ps)
+* global-weak (TwoPassWeakSummary or 2pweak/2pw)
+* global-typed-strong (TwoPassTypedStrongSummary or 2ptypedstrong/2pts)
+* global-typed-weak (TwoPassTypedWeakSummary or 2ptypedweak/2ptw)
+* incremental-strong (StrongSummary or strong/s)
+* incremental-weak (WeakSummary or weak/w)
+* incremental-typed-strong (TypedStrongSummary or typedstrong/ts)
+* incremental-typed-weak (TypedWeakSummary or typedweak/tw)
