@@ -782,11 +782,11 @@ public class Interface {
 		helpFormatter.setLeftPadding(0);
 		String header = "RDFQuotient " + version
 			+ "\n\nThis framework is designed to work with one graph at a time.\n"
-			+ "Before using RDFQuotient make sure that Postgres server is running.\n"
+			+ "Before using RDFQuotient make sure that the Postgres server is running.\n"
 			+ "Input RDF dataset file format is N-Triples and the file is assumed not to\n"
 			+ "contain any duplicated triples.\n\n"
 			+ "rdfquotient";
-		String footer = "\n[ARGS] is a comma-separated list of assigments of form key=value, where key is a configuration property from the list of loading or summarization configuration properties.";
+		String footer = "\n[ARGS] is a comma-separated list of assignments of form key=value, where key is a configuration property from the list of loading or summarization configuration properties.";
 		helpFormatter.printHelp(header, "\n", options, footer, true);
 	}
 

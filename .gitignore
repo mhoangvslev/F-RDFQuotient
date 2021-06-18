@@ -24,3 +24,5 @@ demo/summariesDOT
 demo/summariesPNG
 demo/summariesNT
 demo/summariesNT/*
+.idea
+RDFQuotient.iml
