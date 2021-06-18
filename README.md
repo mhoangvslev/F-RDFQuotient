@@ -49,7 +49,7 @@ A demonstration of the usage of our software can be found under the [demo](https
 ### Jar files (recommended)
 Click on the version number below to download the standalone jar file.
 
-* [Version 1.9](http://files.inria.fr/cedar/RDFQuotient/RDFQuotient-1.9-with-dependencies.jar): the current stable release built on June 18, 2021.
+* [Version 1.9](https://files.inria.fr/cedar/RDFQuotient/RDFQuotient-1.9-with-dependencies.jar): the current stable release built on June 18, 2021.
 
 ### Building from sources
 The loading process is provided by the OntoSQL/RDFDB library developed in the CEDAR team. This library is a dependency in our project that is stored in a private repository. However, it does not prevent you from using our code as we provide a compiled jar file.
@@ -57,7 +57,7 @@ The loading process is provided by the OntoSQL/RDFDB library developed in the CE
 To build the project:
 
 1. Clone this git repository.
-2. Download [OntoSQL jar file](http://files.inria.fr/cedar/RDFQuotient/ontosql-rdfdb-1.0.10-SNAPSHOT-with-dependencies.jar).
+2. Download [OntoSQL jar file](https://files.inria.fr/cedar/RDFQuotient/ontosql-rdfdb-1.0.10-SNAPSHOT-with-dependencies.jar).
 3. Run `mvn install:install-file -Dfile=yourpath/ontosql-rdfdb-1.0.10-SNAPSHOT-with-dependencies.jar -DgroupId=fr.inria.cedar.ontosql -DartifactId=ontosql-rdfdb -Dversion=1.0.10-SNAPSHOT -Dpackaging=jar` command to install our library in your local maven repository, where `yourpath/ontosql-rdfdb-1.0.10-SNAPSHOT-with-dependencies.jar` needs to be replaced with your local path to the download OntoSQL jar file.
 4. Run `mvn clean install -DskipTests` command.
 
