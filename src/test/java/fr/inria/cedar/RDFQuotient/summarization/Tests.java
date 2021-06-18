@@ -20,7 +20,7 @@ public class Tests {
 		Properties loadingProperties = LoadingProperties.getDefaultProperties();
 		loadingProperties.put("dataset.filename", datasetFilename);
 		loadingProperties.put("database.deterministic_ordering", "true");
-		loadingProperties.put("saturation.enable", "false");
+		loadingProperties.put("saturation.type", "NONE");
 		loadingProperties.put("statistics.export_to_csv_file", "false");
 		loadingProperties.put("configuration.export_to_disk", "false");
 
@@ -36,6 +36,7 @@ public class Tests {
 		summarizationProperties.put("drawing.png_file_prefix", "");
 		summarizationProperties.put("drawing.step_by_step", "false");
 		summarizationProperties.put("drawing.style", "plain");
+		summarizationProperties.put("drawing.draw_input_graph", "true");
 		summarizationProperties.put("statistics.export_to_csv_file", "false");
 		summarizationProperties.put("configuration.export_to_disk", "false");
 
@@ -46,7 +47,7 @@ public class Tests {
 		Properties loadingProperties = LoadingProperties.getDefaultProperties();
 		loadingProperties.put("dataset.filename", datasetFilename);
 		loadingProperties.put("database.deterministic_ordering", "true");
-		loadingProperties.put("saturation.enable", "true");
+		loadingProperties.put("saturation.type", "ASSERTION_SAT");
 		loadingProperties.put("statistics.export_to_csv_file", "false");
 		loadingProperties.put("configuration.export_to_disk", "false");
 
@@ -62,6 +63,7 @@ public class Tests {
 		summarizationProperties.put("drawing.png_file_prefix", "");
 		summarizationProperties.put("drawing.step_by_step", "false");
 		summarizationProperties.put("drawing.style", "plain");
+		summarizationProperties.put("drawing.draw_input_graph", "true");
 		summarizationProperties.put("statistics.export_to_csv_file", "false");
 		summarizationProperties.put("configuration.export_to_disk", "false");
 
@@ -86,6 +88,7 @@ public class Tests {
 		summarizationProperties.put("drawing.png_file_prefix", "");
 		summarizationProperties.put("drawing.step_by_step", "false");
 		summarizationProperties.put("drawing.style", "plain");
+		summarizationProperties.put("drawing.draw_input_graph", "true");
 		summarizationProperties.put("statistics.export_to_csv_file", "false");
 		summarizationProperties.put("configuration.export_to_disk", "false");
 

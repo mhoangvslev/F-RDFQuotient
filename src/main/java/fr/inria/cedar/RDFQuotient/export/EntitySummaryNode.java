@@ -139,11 +139,19 @@ public class EntitySummaryNode {
 			//LOGGER.info(actualTypes.size() + " actual types, " + fullTypes.size() + " full types");
 			String prevNameSpace = "";
 			String crtNameSpace = "";
+			int lastIndexOfSlash;
 			int ommittedFromCrtNameSpace = 0;
 			int typesInCurrentNameSpace = 0;
 			boolean firstType = true;
 			for (String fullType: fullTypes) {
-				crtNameSpace = fullType.substring(0, fullType.lastIndexOf('/'));
+				lastIndexOfSlash = fullType.lastIndexOf('/');
+				if (lastIndexOfSlash == -1) {
+					crtNameSpace = fullType;
+				}
+				else {
+					crtNameSpace = fullType.substring(0, lastIndexOfSlash);
+				}
+
 				if (!prevNameSpace.equals(crtNameSpace)) {
 					// we just entered in this namespace; acknowledge ommissions if any before moving to new namespace:
 					if (ommittedFromCrtNameSpace > 0) {

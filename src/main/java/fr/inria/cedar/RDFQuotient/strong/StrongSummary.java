@@ -21,6 +21,7 @@ public class StrongSummary extends StrongOrTypedStrongSummary {
 		this.dictionaryTableName = dictionaryTableName;
 		this.summaryTablePrefix = STRONG_SUMMARY_PREFIX;
 		this.isTypeFirst = false;
+		this.isDataAndType = false;
 		this.isTwoPass = false;
 	}
 

@@ -26,8 +26,9 @@ public class OneBisimSummary extends Summary{
 		this.triplesTableName = triplesTableName;
 		this.encodedTriplesTableName = encodedTriplesTableName;
 		this.dictionaryTableName = dictionaryTableName;
-		this.summaryTablePrefix = ONEFB_SUMMARY_PREFIX;
+		this.summaryTablePrefix = TWO_PASS_ONEFB_SUMMARY_PREFIX;
 		this.isTypeFirst = false;
+		this.isDataAndType = false;
 		this.isTwoPass = true;
 		this.n2ip = new HashMap<>();
 		this.n2op = new HashMap<>();
@@ -139,10 +140,5 @@ public class OneBisimSummary extends Summary{
 			return null;
 		}
 		return (o2n.get(nop));
-	}
-
-	@Override
-	protected void consistencyChecks() {
-		// TODO Auto-generated method stub
 	}
 }

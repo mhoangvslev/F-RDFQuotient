@@ -74,3 +74,48 @@ where s not in (select * from schema_nodes)
 
 -- number of only data triples in the summary
 with schema_nodes as (select distinct s as sn from summary_edges where p = (select key from dictionary where value = '<http://www.w3.org/2000/01/rdf-schema#subClassOf>') or p = (select key from dictionary where value = '<http://www.w3.org/2000/01/rdf-schema#subPropertyOf>') or p = (select key from dictionary where value = '<http://www.w3.org/2000/01/rdf-schema#domain>') or p = (select key from dictionary where value = '<http://www.w3.org/2000/01/rdf-schema#range>') union select distinct o as sn from summary_edges where p = (select key from dictionary where value = '<http://www.w3.org/2000/01/rdf-schema#subClassOf>') or p = (select key from dictionary where value = '<http://www.w3.org/2000/01/rdf-schema#subPropertyOf>') or p = (select key from dictionary where value = '<http://www.w3.org/2000/01/rdf-schema#domain>') or p = (select key from dictionary where value = '<http://www.w3.org/2000/01/rdf-schema#range>') or p = (select key from dictionary where value = '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>') union select distinct s as sn from summary_edges where p = (select key from dictionary where value = '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>') and (o = (select key from dictionary where value = '<http://www.w3.org/2000/01/rdf-schema#Class>') or o = (select key from dictionary where value = '<http://www.w3.org/2000/01/rdf-schema#Property>'))) select count(*) from summary_edges where s not in (select * from schema_nodes) and o not in (select * from schema_nodes);
+
+-- number of summary edges after inlining
+SELECT count(*) FROM (
+	SELECT DISTINCT e1.s, e1.p, e1.o
+	FROM summary_edges e1
+	WHERE e1.o in (
+		SELECT e2.s
+		FROM summary_edges e2
+	)
+) AS q;
+
+-- AL_2 accuracy (slow)
+WITH input_graph_patterns AS (
+	SELECT e1.p AS p1, e2.p AS p2, 'os' AS connection_type
+	FROM encoded_triples e1
+	JOIN encoded_triples e2 ON e1.o = e2.s
+		UNION
+	SELECT e1.p AS p1, e2.p AS p2, 'oo' AS connection_type
+	FROM encoded_triples e1
+	JOIN encoded_triples e2 ON e1.o = e2.o
+		UNION
+	SELECT e1.p AS p1, e2.p AS p2, 'ss' AS connection_type
+	FROM encoded_triples e1
+	JOIN encoded_triples e2 ON e1.s = e2.s
+),
+summary_patterns AS (
+	SELECT e1.p AS p1, e2.p AS p2, 'os' AS connection_type
+	FROM summary_edges e1
+	JOIN summary_edges e2 ON e1.o = e2.s
+		UNION
+	SELECT e1.p AS p1, e2.p AS p2, 'oo' AS connection_type
+	FROM summary_edges e1
+	JOIN summary_edges e2 ON e1.o = e2.o
+		UNION
+	SELECT e1.p AS p1, e2.p AS p2, 'ss' AS connection_type
+	FROM summary_edges e1
+	JOIN summary_edges e2 ON e1.s = e2.s
+)
+-- fix count(*): should be count distinct in the denominator
+SELECT CAST(count(*) AS float) / CAST((SELECT count(*) FROM summary_patterns) AS float) AS AL_2
+FROM (
+	SELECT p1, p2 FROM input_graph_patterns GROUP BY p1, p2, connection_type
+		INTERSECT
+	SELECT p1, p2 FROM summary_patterns GROUP BY p1, p2, connection_type
+) AS q;

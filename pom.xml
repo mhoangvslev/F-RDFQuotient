@@ -5,19 +5,18 @@
 
 	<groupId>fr.inria.cedar</groupId>
 	<artifactId>RDFQuotient</artifactId>
-	<version>1.8</version>
+	<version>1.9</version>
 
 	<packaging>jar</packaging>
 
 	<name>RDFQuotient</name>
-	<url>https://project.inria.fr/rdfquotient/</url>
+	<url>https://rdfquotient.inria.fr/</url>
 	<description>This software allows to build a quotient summary of an RDF graph, based on  an equivalence relation between the graph nodes.</description>
 	<inceptionYear>2018</inceptionYear>
 	<organization>
 		<name>Inria - CEDAR team</name>
 		<url>https://team.inria.fr/cedar/</url>
 	</organization>
-
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -28,7 +27,7 @@
 		<dependency>
 			<groupId>fr.inria.cedar.ontosql</groupId>
 			<artifactId>ontosql-rdfdb</artifactId>
-			<version>1.0.10-SNAPSHOT</version>
+			<version>1.0.12-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.postgresql</groupId>
@@ -54,7 +53,7 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.13-beta-3</version>
+			<version>4.13.2</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
@@ -77,6 +76,10 @@
 			<id>cedarcommons-private-release</id>
 			<name>CEDAR-commons MVN release repo</name>
 			<url>http://maven.inria.fr/artifactory/cedarcommons-private-release</url>
+			<snapshots>
+				<enabled>true</enabled>
+				<updatePolicy>always</updatePolicy>
+			</snapshots>
 		</repository>
 	</repositories>
 
@@ -104,7 +107,7 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.1</version>
+				<version>3.8.1</version>
 				<configuration>
 					<source>${jdk.version}</source>
 					<target>${jdk.version}</target>
@@ -113,7 +116,7 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-assembly-plugin</artifactId>
-				<version>2.4.1</version>
+				<version>3.1.1</version>
 				<executions>
 					<execution>
 						<phase>package</phase>
@@ -141,7 +144,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<version>2.22.1</version>
+				<version>2.22.2</version>
 				<configuration>
 					<includes>
 						<include>**/*Tests.java</include>

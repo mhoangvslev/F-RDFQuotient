@@ -27,6 +27,7 @@ public class TwoPassTypedStrongSummary extends StrongOrTypedStrongSummary {
 		this.dictionaryTableName = dictionaryTableName;
 		this.summaryTablePrefix = TWO_PASS_TYPED_STRONG_SUMMARY_PREFIX;
 		this.isTypeFirst = true;
+		this.isDataAndType = false;
 		this.isTwoPass = true;
 		//this.edges = new HashMap<>();
 		cs = new Long2LongSet();

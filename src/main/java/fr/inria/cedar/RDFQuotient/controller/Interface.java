@@ -3,8 +3,11 @@
 package fr.inria.cedar.RDFQuotient.controller;
 
 import fr.inria.cedar.RDFQuotient.Summary;
+import fr.inria.cedar.RDFQuotient.bisim.ForwardBackwardBisimulationSummary;
 import fr.inria.cedar.RDFQuotient.bisim.OneBisimSummary;
 import fr.inria.cedar.RDFQuotient.bisim.OneFWSummary;
+import fr.inria.cedar.RDFQuotient.dataAndType.InputOutputAndTypedSummary;
+import fr.inria.cedar.RDFQuotient.dataAndType.TypedSummary;
 import fr.inria.cedar.RDFQuotient.strong.StrongSummary;
 import fr.inria.cedar.RDFQuotient.strong.TwoPassStrongSummary;
 import fr.inria.cedar.RDFQuotient.strong.TwoPassTypedStrongSummary;
@@ -15,6 +18,7 @@ import fr.inria.cedar.RDFQuotient.weak.TwoPassWeakSummary;
 import fr.inria.cedar.RDFQuotient.weak.TwoPassWeakSummaryWithUnionFind;
 import fr.inria.cedar.RDFQuotient.weak.TypedWeakSummary;
 import fr.inria.cedar.RDFQuotient.weak.WeakSummary;
+import fr.inria.cedar.ontosql.db.UnsupportedDatabaseEngineException;
 import fr.inria.cedar.ontosql.rdfdb.dataloading.DataLoading;
 import fr.inria.cedar.ontosql.rdfdb.dataloading.Parameters;
 import java.io.File;
@@ -262,7 +266,7 @@ public class Interface {
 		String csvFilename = trimExtension(datasetFilename, false) + "-loading-statistics.csv";
 		LOGGER.info("Loading statistics written to file " + csvFilename);
 		long loadingTime = DataLoading.timeExecutionPerProcess.get("LoadTriplesToDatabase");
-		long saturationTime = (loadingProperties.getProperty("saturation.enable").equals("true")) ? DataLoading.timeExecutionPerProcess.get("RDFGraphSaturator") : 0L;
+		long saturationTime = (!loadingProperties.getProperty("saturation.type").equals("NONE")) ? DataLoading.timeExecutionPerProcess.get("RDFGraphSaturator") : 0L;
 		try (PrintWriter pw = new PrintWriter(new File(csvFilename))) {
 			StringBuilder sb = new StringBuilder();
 			sb.append("loadingTime,saturationTime\n");
@@ -343,7 +347,7 @@ public class Interface {
 		System.out.println("Executing load operation using "
 			+ loadingProperties.getProperty("database.name")
 			+ " database with saturation "
-			+ (loadingProperties.getProperty("saturation.enable").equals("true") ? "enabled" : "disabled"));
+			+ (loadingProperties.getProperty("saturation.type").equals("NONE") ? "disabled" : "enabled"));
 		System.out.println("********************************************************************************");
 
 		// check if loading properties are correct
@@ -369,7 +373,7 @@ public class Interface {
 			DataLoading.process(datasets, loadingProperties);
 			LOGGER.info("Graph loaded to Postgres");
 		}
-		catch (Exception ex) {
+		catch (UnsupportedDatabaseEngineException | FileNotFoundException ex) {
 			LOGGER.error("Could not load dataset " + ex);
 			System.exit(1);
 		}
@@ -410,9 +414,14 @@ public class Interface {
 				case "2pstrong":
 					message += typeGeneralization + "strong summaries. ";
 					break;
-				case "onefb":
-				case "onefw":
+				case "2ponefb":
+				case "2ponefw":
+				case "2pbisim":
 					message += typeGeneralization + "bisimulation-based summaries. ";
+					break;
+				case "typed":
+				case "2pinputoutput":
+					message += typeGeneralization + "data-and-type summaries. ";
 					break;
 			}
 		}
@@ -441,33 +450,38 @@ public class Interface {
 		switch (summaryType) {
 			case "weak":
 				return new WeakSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
+			case "strong":
+				return new StrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
+			case "typedweak":
+				return new TypedWeakSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
+			case "typedstrong":
+				return new TypedStrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 			case "2pweak":
 				return new TwoPassWeakSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 			case "2pweakunionfind":
 				return new TwoPassWeakSummaryWithUnionFind(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
-			case "strong":
-				return new StrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 			case "2pstrong":
 				return new TwoPassStrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
-			case "typedweak":
-				return new TypedWeakSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 			case "2ptypedweak":
 				return new TwoPassTypedWeakSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
-			case "typedstrong":
-				return new TypedStrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 			case "2ptypedstrong":
 				return new TwoPassTypedStrongSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
-			case "onefb":
-				return new OneBisimSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
-			case "onefw":
+			case "typed":
+				return new TypedSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
+			case "2ponefw":
 				return new OneFWSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
+			case "2ponefb":
+				return new OneBisimSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
+			case "2pinputoutput":
+				return new InputOutputAndTypedSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
+			case "2pbisim":
+				return new ForwardBackwardBisimulationSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
 		}
 		throw new IllegalArgumentException("Wrong summary identifier: " + summaryType);
 	}
 
-	private static void exportSummarizationStatisticsToDisk(Properties summarizationProperties) {
-		String datasetFilename = summarizationProperties.getProperty("dataset.filename");
-		String csvFileName = trimExtension(datasetFilename, false) + "-summarization-statistics.csv";
+	private static void exportSummarizationStatisticsToDisk(Properties summarizationProperties, String summaryNTFilename) {
+		String csvFileName = trimExtension(summaryNTFilename, false) + "-summarization-statistics.csv";
 		LOGGER.info("Summarization statistics written to CSV file " + csvFileName);
 		try (PrintWriter pw = new PrintWriter(new File(csvFileName))) {
 			HashMap<String, String> statistics = summary.getRunStatistics();
@@ -493,10 +507,9 @@ public class Interface {
 		}
 	}
 
-	private static void exportSummarizationConfigurationToDisk(Properties summarizationProperties) {
-		String datasetFilename = summarizationProperties.getProperty("dataset.filename");
-		String propertiesFilename = trimExtension(datasetFilename, false) + "-summarization-configuration.properties";
-		LoadingProperties.writePropertiesFile(summarizationProperties, propertiesFilename);
+	private static void exportSummarizationConfigurationToDisk(Properties summarizationProperties, String summaryNTFilename) {
+		String propertiesFilename = trimExtension(summaryNTFilename, false) + "-summarization-configuration.properties";
+		SummarizationProperties.writePropertiesFile(summarizationProperties, propertiesFilename);
 	}
 
 	/*
@@ -512,10 +525,6 @@ public class Interface {
 
 		// derive database name from filename if not specified
 		if (!summarizationProperties.containsKey("database.name") || summarizationProperties.getProperty("database.name").equals("")) {
-			if (!checkIfFileExists(datasetFilename)) {
-				LOGGER.error("File " + datasetFilename + " does not exist.");
-				System.exit(1);
-			}
 			String databaseName = deriveDatabaseNameFromFilename(datasetFilename);
 			summarizationProperties.put("database.name", databaseName);
 		}
@@ -614,22 +623,21 @@ public class Interface {
 
 		if (summarizationProperties.getProperty("statistics.export_to_csv_file").equals("true")) {
 			LOGGER.info("Exporting summarization statistics to disk");
-			exportSummarizationStatisticsToDisk(summarizationProperties);
+			exportSummarizationStatisticsToDisk(summarizationProperties, NTFilename);
 			LOGGER.info("Summarization statistics exported to disk");
 		}
 
 		if (summarizationProperties.getProperty("configuration.export_to_disk").equals("true")) {
 			LOGGER.info("Exporting loading configuration to disk");
-			exportSummarizationConfigurationToDisk(summarizationProperties);
+			exportSummarizationConfigurationToDisk(summarizationProperties, NTFilename);
 			LOGGER.info("Loading configuration exported to disk");
 		}
 
-		String DOTFilename = null;
 		if (drawingEnabled) {
 			LOGGER.info("Exporting summary DOT drawing to disk");
 		}
 		// try to draw RDF graph and summary
-		DOTFilename = summary.writeDecodedSummaryToDOTFile(databaseConnection, summaryDrawingStyle);
+		String DOTFilename = summary.writeDecodedSummaryToDOTFile(databaseConnection, summaryDrawingStyle);
 		if (drawingEnabled) {
 			LOGGER.info("Summary DOT drawing exported to disk");
 		}
@@ -774,11 +782,11 @@ public class Interface {
 		helpFormatter.setLeftPadding(0);
 		String header = "RDFQuotient " + version
 			+ "\n\nThis framework is designed to work with one graph at a time.\n"
-			+ "Before using RDFQuotient make sure that Postgres server is running.\n"
+			+ "Before using RDFQuotient make sure that the Postgres server is running.\n"
 			+ "Input RDF dataset file format is N-Triples and the file is assumed not to\n"
 			+ "contain any duplicated triples.\n\n"
 			+ "rdfquotient";
-		String footer = "\n[ARGS] is a comma-separated list of assigments of form key=value, where key is a configuration property from the list of loading or summarization configuration properties.";
+		String footer = "\n[ARGS] is a comma-separated list of assignments of form key=value, where key is a configuration property from the list of loading or summarization configuration properties.";
 		helpFormatter.printHelp(header, "\n", options, footer, true);
 	}
 
@@ -917,12 +925,12 @@ public class Interface {
 				throw new IllegalArgumentException("No shortcut for typed summaries");
 		}
 
-		loadingProperties.put("saturation.enable", "false");
+		loadingProperties.put("saturation.type", "NONE");
 		load(null, loadingProperties, false);
 		summarizationProperties.put("summary.summarize_saturated_graph", "false");
 		HashMap<String, String> names = summarize(null, summarizationProperties, true);
 
-		loadingProperties.put("saturation.enable", "true");
+		loadingProperties.put("saturation.type", "ASSERTION_SAT");
 		loadingProperties.put("database.name", "");
 		loadingProperties.put("dataset.filename", names.get("NTFilename"));
 		summarizationProperties.put("database.name", "");

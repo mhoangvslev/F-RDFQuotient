@@ -27,8 +27,9 @@ public class OneFWSummary extends Summary {
 		this.triplesTableName = triplesTableName;
 		this.encodedTriplesTableName = encodedTriplesTableName;
 		this.dictionaryTableName = dictionaryTableName;
-		this.summaryTablePrefix = ONEFW_SUMMARY_PREFIX;
+		this.summaryTablePrefix = TWO_PASS_ONEFW_SUMMARY_PREFIX;
 		this.isTypeFirst = false;
+		this.isDataAndType = false;
 		this.isTwoPass = true;
 		this.n2op = new HashMap<>();
 		this.op2sn = new HashMap<>();
@@ -129,10 +130,5 @@ public class OneFWSummary extends Summary {
 
 	private Long getSummaryNode(TreeSet<Long> nop) {
 		return (op2sn.get(nop));
-	}
-
-	@Override
-	protected void consistencyChecks() {
-		// TODO Auto-generated method stub
 	}
 }

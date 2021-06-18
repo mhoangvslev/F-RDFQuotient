@@ -27,7 +27,7 @@ public class DOTAuxiliary {
 											   "lavender", "beige", "aliceblue", "greenyellow",
 											  "thistle", "paleturquoise", "pink", "yellow"};
 	public static TreeSet<String> darkColorNames;
-	public static String[] colorNames = diverseColorNames;
+	public static String[] colorNames;
 
 	// color index for each summary node (may cycle if there are more
 	// summary nodes than colors)
@@ -43,6 +43,7 @@ public class DOTAuxiliary {
 
 	public DOTAuxiliary(String colorScheme) {
 		// diverse is the default
+		colorNames = diverseColorNames;
 		if (colorScheme.toLowerCase().equals("bw")) {
 			colorNames = bwColorNames;
 		}

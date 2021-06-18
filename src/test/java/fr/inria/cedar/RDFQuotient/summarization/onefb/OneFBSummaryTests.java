@@ -7,7 +7,7 @@ import org.junit.Test;
 
 public class OneFBSummaryTests extends Tests {
 	public static String summaryType() {
-		return "onefb";
+		return "2ponefb";
 	}
 
 	public static String sourceFilename(int i) {

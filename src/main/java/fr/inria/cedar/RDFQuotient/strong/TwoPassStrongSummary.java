@@ -22,6 +22,7 @@ public class TwoPassStrongSummary extends StrongOrTypedStrongSummary {
 		this.dictionaryTableName = dictionaryTableName;
 		this.summaryTablePrefix = TWO_PASS_STRONG_SUMMARY_PREFIX;
 		this.isTypeFirst = false;
+		this.isDataAndType = false;
 		this.isTwoPass = true;
 	}
 

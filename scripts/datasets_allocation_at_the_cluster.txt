@@ -8,33 +8,36 @@ cedar001
 	insee_geo
 	nasa
 	nobel
+	nobelprize_org_uniq_onto
 	nobelprizes_uniq
+
+cedar002
+	bsbm100m
+	bsbm138m
+	dblp_large_uniq_onto
 
 cedar003
 	bsbm1m
 	bsbm10m
 	dbpedia_persondata_en_uniq
-	lubm1m
-	lubm10m
 		watdiv10m
 	watdiv10m_onto
 
 cedar004
-	lubm100m
 		watdiv100m
 	watdiv100m_onto
 
 cedar005
 		dblp_large_uniq
-	dblp_large_uniq_onto
-		lubm100m
+		dblp_large_uniq_onto
 
 cedar006
 		bsbm10m
-	bsbm100m
-	bsbm138m
-		lubm1m
-		lubm10m
+		bsbm100m
+		bsbm138m
 
 cedar007
 		bsbm100m
+	lubm1m_uniq_onto
+	lubm10m_uniq_onto
+	lubm100m_uniq_onto

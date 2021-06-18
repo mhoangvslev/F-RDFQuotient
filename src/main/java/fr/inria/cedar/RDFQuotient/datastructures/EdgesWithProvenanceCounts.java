@@ -143,12 +143,13 @@ public class EdgesWithProvenanceCounts {
 
 	public ArrayList<Triple> getSummaryEdges() {
 		ArrayList<Triple> res = new ArrayList<>();
+		Triple t;
 		for (long s : edges.keySet()) {
 			HashMap<Long, HashSet<Long>> triplesOfThisSubject = edges.get(s);
 			for (long p : triplesOfThisSubject.keySet()) {
 				HashSet<Long> objectsOfThisSandP = triplesOfThisSubject.get(p);
 				for (long o : objectsOfThisSandP) {
-					Triple t = new Triple(s, p, o);
+					t = new Triple(s, p, o);
 					res.add(t);
 				}
 			}

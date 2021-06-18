@@ -51,14 +51,14 @@ public class SummarizationProperties extends ConfigurationProperties {
 
 		properties.put("summary.summarize_saturated_graph", "false");
 
-		// Valid options: weak, strong, typedweak, typedstrong, 2pweak, 2pweakunionfind, 2pstrong, 2ptypedweak, 2ptypedstrong, onefb, onefw
+		// Valid options: weak, strong, typedweak, typedstrong, 2pweak, 2pweakunionfind, 2pstrong, 2ptypedweak, 2ptypedstrong, typed, 2ponefw, 2ponefb, 2pinputoutput, 2pbisim
 		properties.put("summary.type", "typedweak");
 
 		// Whether to omit generic RDF properties from clique computation
 		properties.put("summary.omit_generic_properties_from_cliques", "true");
 
 		// Which generic properties to use: comma-separated values
-		properties.put("summary.generic_properties", "<http://www.w3.org/2000/01/rdf-schema#label>,<http://www.w3.org/2000/01/rdf-schema#comment>,<http://www.w3.org/1999/02/22-rdf-syntax-ns#value>,<http://www.w3.org/2002/07/owl#sameAs>");
+		properties.put("summary.generic_properties", "<http://www.w3.org/2000/01/rdf-schema#label>,<http://www.w3.org/2000/01/rdf-schema#comment>,<http://www.w3.org/1999/02/22-rdf-syntax-ns#value>,<http://www.w3.org/2002/07/owl#sameAs>,<http://rq.org/nodeSupport>,<http://rq.org/edgeSupport>,<http://rq.org/edge>,<http://rq.org/reifiedEdgeSubject>,<http://rq.org/reifiedEdgeProperty>,<http://rq.org/reifiedEdgeObject>");
 
 		// In type triples, whether to replace the type with the most general type
 		properties.put("summary.replace_type_with_most_general_type", "true");

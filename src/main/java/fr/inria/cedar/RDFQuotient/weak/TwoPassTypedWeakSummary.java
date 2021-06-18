@@ -31,6 +31,7 @@ public class TwoPassTypedWeakSummary extends WeakOrTypedWeakSummary {
 		this.dictionaryTableName = dictionaryTableName;
 		this.summaryTablePrefix = TWO_PASS_TYPED_WEAK_SUMMARY_PREFIX;
 		this.isTypeFirst = true;
+		this.isDataAndType = false;
 		this.isTwoPass = true;
 		cs = new Long2LongSet();
 		n2cs = new Long2Long();
