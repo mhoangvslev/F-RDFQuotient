@@ -33,6 +33,9 @@ public class ReadingTests extends Tests {
 		summarizationProperties.put("summary.type", "weak");
 		summarizationProperties.put("summary.replace_type_with_most_general_type", "false");
 		summarizationProperties.put("summary.export_to_nt_file", "false");
+		summarizationProperties.put("summary.export_representation_function_to_nt_filename", "");
+		summarizationProperties.put("summary.export_node_statistics_to_nt_filename", "");
+		summarizationProperties.put("summary.export_edge_statistics_to_nt_filename", "");
 		summarizationProperties.put("drawing.style", "none");
 		summarizationProperties.put("statistics.export_to_csv_file", "false");
 
