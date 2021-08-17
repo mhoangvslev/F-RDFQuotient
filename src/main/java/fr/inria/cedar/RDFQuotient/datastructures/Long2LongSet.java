@@ -27,13 +27,8 @@ public class Long2LongSet {
 	}
 
 	public void put(long item, long set) {
-		TreeSet<Long> theSet = map.get(set);
-		if (theSet == null) {
-			theSet = new TreeSet<>();
-			map.put(set, theSet);
-		}
-		if (!theSet.contains(item))
-			theSet.add(item);
+		TreeSet<Long> theSet = map.computeIfAbsent(set, k -> new TreeSet<>());
+		theSet.add(item);
 	}
 
 	public void remove(Long node) {
@@ -51,9 +46,7 @@ public class Long2LongSet {
 		TreeSet<Long> ll2 = map.get(l2);
 		if ((ll1 != null) && (ll2 != null)) {
 			// added all content of l1 into l2
-			for (Long i1: ll1)
-				if (!ll2.contains(i1))
-					ll2.add(i1);
+			ll2.addAll(ll1);
 			// the (augmented) ll2 is already the value associated to l2;
 			// value l1 needs to disappear:
 			map.remove(l1);
@@ -63,7 +56,7 @@ public class Long2LongSet {
 	@Override
 	public String toString() {
 		//LOGGER.debug("LONG2LONGSET DISPLAY");
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 		if (!map.keySet().isEmpty()) {
 			for (Long key: map.keySet()) {
 				sb.append("#").append(key).append("|{");
@@ -90,13 +83,7 @@ public class Long2LongSet {
 	}
 
 	public void add(Long k, Long v) {
-		TreeSet<Long> setFor = map.get(k);
-		if (setFor == null) {
-			setFor = new TreeSet<>();
-			map.put(k, setFor);
-		}
-		if (!setFor.contains(v)) {
-			setFor.add(v);
-		}
+		TreeSet<Long> setFor = map.computeIfAbsent(k, k1 -> new TreeSet<>());
+		setFor.add(v);
 	}
 }

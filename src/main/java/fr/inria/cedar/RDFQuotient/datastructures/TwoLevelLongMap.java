@@ -109,12 +109,8 @@ public class TwoLevelLongMap {
 	}
 
 	public void add(Long flk, Long slk, Long v){
-		HashMap<Long, Long> entriesOnFlk = map.get(flk);
-		if (entriesOnFlk == null) {
-			//LOGGER.debug("No target cliques for source clique " + sourceClique);
-			entriesOnFlk = new HashMap<>();
-			map.put(flk, entriesOnFlk);
-		}
+		HashMap<Long, Long> entriesOnFlk = map.computeIfAbsent(flk, k -> new HashMap<>());
+		//LOGGER.debug("No target cliques for source clique " + sourceClique);
 		Long node = entriesOnFlk.get(slk);
 		if (node == null) {
 			//LOGGER.debug("There was no node for target clique " + targetClique + " among those on source clique " + sourceClique);
@@ -127,7 +123,7 @@ public class TwoLevelLongMap {
 
 	@Override
 	public String toString() {
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 		for (Long flk: map.keySet()) {
 			sb.append(flk).append("=>{");
 			//LOGGER.debug("Source clique: " + sc);

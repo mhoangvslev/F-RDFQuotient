@@ -54,15 +54,11 @@ public class TwoPassTypedWeakSummary extends WeakOrTypedWeakSummary {
 		boolean oTyped = (classSetO != null);
 
 		if (!sn.contains(t.s) && !sTyped) {
-			if (n2o.get(t.s) == null) {
-				n2o.put(t.s, new HashSet<>());
-			}
+			n2o.computeIfAbsent(t.s, k -> new HashSet<>());
 			n2o.get(t.s).add(t.p);
 		}
 		if (!sn.contains(t.o) && !oTyped) {
-			if (n2i.get(t.o) == null) {
-				n2i.put(t.o, new HashSet<>());
-			}
+			n2i.computeIfAbsent(t.o, k -> new HashSet<>());
 			n2i.get(t.o).add(t.p);
 		}
 		nodes.add(t.s);
@@ -92,7 +88,7 @@ public class TwoPassTypedWeakSummary extends WeakOrTypedWeakSummary {
 					}
 				}
 			}
-			Long minOutgoing = (!outgoing.isEmpty()) ? getMin(outgoing) : getNextSummaryNode();
+			long minOutgoing = (!outgoing.isEmpty()) ? getMin(outgoing) : getNextSummaryNode();
 
 			ArrayList<Long> incoming = new ArrayList<>();
 			if (n2i.containsKey(n)) {
@@ -102,9 +98,9 @@ public class TwoPassTypedWeakSummary extends WeakOrTypedWeakSummary {
 					}
 				}
 			}
-			Long minIncoming = (!incoming.isEmpty()) ? getMin(incoming) : getNextSummaryNode();
+			long minIncoming = (!incoming.isEmpty()) ? getMin(incoming) : getNextSummaryNode();
 
-			Long min = (minOutgoing < minIncoming) ? minOutgoing : minIncoming;
+			Long min = Math.min(minOutgoing, minIncoming);
 
 			if (n2o.containsKey(n)) {
 				for (Long p: n2o.get(n)) {

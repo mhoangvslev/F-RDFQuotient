@@ -36,7 +36,7 @@ public class LoadingProperties extends ConfigurationProperties {
 
 		properties.put("database.host", "localhost");
 
-		properties.put("database.port", "5432");
+		properties.put("database.port", "5433");
 
 		properties.put("database.user", "postgres");
 
@@ -109,8 +109,7 @@ public class LoadingProperties extends ConfigurationProperties {
 
 	public static void writeDefaultPropertiesFile() {
 		Properties properties = getDefaultProperties();
-		String filename = DEFAULT_LOADING_PROPERTIES_FILENAME;
-		writePropertiesFile(properties, filename);
+		writePropertiesFile(properties, DEFAULT_LOADING_PROPERTIES_FILENAME);
 	}
 
 	public static void main(String[] args) {

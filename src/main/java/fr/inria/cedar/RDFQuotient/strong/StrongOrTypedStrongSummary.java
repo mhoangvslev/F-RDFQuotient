@@ -37,8 +37,8 @@ public class StrongOrTypedStrongSummary extends Summary {
 	protected long minCliqueID;
 	protected long emptySCCount; // empty source clique number (will never change)
 	protected long emptyTCCount; // empty target clique number (will never change)
-	protected char SOURCE = 0;
-	protected char TARGET = 1;
+	protected final char SOURCE = 0;
+	protected final char TARGET = 1;
 
 	protected Long sourceCliqueS;
 	protected Long sourceCliqueO;
@@ -1228,18 +1228,15 @@ public class StrongOrTypedStrongSummary extends Summary {
 	 */
 	protected Long getOrCreateSummaryNode(Long sourceClique, Long targetClique) {
 		Long node = untypedSummaryNodes.getIfExists(sourceClique, targetClique);
-		if (node != null) {
-			return node;
-		}
-		else {
+		if (node == null) {
 			node = getNextSummaryNode(); // from the Summary class;
 			untypedSummaryNodes.add(sourceClique, targetClique, node);
-			return node;
 		}
+		return node;
 	}
 
 	protected Long getEmptySourceCliqueID() {
-		Long res;
+		long res;
 		if (emptySCCount == Long.MAX_VALUE) { // the empty source clique has not been created yet
 			TreeSet<Long> emptySC = new TreeSet<>();
 			res = minCliqueID; // we invent a new source clique
@@ -1292,7 +1289,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 	}
 
 	protected Long getEmptyTargetCliqueID() {
-		Long res;
+		long res;
 		if (emptyTCCount == Long.MAX_VALUE) { // the empty source clique has not been created yet
 			TreeSet<Long> emptyTC = new TreeSet<>();
 			res = minCliqueID; // we invent a new source clique
@@ -1386,12 +1383,8 @@ public class StrongOrTypedStrongSummary extends Summary {
 						msg += "We don't have a summary edge representing data triple " + s + " " + p + " " + o;
 						throw new IllegalStateException(msg);
 					}
-					if (edgesWithProvCountsByRep.get(repS) == null) {
-						edgesWithProvCountsByRep.put(repS, new HashMap<>());
-					}
-					if (edgesWithProvCountsByRep.get(repS).get(p) == null) {
-						edgesWithProvCountsByRep.get(repS).put(p, new HashMap<>());
-					}
+					edgesWithProvCountsByRep.computeIfAbsent(repS, k -> new HashMap<>());
+					edgesWithProvCountsByRep.get(repS).computeIfAbsent(p, k -> new HashMap<>());
 					if (edgesWithProvCountsByRep.get(repS).get(p).get(repO) == null) {
 						edgesWithProvCountsByRep.get(repS).get(p).put(repO, 1L);
 					}
@@ -1421,7 +1414,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 	}
 
 	protected String showTriplesByObject(){
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 		for (Long node: triplesByObject.keySet()){
 			sb.append(node).append("<~~");
 			Long2LongSet edgesOfNode = triplesByObject.get(node);
@@ -1431,7 +1424,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 	}
 
 	protected String showTriplesBySubject(){
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 		for (Long node: triplesBySubject.keySet()){
 			sb.append(node).append("~~>");
 			Long2LongSet edgesOfNode = triplesBySubject.get(node);

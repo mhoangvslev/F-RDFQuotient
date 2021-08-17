@@ -49,17 +49,13 @@ public class Path implements Comparable<Path> {
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
 		sb.append("||");
-		triples.stream().forEach(t -> sb.append(t.toString()));
+		triples.forEach(t -> sb.append(t.toString()));
 		sb.append("||");
 		return new String(sb);
 	}
 
 	public Triple getFirstEdge() {
 		return triples.get(0);
-	}
-
-	public boolean contains(Triple t) {
-		return (triples.indexOf(t) >= 0);
 	}
 
 	/**
@@ -100,7 +96,7 @@ public class Path implements Comparable<Path> {
 
 	@Override
 	public int compareTo(Path p2) {
-		//Debbugger.log("Comparing " + this.toString() + " and " + p2.toString());
+		//LOGGER.debug("Comparing " + this.toString() + " and " + p2.toString());
 		if (this.triples.size() < p2.triples.size())
 			return -1;
 		if (this.triples.size() > p2.triples.size())

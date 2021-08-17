@@ -42,18 +42,10 @@ public class OneBisimSummary extends Summary{
 
 	@Override
 	protected void classifyDataTriple(Triple t) {
-		TreeSet<Long> previousSOP = n2op.get(t.s);
-		if (previousSOP == null){
-			previousSOP = new TreeSet<>();
-			n2op.put(t.s, previousSOP);
-		}
-		previousSOP.add(t.p);
-		TreeSet<Long> previousOIP = n2ip.get(t.o);
-		if (previousOIP == null){
-			previousOIP = new TreeSet<>();
-			n2ip.put(t.o, previousOIP);
-		}
-		previousOIP.add(t.p);
+        TreeSet<Long> previousSOP = n2op.computeIfAbsent(t.s, k -> new TreeSet<>());
+        previousSOP.add(t.p);
+        TreeSet<Long> previousOIP = n2ip.computeIfAbsent(t.o, k -> new TreeSet<>());
+        previousOIP.add(t.p);
 	}
 
 	@Override
@@ -125,12 +117,8 @@ public class OneBisimSummary extends Summary{
 
 	private long createSummaryNode(TreeSet<Long> nop, TreeSet<Long> nip) {
 		long n = this.getNextSummaryNode();
-		HashMap<TreeSet<Long>, Long> o2n = this.ip2op2sn.get(nip);
-		if (o2n == null){
-			o2n = new HashMap<>();
-			this.ip2op2sn.put(nip, o2n);
-		}
-		o2n.put(nop, n);
+        HashMap<TreeSet<Long>, Long> o2n = this.ip2op2sn.computeIfAbsent(nip, k -> new HashMap<>());
+        o2n.put(nop, n);
 		return n;
 	}
 

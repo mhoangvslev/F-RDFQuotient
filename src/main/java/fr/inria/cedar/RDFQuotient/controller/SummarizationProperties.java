@@ -34,7 +34,7 @@ public class SummarizationProperties extends ConfigurationProperties {
 		// Database configuration
 
 		properties.put("database.host", "localhost");
-		properties.put("database.port", "5432");
+		properties.put("database.port", "5433");
 		properties.put("database.user", "postgres");
 		properties.put("database.password", "postgres");
 		properties.put("database.name", "");
@@ -67,20 +67,29 @@ public class SummarizationProperties extends ConfigurationProperties {
 		// This may make summarization significantly slower; set it to true only for debugging.
 		properties.put("summary.consistency_checks", "false");
 
+		// Whether to export to database
+		properties.put("summary.export_to_database", "true");
+
+		// Whether to export the representation function to NT file while exporting to database
+		properties.put("summary.export_representation_function_and_node_statistics_to_database", "true");
+
+		// Filename and whether to export the representation function to NT file while exporting to database
+		properties.put("summary.export_representation_function_to_nt_filename", "representation_function.nt");
+
+		// Filename and whether to export the node statistics to NT file while exporting to database
+		properties.put("summary.export_node_statistics_to_nt_filename", "node_statistics.nt");
+
+		// Filename and whether to export the edge statistics to NT file while exporting to database
+		properties.put("summary.export_edge_statistics_to_nt_filename", "edge_statistics.nt");
+
+		// Whether to compute count statistics and add them in the .nt and .dot summary files
+		properties.put("summary.add_representation_counts_in_nt_and_dot_files", "true");
+
 		// Whether to export to NT file
 		properties.put("summary.export_to_nt_file", "true");
 
 		// Prefix added to summary NT file, usually to dispatch it into a separate directory
 		properties.put("summary.nt_file_prefix", "summariesNT/");
-
-		// Whether to export to database
-		properties.put("summary.export_to_database", "true");
-
-		// Whether to store representation function and node statistics while exporting to database
-		properties.put("summary.save_representation_function_and_node_statistics", "true");
-
-		// Whether to compute support statistics and add them in the .nt printout of the summary
-		properties.put("summary.gather_representation_counts", "true");
 
 		// Whether to execute step-by-step summarization
 		properties.put("summary.step_by_step", "false");
@@ -174,8 +183,7 @@ public class SummarizationProperties extends ConfigurationProperties {
 
 	public static void writeDefaultPropertiesFile() {
 		Properties properties = getDefaultProperties();
-		String filename = DEFAULT_SUMMARIZATION_PROPERTIES_FILENAME;
-		writePropertiesFile(properties, filename);
+		writePropertiesFile(properties, DEFAULT_SUMMARIZATION_PROPERTIES_FILENAME);
 	}
 
 	public static void main(String[] args) {

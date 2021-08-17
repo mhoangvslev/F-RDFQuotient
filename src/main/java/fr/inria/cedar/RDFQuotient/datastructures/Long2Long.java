@@ -43,9 +43,8 @@ public class Long2Long {
 	 * representative of no one.
 	 * @param k
 	 * @param v
-	 * @return
 	 */
-	public boolean put(Long k, Long v) {
+	public void put(Long k, Long v) {
 		//LOGGER.debug("Long2Long: upon entering put " + clique + " on " + node + ": " + this.display());
 		boolean res = false;
 
@@ -67,15 +66,8 @@ public class Long2Long {
 		}
 		map.put(k, v);
 
-		HashSet<Long> keysForV = inverse.get(v);
-		if (keysForV == null) {
-			keysForV = new HashSet<>();
-			inverse.put(v, keysForV);
-		}
-		if (!keysForV.contains(k)){
-			keysForV.add(k);
-		}
-		return res;
+		HashSet<Long> keysForV = inverse.computeIfAbsent(v, k1 -> new HashSet<>());
+		keysForV.add(k);
 	}
 
 	@Override
@@ -106,18 +98,12 @@ public class Long2Long {
 	 * all keys previously associated to value 1 should now map to value 2
 	 * entries previously associated to value 2 stay the same
 	 *
-	 * @param v1
-	 * @param v2
 	 */
 	public void replaceValue(Long v1, Long v2) {
 		//LOGGER.debug("Trying to replace value " + v1 + " with " + v2 + " in:");
 		HashSet<Long> keysWithV1 = inverse.get(v1);
 		if (keysWithV1 != null){
-			HashSet<Long> keysWithV2 = inverse.get(v2);
-			if (keysWithV2 == null){
-				keysWithV2 = new HashSet<>();
-				inverse.put(v2, keysWithV2);
-			}
+			HashSet<Long> keysWithV2 = inverse.computeIfAbsent(v2, k -> new HashSet<>());
 			for (Long l: keysWithV1) {
 				keysWithV2.add(l);
 				map.put(l, v2); // this erases (l, v1)
@@ -128,7 +114,6 @@ public class Long2Long {
 
 	/** remove the value on this key, and the inverse mapping
 	 *
-	 * @param key
 	 */
 	public void remove(Long key) {
 		Long value = map.get(key);
@@ -146,7 +131,7 @@ public class Long2Long {
 	}
 
 	public long numberOfKeys() {
-		return (long) map.keySet().size();
+		return map.keySet().size();
 	}
 
 	public long numberOfDistinctValues() {
@@ -157,6 +142,6 @@ public class Long2Long {
 				values.add(val);
 		}
 		return values.size();*/
-		return (long) inverse.keySet().size();
+		return inverse.keySet().size();
 	}
 }

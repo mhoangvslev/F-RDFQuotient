@@ -16,7 +16,6 @@ public class RandomTripleGenerator {
 	private final long typeProperty = 2;
 	private final String dataTriplesFile;
 	private final String typeTriplesFile;
-	private Random r;
 
 	public RandomTripleGenerator(String typeFile, String dataFile, Long typeNo, Long dataNo, Long maxURI, Long classNo, long propertyNo) {
 		this.typeTriplesFile = typeFile;
@@ -29,7 +28,7 @@ public class RandomTripleGenerator {
 	}
 
 	void generateTriples() {
-		r = new Random();
+		Random r = new Random();
 		try (BufferedWriter dataBw = new BufferedWriter(new FileWriter(dataTriplesFile));
 			 BufferedWriter typeBw = new BufferedWriter(new FileWriter(typeTriplesFile))) {
 
@@ -58,7 +57,7 @@ public class RandomTripleGenerator {
 	public static void main(String[] args) {
 		if (args.length < 7)
 			System.out.println("Usage: RandomTripleGenerator typeTriplesFile dataTriplesFile typeTriplesNumber dataTriplesNumber maxURI classNumber propertyNumber");
-		RandomTripleGenerator gen = new RandomTripleGenerator(args[0], args[1], new Long(args[2]), new Long(args[3]), new Long(args[4]), new Long(args[5]), new Long(args[6]));
+		RandomTripleGenerator gen = new RandomTripleGenerator(args[0], args[1], Long.parseLong(args[2]), Long.parseLong(args[3]), Long.parseLong(args[4]), Long.parseLong(args[5]), Long.parseLong(args[6]));
 		gen.generateTriples();
 	}
 }

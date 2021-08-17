@@ -71,7 +71,7 @@ Credits for the Docker file go to Matteo Lissandrini.
 Thank you for trying out our software! If you encounter any problem using it, please file an issue in this GitLab project.
 
 ## More technical details
-Our software enables building eight different summaries, four defined in our [paper](https://hal.inria.fr/hal-02530206v2), and four classical algorithms, namely typed, input-output and typed, 1-forwardd bisimulation, and 1-forward-and-backwar bisimulation quotients.
+Our software enables building eight different summaries, four defined in our [paper](https://hal.inria.fr/hal-02530206v2), and four classical algorithms, namely typed, input-output and typed, 1-forward bisimulation, and 1-forward-and-backwar bisimulation quotients.
 
 For each of our four summaries, two implementations are available: one "global" (or "two-pass") that needs to read the whole RDF graph before summarizing it, and one "incremental" that summarizes the graph while traversing it and continuously updates the summary.
 

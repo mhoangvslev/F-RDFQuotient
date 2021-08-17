@@ -36,10 +36,7 @@ public class EdgesWithProvenanceCounts {
 	/**
 	 * Adds an integer-encoded triple to the summary
 	 *
-	 * @param s
-	 * @param p
-	 * @param o
-	 */
+     */
 	public final void addTriple(long s, long p, long o) {
 		//LOGGER.info("ADDING SUMMARY TRIPLE: " + s + " " + p + " " + o);
 		HashMap<Long, HashSet<Long>> triplesForThisSubject = edges.get(s);
@@ -214,6 +211,6 @@ public class EdgesWithProvenanceCounts {
 		for (Triple t: this.getSummaryEdges()){
 			sb.append(t.toString()).append(": ").append(getCounter(t.s, t.p, t.o)).append("\n");
 		}
-		System.out.println(sb.toString());
+		System.out.println(sb);
 	}
 }

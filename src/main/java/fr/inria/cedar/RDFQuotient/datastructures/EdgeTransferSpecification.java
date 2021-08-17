@@ -35,12 +35,8 @@ public class EdgeTransferSpecification {
 			if (triplesBySubject.get(dataNode) != null) {
 				for (long p: triplesBySubject.get(dataNode).keys()) {
 					for (long o: triplesBySubject.get(dataNode).get(p)) {
-						if (edgesToTransfer.get(dataNode) == null) {
-							edgesToTransfer.put(dataNode, new HashMap<>());
-						}
-						if (edgesToTransfer.get(dataNode).get(p) == null) {
-							edgesToTransfer.get(dataNode).put(p, new HashSet<>());
-						}
+                        edgesToTransfer.computeIfAbsent(dataNode, k -> new HashMap<>());
+                        edgesToTransfer.get(dataNode).computeIfAbsent(p, k -> new HashSet<>());
 						edgesToTransfer.get(dataNode).get(p).add(o);
 					}
 				}
@@ -50,12 +46,8 @@ public class EdgeTransferSpecification {
 			if (triplesByObject.get(dataNode) != null) {
 				for (long p: triplesByObject.get(dataNode).keys()) {
 					for (long s: triplesByObject.get(dataNode).get(p)) {
-						if (edgesToTransfer.get(s) == null) {
-							edgesToTransfer.put(s, new HashMap<>());
-						}
-						if (edgesToTransfer.get(s).get(p) == null) {
-							edgesToTransfer.get(s).put(p, new HashSet<>());
-						}
+                        edgesToTransfer.computeIfAbsent(s, k -> new HashMap<>());
+                        edgesToTransfer.get(s).computeIfAbsent(p, k -> new HashSet<>());
 						edgesToTransfer.get(s).get(p).add(dataNode);
 					}
 				}
@@ -73,12 +65,8 @@ public class EdgeTransferSpecification {
 			for (long s: edgesToTransferToAdd.keySet()) {
 				for (long p: edgesToTransferToAdd.get(s).keySet()) {
 					for (long o: edgesToTransferToAdd.get(s).get(p)) {
-						if (edgesToTransfer.get(s) == null) {
-							edgesToTransfer.put(s, new HashMap<>());
-						}
-						if (edgesToTransfer.get(s).get(p) == null) {
-							edgesToTransfer.get(s).put(p, new HashSet<>());
-						}
+                        edgesToTransfer.computeIfAbsent(s, k -> new HashMap<>());
+                        edgesToTransfer.get(s).computeIfAbsent(p, k -> new HashSet<>());
 						edgesToTransfer.get(s).get(p).add(o);
 					}
 				}

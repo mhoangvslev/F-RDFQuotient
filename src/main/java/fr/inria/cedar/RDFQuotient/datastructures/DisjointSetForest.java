@@ -7,7 +7,7 @@ import java.util.Objects;
 
 public class DisjointSetForest {
 	private final HashMap<Long, Tree> forest;
-	private class Tree {
+	private static class Tree {
 		public Long parent;
 		public Long rank;
 

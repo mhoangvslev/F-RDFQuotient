@@ -33,7 +33,7 @@ public class ObjectAnalysis {
 	public ObjectAnalysis() {
 	}
 
-	public void analyze(String datasetFilename) throws IOException {
+	public void analyze(String datasetFilename) {
 		System.out.println("############################################");
 		System.out.println("Analysis of " + datasetFilename);
 		System.out.println("#############################################");
@@ -200,13 +200,13 @@ public class ObjectAnalysis {
 			stat.executeUpdate(createStatement);
 		}
 		catch(SQLException e) {
-			if (e.toString().indexOf("already exists") >= 0) {
+			if (e.toString().contains("already exists")) {
 				try {
 					stat.executeUpdate("drop table " + tableName);
 					stat.executeUpdate(createStatement);
 				}
 				catch(SQLException e2) {
-					LOGGER.error("Could still not create " + tableName + e2.toString());
+					LOGGER.error("Could still not create " + tableName + e2);
 				}
 			}
 			else{
@@ -221,7 +221,7 @@ public class ObjectAnalysis {
 		}
 	}
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) {
 		ObjectAnalysis o = new ObjectAnalysis();
 		String[] fileNames = new String[] {"lubm10m"}; //{"lubm10m", "frenchpolitics", "lubm1m", "mondial", "nasa", "nobelprizes", "pokedex", "bsbm1m", "watdiv10m"};
 		String directory = "src/test/resources/rdf-nt-files/";

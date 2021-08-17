@@ -45,11 +45,7 @@ public class OneFWSummary extends Summary {
 	protected void classifyDataTriple(Triple t) {
 		leaves.remove(t.s);  // s is certainly not a leaf
 		//LOGGER.info(t.s + " " + RDF2SQLEncoding.dictionaryDecode(t.s) + " not a leaf");
-		TreeSet<Long> previousPOS = n2op.get(t.s);
-		if (previousPOS == null){
-			previousPOS = new TreeSet<>();
-			n2op.put(t.s, previousPOS);
-		}
+		TreeSet<Long> previousPOS = n2op.computeIfAbsent(t.s, k -> new TreeSet<>());
 		previousPOS.add(t.p);
 		//LOGGER.info(t.s + " " + RDF2SQLEncoding.dictionaryDecode(t.s) + " has property " + t.p + " " + RDF2SQLEncoding.dictionaryDecode(t.p));
 		//LOGGER.info("Properties of " + t.s + " are: " + previousPOS);

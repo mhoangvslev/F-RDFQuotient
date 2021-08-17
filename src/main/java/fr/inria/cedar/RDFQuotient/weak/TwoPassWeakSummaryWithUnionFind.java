@@ -46,9 +46,7 @@ public class TwoPassWeakSummaryWithUnionFind extends WeakOrTypedWeakSummary {
 	@Override
 	protected void classifyDataTriple(Triple t) {
 		if (!sn.contains(t.s)) {
-			if (n2o.get(t.s) == null) {
-				n2o.put(t.s, new TreeSet<>());
-			}
+            n2o.computeIfAbsent(t.s, k -> new TreeSet<>());
 			n2o.get(t.s).add(t.p);
 
 			repS = disjointSetForest.find(shiftNodeNumber(t.s));
@@ -60,9 +58,7 @@ public class TwoPassWeakSummaryWithUnionFind extends WeakOrTypedWeakSummary {
 			}
 		}
 		if (!sn.contains(t.o)) {
-			if (n2i.get(t.o) == null) {
-				n2i.put(t.o, new TreeSet<>());
-			}
+            n2i.computeIfAbsent(t.o, k -> new TreeSet<>());
 			n2i.get(t.o).add(t.p);
 
 			repO = disjointSetForest.find(shiftNodeNumber(t.o));

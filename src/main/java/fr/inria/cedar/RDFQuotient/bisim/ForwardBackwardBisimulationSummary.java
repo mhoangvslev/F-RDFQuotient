@@ -19,10 +19,10 @@ public class ForwardBackwardBisimulationSummary extends Summary {
 		LOGGER.setLevel(Level.INFO);
 	}
 
-	protected class NodeSignature {
-		protected HashSet<Long> outgoingNonTypeProperties;
-		protected HashSet<Long> incomingNonTypeProperties;
-		protected HashSet<Long> typeProperties; // only outgoing properties
+	protected static class NodeSignature {
+		protected final HashSet<Long> outgoingNonTypeProperties;
+		protected final HashSet<Long> incomingNonTypeProperties;
+		protected final HashSet<Long> typeProperties; // only outgoing properties
 
 		public NodeSignature(HashSet<Long> outgoingNonTypeProperties, HashSet<Long> incomingNonTypeProperties, HashSet<Long> typeProperties) {
 			this.outgoingNonTypeProperties = outgoingNonTypeProperties;
@@ -75,7 +75,7 @@ public class ForwardBackwardBisimulationSummary extends Summary {
 	}
 
 	protected class EquivalenceClass {
-		protected HashSet<Long> inputGraphNodesRepresented;
+		protected final HashSet<Long> inputGraphNodesRepresented;
 
 		public EquivalenceClass(HashSet<Long> nodes) {
 			inputGraphNodesRepresented = nodes;
@@ -147,9 +147,9 @@ public class ForwardBackwardBisimulationSummary extends Summary {
 	}
 
 	protected class NeighborhoodEquivalencePattern {
-		protected Boolean direction; // forward: true, backward: false
-		protected Long property;
-		protected HashSet<EquivalenceClass> setOfEquivalenceClasses;
+		protected final Boolean direction; // forward: true, backward: false
+		protected final Long property;
+		protected final HashSet<EquivalenceClass> setOfEquivalenceClasses;
 
 		public NeighborhoodEquivalencePattern(Boolean direction, Long property, HashSet<EquivalenceClass> setOfEquivalenceClasses) {
 			this.direction = direction;

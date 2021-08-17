@@ -53,7 +53,7 @@ public class RDF2SQLEncoding {
 			stmtEncode = conn.prepareStatement("select key from " + PostgresIdentifier.escapedQuotedId(dictionaryTableName) + " where value=?");
 		}
 		catch (SQLException e) {
-			throw new IllegalStateException("Could not prepare encode/decode statements " + e.toString());
+			throw new IllegalStateException("Could not prepare encode/decode statements " + e);
 		}
 		codeToURIOrLiteral = new HashMap<>();
 		uriOrLiteralToCode = new HashMap<>();
@@ -164,7 +164,7 @@ public class RDF2SQLEncoding {
 			}
 		}
 		catch (SQLException e) {
-			throw new IllegalStateException("Not able to encode " + e.toString());
+			throw new IllegalStateException("Not able to encode " + e);
 		}
 		// feed the cache:
 		uriOrLiteralToCode.put(URI, code);

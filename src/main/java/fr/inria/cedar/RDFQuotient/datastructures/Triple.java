@@ -12,7 +12,7 @@ import org.apache.log4j.Logger;
  * @author ioanamanolescu
  *
  */
-public class Triple implements Comparable {
+public class Triple implements Comparable<Triple> {
 	private static final Logger LOGGER = Logger.getLogger(Triple.class.getName());
 
 	static {
@@ -35,7 +35,7 @@ public class Triple implements Comparable {
 	}
 
 	public void display() {
-		System.out.println(toString());
+		System.out.println(this);
 	}
 
 	@Override
@@ -56,28 +56,21 @@ public class Triple implements Comparable {
 	}
 
 	@Override
-	public int compareTo(Object o) {
-		if (o.getClass() == this.getClass()){
-			Triple ot = (Triple)o;
-			if (this.s < ot.s){
+	public int compareTo(Triple that) {
+		if (that.getClass() == this.getClass()){
+			if (this.s < that.s){
 				return -1;
 			}
-			if (this.s > ot.s){
+			if (this.s > that.s){
 				return 1;
 			}
-			if (this.p < ot.p){
+			if (this.p < that.p){
 				return -1;
 			}
-			if (this.p > ot.p){
+			if (this.p > that.p){
 				return 1;
 			}
-			if (this.o < ot.o){
-				return -1;
-			}
-			if (this.o > ot.o){
-				return 1;
-			}
-			return 0;
+			return Long.compare(this.o, that.o);
 		}
 		else{
 			return -1;

@@ -48,8 +48,6 @@ public class DecodedTriple implements Comparable<DecodedTriple> {
 		if (k != 0)
 			return k;
 		k = this.o.compareTo(other.getObject());
-		if (k != 0)
-			return k;
-		return 0;
+		return k;
 	}
 }

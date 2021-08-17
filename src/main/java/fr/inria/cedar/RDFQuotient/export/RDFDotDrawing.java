@@ -5,7 +5,6 @@ package fr.inria.cedar.RDFQuotient.export;
 import fr.inria.cedar.RDFQuotient.datastructures.DecodedTriple;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -20,7 +19,7 @@ import org.apache.log4j.Logger;
  *
  */
 public class RDFDotDrawing {
-	String pathToDot;
+	final String pathToDot;
 
 	private static final Logger LOGGER = Logger.getLogger(RDFDotDrawing.class.getName());
 
@@ -68,7 +67,7 @@ public class RDFDotDrawing {
 		String dotFileName = "rdf-" + code + ".dot";
 		//LOGGER.debug("Trying to build DOT file:" + dotFileName + " out of " + coll.size() + "triples");
 		try{
-			BufferedWriter bw = new BufferedWriter(new FileWriter(new File(dotFileName)));
+			BufferedWriter bw = new BufferedWriter(new FileWriter(dotFileName));
 			bw.write("digraph g" + code + "{");
 			for (DecodedTriple t: coll){
 				drawTriple(bw, t);

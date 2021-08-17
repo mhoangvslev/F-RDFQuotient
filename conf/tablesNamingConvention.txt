@@ -4,8 +4,8 @@ edges table name: "summary_"<timestamp><info>"_"<summaryType>"_edges"
 node stats table name: "summary_"<timestamp><info>"_"<summaryType>"_nodeStats"
 
 <timestamp>: datetime in yyyyMMdd_HHmmss format
-<summaryType>: "w", "s", "tw", "ts", "2pw", "2pwuf", "2ps", "2ptw", "2pts", "onefb", "onefw"
-<info>: "", "_sum"
+<info>: "", "_sat"
+<summaryType>: "t", "2pioat", "2p1fw", "2p1fb", "2ps", "2pw", "2pwuf", "2pts", "2ptw", "s", "w", "ts", "tw"
 
 A catalog of table names is saved in a table called saved_summary_table_names. It contains the following rows:
 dictionary

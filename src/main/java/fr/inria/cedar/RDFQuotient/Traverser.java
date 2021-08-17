@@ -98,15 +98,15 @@ public abstract class Traverser {
 
 			if (!userTriple.matches(
 				// subject: IRI or blank node
-				"(\\<.*\\>|_:\\p{Alnum}+)" +
+				"(<.*>|_:\\p{Alnum}+)" +
 				// property: IRI or blank node
-				"( |\t)(\\<.*\\>|_:\\p{Alnum}+)" +
+				"([ \t])(<.*>|_:\\p{Alnum}+)" +
 				// object: IRI, blank node or literal
-				"( |\t)(\\<.*\\>|_:\\p{Alnum}+|\"(?:[^\"\\\\]|\\\\.)*\")" +
+				"([ \t])(<.*>|_:\\p{Alnum}+|\"(?:[^\"\\\\]|\\\\.)*\")" +
 				// language tag and/or datatype IRI
-				"(@\\p{Alnum}+(\\-\\p{Alnum}+)?|\\^\\^\\<.*\\>)*" +
+				"(@\\p{Alnum}+(-\\p{Alnum}+)?|\\^\\^<.*>)*" +
 				// dot after the triple
-				"( |\t)\\." +
+				"([ \t])\\." +
 				// comments
 				"(\\s+#\\s.*)?")) {
 				LOGGER.error("Wrong format of the input triple, retry");

@@ -29,12 +29,8 @@ public class Long2LongList {
 	}
 
 	public void put(long property, long clique) {
-		ArrayList<Long> theClique = map.get(clique);
-		if (theClique == null) {
-			theClique = new ArrayList<>();
-			map.put(clique, theClique);
-		}
-		if (theClique.indexOf(property) == -1)
+		ArrayList<Long> theClique = map.computeIfAbsent(clique, k -> new ArrayList<>());
+		if (!theClique.contains(property))
 			theClique.add(property);
 	}
 
@@ -63,7 +59,7 @@ public class Long2LongList {
 	}
 
 	public String display() {
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 		if (map.size() > 0) {
 			sb.append("\n==============: \n");
 			for (Long key: map.keySet()) {

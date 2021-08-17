@@ -3,7 +3,6 @@
 package fr.inria.cedar.RDFQuotient.controller;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Properties;
 import java.util.TreeMap;
@@ -21,10 +20,6 @@ public class ConfigurationProperties {
 		Properties properties = new Properties();
 		try {
 			properties.load(new FileInputStream(filename));
-		}
-		catch (FileNotFoundException ex) {
-			LOGGER.info(ex);
-			return null;
 		}
 		catch (IOException ex) {
 			LOGGER.info(ex);
@@ -52,7 +47,7 @@ public class ConfigurationProperties {
 	}
 
 	public static String prettifiedToString(Properties properties) {
-		String prettifiedProperties = "";
+		StringBuilder prettifiedProperties = new StringBuilder();
 
 		TreeMap<String, String> propertiesSorted = new TreeMap<>();
 		for (Object property: properties.keySet()) {
@@ -60,7 +55,7 @@ public class ConfigurationProperties {
 		}
 
 		for (String property: propertiesSorted.keySet()) {
-			prettifiedProperties += property + "=" + propertiesSorted.get(property) + "\n";
+			prettifiedProperties.append(property).append("=").append(propertiesSorted.get(property)).append("\n");
 		}
 
 		return prettifiedProperties.substring(0, prettifiedProperties.length() - 1);

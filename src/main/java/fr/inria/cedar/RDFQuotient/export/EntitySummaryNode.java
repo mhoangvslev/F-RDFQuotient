@@ -13,26 +13,26 @@ import java.util.TreeSet;
 import org.apache.log4j.Logger;
 
 public class EntitySummaryNode {
-	long node;
-	long ownCardinality;
-	String hiddenDotName;
+	final long node;
+	final long ownCardinality;
+	final String hiddenDotName;
 
-	SummaryExport exporter;
+	final SummaryExport exporter;
 
 	HashMap<Long, Long> actualTypes; // for each actual type of a resource represented by this entity, how many times that happened
-	HashSet<Long> groupByTypes; // each of the top types corresponding to this node's class set (or actual types)
+	final HashSet<Long> groupByTypes; // each of the top types corresponding to this node's class set (or actual types)
 
 	// properties in sorted order
-	TreeMap<String, Long> outgoingPropertiesMap;
-	TreeMap<String, Long> leafChildrenMap;
-	TreeMap<String, Long> propCardinalitiesMap;
-	TreeMap<String, Long> childCardinalitiesMap;
+    final TreeMap<String, Long> outgoingPropertiesMap;
+	final TreeMap<String, Long> leafChildrenMap;
+	final TreeMap<String, Long> propCardinalitiesMap;
+	final TreeMap<String, Long> childCardinalitiesMap;
 	TreeMap<String, Long> typesMap;
 
-	TreeSet<String> genericProperties;
+	final TreeSet<String> genericProperties;
 
-	ArrayList<String> fullTypes; // for each type, how many subjects of this entity have this type
-	int maxTypesDrawnPerNameSpace;
+	final ArrayList<String> fullTypes; // for each type, how many subjects of this entity have this type
+	final int maxTypesDrawnPerNameSpace;
 
 	private static final Logger LOGGER = Logger.getLogger(EntitySummaryNode.class.getName());
 
@@ -115,9 +115,9 @@ public class EntitySummaryNode {
 			this.actualTypes = new HashMap<>();
 			//LOGGER.info("Currently no actual types");
 		}
-		else {
+		//else {
 			//LOGGER.info("Now " + actualTypes.size() + " actual types");
-		}
+		//}
 	}
 	// if a node has very many actual types, show at most five, then write "... X more types from this namespace"
 	void addTypeDescriptionTo(BufferedWriter bw, String fontColor) {

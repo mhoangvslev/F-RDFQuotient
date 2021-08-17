@@ -29,6 +29,9 @@ public class StepByStepDrawingTests extends Tests {
 		summarizationProperties.put("summary.type", summaryType);
 		summarizationProperties.put("summary.replace_type_with_most_general_type", "false");
 		summarizationProperties.put("summary.nt_file_prefix", "summariesNT/");
+		summarizationProperties.put("summary.export_representation_function_to_nt_filename", "");
+		summarizationProperties.put("summary.export_node_statistics_to_nt_filename", "");
+		summarizationProperties.put("summary.export_edge_statistics_to_nt_filename", "");
 		summarizationProperties.put("drawing.remove_dot_file", "true");
 		summarizationProperties.put("drawing.dot_file_prefix", "summariesDOT/");
 		summarizationProperties.put("drawing.png_file_prefix", "summariesPNG/");

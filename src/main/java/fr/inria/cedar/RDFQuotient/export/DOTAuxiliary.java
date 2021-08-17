@@ -15,15 +15,15 @@ public class DOTAuxiliary {
 		LOGGER.setLevel(Level.INFO);
 	}
 
-	public static String[] diverseColorNames = {"antiquewhite1", "aquamarine1",
+	public static final String[] diverseColorNames = {"antiquewhite1", "aquamarine1",
 											"cornflowerblue", "gold", "tomato", "chartreuse", "cadetblue1",
 											"blueviolet", "lightpink", "magenta", "yellow",
 											"plum", "wheat", "mediumpurple1", "coral",
 											"lightgoldenrod", "orange", "khaki1", "orangered", "navy",
 											"lightpink", "magenta", "cyan", "firebrick"};
-	public static String[] bwColorNames = {"white"};
-	public static String[] ivoryColorNames = {"ivory"};
-	public static String[] lightColorNames = {"white", "lightcyan", "ivory", "azure", "lemonchiffon", "mistyrose1",
+	public static final String[] bwColorNames = {"white"};
+	public static final String[] ivoryColorNames = {"ivory"};
+	public static final String[] lightColorNames = {"white", "lightcyan", "ivory", "azure", "lemonchiffon", "mistyrose1",
 											   "lavender", "beige", "aliceblue", "greenyellow",
 											  "thistle", "paleturquoise", "pink", "yellow"};
 	public static TreeSet<String> darkColorNames;
@@ -44,13 +44,13 @@ public class DOTAuxiliary {
 	public DOTAuxiliary(String colorScheme) {
 		// diverse is the default
 		colorNames = diverseColorNames;
-		if (colorScheme.toLowerCase().equals("bw")) {
+		if (colorScheme.equalsIgnoreCase("bw")) {
 			colorNames = bwColorNames;
 		}
-		if (colorScheme.toLowerCase().equals("ivory")) {
+		if (colorScheme.equalsIgnoreCase("ivory")) {
 			colorNames = ivoryColorNames;
 		}
-		if (colorScheme.toLowerCase().equals("light")){
+		if (colorScheme.equalsIgnoreCase("light")){
 			colorNames = lightColorNames;
 		}
 		coloredSummaryNodes = new HashMap<>();
@@ -83,9 +83,8 @@ public class DOTAuxiliary {
 	}
 
 	public boolean unknownSummaryNode(long summaryNodeCode) {
-		boolean b = (coloredSummaryNodes.get(summaryNodeCode) == null);
 		//System.out.println("-<-<-<-<-<-< " + summaryNodeCode + " unknown: " + b);
-		return b;
+		return (coloredSummaryNodes.get(summaryNodeCode) == null);
 	}
 
 	public boolean unknownRDFNode(long RDFNodeCode) {

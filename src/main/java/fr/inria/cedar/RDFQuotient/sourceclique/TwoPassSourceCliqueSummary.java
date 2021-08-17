@@ -142,14 +142,11 @@ public class TwoPassSourceCliqueSummary extends StrongOrTypedStrongSummary{
 	 */
 	protected Long getOrCreateSummaryNode(Long sourceClique) {
 		Long node = untypedNodesBySC.get(sourceClique);
-		if (node != null) {
-			return node;
-		}
-		else {
-			node = getNextSummaryNode(); // from the Summary class;
-			untypedNodesBySC.put(sourceClique, node);
-			return node;
-		}
-	}
+        if (node == null) {
+            node = getNextSummaryNode(); // from the Summary class;
+            untypedNodesBySC.put(sourceClique, node);
+        }
+        return node;
+    }
 
 }
