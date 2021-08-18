@@ -36,7 +36,7 @@ public class LoadingProperties extends ConfigurationProperties {
 
 		properties.put("database.host", "localhost");
 
-		properties.put("database.port", "5433");
+		properties.put("database.port", "5432");
 
 		properties.put("database.user", "postgres");
 
@@ -51,9 +51,9 @@ public class LoadingProperties extends ConfigurationProperties {
 
 		properties.put("database.triples_table_name", "triples");
 
-		properties.put("database.cluster_indexes", "true");
-
 		properties.put("database.encoded_triples_table_name", "encoded_triples");
+
+		properties.put("database.encoded_saturated_triples_table_name", "encoded_saturated_triples");
 
 		properties.put("database.dictionary_table_name", "dictionary");
 
@@ -61,9 +61,9 @@ public class LoadingProperties extends ConfigurationProperties {
 
 		properties.put("saturation.type", "NONE");
 
-		properties.put("database.encoded_saturated_triples_table_name", "encoded_saturated_triples");
-
 		properties.put("saturation.batch_size", "1000");
+
+		properties.put("database.cluster_indexes", "true");
 
 		// Whether to sort dictionary entries before assigning encodings and also encode_triples and encoded_saturated_triples tables
 		// used for tests, should not be used for big graphs
@@ -84,6 +84,7 @@ public class LoadingProperties extends ConfigurationProperties {
 		try {
 			try (PrintWriter pw = new PrintWriter(new FileWriter(filename))) {
 				properties.remove("database.engine");
+				properties.remove("statistics.create_tables_flag");
 
 				TreeMap<String, String> propertiesSorted = new TreeMap<>();
 				for (Object property: properties.keySet()) {

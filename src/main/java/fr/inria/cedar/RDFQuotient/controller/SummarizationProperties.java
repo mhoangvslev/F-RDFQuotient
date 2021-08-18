@@ -34,7 +34,7 @@ public class SummarizationProperties extends ConfigurationProperties {
 		// Database configuration
 
 		properties.put("database.host", "localhost");
-		properties.put("database.port", "5433");
+		properties.put("database.port", "5432");
 		properties.put("database.user", "postgres");
 		properties.put("database.password", "postgres");
 		properties.put("database.name", "");
@@ -94,23 +94,17 @@ public class SummarizationProperties extends ConfigurationProperties {
 		// Whether to execute step-by-step summarization
 		properties.put("summary.step_by_step", "false");
 
-		// Whether to export run statistics
-		properties.put("statistics.export_to_csv_file", "true");
-
-		// Whether to export summarization configuration to disk
-		properties.put("configuration.export_to_disk", "false");
-
 		// Drawing configuration
 
 		// Path to dot executable; if this is not found, it is not an error, just drawing won't work
 		properties.put("drawing.dot_installation", "/usr/local/bin/dot");
 
-		// Whether to remove DOT file in case of successful execution of dot
-		properties.put("drawing.remove_dot_file", "false");
-
 		// Prefixes added to drawing files, usually to dispatch them into separate directories
 		properties.put("drawing.dot_file_prefix", "summariesDOT/");
 		properties.put("drawing.png_file_prefix", "summariesPNG/");
+
+		// Whether to remove DOT file in case of successful execution of dot
+		properties.put("drawing.remove_dot_file", "false");
 
 		// Whether to draw input RDF graph
 		properties.put("drawing.draw_input_graph", "false");
@@ -124,10 +118,6 @@ public class SummarizationProperties extends ConfigurationProperties {
 		// The color scheme to use for drawing; available color schemes are: diverse (default), bw, ivory, and light
 		properties.put("drawing.color_scheme", "diverse");
 
-		// This prefix will be used for all the URIs of nodes created by summarization.
-		// Its value must be such that if one appends a short summary code (a few characters) then a number, the result is an URI.
-		properties.put("drawing.summary_node_URI_prefix", "http://rq.org/");
-
 		// Whether to include a graph label when drawing the summary, or not
 		properties.put("drawing.title", "true");
 
@@ -138,6 +128,10 @@ public class SummarizationProperties extends ConfigurationProperties {
 
 		// The maximum number of types to be displayed from each namespace (more are replaced with "...")
 		properties.put("drawing.max_types_drawn_per_namespace", "5");
+
+		// This prefix will be used for all the URIs of nodes created by summarization.
+		// Its value must be such that if one appends a short summary code (a few characters) then a number, the result is an URI.
+		properties.put("drawing.summary_node_URI_prefix", "http://rq.org/");
 
 		// This URI will be used as a property, to denote the number of graph nodes represented by a given summary node
 		properties.put("drawing.summary_node_support_URI_prefix", "http://rq.org/nodeSupport");
@@ -152,6 +146,14 @@ public class SummarizationProperties extends ConfigurationProperties {
 		properties.put("drawing.reified_edge_subject_URI_prefix", "http://rq.org/reifiedEdgeSubject");
 		properties.put("drawing.reified_edge_property_URI_prefix", "http://rq.org/reifiedEdgeProperty");
 		properties.put("drawing.reified_edge_object_URI_prefix", "http://rq.org/reifiedEdgeObject");
+
+		// Other
+
+		// Whether to export run statistics
+		properties.put("statistics.export_to_csv_file", "true");
+
+		// Whether to export summarization configuration to disk
+		properties.put("configuration.export_to_disk", "false");
 
 		return properties;
 	}

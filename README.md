@@ -11,7 +11,7 @@ This software enables building a **quotient summary of an RDF graph** based on a
 * The edges of the quotient summary graph are derived from the input graph edges: whenever the input graph contained an edge a--p-->b, the quotient summary graph contains an edge rep(a)--p-->rep(b), where rep(a), rep(b) denote the summary nodes that correspond to a and to b in the original graph, respectively, and p denotes the edge of the label going from a to b (or, the value of the property connecting a to b in the input graph).
 
 ## Implementation
-Our software is written in **Java** and compiled using Apache **Maven** build automation tool. It relies on the **Postgres** DBMS for data storage, and the **[DOT](https://www.graphviz.org/)** tool for visualizations. The code design focuses on two basic operations: `load` and `summarize`. An RDF graph in **N-Triples format, with no duplicates**, can be loaded into Postgres using `load` operation. The RDF graph that has been loaded in the database can be summarized using the `summarize` operation. The summary of the RDF graph is stored in Postgres (where subsequent applications can use it from) and in an output NT file. A visualization of a summary is written into a DOT file and drawn using DOT into a PNG file.
+Our RDFQuotient software is written in **Java** and compiled using Apache **Maven** build automation tool. It relies on the **Postgres** DBMS for data storage, and the **[DOT](https://www.graphviz.org/)** tool for visualizations. The code design focuses on two basic operations: `load` and `summarize`. An RDF graph in **N-Triples format, with no duplicates**, can be loaded into Postgres using `load` operation. The RDF graph that has been loaded in the database can be summarized using the `summarize` operation. The summary of the RDF graph is stored in Postgres (where subsequent applications can use it from) and in an output NT file. A visualization of a summary is written into a DOT file and drawn using DOT into a PNG file.
 
 ### Example
 
@@ -46,6 +46,12 @@ A demonstration of the usage of our software can be found under the [demo](https
 	* for the details about setting the parameters see the [documentation](https://gitlab.inria.fr/cedar/RDFQuotient/blob/master/documentation.pdf)
 
 ## Download
+### Versions
+* Version 1.9: current, stable
+* Version 2.0-SNAPSHOT: latest, experimental
+
+See the detail below.
+
 ### Jar files (recommended)
 Click on the version number below to download the standalone jar file.
 
@@ -57,14 +63,15 @@ The loading process is provided by the OntoSQL/RDFDB library developed in the CE
 To build the project:
 
 1. Clone this git repository.
-2. Download [OntoSQL jar file](https://files.inria.fr/cedar/RDFQuotient/ontosql-rdfdb-1.0.10-SNAPSHOT-with-dependencies.jar).
-3. Run `mvn install:install-file -Dfile=yourpath/ontosql-rdfdb-1.0.10-SNAPSHOT-with-dependencies.jar -DgroupId=fr.inria.cedar.ontosql -DartifactId=ontosql-rdfdb -Dversion=1.0.10-SNAPSHOT -Dpackaging=jar` command to install our library in your local maven repository, where `yourpath/ontosql-rdfdb-1.0.10-SNAPSHOT-with-dependencies.jar` needs to be replaced with your local path to the download OntoSQL jar file.
-4. Run `mvn clean install -DskipTests` command.
+2. The latest code corresponds to the experimental Version 2.0-SNAPSHOT, which has been only released as a jar to the CEDAR team private Maven repository. The jar of the stable Version 1.9 was compiled from sources at the commit marked with the [v1.9 git tag](https://gitlab.inria.fr/cedar/RDFQuotient/-/tags/v1.9).
+3. Download [OntoSQL jar file](https://files.inria.fr/cedar/RDFQuotient/ontosql-rdfdb-1.0.10-SNAPSHOT-with-dependencies.jar).
+. Run `mvn install:install-file -Dfile=yourpath/ontosql-rdfdb-1.0.10-SNAPSHOT-with-dependencies.jar -DgroupId=fr.inria.cedar.ontosql -DartifactId=ontosql-rdfdb -Dversion=1.0.10-SNAPSHOT -Dpackaging=jar` command to install our library in your local maven repository, where `yourpath/ontosql-rdfdb-1.0.10-SNAPSHOT-with-dependencies.jar` needs to be replaced with your local path to the download OntoSQL jar file.
+5. Run `mvn clean install -DskipTests` command.
 
 In step 4, `mvn install` or `mvn clean install` part of the command attempts to first compile the code, and then execute the tests. We use the tests as an automatic means to assert the basic correctness of our software. They are run in a controlled environment, where the parameters for a database connection are fixed. If you wish to run the tests, and you use a non-standard configuration of Postgres or DOT installation, make sure you adjust the configuration used for testing.
 
 ### Docker configuration file
-To install RDFQuotient and all the dependencies and prerequisites in a Docker container, use the [rdfquotient.dockerfile](https://gitlab.inria.fr/cedar/RDFQuotient/blob/master/rdfquotient.dockerfile).
+To install RDFQuotient in Version 2.0-SNAPSHOT with all the dependencies and prerequisites in a Docker container, use the [rdfquotient.dockerfile](https://gitlab.inria.fr/cedar/RDFQuotient/blob/master/rdfquotient.dockerfile).
 Credits for the Docker file go to Matteo Lissandrini.
 
 ## Troubleshooting
