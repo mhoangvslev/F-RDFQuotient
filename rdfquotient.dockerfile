@@ -8,12 +8,12 @@ RUN apt-get update && \
 
 WORKDIR /code
 RUN git clone https://gitlab.inria.fr/cedar/RDFQuotient.git
-RUN curl http://files.inria.fr/cedar/RDFQuotient/ontosql-rdfdb-1.0.10-SNAPSHOT-with-dependencies.jar \
+RUN curl http://files.inria.fr/cedar/RDFQuotient/ontosql-rdfdb-1.0.12-SNAPSHOT-with-dependencies.jar \
         --output ontosql.jar  \
     && mvn -q install:install-file -Dfile=/code/ontosql.jar \
          -DgroupId=fr.inria.cedar.ontosql \
          -DartifactId=ontosql-rdfdb \
-         -Dversion=1.0.10-SNAPSHOT \
+         -Dversion=1.0.12-SNAPSHOT \
          -Dpackaging=jar
 
 WORKDIR /code/RDFQuotient
