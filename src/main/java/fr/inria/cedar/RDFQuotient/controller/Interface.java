@@ -328,7 +328,7 @@ public class Interface {
 
         System.out.println("********************************************************************************");
         System.out.println(currentDateTime());
-        System.out.println("Executing load operation using "
+        System.out.println("Executing the load operation using "
                 + loadingProperties.getProperty("database.name")
                 + " database with saturation "
                 + (loadingProperties.getProperty("saturation.type").equals("NONE") ? "disabled" : "enabled"));
@@ -520,7 +520,7 @@ public class Interface {
 
         System.out.println("********************************************************************************");
         System.out.println(currentDateTime());
-        String message = "Executing summarize operation using "
+        String message = "Executing the summarize operation using "
                 + summarizationProperties.getProperty("database.name")
                 + " database, computing "
                 + summarizationProperties.getProperty("summary.type")
@@ -662,7 +662,7 @@ public class Interface {
 
         System.out.println("********************************************************************************");
         System.out.println(currentDateTime());
-        System.out.println("Executing read operation using "
+        System.out.println("Executing the read operation using "
                 + readingProperties.getProperty("database.name")
                 + " database");
         System.out.println("********************************************************************************");
