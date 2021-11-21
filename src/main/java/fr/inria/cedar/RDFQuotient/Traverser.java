@@ -12,6 +12,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Scanner;
 import org.apache.log4j.Level;
@@ -27,7 +28,8 @@ public abstract class Traverser {
 	protected final Summary summ;
 	protected final Connection conn;
 	protected long setupTime;
-	protected long typeConstantCode;
+	protected long defaultTypeConstantCode;
+	protected HashSet<Long> allTypeConstantCodes;
 	protected long subClassCode;
 	protected long subPropertyCode;
 	protected long domainCode;
@@ -63,8 +65,10 @@ public abstract class Traverser {
 		}
 
 		// this is needed to find the constants associated to special RDF properties
-		RDF2SQLEncoding.setUp(conn, summ.dictionaryTableName);
-		typeConstantCode = RDF2SQLEncoding.getTypeCode();
+		summ.setTypeURIs();
+		RDF2SQLEncoding.setUp(conn, summ.dictionaryTableName, summ.defaultTypeURI, summ.variantTypeURIs);
+		defaultTypeConstantCode = RDF2SQLEncoding.getDefaultTypeCode();
+		allTypeConstantCodes = RDF2SQLEncoding.getAllTypeCodes();
 		subClassCode = RDF2SQLEncoding.getSubClassCode();
 		subPropertyCode = RDF2SQLEncoding.getSubPropertyCode();
 		domainCode = RDF2SQLEncoding.getDomainCode();
@@ -148,7 +152,7 @@ public abstract class Traverser {
 				oEncoded = RDF2SQLEncoding.addNewEntryToDictionary(o, summ.dictionaryTableName);
 			}
 
-			long typeCode = RDF2SQLEncoding.getTypeCode();
+			long typeCode = RDF2SQLEncoding.getDefaultTypeCode();
 			long classCode = RDF2SQLEncoding.getClassCode();
 			long propertyCode = RDF2SQLEncoding.getPropertyCode();
 			if (typeTriple && (pEncoded != typeCode)) {
@@ -235,7 +239,7 @@ public abstract class Traverser {
 		long start = System.currentTimeMillis();
 		String getUntypedTriplesString = "select * from "
 			+ PostgresIdentifier.escapedQuotedId(summ.encodedTriplesTableName)
-			+ " where p <> " + typeConstantCode
+			+ " where p <> " + defaultTypeConstantCode
 			+ (summ.summarizationProperties.getProperty("database.deterministic_ordering").equals("false") ? "" : "order by s, p, o");
 		try {
 			try (Statement getUntypedTriples = conn.createStatement()) {
@@ -301,7 +305,7 @@ public abstract class Traverser {
 		long start = System.currentTimeMillis();
 		String getUntypedTriplesString = "select * from "
 			+ PostgresIdentifier.escapedQuotedId(summ.encodedTriplesTableName)
-			+ " where p <> " + typeConstantCode
+			+ " where p <> " + defaultTypeConstantCode
 			+ (summ.summarizationProperties.getProperty("database.deterministic_ordering").equals("false") ? "" : "order by s, p, o");
 		Triple t;
 		try {
@@ -343,7 +347,7 @@ public abstract class Traverser {
 		long start = System.currentTimeMillis();
 		String getUntypedTriplesString = "select * from "
 			+ PostgresIdentifier.escapedQuotedId(summ.encodedTriplesTableName)
-			+ " where p <> " + typeConstantCode
+			+ " where p <> " + defaultTypeConstantCode
 			+ (summ.summarizationProperties.getProperty("database.deterministic_ordering").equals("false") ? "" : "order by s, p, o");
 		Triple t;
 		try {

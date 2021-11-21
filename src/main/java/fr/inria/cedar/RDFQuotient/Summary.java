@@ -124,6 +124,9 @@ public class Summary {
     protected HashMap<Long, HashMap<Long, Long>> summaryNodeToActualTypeToCardinality;
     protected HashMap<Long, HashSet<Long>> generalizers;
 
+    protected String defaultTypeURI;
+    protected String[] variantTypeURIs;
+
     public Summary() {
         summaryTablePrefix = ROOT_SUMMARY_PREFIX;
         typeOnlyNodeAlreadySeen = false;
@@ -179,6 +182,27 @@ public class Summary {
             this.topClass = new HashMap<>();
             this.topClasses = new HashMap<>();
         }
+    }
+
+    private void setDefaultTypeURI() {
+        this.defaultTypeURI = summarizationProperties.getProperty("default_rdftype_property_URI");
+    }
+
+    private void setVariantTypeURIs() {
+        this.variantTypeURIs = summarizationProperties.getProperty("summary.generic_properties").split(",");
+    }
+
+    public void setTypeURIs() {
+        setDefaultTypeURI();
+        setVariantTypeURIs();
+    }
+
+    public String getDefaultTypeURI() {
+        return this.defaultTypeURI;
+    }
+
+    public String[] getVariantTypeURIs() {
+        return this.variantTypeURIs;
     }
 
     public void setUpClassFieldsDependingOnProperties() {
@@ -242,7 +266,7 @@ public class Summary {
             conn.close();
             throw new IllegalStateException("Could not read summary from Postgres " + e);
         }
-        RDF2SQLEncoding.setUp(conn, dictionaryTableName);
+        RDF2SQLEncoding.setUp(conn, dictionaryTableName, defaultTypeURI, variantTypeURIs);
         //LOGGER.debug("Set up special URIs from dictionary");
         String getSummaryTriples = getSummaryTriplesSQLQuery();
         try (
@@ -306,7 +330,7 @@ public class Summary {
     // (which, in this implementation, for simplicity, are preserved).
     protected void avoidCollisionsWhenAssigningSummaryNodes(Connection conn) {
         long maxClassOrPropertyCode = 0;
-        long typeConstantCode = RDF2SQLEncoding.getTypeCode();
+        long typeConstantCode = RDF2SQLEncoding.getDefaultTypeCode();
 
         if (typeConstantCode != -1) {
             maxClassOrPropertyCode = this.maxO(conn, typeConstantCode);
@@ -382,12 +406,12 @@ public class Summary {
     }
 
     protected void collectSchemaNodes(Connection conn) {
-        RDF2SQLEncoding.setUp(conn, dictionaryTableName);
+        RDF2SQLEncoding.setUp(conn, dictionaryTableName, defaultTypeURI, variantTypeURIs);
         long subClassCode = RDF2SQLEncoding.getSubClassCode();
         long subPropertyCode = RDF2SQLEncoding.getSubPropertyCode();
         long domainCode = RDF2SQLEncoding.getDomainCode();
         long rangeCode = RDF2SQLEncoding.getRangeCode();
-        long typeCode = RDF2SQLEncoding.getTypeCode();
+        long typeCode = RDF2SQLEncoding.getDefaultTypeCode();
         long classCode = RDF2SQLEncoding.getClassCode();
         long propertyCode = RDF2SQLEncoding.getPropertyCode();
 
@@ -460,7 +484,7 @@ public class Summary {
     }
 
     void computeMostGeneralType(Connection conn) {
-        RDF2SQLEncoding.setUp(conn, dictionaryTableName);
+        RDF2SQLEncoding.setUp(conn, dictionaryTableName, defaultTypeURI, variantTypeURIs);
         long subClassCode = RDF2SQLEncoding.getSubClassCode();
         LOGGER.info("Computing most general types");
         // traverse all the subClassOf triples and gather the most general superclasses of every class (according to the schema)
@@ -875,7 +899,7 @@ public class Summary {
             rep.put(node, thisClassSetID); // Dec 17, 2018
             TreeSet<Long> thisClassSet = cs.get(thisClassSetID); // the class set IS the representative
             for (long thisClass : thisClassSet) {
-                edgesWithProv.addTriple(thisClassSetID, RDF2SQLEncoding.getTypeCode(), thisClass);
+                edgesWithProv.addTriple(thisClassSetID, RDF2SQLEncoding.getDefaultTypeCode(), thisClass);
                 // o already represented in collectSchemaNodes
             }
         }

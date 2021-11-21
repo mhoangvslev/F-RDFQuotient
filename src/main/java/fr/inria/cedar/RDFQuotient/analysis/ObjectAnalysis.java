@@ -2,11 +2,12 @@
 
 package fr.inria.cedar.RDFQuotient.analysis;
 
+import fr.inria.cedar.RDFQuotient.Summary;
 import fr.inria.cedar.RDFQuotient.controller.Interface;
 import fr.inria.cedar.RDFQuotient.controller.LoadingProperties;
 import fr.inria.cedar.RDFQuotient.controller.SummarizationProperties;
 import fr.inria.cedar.RDFQuotient.util.RDF2SQLEncoding;
-import java.io.IOException;
+
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -53,7 +54,8 @@ public class ObjectAnalysis {
 
 			conn = Interface.getDatabaseConnection();
 
-			RDF2SQLEncoding.setUp(conn, "dictionary"); // fingers crossed
+			Summary summary = Interface.getSummary();
+			RDF2SQLEncoding.setUp(conn, "dictionary", summary.getDefaultTypeURI(), summary.getVariantTypeURIs()); // fingers crossed
 		}
 		catch(Exception e) {
 			LOGGER.info("Error: " + e);
@@ -62,12 +64,12 @@ public class ObjectAnalysis {
 		boolean hasWhere = false;
 
 		// typed subjects
-		if (RDF2SQLEncoding.getTypeCode() >= 0) {
+		if (RDF2SQLEncoding.getDefaultTypeCode() >= 0) {
 			if (!hasWhere) {
 				typedSubjectsStmt = typedSubjectsStmt + " where ";
 				hasWhere = true;
 			}
-			typedSubjectsStmt = typedSubjectsStmt + " p = " + RDF2SQLEncoding.getTypeCode();
+			typedSubjectsStmt = typedSubjectsStmt + " p = " + RDF2SQLEncoding.getDefaultTypeCode();
 		}
 		else {
 			typedSubjectsStmt = "create table typed (s long)";
@@ -80,12 +82,12 @@ public class ObjectAnalysis {
 		// data subjects
 		hasWhere = false;
 		String dataSubjectsStmt = "create table hasdataprops as select distinct s from tmp_encoded_sat ";
-		if (RDF2SQLEncoding.getTypeCode() >= 0) {
+		if (RDF2SQLEncoding.getDefaultTypeCode() >= 0) {
 			if (!hasWhere) {
 				dataSubjectsStmt = dataSubjectsStmt + " where ";
 				hasWhere = true;
 			}
-			dataSubjectsStmt = dataSubjectsStmt + " p <> " + RDF2SQLEncoding.getTypeCode() + " and";
+			dataSubjectsStmt = dataSubjectsStmt + " p <> " + RDF2SQLEncoding.getDefaultTypeCode() + " and";
 		}
 		if (RDF2SQLEncoding.getSubClassCode() >= 0) {
 			if (!hasWhere) {

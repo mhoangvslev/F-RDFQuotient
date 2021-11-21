@@ -930,4 +930,9 @@ public class Interface {
 
         return names;
     }
+
+    // if need be
+    public static Summary getSummary() {
+        return summary;
+    }
 }

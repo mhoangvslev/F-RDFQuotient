@@ -87,7 +87,7 @@ public class SummaryExport {
 	public void exportRepresentationFunctionToNTFile(Connection conn, String exportRepresentationFunctionToNTFilename) {
 		String URIprefix = summarizationProperties.getProperty("drawing.summary_node_URI_prefix");
 		HashSet<Long> sn = summary.getSchemaNodes();
-		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
+		RDF2SQLEncoding.setUp(conn, dictionaryTableName, summary.getDefaultTypeURI(), summary.getVariantTypeURIs());
 		String NTFilenamePrefix = summarizationProperties.getProperty("summary.nt_file_prefix");
 		String exportRepresentationFunctionToNTFilePath = getNTRepresentationFileName(exportRepresentationFunctionToNTFilename);
 		LOGGER.info("Exporting the " + this.getClass().getSimpleName() + " representation function to disk to the file " + exportRepresentationFunctionToNTFilePath);
@@ -117,7 +117,7 @@ public class SummaryExport {
 	public void exportNodeStatisticsToNTFile(Connection conn, boolean representationCountsAlreadyComputed, String exportNodeStatisticsToNTFilename) {
 		String URIprefix = summarizationProperties.getProperty("drawing.summary_node_URI_prefix");
 		HashSet<Long> sn = summary.getSchemaNodes();
-		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
+		RDF2SQLEncoding.setUp(conn, dictionaryTableName, summary.getDefaultTypeURI(), summary.getVariantTypeURIs());
 		String exportNodeStatisticsToNTFilePath = getNTRepresentationFileName(exportNodeStatisticsToNTFilename);
 		LOGGER.info("Exporting the " + this.getClass().getSimpleName() + " node statistics to disk to the file " + exportNodeStatisticsToNTFilePath);
 		try (BufferedWriter nodeStatisticsFile = new BufferedWriter(new FileWriter(exportNodeStatisticsToNTFilePath))) {
@@ -147,7 +147,7 @@ public class SummaryExport {
 	}
 
 	public void exportEdgeStatisticsToNTFile(Connection conn, String exportEdgeStatisticsToNTFilename) {
-		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
+		RDF2SQLEncoding.setUp(conn, dictionaryTableName, summary.getDefaultTypeURI(), summary.getVariantTypeURIs());
 		String exportEdgeStatisticsToNTFilePath = getNTRepresentationFileName(exportEdgeStatisticsToNTFilename);
 		LOGGER.info("Exporting the " + this.getClass().getSimpleName() + " edge statistics to disk to the file " + exportEdgeStatisticsToNTFilePath);
 		try (BufferedWriter edgeStatisticsFile = new BufferedWriter(new FileWriter(exportEdgeStatisticsToNTFilePath))) {
@@ -194,7 +194,7 @@ public class SummaryExport {
 	 */
 	public String writeDecodedSummaryToNTFile(Connection conn) {
 		HashSet<Long> sn = summary.getSchemaNodes();
-		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
+		RDF2SQLEncoding.setUp(conn, dictionaryTableName, summary.getDefaultTypeURI(), summary.getVariantTypeURIs());
 
 		String URIprefix = summarizationProperties.getProperty("drawing.summary_node_URI_prefix");
 
@@ -366,7 +366,7 @@ public class SummaryExport {
 	public void writeSummaryToDOTFile(Connection conn, String summaryDOTFileName, String summaryPNGFileName) {
 		dax = new DOTAuxiliary(summarizationProperties.getProperty("drawing.color_scheme"));
 		HashSet<Long> sn = summary.getSchemaNodes();
-		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
+		RDF2SQLEncoding.setUp(conn, dictionaryTableName, summary.getDefaultTypeURI(), summary.getVariantTypeURIs());
 		dax.resetColors();
 		String URIprefix = summarizationProperties.getProperty("drawing.summary_node_URI_prefix");
 
@@ -703,7 +703,7 @@ public class SummaryExport {
 		summary.setNumberOfLeaves(leaves.size());
 		// now we know who the leaves are, we just have to draw all this
 		HashSet<Long> sn = summary.getSchemaNodes();
-		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
+		RDF2SQLEncoding.setUp(conn, dictionaryTableName, summary.getDefaultTypeURI(), summary.getVariantTypeURIs());
 		dax.resetColors();
 		//LOGGER.debug("writeSummaryToDOTFileSplitLeaves:");
 
@@ -891,7 +891,7 @@ public class SummaryExport {
 
 		// prepare the drawing
 		HashSet<Long> sn = summary.getSchemaNodes();
-		RDF2SQLEncoding.setUp(conn, dictionaryTableName);
+		RDF2SQLEncoding.setUp(conn, dictionaryTableName, summary.getDefaultTypeURI(), summary.getVariantTypeURIs());
 		dax.resetColors();
 		//LOGGER.debug("writeSummaryToDOTFileSplitLeaves:");
 
@@ -964,7 +964,7 @@ public class SummaryExport {
 						break;
 					}
 					//LOGGER.info("Second pass over " + t.toString());
-					if (RDF2SQLEncoding.isDataProperty(t.p) || (RDF2SQLEncoding.getTypeCode() == t.p)) { // type or data triple
+					if (RDF2SQLEncoding.isDataProperty(t.p) || (RDF2SQLEncoding.getDefaultTypeCode() == t.p)) { // type or data triple
 						if (!sn.contains(t.s)) { // data subject
 							//LOGGER.info(t.s + " is a data node");
 							EntitySummaryNode esn = entities.get(t.s);
@@ -978,7 +978,7 @@ public class SummaryExport {
 								esn.addNodeDescriptionTo(bw, dax);
 								dotLinesPrinted++;
 							}
-							if (t.p != RDF2SQLEncoding.getTypeCode() && (!leaves.contains(t.o))) { // print data edge (not type edge)
+							if (t.p != RDF2SQLEncoding.getDefaultTypeCode() && (!leaves.contains(t.o))) { // print data edge (not type edge)
 								// if the object is not a leaf
 								String subjectInDot = getVeryShortLabelForSummaryDataSubject(t.s, sn);
 								String objectInDot = getVeryShortLabelForSummaryDataSubject(t.o, sn);

@@ -25,7 +25,7 @@ public class DataFirstTraverser extends Traverser {
 	@Override
 	protected void typePass() {
 		long start = System.currentTimeMillis();
-		String getTypedTriplesString = ("select * from " + PostgresIdentifier.escapedQuotedId(summ.encodedTriplesTableName) + " where p = " + typeConstantCode);
+		String getTypedTriplesString = ("select * from " + PostgresIdentifier.escapedQuotedId(summ.encodedTriplesTableName) + " where p = " + defaultTypeConstantCode);
 		try {
 			try (Statement getTypedTriples = conn.createStatement()) {
 				getTypedTriples.setFetchSize(10000);

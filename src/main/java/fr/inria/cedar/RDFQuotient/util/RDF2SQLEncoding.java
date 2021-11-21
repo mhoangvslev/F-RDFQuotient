@@ -8,7 +8,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
@@ -20,7 +23,8 @@ import org.apache.log4j.Logger;
  */
 public class RDF2SQLEncoding {
 	private static final Logger LOGGER = Logger.getLogger(RDF2SQLEncoding.class.getName());
-	private static long typeCode = -1; // this is the long associated by OntoSQL to rdf:type.
+	private static long defaultTypeCode = -1; // this is the long associated by OntoSQL to rdf:type.
+	private static HashSet<Long> allTypeCodes;
 	private static long subClassCode = -1;
 	private static long subPropertyCode = -1;
 	private static long domainCode = -1;
@@ -46,7 +50,7 @@ public class RDF2SQLEncoding {
 	 * @param givenConn
 	 * @param dictionaryTableName
 	 */
-	public static void setUp(Connection givenConn, String dictionaryTableName) {
+	public static void setUp(Connection givenConn, String dictionaryTableName, String defaultTypeURI, String[] variantTypeURIs) {
 		conn = givenConn;
 		try {
 			stmtDecode = conn.prepareStatement("select value from " + PostgresIdentifier.escapedQuotedId(dictionaryTableName) + " where key=?");
@@ -58,6 +62,7 @@ public class RDF2SQLEncoding {
 		codeToURIOrLiteral = new HashMap<>();
 		uriOrLiteralToCode = new HashMap<>();
 		setRDFBuiltInPropertyCodes();
+		setTypeCodes(defaultTypeURI, variantTypeURIs);
 	}
 
 	public static Connection getConnection() {
@@ -68,8 +73,12 @@ public class RDF2SQLEncoding {
 		conn = givenConn;
 	}
 
-	public static long getTypeCode() {
-		return typeCode;
+	public static long getDefaultTypeCode() {
+		return defaultTypeCode;
+	}
+
+	public static HashSet<Long> getAllTypeCodes() {
+		return allTypeCodes;
 	}
 
 	public static long getSubClassCode() {
@@ -97,8 +106,6 @@ public class RDF2SQLEncoding {
 	}
 
 	public static void setRDFBuiltInPropertyCodes() {
-		setTypeCode();
-		//LOGGER.debug("rdf:type code is " + typeCode);
 		setSubClassCode();
 		//LOGGER.debug("rdfs:subClassOf code is: " + subClassCode);
 		setSubPropertyCode();
@@ -111,8 +118,23 @@ public class RDF2SQLEncoding {
 		setPropertyCode();
 	}
 
-	private static void setTypeCode() {
-		typeCode = dictionaryEncode("<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>");
+	public static void setTypeCodes(String defaultTypeURI, String[] variantTypeURIs) {
+		setDefaultTypeCode(defaultTypeURI);
+		//LOGGER.debug("rdf:type code is " + typeCode);
+		setAllTypeCodes(variantTypeURIs);
+	}
+
+	private static void setDefaultTypeCode(String defaultTypeURI) {
+		defaultTypeCode = dictionaryEncode(defaultTypeURI);
+	}
+
+	private static void setAllTypeCodes(String[] variantTypeURIs) {
+		allTypeCodes.add(defaultTypeCode);
+		long variantTypeCode;
+		for (String variantTypeURI: variantTypeURIs) {
+			variantTypeCode = dictionaryEncode(variantTypeURI);
+			allTypeCodes.add(variantTypeCode);
+		}
 	}
 
 	private static void setSubClassCode() {
@@ -300,7 +322,7 @@ public class RDF2SQLEncoding {
 	}
 
 	public static boolean isSpecialProperty(long p) {
-		return ((p == typeCode) && (typeCode != -1)) || isSchemaProperty(p);
+		return ((p == defaultTypeCode) && (defaultTypeCode != -1)) || isSchemaProperty(p);
 	}
 
 	public static boolean isDataProperty(long p) {

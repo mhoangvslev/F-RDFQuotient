@@ -205,7 +205,7 @@ public class ForwardBackwardBisimulationSummary extends Summary {
 		this.isTypeFirst = false;
 		this.isDataAndType = true;
 		this.isTwoPass = true;
-		typeConstantCode = RDF2SQLEncoding.getTypeCode();
+		typeConstantCode = RDF2SQLEncoding.getDefaultTypeCode();
 		allNonSchemaNodes = new HashSet<>();
 		nodeToNextHopNodesByOutgoingNonSchemaProperty = new HashMap<>();
 		nodeToPreviousHopNodesByIncomingNonSchemaProperties = new HashMap<>();
