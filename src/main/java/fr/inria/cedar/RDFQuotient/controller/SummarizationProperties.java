@@ -52,7 +52,7 @@ public class SummarizationProperties extends ConfigurationProperties {
 		properties.put("summary.summarize_saturated_graph", "false");
 
 		// Valid options: weak, strong, typedweak, typedstrong, 2pweak, 2pweakunionfind, 2pstrong, 2ptypedweak, 2ptypedstrong, typed, 2ponefw, 2ponefb, 2pinputoutput, 2pbisim
-		properties.put("summary.type", "typedweak");
+		properties.put("summary.type", "strong");
 
 		// Whether to omit generic RDF properties from clique computation
 		properties.put("summary.omit_generic_properties_from_cliques", "true");
