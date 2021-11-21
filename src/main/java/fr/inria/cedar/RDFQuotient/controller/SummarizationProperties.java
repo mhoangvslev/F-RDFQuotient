@@ -64,10 +64,10 @@ public class SummarizationProperties extends ConfigurationProperties {
 		properties.put("summary.replace_type_with_most_general_type", "true");
 
 		// The property URI to be used as a default type property
-		properties.put("summary.default_rdftype_property_URI", "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>");
+		properties.put("summary.default_type_property_URI", "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>");
 
 		// In case it's needed, the list of other properties to be used as type properties
-		properties.put("summary.variant_rdftype_property_URIs", "<http://www.wikidata.org/prop/direct/P31>");
+		properties.put("summary.variant_type_property_URIs", "<http://www.wikidata.org/prop/direct/P31>");
 
 		// Whether to run consistency checks after each summarized triple
 		// This may make summarization significantly slower; set it to true only for debugging.

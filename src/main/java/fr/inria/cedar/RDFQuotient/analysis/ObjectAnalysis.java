@@ -61,15 +61,16 @@ public class ObjectAnalysis {
 			LOGGER.info("Error: " + e);
 		}
 		String typedSubjectsStmt = "create table typed as select distinct s from tmp_encoded_sat ";
-		boolean hasWhere = false;
 
 		// typed subjects
 		if (RDF2SQLEncoding.getDefaultTypeCode() >= 0) {
-			if (!hasWhere) {
-				typedSubjectsStmt = typedSubjectsStmt + " where ";
-				hasWhere = true;
+			typedSubjectsStmt += " where ";
+
+			String prefix = "";
+			for (long typeCode: RDF2SQLEncoding.getAllTypeCodes()) { // typeCodes guaranteed to be non-empty
+				typedSubjectsStmt += prefix + "p = " + typeCode;
+				prefix = " or ";
 			}
-			typedSubjectsStmt = typedSubjectsStmt + " p = " + RDF2SQLEncoding.getDefaultTypeCode();
 		}
 		else {
 			typedSubjectsStmt = "create table typed (s long)";
@@ -80,14 +81,17 @@ public class ObjectAnalysis {
 		LOGGER.info("Typed table done.");
 
 		// data subjects
-		hasWhere = false;
+		boolean hasWhere = false;
 		String dataSubjectsStmt = "create table hasdataprops as select distinct s from tmp_encoded_sat ";
 		if (RDF2SQLEncoding.getDefaultTypeCode() >= 0) {
-			if (!hasWhere) {
-				dataSubjectsStmt = dataSubjectsStmt + " where ";
-				hasWhere = true;
+			dataSubjectsStmt += " where ";
+			hasWhere = true;
+			String prefix = "";
+			for (long typeCode: RDF2SQLEncoding.getAllTypeCodes()) { // typeCodes guaranteed to be non-empty
+				dataSubjectsStmt += prefix + "p <> " + typeCode;
+				prefix = " and ";
 			}
-			dataSubjectsStmt = dataSubjectsStmt + " p <> " + RDF2SQLEncoding.getDefaultTypeCode() + " and";
+			dataSubjectsStmt += " and";
 		}
 		if (RDF2SQLEncoding.getSubClassCode() >= 0) {
 			if (!hasWhere) {
@@ -127,7 +131,7 @@ public class ObjectAnalysis {
 		LOGGER.info("HasDataProps done.");
 
 
-		this.createAndIndexOneColTable("datatyped", "create table datatyped as (select * from typed natural join hasdataprops);");
+		this.createAndIndexOneColTable("datatyped", "create table datatyped as (select * from typed natural join hasdataprops)");
 		LOGGER.info("DataTyped done.");
 
 		Statement stat = null;

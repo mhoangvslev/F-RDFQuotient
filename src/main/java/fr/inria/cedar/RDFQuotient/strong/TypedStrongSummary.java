@@ -243,7 +243,7 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 				handleDataTriple_US_UP_UO(t);
 				break;
 			default:
-				throw new IllegalStateException("Unknown case;");
+				throw new IllegalStateException("Unknown case");
 		}
 		cacheTriple(t);
 	}

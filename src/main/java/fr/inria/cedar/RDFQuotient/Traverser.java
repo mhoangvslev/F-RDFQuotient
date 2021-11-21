@@ -28,7 +28,6 @@ public abstract class Traverser {
 	protected final Summary summ;
 	protected final Connection conn;
 	protected long setupTime;
-	protected long defaultTypeConstantCode;
 	protected HashSet<Long> allTypeConstantCodes;
 	protected long subClassCode;
 	protected long subPropertyCode;
@@ -67,7 +66,6 @@ public abstract class Traverser {
 		// this is needed to find the constants associated to special RDF properties
 		summ.setTypeURIs();
 		RDF2SQLEncoding.setUp(conn, summ.dictionaryTableName, summ.defaultTypeURI, summ.variantTypeURIs);
-		defaultTypeConstantCode = RDF2SQLEncoding.getDefaultTypeCode();
 		allTypeConstantCodes = RDF2SQLEncoding.getAllTypeCodes();
 		subClassCode = RDF2SQLEncoding.getSubClassCode();
 		subPropertyCode = RDF2SQLEncoding.getSubPropertyCode();
@@ -152,14 +150,14 @@ public abstract class Traverser {
 				oEncoded = RDF2SQLEncoding.addNewEntryToDictionary(o, summ.dictionaryTableName);
 			}
 
-			long typeCode = RDF2SQLEncoding.getDefaultTypeCode();
+			HashSet<Long> typeCodes = RDF2SQLEncoding.getAllTypeCodes();
 			long classCode = RDF2SQLEncoding.getClassCode();
 			long propertyCode = RDF2SQLEncoding.getPropertyCode();
-			if (typeTriple && (pEncoded != typeCode)) {
+			if (typeTriple && !(typeCodes.contains(pEncoded))) {
 				LOGGER.error("Expected type triple, addition cancelled, retry");
 				return haltStepByStepAndAskForTripleFromUser(typeTriple);
 			}
-			if (!typeTriple && (pEncoded == typeCode)) {
+			if (!typeTriple && typeCodes.contains(pEncoded)) {
 				LOGGER.error("Expected type non-triple, addition cancelled, retry");
 				return haltStepByStepAndAskForTripleFromUser(typeTriple);
 			}
@@ -175,7 +173,7 @@ public abstract class Traverser {
 				summ.sn.add(oEncoded);
 				summ.rep.put(oEncoded, oEncoded);
 			}
-			if (pEncoded == typeCode) {
+			if (typeCodes.contains(pEncoded)) {
 				summ.sn.add(oEncoded);
 				summ.rep.put(oEncoded, oEncoded);
 				if (oEncoded == classCode || oEncoded == propertyCode) {
@@ -237,14 +235,20 @@ public abstract class Traverser {
 	// data and schema triples
 	protected void dataPass() {
 		long start = System.currentTimeMillis();
-		String getUntypedTriplesString = "select * from "
-			+ PostgresIdentifier.escapedQuotedId(summ.encodedTriplesTableName)
-			+ " where p <> " + defaultTypeConstantCode
-			+ (summ.summarizationProperties.getProperty("database.deterministic_ordering").equals("false") ? "" : "order by s, p, o");
+		StringBuilder getUntypedTriplesString = new StringBuilder();
+		getUntypedTriplesString.append("select * from ").append(PostgresIdentifier.escapedQuotedId(summ.encodedTriplesTableName))
+				.append(" where ");
+		String prefix = "";
+		for (long typeCode: allTypeConstantCodes) { // allTypeConstantCodes guaranteed to be non-empty
+			getUntypedTriplesString.append(prefix).append("p <> ").append(typeCode);
+			prefix = " and ";
+		}
+		getUntypedTriplesString.append(summ.summarizationProperties.getProperty("database.deterministic_ordering").equals("false") ? "" : "order by s, p, o");
+
 		try {
 			try (Statement getUntypedTriples = conn.createStatement()) {
 				getUntypedTriples.setFetchSize(10000);
-				try (ResultSet rs = getUntypedTriples.executeQuery(getUntypedTriplesString)) {
+				try (ResultSet rs = getUntypedTriples.executeQuery(getUntypedTriplesString.toString())) {
 					do {
 						Triple t = null;
 
@@ -303,15 +307,22 @@ public abstract class Traverser {
 	// first pass
 	protected void dataTriplesClassification() {
 		long start = System.currentTimeMillis();
-		String getUntypedTriplesString = "select * from "
-			+ PostgresIdentifier.escapedQuotedId(summ.encodedTriplesTableName)
-			+ " where p <> " + defaultTypeConstantCode
-			+ (summ.summarizationProperties.getProperty("database.deterministic_ordering").equals("false") ? "" : "order by s, p, o");
+
+		StringBuilder getUntypedTriplesString = new StringBuilder();
+		getUntypedTriplesString.append("select * from ").append(PostgresIdentifier.escapedQuotedId(summ.encodedTriplesTableName))
+				.append(" where ");
+		String prefix = "";
+		for (long typeCode: allTypeConstantCodes) { // allTypeConstantCodes guaranteed to be non-empty
+			getUntypedTriplesString.append(prefix).append("p <> ").append(typeCode);
+			prefix = " and ";
+		}
+		getUntypedTriplesString.append(summ.summarizationProperties.getProperty("database.deterministic_ordering").equals("false") ? "" : "order by s, p, o");
+
 		Triple t;
 		try {
 			try (Statement getUntypedTriples = conn.createStatement()) {
 				getUntypedTriples.setFetchSize(10000);
-				try (ResultSet rs = getUntypedTriples.executeQuery(getUntypedTriplesString)) {
+				try (ResultSet rs = getUntypedTriples.executeQuery(getUntypedTriplesString.toString())) {
 					while (rs.next()) {
 						t = new Triple(rs.getLong(1), rs.getLong(2), rs.getLong(3));
 						if ((t.p == subClassCode)
@@ -345,15 +356,22 @@ public abstract class Traverser {
 	// second pass
 	protected void dataTriplesRepresentation() {
 		long start = System.currentTimeMillis();
-		String getUntypedTriplesString = "select * from "
-			+ PostgresIdentifier.escapedQuotedId(summ.encodedTriplesTableName)
-			+ " where p <> " + defaultTypeConstantCode
-			+ (summ.summarizationProperties.getProperty("database.deterministic_ordering").equals("false") ? "" : "order by s, p, o");
+
+		StringBuilder getUntypedTriplesString = new StringBuilder();
+		getUntypedTriplesString.append("select * from ").append(PostgresIdentifier.escapedQuotedId(summ.encodedTriplesTableName))
+				.append(" where ");
+		String prefix = "";
+		for (long typeCode: allTypeConstantCodes) { // allTypeConstantCodes guaranteed to be non-empty
+			getUntypedTriplesString.append(prefix).append("p <> ").append(typeCode);
+			prefix = " and ";
+		}
+		getUntypedTriplesString.append(summ.summarizationProperties.getProperty("database.deterministic_ordering").equals("false") ? "" : "order by s, p, o");
+
 		Triple t;
 		try {
 			try (Statement getUntypedTriples = conn.createStatement()) {
 				getUntypedTriples.setFetchSize(10000);
-				try (ResultSet rs = getUntypedTriples.executeQuery(getUntypedTriplesString)) {
+				try (ResultSet rs = getUntypedTriples.executeQuery(getUntypedTriplesString.toString())) {
 					while (rs.next()) {
 						if (summ.haltStepByStep) {
 							haltStepByStep();

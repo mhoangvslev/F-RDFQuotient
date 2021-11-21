@@ -8,7 +8,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -23,7 +22,7 @@ import org.apache.log4j.Logger;
  */
 public class RDF2SQLEncoding {
 	private static final Logger LOGGER = Logger.getLogger(RDF2SQLEncoding.class.getName());
-	private static long defaultTypeCode = -1; // this is the long associated by OntoSQL to rdf:type.
+	private static long defaultTypeCode;
 	private static HashSet<Long> allTypeCodes;
 	private static long subClassCode = -1;
 	private static long subPropertyCode = -1;
@@ -294,7 +293,7 @@ public class RDF2SQLEncoding {
 
 	public static void dropUserTriplesTable() {
 		try {
-			PreparedStatement stmtDropUserTriplesTable = conn.prepareStatement("drop table if exists user_triples;");
+			PreparedStatement stmtDropUserTriplesTable = conn.prepareStatement("drop table if exists user_triples");
 			stmtDropUserTriplesTable.executeUpdate();
 			conn.commit();
 		}
@@ -305,7 +304,7 @@ public class RDF2SQLEncoding {
 
 	public static void dropEncodedUserTriplesTable() {
 		try {
-			PreparedStatement stmtDropEncodedUserTriplesTable = conn.prepareStatement("drop table if exists user_encoded_triples;");
+			PreparedStatement stmtDropEncodedUserTriplesTable = conn.prepareStatement("drop table if exists user_encoded_triples");
 			stmtDropEncodedUserTriplesTable.executeUpdate();
 			conn.commit();
 		}

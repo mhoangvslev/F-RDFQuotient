@@ -964,7 +964,7 @@ public class SummaryExport {
 						break;
 					}
 					//LOGGER.info("Second pass over " + t.toString());
-					if (RDF2SQLEncoding.isDataProperty(t.p) || (RDF2SQLEncoding.getDefaultTypeCode() == t.p)) { // type or data triple
+					if (RDF2SQLEncoding.isDataProperty(t.p) || RDF2SQLEncoding.getAllTypeCodes().contains(t.p)) { // type or data triple
 						if (!sn.contains(t.s)) { // data subject
 							//LOGGER.info(t.s + " is a data node");
 							EntitySummaryNode esn = entities.get(t.s);
@@ -978,7 +978,7 @@ public class SummaryExport {
 								esn.addNodeDescriptionTo(bw, dax);
 								dotLinesPrinted++;
 							}
-							if (t.p != RDF2SQLEncoding.getDefaultTypeCode() && (!leaves.contains(t.o))) { // print data edge (not type edge)
+							if (!RDF2SQLEncoding.getAllTypeCodes().contains(t.p) && !leaves.contains(t.o)) { // print data edge (not type edge)
 								// if the object is not a leaf
 								String subjectInDot = getVeryShortLabelForSummaryDataSubject(t.s, sn);
 								String objectInDot = getVeryShortLabelForSummaryDataSubject(t.o, sn);
@@ -1165,21 +1165,21 @@ public class SummaryExport {
 				long triplesToDraw = Math.min(100, summary.getTriplesSummarizedSoFar());
 				long triplesDrawn = 0;
 				if (summary.isTypeFirst()) {
-					try (ResultSet rs = getTypeTriplesCursorForDotDrawing(conn, triplesToDraw)) {
+					try (ResultSet rs = getTypeTriplesCursorForDotDrawing(conn)) { //, triplesToDraw)) {
 						triplesDrawn = drawTriples(conn, rs, bw, triplesToDraw, triplesDrawn);
 					}
 					if (triplesDrawn < triplesToDraw){
-						try (ResultSet rs2 = getNonTypeTriplesCursorForDotDrawing(conn, triplesToDraw-triplesDrawn)) {
+						try (ResultSet rs2 = getNonTypeTriplesCursorForDotDrawing(conn)) { //, triplesToDraw-triplesDrawn)) {
 							drawTriples(conn, rs2, bw, triplesToDraw, triplesDrawn);
 						}
 					}
 				}
 				else {
-					try (ResultSet rs = getNonTypeTriplesCursorForDotDrawing(conn, triplesToDraw)) {
+					try (ResultSet rs = getNonTypeTriplesCursorForDotDrawing(conn)) { //, triplesToDraw)) {
 						triplesDrawn = drawTriples(conn, rs, bw, triplesToDraw, triplesDrawn);
 					}
 					if (triplesDrawn < triplesToDraw){
-						try (ResultSet rs2 = getTypeTriplesCursorForDotDrawing(conn, triplesToDraw-triplesDrawn)) {
+						try (ResultSet rs2 = getTypeTriplesCursorForDotDrawing(conn)) { //, triplesToDraw-triplesDrawn)) {
 							drawTriples(conn, rs2, bw, triplesToDraw, triplesDrawn);
 						}
 					}
@@ -1210,20 +1210,23 @@ public class SummaryExport {
 	 * Different summaries need to traverse their triples in different orders, thus the two cursors which differ between the typed and untyped summaries.
 	 * Returns the first cursor, over the non-type triples
 	 * @param conn
-	 * @param triplesToDraw
+	 //* @param triplesToDraw
 	 * @return
 	 */
-	protected ResultSet getNonTypeTriplesCursorForDotDrawing(Connection conn, long triplesToDraw) {
+	protected ResultSet getNonTypeTriplesCursorForDotDrawing(Connection conn) { //, long triplesToDraw) {
 		try {
-			String stepByStep = summarizationProperties.getProperty("summary.step_by_step");
-			Boolean sbs = stepByStep.equals("false");
-			String query = "select d1.value, d2.value, d3.value from (select row_number() over () as id, s, p, o from "
-				+ encodedTriplesTableName + ") t join " + dictionaryTableName
-				+ " d1 on t.s = d1.key join " + dictionaryTableName
-				+ " d2 on t.p = d2.key join " + dictionaryTableName
-				+ " d3 on t.o = d3.key where d2.value <> '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>'"
-				+ (summarizationProperties.getProperty("database.deterministic_ordering").equals("false") ? " order by id" : " order by d1.key, d2.key, d3.key");
-			return conn.createStatement().executeQuery(query);
+			StringBuilder query = new StringBuilder();
+			query.append("select d1.value, d2.value, d3.value from (select row_number() over () as id, s, p, o from ")
+					.append(encodedTriplesTableName).append(") t join ").append(dictionaryTableName)
+					.append(" d1 on t.s = d1.key join ").append(dictionaryTableName)
+					.append(" d2 on t.p = d2.key join ").append(dictionaryTableName)
+					.append(" d3 on t.o = d3.key where d2.value <> '").append(summary.getDefaultTypeURI()).append("'");
+			for (String variantType: summary.getVariantTypeURIs()) {
+				query.append(" and d2.value <> '").append(variantType).append("'");
+			}
+			query.append(summarizationProperties.getProperty("database.deterministic_ordering").equals("false") ? " order by id" : " order by d1.key, d2.key, d3.key");
+
+			return conn.createStatement().executeQuery(query.toString());
 		}
 		catch(SQLException e) {
 			throw new IllegalStateException("Could not get a cursor on the graph triples for drawing");
@@ -1235,18 +1238,23 @@ public class SummaryExport {
 	 * Different summaries need to traverse their triples in different orders, thus the two cursors which differ between the typed and untyped summaries.
 	 * Returns the second cursor, over the type triples.
 	 * @param conn
-	 * @param triplesToDraw
+	 //* @param triplesToDraw
 	 * @return
 	 */
-	protected ResultSet getTypeTriplesCursorForDotDrawing(Connection conn, long triplesToDraw) {
+	protected ResultSet getTypeTriplesCursorForDotDrawing(Connection conn) { //, long triplesToDraw) {, long triplesToDraw) {
 		try {
-			String query = "select d1.value, d2.value, d3.value from "
-				+ encodedTriplesTableName + " t join " + dictionaryTableName
-				+ " d1 on t.s = d1.key join " + dictionaryTableName
-				+ " d2 on t.p = d2.key join " + dictionaryTableName
-				+ " d3 on t.o = d3.key where d2.value = '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>'"
-				+ (summarizationProperties.getProperty("database.deterministic_ordering").equals("false") ? "" : " order by d1.value, d2.value, d3.value");
-			return conn.createStatement().executeQuery(query);
+			StringBuilder query = new StringBuilder();
+			query.append("select d1.value, d2.value, d3.value from ").append(encodedTriplesTableName)
+					.append(" t join ").append(dictionaryTableName)
+					.append(" d1 on t.s = d1.key join ").append(dictionaryTableName)
+					.append(" d2 on t.p = d2.key join ").append(dictionaryTableName)
+					.append(" d3 on t.o = d3.key where d2.value = '").append(summary.getDefaultTypeURI()).append("'");
+			for (String variantType: summary.getVariantTypeURIs()) {
+				query.append(" or d2.value = '").append(variantType).append("'");
+			}
+			query.append(summarizationProperties.getProperty("database.deterministic_ordering").equals("false") ? "" : " order by d1.value, d2.value, d3.value");
+
+			return conn.createStatement().executeQuery(query.toString());
 		}
 		catch(SQLException e) {
 			throw new IllegalStateException("Could not get a cursor on the graph triples for drawing");

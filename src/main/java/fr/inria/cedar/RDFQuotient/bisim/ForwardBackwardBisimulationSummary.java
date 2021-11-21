@@ -185,7 +185,7 @@ public class ForwardBackwardBisimulationSummary extends Summary {
 		}
 	}
 
-	protected long typeConstantCode;
+	protected HashSet<Long> typeConstantCodes;
 	protected HashSet<Long> allNonSchemaNodes;
 	protected HashMap<Long, HashMap<Long, HashSet<Long>>> nodeToNextHopNodesByOutgoingNonSchemaProperty;
 	protected HashMap<Long, HashMap<Long, HashSet<Long>>> nodeToPreviousHopNodesByIncomingNonSchemaProperties;
@@ -205,7 +205,7 @@ public class ForwardBackwardBisimulationSummary extends Summary {
 		this.isTypeFirst = false;
 		this.isDataAndType = true;
 		this.isTwoPass = true;
-		typeConstantCode = RDF2SQLEncoding.getDefaultTypeCode();
+		typeConstantCodes = RDF2SQLEncoding.getAllTypeCodes();
 		allNonSchemaNodes = new HashSet<>();
 		nodeToNextHopNodesByOutgoingNonSchemaProperty = new HashMap<>();
 		nodeToPreviousHopNodesByIncomingNonSchemaProperties = new HashMap<>();
@@ -246,7 +246,7 @@ public class ForwardBackwardBisimulationSummary extends Summary {
 		if (!sn.contains(t.s)) {
 			allNonSchemaNodes.add(t.s);
 		}
-		if (t.p == typeConstantCode) {
+		if (typeConstantCodes.contains(t.p)) {
 			nodeToSetOfTypes.get(t.s).add(t.o);
 		}
 		else {

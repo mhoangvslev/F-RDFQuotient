@@ -26,11 +26,20 @@ public class TypeFirstTraverser extends Traverser {
 	protected void typePass() {
 		long start = System.currentTimeMillis();
 		// we traverse all the type triples, build the class sets and (if needed) the actual class sets. We do not represent yet.
-		String getTypedTriplesString = ("select * from " + PostgresIdentifier.escapedQuotedId(summ.encodedTriplesTableName) + " where p = " + defaultTypeConstantCode);
+
+		StringBuilder getTypedTriplesString = new StringBuilder();
+		getTypedTriplesString.append("select * from ").append(PostgresIdentifier.escapedQuotedId(summ.encodedTriplesTableName))
+				.append(" where ");
+		String prefix = "";
+		for (long typeCode: allTypeConstantCodes) { // allTypeConstantCodes guaranteed to be non-empty
+			getTypedTriplesString.append(prefix).append("p = ").append(typeCode);
+			prefix = " or ";
+		}
+
 		try {
 			try (Statement getTypedTriples = conn.createStatement()) {
 				getTypedTriples.setFetchSize(10000);
-				try (ResultSet rs = getTypedTriples.executeQuery(getTypedTriplesString)) {
+				try (ResultSet rs = getTypedTriples.executeQuery(getTypedTriplesString.toString())) {
 					do {
 						Triple t = null;
 
