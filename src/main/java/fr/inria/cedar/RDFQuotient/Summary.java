@@ -263,6 +263,20 @@ public class Summary {
             else {
                 throw new IllegalStateException("Could not learn the name of the encoded triples table");
             }
+            rs = stmt.executeQuery("select name from saved_summary_table_names where role='default_type_URI'");
+            if (rs.next()) {
+                this.defaultTypeURI = rs.getString(1);
+            }
+            else {
+                throw new IllegalStateException("Could not learn the name of the encoded triples table");
+            }
+            rs = stmt.executeQuery("select name from saved_summary_table_names where role='variant_type_URIs'");
+            if (rs.next()) {
+                this.variantTypeURIs = rs.getString(1).split(",");
+            }
+            else {
+                throw new IllegalStateException("Could not learn the name of the encoded triples table");
+            }
             rs.close();
         }
         catch (SQLException e) {
@@ -411,6 +425,7 @@ public class Summary {
     }
 
     protected void collectSchemaNodes(Connection conn) {
+        setTypeURIs();
         RDF2SQLEncoding.setUp(conn, dictionaryTableName, defaultTypeURI, variantTypeURIs);
         long subClassCode = RDF2SQLEncoding.getSubClassCode();
         long subPropertyCode = RDF2SQLEncoding.getSubPropertyCode();
@@ -479,6 +494,7 @@ public class Summary {
             getTriplesString.append(prefix).append("p = ").append(typeCode);
             prefix = " or ";
         }
+        getTriplesString.append(")");
 
         try {
             try (Statement getTriples = conn.createStatement()) {
@@ -499,6 +515,7 @@ public class Summary {
     }
 
     void computeMostGeneralType(Connection conn) {
+        setTypeURIs();
         RDF2SQLEncoding.setUp(conn, dictionaryTableName, defaultTypeURI, variantTypeURIs);
         long subClassCode = RDF2SQLEncoding.getSubClassCode();
         LOGGER.info("Computing most general types");
@@ -1144,6 +1161,14 @@ public class Summary {
             stmt.executeUpdate("insert into saved_summary_table_names values ('representation', '" + newSummaryTableNameRep + "')");
             stmt.executeUpdate("insert into saved_summary_table_names values ('summary_node_stats', '" + newSummaryTableNameNodeStats + "')");
             stmt.executeUpdate("insert into saved_summary_table_names values ('edges', '" + newSummaryTableNameEdges + "')");
+            stmt.executeUpdate("insert into saved_summary_table_names values ('default_type_URI', '" + defaultTypeURI + "')");
+            StringBuilder sb = new StringBuilder();
+            String prefix = "";
+            for (String variantTypeURI: variantTypeURIs) {
+                sb.append(prefix).append(variantTypeURI);
+                prefix = ",";
+            }
+            stmt.executeUpdate("insert into saved_summary_table_names values ('variant_type_URIs', '" + sb + "')");
             conn.commit();
         }
         catch (SQLException e) {

@@ -55,6 +55,7 @@ public class ObjectAnalysis {
 			conn = Interface.getDatabaseConnection();
 
 			Summary summary = Interface.getSummary();
+			summary.setTypeURIs();
 			RDF2SQLEncoding.setUp(conn, "dictionary", summary.getDefaultTypeURI(), summary.getVariantTypeURIs()); // fingers crossed
 		}
 		catch(Exception e) {

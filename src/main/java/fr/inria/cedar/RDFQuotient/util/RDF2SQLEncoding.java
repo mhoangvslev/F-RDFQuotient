@@ -61,6 +61,7 @@ public class RDF2SQLEncoding {
 		codeToURIOrLiteral = new HashMap<>();
 		uriOrLiteralToCode = new HashMap<>();
 		setRDFBuiltInPropertyCodes();
+		allTypeCodes = new HashSet<>();
 		setTypeCodes(defaultTypeURI, variantTypeURIs);
 	}
 
