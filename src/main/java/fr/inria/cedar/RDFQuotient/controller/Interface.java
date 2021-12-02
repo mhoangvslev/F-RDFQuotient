@@ -416,7 +416,7 @@ public class Interface {
                 case "plain":
                 case "split_leaves":
                 case "split_and_fold_leaves":
-                    message += "Exporting summary to database is manadatory in order to draw it.";
+                    message += "Exporting summary to database is mandatory in order to draw it.";
                     break;
             }
         }
