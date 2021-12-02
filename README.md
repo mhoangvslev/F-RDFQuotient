@@ -64,8 +64,8 @@ To build the project:
 
 1. Clone this git repository.
 2. The latest code corresponds to the experimental version 2.0-SNAPSHOT, which has been only released as a jar to the CEDAR team private Maven repository. (You may skip steps 3 and 4 if you have access to the CEDAR repositories and simply add RDFQuotient as a dependency.) The jar of the stable version 1.9 was compiled from sources at the commit marked with the [v1.9 git tag](https://gitlab.inria.fr/cedar/RDFQuotient/-/tags/v1.9).
-3. Download [OntoSQL jar file v1.0.12-SNAPSHOT](https://files.inria.fr/cedar/RDFQuotient/ontosql-rdfdb-1.0.12-SNAPSHOT-with-dependencies.jar).
-4. Run `mvn install:install-file -Dfile=yourpath/ontosql-rdfdb-1.0.12-SNAPSHOT-with-dependencies.jar -DgroupId=fr.inria.cedar.ontosql -DartifactId=ontosql-rdfdb -Dversion=1.0.12-SNAPSHOT -Dpackaging=jar` command to install our library in your local maven repository, where `yourpath/ontosql-rdfdb-1.0.12-SNAPSHOT-with-dependencies.jar` needs to be replaced with your local path to the download OntoSQL jar file.
+3. Download [OntoSQL jar file v1.0.13-SNAPSHOT](https://files.inria.fr/cedar/RDFQuotient/ontosql-rdfdb-1.0.13-SNAPSHOT-with-dependencies.jar).
+4. Run `mvn install:install-file -Dfile=yourpath/ontosql-rdfdb-1.0.13-SNAPSHOT-with-dependencies.jar -DgroupId=fr.inria.cedar.ontosql -DartifactId=ontosql-rdfdb -Dversion=1.0.13-SNAPSHOT -Dpackaging=jar` command to install our library in your local maven repository, where `yourpath/ontosql-rdfdb-1.0.13-SNAPSHOT-with-dependencies.jar` needs to be replaced with your local path to the download OntoSQL jar file.
 5. Run `mvn clean install -DskipTests` command.
 
 In step 4, `mvn install` or `mvn clean install` part of the command attempts to first compile the code, and then execute the tests. We use the tests as an automatic means to assert the basic correctness of our software. They are run in a controlled environment, where the parameters for a database connection are fixed. If you wish to run the tests, and you use a non-standard configuration of Postgres or DOT installation, make sure you adjust the configuration used for testing.
