@@ -1,3 +1,5 @@
+//Initial software, [Manolescu-Goujot, Goasdoué, Guzewicz], Copyright C Inria and Rennes 1 University, see the license available at https://gitlab.inria.fr/cedar/RDFQuotient/blob/master/LICENSE.txt
+
 package fr.inria.cedar.RDFQuotient.analysis;
 
 import fr.inria.cedar.RDFQuotient.controller.Interface;
