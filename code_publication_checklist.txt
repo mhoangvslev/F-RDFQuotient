@@ -1,0 +1,11 @@
+- document the code a bit (i.e., add authors of each file and a license note)
+- re-generate the default properties files
+- add the latest license to the repository
+- update all the maven dependencies in the pom.xml file
+- bump up the version and deploy it in the maven repository (compiled under Java 8)
+- share the new jar with dependencies (compiled under Java 8) and update the README file (including the version)
+- update the run scripts (including the version)
+- add an updated documentation PDF file (including the version)
+- set a tag on a commit for a release version
+- create a GitLab release
+- update all the projects that depend on the latest release of RDFQuotient
