@@ -1,26 +1,26 @@
-LICENCE LOGICIEL RDFQUOTIENTS V2
+LICENCE LOGICIEL RDFQUOTIENT V2
 
 Préambule
-Le logiciel RDFQuotients version 2 a été développé dans le cadre de recherches académiques.
+Le logiciel RDFQuotient version 2 a été développé dans le cadre de recherches académiques.
 Mme Ioana Manolescu-Goujot, M. François Goasdoué et M. Pawel Guzewicz sont les auteurs de ce logiciel.
-RDFQuotients est un logiciel capable de construire automatiquement un résumé structurel d'un graphe RDF.
+RDFQuotient est un logiciel capable de construire automatiquement un résumé structurel d'un graphe RDF.
 
-Pour cela, il s'appuie sur le formalisme de graphes quotient, à la base duquel se trouve une notion d'équivalence de noeuds. Pour chaque groupe de noeuds équivalents dans le graphe en entrée, RDFQuotients construit un nœud dans le graphe quotient (le résumé); les arêtes du graphe d'entrée conduisent à des arêtes entre les représentants de ses noeuds, dans le résumé.
-RDFQuotients implémente quatre résumés différents, s'appuyant sur des relations d'équivalence issues de la recherche de notre équipe.
+Pour cela, il s'appuie sur le formalisme de graphes quotient, à la base duquel se trouve une notion d'équivalence de noeuds. Pour chaque groupe de noeuds équivalents dans le graphe en entrée, RDFQuotient construit un nœud dans le graphe quotient (le résumé); les arêtes du graphe d'entrée conduisent à des arêtes entre les représentants de ses noeuds, dans le résumé.
+RDFQuotient implémente quatre résumés différents, s'appuyant sur des relations d'équivalence issues de la recherche de notre équipe.
 Ces résumés ont un grand pouvoir de compression: la taille du graphe résumé est souvent plusieurs ordres de grandeurs plus petite que la taille du graphe d'entrée. Ces résumés peuvent être construits soit dans une seule passe sur le graphe d'entrée, soit de façon incrémentale, pour refléter l'ajout d'une nouvelle arête (nouveau triple) dans le graphe RDF.
 Enfin, RDFQuotient fournit des visualisations des résumés construits.
-Pour le stockage et le traitement de données, RDFQuotients s'appuie sur Postgres et sur la suite OntoSQL (http://ontosql.inria.fr).
+Pour le stockage et le traitement de données, RDFQuotient s'appuie sur Postgres et sur la suite OntoSQL (http://ontosql.inria.fr).
 Pour les visualisations, il utilise GraphViz (http://www.graphviz.org).
 
 Article 1 - Définitions :
-Code Exécutable : désigne le Logiciel RDFQuotients exprimé en langage machine et exécutable à partir d’un ordinateur.
-Code source : désigne le Logiciel RDFQuotients exprimé dans un langage de programmation compréhensible par un être humain.
+Code Exécutable : désigne le Logiciel RDFQuotient exprimé en langage machine et exécutable à partir d’un ordinateur.
+Code source : désigne le Logiciel RDFQuotient exprimé dans un langage de programmation compréhensible par un être humain.
 Concédant : désigne les Titulaires, les Contributeurs ou toute personne physique ou morale distribuant le Logiciel sous le Contrat.
 Contrat : désigne la présente licence.
 Contributeur : désigne le Licencié auteur d’au moins une Contribution sur le Logiciel.
 Contribution(s) : désigne toute modification, correction, traduction, adaptation et/ou nouvelles fonctionnalités intégrées au Logiciel par tout Contributeur.
 Licencié : désigne toute personne qui utilise le Logiciel et ayant accepté les termes du présent Contrat.
-Logiciel : désigne le programme d’ordinateur RDFQuotients dans sa version 2 ainsi que sa documentation associée et son matériel de conception préparatoire, son Code Source, son Code Exécutable, ainsi que les éventuelles Contributions.
+Logiciel : désigne le programme d’ordinateur RDFQuotient dans sa version 2 ainsi que sa documentation associée et son matériel de conception préparatoire, son Code Source, son Code Exécutable, ainsi que les éventuelles Contributions.
 Titulaires : désigne les détenteurs des droits patrimoniaux sur le Logiciel. Ces titulaires sont l’Institut national de recherche en informatique et en automatique (Inria) et Université Rennes 1.
 
 Article 2 - Objet :
@@ -73,27 +73,27 @@ Ce Contrat est rédigé en langue française et en langue anglaise. En cas de co
 
 -----
 
-RDFQUOTIENTS V2 SOFTWARE LICENSE
+RDFQUOTIENT V2 SOFTWARE LICENSE
 Preamble
-RDFQuotients v2 has been developed within the context of academic research.
+RDFQuotient v2 has been developed within the context of academic research.
 Mrs Ioana Manolescu-Goujot, Mr François Goasdoué and Mr Pawel Guzewicz are the authors of the software.
-RDFQuotients is a software that automatically computes the summary of an RDF graph.
-It relies on the concept of quotient graph, which is based on the notion of node equivalence. For every node equivalence class of the input graph, RDFQuotients creates a node in the summary; the edges of the input graph lead to the edges between the representatives of those nodes in the summary.
+RDFQuotient is a software that automatically computes the summary of an RDF graph.
+It relies on the concept of quotient graph, which is based on the notion of node equivalence. For every node equivalence class of the input graph, RDFQuotient creates a node in the summary; the edges of the input graph lead to the edges between the representatives of those nodes in the summary.
 RDFQuotient implements four different summary types, based on equivalence relations defined in research publications of our team.
 These summaries have a great compression potential: the size of the summary graph is often orders of magnitude smaller than the size of the input graph. These summaries can be computed either in a single pass on the input graph or in an incremental manner upon the new addition (new triple) to the RDF graph.
-Finally, RDFQuotients provides visualizations of computed summaries.
-For the storage and data processing, RDFQuotients relies on Postgres and OntoSQL (http://ontosql.inria.fr).
+Finally, RDFQuotient provides visualizations of computed summaries.
+For the storage and data processing, RDFQuotient relies on Postgres and OntoSQL (http://ontosql.inria.fr).
 For visualizations, it uses GraphViz (http://www.graphviz.org).
 
 Article 1 - Definitions:
-Executable code: refers to the RDFQuotients software in machine language that can be executed on a computer.
-Source code: refers to the RDFQuotients software in programming language that can be understood by a human being.
+Executable code: refers to the RDFQuotient software in machine language that can be executed on a computer.
+Source code: refers to the RDFQuotient software in programming language that can be understood by a human being.
 Licensor: refers to the Owners, Contributors or any other person or organization that distributes the Software according to the Contract.
 Contract: refers to this license.
 Contributor: refers to License Holders who make at least one Contribution to the Software.
 Contribution(s): refers to any modification, correction, translation, adaptation and/or new functionality integrated in the Software by any Contributor.
 License Holder: refers to any person who uses the Software and accepts the terms and conditions of this Contract.
-Software: refers to the RDFQuotients v2 computer program and its documentation, its design and preparation hardware, the Source Code, the Executable Code and any Contributions.
+Software: refers to the RDFQuotient v2 computer program and its documentation, its design and preparation hardware, the Source Code, the Executable Code and any Contributions.
 Owner(s): refers to the owner(s) of the property rights of the Software. The owners are the Institut national de la recherche en informatique et en automatique (Inria) and Université Rennes 1.
 
 Article 2 - Purpose:
