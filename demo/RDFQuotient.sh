@@ -1,3 +1,5 @@
 #!/bin/bash
 
-java -jar ../target/RDFQuotient-1.8-with-dependencies.jar "$@"
+VERSION="2.0"
+
+java -Xmx90g -jar ../target/RDFQuotient-$VERSION-with-dependencies.jar "$@"
