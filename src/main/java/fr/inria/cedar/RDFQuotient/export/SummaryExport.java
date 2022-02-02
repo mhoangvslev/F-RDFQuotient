@@ -139,7 +139,7 @@ public class SummaryExport {
 					summaryNodeDecoded = getSummaryNodeURI(URIprefix, summaryNode);
 				}
 				count = entry.getValue();
-				nodeStatisticsFile.write(summaryNodeDecoded + " <" + nodeSupport + "> \"" + count + "^^xs:integer\" .\n");
+				nodeStatisticsFile.write(summaryNodeDecoded + " <" + nodeSupport + "> \"" + count + "\"^^xs:integer .\n");
 			}
 		}
 		catch (IOException e) {
@@ -162,7 +162,7 @@ public class SummaryExport {
 				summaryEdge = entry.getKey().p;
 				summaryEdgeDecoded = RDF2SQLEncoding.dictionaryDecode(summaryEdge);
 				count = entry.getValue();
-				edgeStatisticsFile.write(summaryEdgeDecoded + " <" + edgeSupport + "> \"" + count + "^^xs:integer\" .\n");
+				edgeStatisticsFile.write(summaryEdgeDecoded + " <" + edgeSupport + "> \"" + count + "\"^^xs:integer .\n");
 			}
 		}
 		catch (IOException e) {
