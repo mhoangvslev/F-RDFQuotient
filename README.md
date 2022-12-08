@@ -16,9 +16,9 @@ Our RDFQuotient software is written in **Java** and compiled using Apache **Mave
 ### Example
 
 1. The following command can be used to load an RDF graph:
-`java -jar target/RDFQuotient-2.0-with-dependencies.jar --load "dataset.filename=yourpath"`
+`java -jar target/RDFQuotient-2.1-with-dependencies.jar --load "dataset.filename=yourpath"`
 2. The following command can be used to summarize the loaded RDF graph:
-`java -jar target/RDFQuotient-2.0-with-dependencies.jar --summarize "dataset.filename=yourpath"`
+`java -jar target/RDFQuotient-2.1-with-dependencies.jar --summarize "dataset.filename=yourpath"`
 
 where `yourpath` needs to be replaced with the path to the RDF graph file.
 
@@ -48,6 +48,7 @@ A demonstration of the usage of our software can be found under the [demo](https
 ## Download
 ### Versions
 * Version 2.0: current, stable (also latest)
+  * Version 2.1 (only) offers more compatibility with Windows machines.
 
 See the detail below.
 
@@ -73,7 +74,7 @@ In step 4, `mvn install` or `mvn clean install` part of the command attempts to 
 		<dependency>
 			<groupId>fr.inria.cedar</groupId>
 			<artifactId>RDFQuotient</artifactId>
-			<version>2.0</version>
+			<version>2.1</version>
 		</dependency>
 
 ### Docker configuration file
