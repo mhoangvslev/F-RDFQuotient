@@ -6,6 +6,8 @@ import fr.inria.cedar.RDFQuotient.controller.Interface;
 import fr.inria.cedar.RDFQuotient.controller.LoadingProperties;
 import fr.inria.cedar.RDFQuotient.controller.SummarizationProperties;
 import fr.inria.cedar.RDFQuotient.summarization.Tests;
+
+import java.io.File;
 import java.util.Properties;
 import org.junit.Test;
 

@@ -5,8 +5,12 @@ package fr.inria.cedar.RDFQuotient.summarization;
 import fr.inria.cedar.RDFQuotient.controller.Interface;
 import fr.inria.cedar.RDFQuotient.controller.LoadingProperties;
 import fr.inria.cedar.RDFQuotient.controller.SummarizationProperties;
+
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Properties;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
@@ -116,11 +120,12 @@ public class Tests {
 			if (!expectedOutput.exists()) {
 				fail("Expected output not found: " + referenceNTFilename);
 			}
+
 			assertTrue("Summary file "
 				   + summaryNTFilename
 				   + " does not match reference file: "
 				   + referenceNTFilename,
-				   FileUtils.contentEquals(testOutput, expectedOutput));
+				   FileUtils.contentEqualsIgnoreEOL(testOutput, expectedOutput, null)); // Windows requires to use IgnoreEOL version
 		}
 		catch (IOException ex) {
 			LOGGER.error(ex);

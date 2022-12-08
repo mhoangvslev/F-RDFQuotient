@@ -239,6 +239,9 @@ public class Interface {
     public static String trimExtension(String fileName, boolean trimSlash) {
         int lastDotPosition = Math.max(0, fileName.lastIndexOf("."));
         String separator = System.getProperty("file.separator");
+        if(File.separator.equals("\\")) {
+            fileName = fileName.replaceAll("\\/", "\\\\");
+        }
         return fileName.substring(trimSlash ? fileName.lastIndexOf(separator) + 1 : 0, lastDotPosition);
     }
 
@@ -505,6 +508,10 @@ public class Interface {
         Properties summarizationProperties = reconcileProperties(defaultProperties, configurationFilename, properties);
 
         String datasetFilename = summarizationProperties.getProperty("dataset.filename");
+
+        if(File.separator.equals("\\")) { // specify a different dot installation for Dot on Windows
+            summarizationProperties.put("drawing.dot_installation", "C:\\Program Files\\Graphviz\\bin\\dot.exe");
+        }
 
         // derive database name from filename if not specified
         if (!summarizationProperties.containsKey("database.name") || summarizationProperties.getProperty("database.name").equals("")) {
@@ -832,6 +839,12 @@ public class Interface {
                 if (arguments.hasOption(dryRunOption.getOpt())) {
                     Properties defaultProperties = LoadingProperties.getDefaultProperties();
                     Properties loadingProperties = reconcileProperties(defaultProperties, loadingPropertiesFilename, commandLineProperties);
+                    // Dataset filename needs backslashes on Windows
+                    if(File.separator.equals("\\")) {
+                        String datasetFilename = loadingProperties.getProperty("dataset.filename");
+                        datasetFilename = datasetFilename.replaceAll("\\/", "\\\\");
+                        loadingProperties.setProperty("dataset.filename", datasetFilename);
+                    }
                     // derive database name from filename if not specified
                     if (!loadingProperties.containsKey("database.name") || loadingProperties.getProperty("database.name").equals("")) {
                         String datasetFilename = loadingProperties.getProperty("dataset.filename");
@@ -855,6 +868,11 @@ public class Interface {
                 if (arguments.hasOption(dryRunOption.getOpt())) {
                     Properties defaultProperties = SummarizationProperties.getDefaultProperties();
                     Properties summarizationProperties = reconcileProperties(defaultProperties, summarizationPropertiesFilename, commandLineProperties);
+                    if(File.separator.equals("\\")) {
+                        String datasetFilename = summarizationProperties.getProperty("dataset.filename");
+                        datasetFilename = datasetFilename.replaceAll("\\/", "\\\\");
+                        summarizationProperties.setProperty("dataset.filename", datasetFilename);
+                    }
                     // derive database name from filename if not specified
                     if (!summarizationProperties.containsKey("database.name") || summarizationProperties.getProperty("database.name").equals("")) {
                         String datasetFilename = summarizationProperties.getProperty("dataset.filename");

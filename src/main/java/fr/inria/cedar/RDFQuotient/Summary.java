@@ -1119,7 +1119,7 @@ public class Summary {
         }
         String timestamp = SD_FORMAT.format(new Timestamp(System.currentTimeMillis()));
         boolean summarizeSaturatedGraph = summarizationProperties.getProperty("summary.summarize_saturated_graph").equals("true");
-        String newTableName = "summary_" + timestamp + (summarizeSaturatedGraph ? "_sat" : "") + "_" + getSummaryTablePrefix();
+        String newTableName = "summary" + (summarizeSaturatedGraph ? "_sat" : "") + "_" + getSummaryTablePrefix();
 
         String newSummaryTableNameRep = newTableName + "_rep";
         // Ioana, Sept 25, 2018: we need the following line in order for the drawing with split leaves
@@ -1179,6 +1179,7 @@ public class Summary {
     public void exportRepresentationFunctionToNTFile(Connection conn, String exportRepresentationFunctionToNTFilename) {
         if (!exportRepresentationFunctionToNTFilename.equals("")) {
             ensureExporter();
+            LOGGER.info(exportRepresentationFunctionToNTFilename);
             exporter.exportRepresentationFunctionToNTFile(conn, exportRepresentationFunctionToNTFilename);
         }
     }
@@ -1186,6 +1187,7 @@ public class Summary {
     public void exportNodeStatisticsToNTFile(Connection conn, boolean representationCountsAlreadyComputed, String exportNodeStatisticsToNTFilename) {
         if (!exportNodeStatisticsToNTFilename.equals("")) {
             ensureExporter();
+            LOGGER.info(exportNodeStatisticsToNTFilename);
             exporter.exportNodeStatisticsToNTFile(conn, representationCountsAlreadyComputed, exportNodeStatisticsToNTFilename);
         }
     }
