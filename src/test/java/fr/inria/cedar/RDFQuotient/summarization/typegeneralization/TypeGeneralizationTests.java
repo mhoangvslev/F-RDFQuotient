@@ -89,7 +89,7 @@ public class TypeGeneralizationTests extends Tests {
 				   + summaryDOTFilename
 				   + " does not match reference file: "
 				   + referenceDOTFilename,
-				   FileUtils.contentEquals(testOutput, expectedOutput));
+				   FileUtils.contentEqualsIgnoreEOL(testOutput, expectedOutput, null));
 		}
 		catch (IOException ex) {
 			LOGGER.error(ex);

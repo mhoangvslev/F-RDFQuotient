@@ -92,7 +92,11 @@ public class SummaryExport {
 		String NTFilenamePrefix = summarizationProperties.getProperty("summary.nt_file_prefix");
 		String exportRepresentationFunctionToNTFilePath = getNTRepresentationFileName(exportRepresentationFunctionToNTFilename);
 		LOGGER.info("Exporting the " + this.getClass().getSimpleName() + " representation function to disk to the file " + exportRepresentationFunctionToNTFilePath);
-		try (BufferedWriter representationFunctionFile = new BufferedWriter(new FileWriter(exportRepresentationFunctionToNTFilePath))) {
+		File f = new File(exportRepresentationFunctionToNTFilename);
+		if(f.getParentFile() != null) {
+			f.getParentFile().mkdirs();
+		}
+		try (BufferedWriter representationFunctionFile = new BufferedWriter(new FileWriter(f))) {
 			long summaryNode;
 			String summaryNodeDecoded;
 			String originalNodeDecoded;
@@ -336,6 +340,10 @@ public class SummaryExport {
 		String pathToDOT = summarizationProperties.getProperty("drawing.dot_installation");
 		boolean removeDOTFile = summarizationProperties.getProperty("drawing.remove_dot_file").equals("true");
 		try {
+			File f = new File(summaryPNGFilename);
+			if(f.getParentFile() != null) {
+				f.getParentFile().mkdirs();
+			}
 			Process p = Runtime.getRuntime().exec(new String[] {pathToDOT, "-Tpng", summaryDOTFilename, "-o", summaryPNGFilename});
 			try {
 				p.waitFor();
@@ -378,7 +386,11 @@ public class SummaryExport {
 		int dotLinesPrinted = 0;
 
 		try {
-			try (BufferedWriter bw = new BufferedWriter(new FileWriter(summaryDOTFileName))) {
+			File f = new File(summaryDOTFileName);
+			if(f.getParentFile() != null) {
+				f.getParentFile().mkdirs();
+			}
+			try (BufferedWriter bw = new BufferedWriter(new FileWriter(f))) {
 				bw.write("digraph g{\n node[color=black, shape=box, style=filled];\n");
 
 				ArrayList<Triple> summEdges = summary.getSummaryEdges();
@@ -906,7 +918,11 @@ public class SummaryExport {
 		long entityEdgeCount = 0;
 
 		try {
-			try (BufferedWriter bw = new BufferedWriter(new FileWriter(summaryDOTFileName))) {
+			File f = new File(summaryDOTFileName);
+			if(f.getParentFile() != null) {
+				f.getParentFile().mkdirs();
+			}
+			try (BufferedWriter bw = new BufferedWriter(new FileWriter(f))) {
 				bw.write("digraph g{\nsplines=polyline;\n nodesep=0.15;\n ranksep=0.2;\n node[shape=box, color=black, style=filled];\n");
 
 				ArrayList<Triple> summEdges = summary.getSummaryEdges();
@@ -1167,7 +1183,11 @@ public class SummaryExport {
 
 	public void writeRDFGraphToDOTFile(Connection conn, String summaryDOTFileName, String summaryPNGFileName) {
 		try {
-			try (BufferedWriter bw = new BufferedWriter(new FileWriter(summaryDOTFileName))) {
+			File f = new File(summaryDOTFileName);
+			if(f.getParentFile() != null) {
+				f.getParentFile().mkdirs();
+			}
+			try (BufferedWriter bw = new BufferedWriter(new FileWriter(f))) {
 				bw.write("digraph g{\n");
 				long triplesToDraw = Math.min(100, summary.getTriplesSummarizedSoFar());
 				long triplesDrawn = 0;
@@ -1357,16 +1377,17 @@ public class SummaryExport {
 	public String getNTRepresentationFileName(String filename) {
 		String NTFilenamePrefix = summarizationProperties.getProperty("summary.nt_file_prefix");
 		String separator = System.getProperty("file.separator");
-		int lastSlashPostion = triplesFileName.lastIndexOf(separator);
-		String newPath = triplesFileName.substring(0, lastSlashPostion + 1) + NTFilenamePrefix;
+		int lastSlashPosition = triplesFileName.lastIndexOf(separator);
+		String newPath = triplesFileName.substring(0, lastSlashPosition + 1) + NTFilenamePrefix;
 		String newFilename = newPath + filename;
 		if (NTFilenamePrefix.contains(separator)) {
-			lastSlashPostion = newPath.lastIndexOf(separator);
-			newPath = newPath.substring(0, lastSlashPostion);
+			lastSlashPosition = newPath.lastIndexOf(separator);
+			newPath = newPath.substring(0, lastSlashPosition);
 			File f = new File(newPath);
-			f.mkdirs();
+			if(f.getParentFile() != null) {
+				f.getParentFile().mkdirs();
+			}
 		}
-
 		return newFilename;
 	}
 
@@ -1382,15 +1403,17 @@ public class SummaryExport {
 		String filePathWithoutExtension = Interface.trimExtension(triplesFileName, false);
 		String NTFilenamePrefix = summarizationProperties.getProperty("summary.nt_file_prefix");
 		String separator = System.getProperty("file.separator");
-		int lastSlashPostion = filePathWithoutExtension.lastIndexOf(separator);
-		String newPath = filePathWithoutExtension.substring(0, lastSlashPostion + 1) + NTFilenamePrefix;
-		String filename = filePathWithoutExtension.substring(lastSlashPostion + 1);
+		int lastSlashPosition = filePathWithoutExtension.lastIndexOf(separator);
+		String newPath = filePathWithoutExtension.substring(0, lastSlashPosition + 1) + NTFilenamePrefix;
+		String filename = filePathWithoutExtension.substring(lastSlashPosition + 1);
 		filePathWithoutExtension = newPath + filename;
 		if (NTFilenamePrefix.contains(separator)) {
-			lastSlashPostion = newPath.lastIndexOf(separator);
-			newPath = newPath.substring(0, lastSlashPostion);
+			lastSlashPosition = newPath.lastIndexOf(separator);
+			newPath = newPath.substring(0, lastSlashPosition);
 			File f = new File(newPath);
-			f.mkdirs();
+			if(f.getParentFile() != null) {
+				f.getParentFile().mkdirs();
+			}
 		}
 
 		String saturated = summarizationProperties.getProperty("summary.summarize_saturated_graph").equals("true") ? "_sat" : "";
@@ -1417,15 +1440,17 @@ public class SummaryExport {
 		String filePathWithoutExtension = Interface.trimExtension(triplesFileName, false);
 		String DOTFilenamePrefix = summarizationProperties.getProperty("drawing.dot_file_prefix");
 		String separator = System.getProperty("file.separator");
-		int lastSlashPostion = filePathWithoutExtension.lastIndexOf(separator);
-		String newPath = filePathWithoutExtension.substring(0, lastSlashPostion + 1) + DOTFilenamePrefix;
-		String filename = filePathWithoutExtension.substring(lastSlashPostion + 1);
+		int lastSlashPosition = filePathWithoutExtension.lastIndexOf(separator);
+		String newPath = filePathWithoutExtension.substring(0, lastSlashPosition + 1) + DOTFilenamePrefix;
+		String filename = filePathWithoutExtension.substring(lastSlashPosition + 1);
 		filePathWithoutExtension = newPath + filename;
 		if (DOTFilenamePrefix.contains(separator)) {
-			lastSlashPostion = newPath.lastIndexOf(separator);
-			newPath = newPath.substring(0, lastSlashPostion);
+			lastSlashPosition = newPath.lastIndexOf(separator);
+			newPath = newPath.substring(0, lastSlashPosition);
 			File f = new File(newPath);
-			f.mkdirs();
+			if(f.getParentFile() != null) {
+				f.getParentFile().mkdirs();
+			}
 		}
 
 		String saturated = summarizationProperties.getProperty("summary.summarize_saturated_graph").equals("true") ? "_sat" : "";
@@ -1480,7 +1505,9 @@ public class SummaryExport {
 			lastSlashPostion = newPath.lastIndexOf(separator);
 			newPath = newPath.substring(0, lastSlashPostion);
 			File f = new File(newPath);
-			f.mkdirs();
+			if(f.getParentFile() != null) {
+				f.getParentFile().mkdirs();
+			}
 		}
 
 		String saturated = summarizationProperties.getProperty("summary.summarize_saturated_graph").equals("true") ? "_sat" : "";
