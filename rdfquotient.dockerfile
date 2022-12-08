@@ -20,5 +20,5 @@ WORKDIR /code/RDFQuotient
 
 RUN mvn clean install -DskipTests -q -B -ntp
 
-ENTRYPOINT [ "java", "-jar", "./target/RDFQuotient-2.0-with-dependencies.jar" ]
+ENTRYPOINT [ "java", "-jar", "./target/RDFQuotient-2.1-with-dependencies.jar" ]
 CMD [ "--help" ]
