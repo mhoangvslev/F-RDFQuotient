@@ -16,9 +16,9 @@ Our RDFQuotient software is written in **Java** and compiled using Apache **Mave
 ### Example
 
 1. The following command can be used to load an RDF graph:
-`java -jar target/RDFQuotient-2.1-with-dependencies.jar --load "dataset.filename=yourpath"`
+`java -jar target/RDFQuotient-2.2-with-dependencies.jar --load "dataset.filename=yourpath"`
 2. The following command can be used to summarize the loaded RDF graph:
-`java -jar target/RDFQuotient-2.1-with-dependencies.jar --summarize "dataset.filename=yourpath"`
+`java -jar target/RDFQuotient-2.2-with-dependencies.jar --summarize "dataset.filename=yourpath"`
 
 where `yourpath` needs to be replaced with the path to the RDF graph file.
 
@@ -48,7 +48,7 @@ A demonstration of the usage of our software can be found under the [demo](https
 ## Download
 ### Versions
 * Version 2.0: current, stable (also latest)
-* Version 2.1: (only) offers more compatibility with Windows machines.
+* Version 2.2: (only) offers more compatibility with Windows machines.
 
 See the detail below.
 
@@ -56,7 +56,7 @@ See the detail below.
 Click on the version number below to download the standalone jar file compatible with Java >=1.8.
 
 * [Version 2.0](https://files.inria.fr/cedar/RDFQuotient/RDFQuotient-2.0-with-dependencies.jar): the current stable release built on December 8, 2021.
-* [Version 2.1](RDFQuotient-2.1-with-dependencies.jar): the current stable release for Windows users. Built on December 8, 2022.
+* [Version 2.2](RDFQuotient-2.2-with-dependencies.jar): the current stable release for Windows users. Built on December 8, 2022.
 
 ### Building from sources
 The loading process is provided by the OntoSQL/RDFDB library developed in the CEDAR team. This library is a dependency in our project that is stored in a private repository. However, it does not prevent you from using our code as we provide a compiled jar file.
@@ -64,7 +64,7 @@ The loading process is provided by the OntoSQL/RDFDB library developed in the CE
 To build the project:
 
 1. Clone this git repository.
-2. The latest code corresponds to the stable version 2.1, which has also been released as a jar to the CEDAR team private Maven repository. (If you have access to the CEDAR repositories, you may skip steps 3 and 4 and simply add RDFQuotient as a dependency.) The jar of the stable version 2.1 was compiled from sources at the commit marked with the [v2.1 git tag](https://gitlab.inria.fr/cedar/RDFQuotient/-/tags/v2.1).
+2. The latest code corresponds to the stable version 2.2, which has also been released as a jar to the CEDAR team private Maven repository. (If you have access to the CEDAR repositories, you may skip steps 3 and 4 and simply add RDFQuotient as a dependency.) The jar of the stable version 2.1 was compiled from sources at the commit marked with the [v2.2 git tag](https://gitlab.inria.fr/cedar/RDFQuotient/-/tags/v2.2).
 3. Download [OntoSQL jar file v1.0.13-SNAPSHOT](https://files.inria.fr/cedar/RDFQuotient/ontosql-rdfdb-1.0.13-SNAPSHOT-with-dependencies.jar).
 4. Run `mvn install:install-file -Dfile=yourpath/ontosql-rdfdb-1.0.13-SNAPSHOT-with-dependencies.jar -DgroupId=fr.inria.cedar.ontosql -DartifactId=ontosql-rdfdb -Dversion=1.0.13-SNAPSHOT -Dpackaging=jar` command to install our library in your local maven repository, where `yourpath/ontosql-rdfdb-1.0.13-SNAPSHOT-with-dependencies.jar` needs to be replaced with your local path to the download OntoSQL jar file.
 5. Run `mvn clean install -DskipTests` command.
@@ -75,11 +75,11 @@ In step 4, `mvn install` or `mvn clean install` part of the command attempts to 
 		<dependency>
 			<groupId>fr.inria.cedar</groupId>
 			<artifactId>RDFQuotient</artifactId>
-			<version>2.1</version>
+			<version>2.2</version>
 		</dependency>
 
 ### Docker configuration file
-To install RDFQuotient in version 2.1 with all the dependencies and prerequisites in a Docker container, use the [rdfquotient.dockerfile](https://gitlab.inria.fr/cedar/RDFQuotient/blob/master/rdfquotient.dockerfile).
+To install RDFQuotient in version 2.2 with all the dependencies and prerequisites in a Docker container, use the [rdfquotient.dockerfile](https://gitlab.inria.fr/cedar/RDFQuotient/blob/master/rdfquotient.dockerfile).
 Credits for the Docker file go to Matteo Lissandrini.
 
 ## Troubleshooting
