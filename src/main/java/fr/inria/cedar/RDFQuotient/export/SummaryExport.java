@@ -126,7 +126,11 @@ public class SummaryExport {
 		RDF2SQLEncoding.setUp(conn, dictionaryTableName, summary.getDefaultTypeURI(), summary.getVariantTypeURIs());
 		String exportNodeStatisticsToNTFilePath = getNTRepresentationFileName(exportNodeStatisticsToNTFilename);
 		LOGGER.info("Exporting the " + this.getClass().getSimpleName() + " node statistics to disk to the file " + exportNodeStatisticsToNTFilePath);
-		try (BufferedWriter nodeStatisticsFile = new BufferedWriter(new FileWriter(exportNodeStatisticsToNTFilePath))) {
+		File f = new File(exportNodeStatisticsToNTFilePath);
+		if(f.getParentFile() != null) {
+			f.getParentFile().mkdirs();
+		}
+		try (BufferedWriter nodeStatisticsFile = new BufferedWriter(new FileWriter(f))) {
 			if (!representationCountsAlreadyComputed) {
 				summary.gatherNodeStatistics();
 			}
