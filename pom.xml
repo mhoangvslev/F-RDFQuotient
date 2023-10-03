@@ -27,7 +27,7 @@
 		<dependency>
 			<groupId>fr.inria.cedar.ontosql</groupId>
 			<artifactId>ontosql-rdfdb</artifactId>
-			<version>1.0.13-SNAPSHOT</version>
+			<version>1.1.0-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.postgresql</groupId>
@@ -58,20 +58,37 @@
 		</dependency>
 	</dependencies>
 
-	<distributionManagement>
+
+		<repositories>
 		<repository>
+			<id>gitlab-maven</id>
+			<url>https://gitlab.inria.fr/api/v4/projects/46547/packages/maven</url>
+		</repository>
+		<!-- <repository>
 			<id>cedarcommons-private-release</id>
 			<name>CEDAR-commons MVN release repo</name>
 			<url>http://maven.inria.fr/artifactory/cedarcommons-private-release</url>
 		</repository>
-		<snapshotRepository>
+		<repository>
 			<id>cedarcommons-private-snapshot</id>
 			<name>CEDAR-commons MVN snapshot repo</name>
 			<url>http://maven.inria.fr/artifactory/cedarcommons-private-snapshot</url>
+		</repository> -->
+		</repositories>
+
+	<distributionManagement>
+		<repository>
+			<id>gitlab-maven</id>
+			<url>https://gitlab.inria.fr/api/v4/projects/46547/packages/maven</url>
+		</repository>
+		<snapshotRepository>
+			<id>gitlab-maven</id>
+			<url>https://gitlab.inria.fr/api/v4/projects/46547/packages/maven</url>
 		</snapshotRepository>
 	</distributionManagement>
 
-	<repositories>
+
+	<!-- <repositories>
 		<repository>
 			<id>cedarcommons-private-release</id>
 			<name>CEDAR-commons MVN release repo</name>
@@ -81,7 +98,7 @@
 				<updatePolicy>always</updatePolicy>
 			</snapshots>
 		</repository>
-	</repositories>
+	</repositories> -->
 
 	<build>
 		<plugins>
