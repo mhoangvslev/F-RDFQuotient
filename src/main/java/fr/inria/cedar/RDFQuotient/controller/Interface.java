@@ -49,9 +49,9 @@ public class Interface {
     private static long summarySavingToDiskTime;
     private static long summarySavingInPostgresTime;
 
-    static {
-        LOGGER.setLevel(Level.INFO);
-    }
+//    static {
+//        LOGGER.setLevel(Level.INFO);
+//    }
 
     public Interface() {
     }
