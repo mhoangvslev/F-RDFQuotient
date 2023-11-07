@@ -57,11 +57,14 @@ public class Interface {
     }
 
     private static String currentDateTime() {
+        LOGGER.info("START currentDateTime");
         DateFormat localeLongDateFormat = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG);
+        LOGGER.info("END currentDateTime");
         return localeLongDateFormat.format(new Date());
     }
 
     private static void checkIfDatabaseServerIsRunning(Properties properties) {
+        LOGGER.info("START checkIfDatabaseServerIsRunning");
         try {
             Class.forName("org.postgresql.Driver");
         }
@@ -103,6 +106,7 @@ public class Interface {
             LOGGER.error(ex);
             System.exit(1);
         }
+        LOGGER.info("END checkIfDatabaseServerIsRunning");
     }
 
     /*
@@ -114,6 +118,7 @@ public class Interface {
         - database.name
     */
     private static void setUpDatabaseConnection(Properties properties) {
+        LOGGER.info("START setUpDatabaseConnection");
         try {
             Class.forName("org.postgresql.Driver");
         }
@@ -147,6 +152,7 @@ public class Interface {
             LOGGER.error("No connection for " + connectionURL);
             System.exit(1);
         }
+        LOGGER.info("END setUpDatabaseConnection");
     }
 
     /*
@@ -158,9 +164,11 @@ public class Interface {
         - database.name
     */
     public static Connection getOrEstablishNewDatabaseConnection(Properties properties) {
+        LOGGER.info("START getOrEstablishNewDatabaseConnection");
         if (databaseConnection == null) {
             setUpDatabaseConnection(properties);
         }
+        LOGGER.info("END getOrEstablishNewDatabaseConnection");
         return databaseConnection;
     }
 
@@ -170,6 +178,7 @@ public class Interface {
     }
 
     public static void closeDatabaseConnection() {
+        LOGGER.info("START closeDatabaseConnection");
         try {
             databaseConnection.close();
             databaseConnection = null;
@@ -179,10 +188,12 @@ public class Interface {
             LOGGER.error(ex);
             System.exit(1);
         }
+        LOGGER.info("END closeDatabaseConnection");
     }
 
     // this is an emergency method if some library misbehaves and doesn't close connection, should not be used otherwise
     public static void forceCloseDatabaseConnection(Properties properties) {
+        LOGGER.info("START forceCloseDatabaseConnection");
         try {
             Class.forName("org.postgresql.Driver");
         }
@@ -234,14 +245,17 @@ public class Interface {
             LOGGER.error(ex);
             System.exit(1);
         }
+        LOGGER.info("END forceCloseDatabaseConnection");
     }
 
     public static String trimExtension(String fileName, boolean trimSlash) {
+        LOGGER.info("START trimExtension");
         int lastDotPosition = Math.max(0, fileName.lastIndexOf("."));
         String separator = System.getProperty("file.separator");
         if(File.separator.equals("\\")) {
             fileName = fileName.replaceAll("\\/", "\\\\");
         }
+        LOGGER.info("END trimExtension");
         return fileName.substring(trimSlash ? fileName.lastIndexOf(separator) + 1 : 0, lastDotPosition);
     }
 
@@ -250,6 +264,7 @@ public class Interface {
     }
 
     private static void exportLoadingStatisticsToDisk(Properties loadingProperties) {
+        LOGGER.info("START exportLoadingStatisticsToDisk");
         String datasetFilename = loadingProperties.getProperty("dataset.filename");
         String csvFilename = trimExtension(datasetFilename, false) + "-loading-statistics.csv";
         LOGGER.info("Loading statistics written to file " + csvFilename);
@@ -264,6 +279,7 @@ public class Interface {
             LOGGER.error(ex);
             System.exit(1);
         }
+        LOGGER.info("END exportLoadingStatisticsToDisk");
     }
 
     private static void exportLoadingConfigurationToDisk(Properties loadingProperties) {
@@ -314,6 +330,7 @@ public class Interface {
         Returns a name of the database.
     */
     public static void load(String configurationFilename, Properties properties, boolean closeConnection) {
+        LOGGER.info("START load");
         Properties defaultProperties = LoadingProperties.getDefaultProperties();
         Properties loadingProperties = reconcileProperties(defaultProperties, configurationFilename, properties);
 
@@ -383,9 +400,11 @@ public class Interface {
         }
 
         loadingProperties.getProperty("database.name");
+        LOGGER.info("END load");
     }
 
     private static String checkConsistencyOfSummarizationProperties(Properties summarizationProperties) {
+        LOGGER.info("START checkConsistencyOfSummarizationProperties");
         String message = "";
 
         if (summarizationProperties.getProperty("summary.replace_type_with_most_general_type").equals("true")) {
@@ -424,10 +443,12 @@ public class Interface {
             }
         }
 
+        LOGGER.info("END checkConsistencyOfSummarizationProperties");
         return message.equals("") ? null : message;
     }
 
     private static Summary createNewSummary(Properties summarizationProperties) throws IllegalArgumentException {
+        LOGGER.info("START createNewSummary");
         String summaryType = summarizationProperties.getProperty("summary.type");
         String triplesFileName = summarizationProperties.getProperty("dataset.filename");
         String triplesTableName = summarizationProperties.getProperty("database.triples_table_name");
@@ -464,10 +485,12 @@ public class Interface {
             case "2pbisim":
                 return new ForwardBackwardBisimulationSummary(triplesFileName, triplesTableName, encodedTriplesTableName, dictionaryTableName);
         }
+        LOGGER.info("END createNewSummary");
         throw new IllegalArgumentException("Wrong summary identifier: " + summaryType);
     }
 
     private static void exportSummarizationStatisticsToDisk(Properties summarizationProperties, String summaryNTFilename) {
+        LOGGER.info("START exportSummarizationStatisticsToDisk");
         String csvFileName = trimExtension(summaryNTFilename, false) + "-summarization-statistics.csv";
         LOGGER.info("Summarization statistics written to CSV file " + csvFileName);
         try (PrintWriter pw = new PrintWriter(csvFileName)) {
@@ -491,6 +514,7 @@ public class Interface {
             LOGGER.error(ex);
             System.exit(1);
         }
+        LOGGER.info("END exportSummarizationStatisticsToDisk");
     }
 
     private static void exportSummarizationConfigurationToDisk(Properties summarizationProperties, String summaryNTFilename) {
@@ -504,6 +528,7 @@ public class Interface {
         If the corresponding name is not present, the value is set to null.
     */
     public static HashMap<String, String> summarize(String configurationFilename, Properties properties, boolean closeConnection) {
+        LOGGER.info("START summarize");
         Properties defaultProperties = SummarizationProperties.getDefaultProperties();
         Properties summarizationProperties = reconcileProperties(defaultProperties, configurationFilename, properties);
 
@@ -647,7 +672,7 @@ public class Interface {
         names.put("databaseName", summarizationProperties.getProperty("database.name"));
         names.put("NTFilename", NTFilename);
         names.put("DOTFilename", DOTFilename);
-
+        LOGGER.info("END summarize");
         return names;
     }
 
@@ -656,6 +681,7 @@ public class Interface {
         Returns Summary object.
     */
     public static Summary read(String configurationFilename, Properties properties, boolean closeConnection) {
+        LOGGER.info("START read");
         Properties defaultProperties = SummarizationProperties.getDefaultProperties();
         Properties readingProperties = reconcileProperties(defaultProperties, configurationFilename, properties);
 
