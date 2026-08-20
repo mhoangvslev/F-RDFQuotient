@@ -1,0 +1,4 @@
+<https://a.example.org/entity1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://qstest.org/class#Person> <https://a.example.org/graph> .
+<https://a.example.org/entity1> <http://qstest.org/prop#name> "Alice" <https://a.example.org/graph> .
+<https://a.example.org/entity2> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://qstest.org/class#Person> <https://a.example.org/graph> .
+<https://b.example.org/entity3> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://qstest.org/class#Person> <https://b.example.org/graph> .
