@@ -97,6 +97,13 @@ public class SummarizationProperties extends ConfigurationProperties {
 		// Prefix added to summary NT file, usually to dispatch it into a separate directory
 		properties.put("summary.nt_file_prefix", "summariesNT/");
 
+		// Whether to export to N-Quads file, with each triple placed in a named graph identified by
+		// its subject's authority (see PLAN.md) - a separate, additional export alongside the NT one
+		properties.put("summary.export_to_nq_file", "false");
+
+		// Prefix added to summary NQ file, usually to dispatch it into a separate directory
+		properties.put("summary.nq_file_prefix", "summariesNQ/");
+
 		// Whether to execute step-by-step summarization
 		properties.put("summary.step_by_step", "false");
 

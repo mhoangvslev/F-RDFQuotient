@@ -742,6 +742,29 @@ public class Summary {
     }
 
     /**
+     * The authority of a summary node, for export-time URI minting. A summary node's authority is
+     * never recorded directly - instead, it's recovered from any one original node it represents
+     * (every original node mapped to the same summary node necessarily shares one authority, by
+     * construction of the partition), via the same resolution logic used while building it.
+     */
+    public long getSummaryNodeAuthorityId(long summaryNodeId) {
+        HashSet<Long> originals = rep.getInverse(summaryNodeId);
+        if (originals == null || originals.isEmpty()) {
+            return AUTHORITY_NONE;
+        }
+        return authorityOfResolvedNode(originals.iterator().next());
+    }
+
+    /**
+     * Public accessor for export code (a different package): the authority of a real,
+     * dictionary-backed node (e.g. a schema node), as opposed to a summary node - see
+     * getSummaryNodeAuthorityId for that case.
+     */
+    public long getNodeAuthorityIdForExport(long nodeId) {
+        return getOrComputeAuthorityId(nodeId);
+    }
+
+    /**
      * Decodes a node for export, resolving synthetic literal-occurrence IDs (minted by
      * resolveObjectNodeId) back to their real literal before dictionary decoding.
      */
@@ -1363,6 +1386,11 @@ public class Summary {
     public String writeDecodedSummaryToNTFile(Connection conn) {
         ensureExporter();
         return exporter.writeDecodedSummaryToNTFile(conn);
+    }
+
+    public String writeDecodedSummaryToNQuadsFile(Connection conn) {
+        ensureExporter();
+        return exporter.writeDecodedSummaryToNQuadsFile(conn);
     }
 
     /**

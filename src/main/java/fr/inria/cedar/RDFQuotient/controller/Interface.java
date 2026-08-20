@@ -643,6 +643,12 @@ public class Interface {
             LOGGER.info("Summary NT file exported to disk");
         }
 
+        if (summarizationProperties.getProperty("summary.export_to_nq_file").equals("true")) {
+            LOGGER.info("Exporting summary to disk to N-Quads file");
+            summary.writeDecodedSummaryToNQuadsFile(databaseConnection);
+            LOGGER.info("Summary N-Quads file exported to disk");
+        }
+
         if (summarizationProperties.getProperty("statistics.export_to_csv_file").equals("true")) {
             LOGGER.info("Exporting summarization statistics to disk");
             exportSummarizationStatisticsToDisk(summarizationProperties, NTFilename);

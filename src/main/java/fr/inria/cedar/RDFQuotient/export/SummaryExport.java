@@ -85,7 +85,6 @@ public class SummaryExport {
 	//============= Saving in NT format ====
 
 	public void exportRepresentationFunctionToNTFile(Connection conn, String exportRepresentationFunctionToNTFilename) {
-		String URIprefix = summarizationProperties.getProperty("drawing.summary_node_URI_prefix");
 		HashSet<Long> sn = summary.getSchemaNodes();
 		summary.setTypeURIs();
 		RDF2SQLEncoding.setUp(conn, dictionaryTableName, summary.getDefaultTypeURI(), summary.getVariantTypeURIs());
@@ -104,12 +103,12 @@ public class SummaryExport {
 			for (long originalNode : summary.rep.getKeys()) {
 				summaryNode = summary.rep.get(originalNode);
 				if (sn.contains(originalNode)) {
-					summaryNodeDecoded = RDF2SQLEncoding.dictionaryDecode(originalNode);
+					summaryNodeDecoded = summary.decodeNode(originalNode);
 				}
 				else {
-					summaryNodeDecoded = getSummaryNodeURI(URIprefix, summaryNode);
+					summaryNodeDecoded = getSummaryNodeURI(summary.getSummaryNodeAuthorityId(summaryNode), summaryNode);
 				}
-				originalNodeDecoded = RDF2SQLEncoding.dictionaryDecode(originalNode);
+				originalNodeDecoded = summary.decodeNode(originalNode);
 				representationFunctionFile.write(summaryNodeDecoded + " " + skosMember + " " + originalNodeDecoded + " .\n");
 			}
 		}
@@ -120,7 +119,6 @@ public class SummaryExport {
 	}
 
 	public void exportNodeStatisticsToNTFile(Connection conn, boolean representationCountsAlreadyComputed, String exportNodeStatisticsToNTFilename) {
-		String URIprefix = summarizationProperties.getProperty("drawing.summary_node_URI_prefix");
 		HashSet<Long> sn = summary.getSchemaNodes();
 		summary.setTypeURIs();
 		RDF2SQLEncoding.setUp(conn, dictionaryTableName, summary.getDefaultTypeURI(), summary.getVariantTypeURIs());
@@ -141,10 +139,10 @@ public class SummaryExport {
 			for (Map.Entry<Long, Long> entry : summary.getSummaryNodeStatistics().entrySet()) {
 				summaryNode = entry.getKey();
 				if (sn.contains(summaryNode)) {
-					summaryNodeDecoded = RDF2SQLEncoding.dictionaryDecode(summaryNode);
+					summaryNodeDecoded = summary.decodeNode(summaryNode);
 				}
 				else {
-					summaryNodeDecoded = getSummaryNodeURI(URIprefix, summaryNode);
+					summaryNodeDecoded = getSummaryNodeURI(summary.getSummaryNodeAuthorityId(summaryNode), summaryNode);
 				}
 				count = entry.getValue();
 				nodeStatisticsFile.write(summaryNodeDecoded + " <" + nodeSupport + "> \"" + count + "\"^^xs:integer .\n");
@@ -204,15 +202,33 @@ public class SummaryExport {
 	 * @return
 	 */
 	public String writeDecodedSummaryToNTFile(Connection conn) {
+		return writeDecodedSummary(conn, false);
+	}
+
+	/**
+	 * Same as writeDecodedSummaryToNTFile, but in N-Quads format: every summary triple is placed in
+	 * a named graph identified by its subject's authority, so downstream SPARQL can use
+	 * GRAPH &lt;authority&gt; { ... } or GRAPH ?g { ... } to query per federation source. Schema
+	 * triples (unchanged from the input) and triples whose subject has no real authority
+	 * (AUTHORITY_NONE - blank nodes, literals-only nodes, non-matching URIs) go to the unnamed
+	 * default graph - see PLAN.md.
+	 *
+	 * @param conn
+	 * @return
+	 */
+	public String writeDecodedSummaryToNQuadsFile(Connection conn) {
+		return writeDecodedSummary(conn, true);
+	}
+
+	private String writeDecodedSummary(Connection conn, boolean includeGraphTerm) {
 		HashSet<Long> sn = summary.getSchemaNodes();
 		summary.setTypeURIs();
 		RDF2SQLEncoding.setUp(conn, dictionaryTableName, summary.getDefaultTypeURI(), summary.getVariantTypeURIs());
 
-		String URIprefix = summarizationProperties.getProperty("drawing.summary_node_URI_prefix");
+		String extension = includeGraphTerm ? ".nq" : ".nt";
+		String summaryFileName = includeGraphTerm ? getNQuadsSummaryFileName() : getNTSummaryFileName();
 
-		String summaryNTFileName = getNTSummaryFileName();
-
-		LOGGER.info("Decoding summary and writing it in .nt format to " + summaryNTFileName);
+		LOGGER.info("Decoding summary and writing it in " + extension + " format to " + summaryFileName);
 
 		ArrayList<Triple> summEdges = summary.getSummaryEdges();
 		// if we generalize types, we will output the type edges of the summary not from the summary
@@ -227,38 +243,43 @@ public class SummaryExport {
 
 		try {
 			// write summary triples:
-			try (BufferedWriter bw = new BufferedWriter(new FileWriter(summaryNTFileName))) {
+			try (BufferedWriter bw = new BufferedWriter(new FileWriter(summaryFileName))) {
 				// write summary triples:
 				for (Triple t : summEdges) {
 					boolean isTypeTriple = false;
 					//LOGGER.debug("Summary triple: " + t.toString() );
 					String subject, property, object;
+					Long subjectAuthorityId = null; // null means default graph
 					if (RDF2SQLEncoding.isDataProperty(t.p)) { // data
 						if (sn.contains(t.s)) {
-							subject = RDF2SQLEncoding.dictionaryDecode(t.s);
+							subject = summary.decodeNode(t.s);
+							subjectAuthorityId = summary.getNodeAuthorityIdForExport(t.s);
 						}
 						else {
-							subject = getSummaryNodeURI(URIprefix, t.s);
+							subjectAuthorityId = summary.getSummaryNodeAuthorityId(t.s);
+							subject = getSummaryNodeURI(subjectAuthorityId, t.s);
 						}
 						property = RDF2SQLEncoding.dictionaryDecode(t.p);
 						if (sn.contains(t.o)) {
-							object = RDF2SQLEncoding.dictionaryDecode(t.o);
+							object = summary.decodeNode(t.o);
 						}
 						else {
-							object = getSummaryNodeURI(URIprefix, t.o);
+							object = getSummaryNodeURI(summary.getSummaryNodeAuthorityId(t.o), t.o);
 						}
 					}
-					else if (RDF2SQLEncoding.isSchemaProperty(t.p)) { // schema
-						subject = RDF2SQLEncoding.dictionaryDecode(t.s);
+					else if (RDF2SQLEncoding.isSchemaProperty(t.p)) { // schema - stays in the default graph
+						subject = summary.decodeNode(t.s);
 						property = RDF2SQLEncoding.dictionaryDecode(t.p);
-						object = RDF2SQLEncoding.dictionaryDecode(t.o);
+						object = summary.decodeNode(t.o);
 					}
 					else { // type triple
 						if (sn.contains(t.s)) {
-							subject = RDF2SQLEncoding.dictionaryDecode(t.s);
+							subject = summary.decodeNode(t.s);
+							subjectAuthorityId = summary.getNodeAuthorityIdForExport(t.s);
 						}
 						else {
-							subject = getSummaryNodeURI(URIprefix, t.s);
+							subjectAuthorityId = summary.getSummaryNodeAuthorityId(t.s);
+							subject = getSummaryNodeURI(subjectAuthorityId, t.s);
 						}
 						property = RDF2SQLEncoding.dictionaryDecode(t.p);
 
@@ -279,14 +300,14 @@ public class SummaryExport {
 								else {
 									for (Long actualType: actualTypesOfThisNode.keySet()) {
 										object = RDF2SQLEncoding.dictionaryDecode(actualType);
-										bw.write(subject + " " + property + " " + object + " .\n");
+										writeQuad(bw, subject, property, object, subjectAuthorityId, includeGraphTerm);
 									}
 								}
 								typedSummaryNodesCovered.add(t.s);
 							}
 						}
 						else {
-							object = RDF2SQLEncoding.dictionaryDecode(t.o);
+							object = summary.decodeNode(t.o);
 						}
 					}
 					//LOGGER.debug(subject + " " + property + " " + object);
@@ -296,7 +317,7 @@ public class SummaryExport {
 						// if we group on generalized types and this is a type triple, we should not
 						// output it, because it goes to one of the most general types, and not
 						// necessarily to an actual type that occurred in the data.
-						bw.write(subject + " " + property + " " + object + " .\n");
+						writeQuad(bw, subject, property, object, subjectAuthorityId, includeGraphTerm);
 					}
 				}
 
@@ -305,37 +326,55 @@ public class SummaryExport {
 					// write node cardinality statistics:
 					for (long node : summaryNodeStats.keySet()) {
 						long numberOfRepresentedGraphNodes = summaryNodeStats.get(node);
-						String subject = getSummaryNodeURI(URIprefix, node);
-						String property = summarizationProperties.getProperty("drawing.summary_node_support_URI_prefix");
+						long nodeAuthorityId = summary.getSummaryNodeAuthorityId(node);
+						String subject = getSummaryNodeURI(nodeAuthorityId, node);
+						String property = "<" + summarizationProperties.getProperty("drawing.summary_node_support_URI_prefix") + ">";
 						String object = ("\"" + numberOfRepresentedGraphNodes + "\"");
 						//LOGGER.debug(subject + " " + property + " " + object);
-						bw.write(subject + " <" + property + "> " + object + " .\n");
+						writeQuad(bw, subject, property, object, nodeAuthorityId, includeGraphTerm);
 					}
 					HashMap<Triple, Long> summaryEdgeStats = summary.getSummaryEdgeStatistics();
 					// write edge cardinality statistics:
 					int reifiedEdgeNumber = 0;
 					for (Triple ts : summaryEdgeStats.keySet()) {
 						long numberOfRepresentedEdges = summaryEdgeStats.get(ts);
-						String reifEdgeURI = getSummaryNodeURI(summarizationProperties.getProperty("drawing.reified_summary_edge_URI_prefix"),
-							reifiedEdgeNumber);
-						bw.write(reifEdgeURI + " <" + summarizationProperties.getProperty("drawing.reified_edge_subject_URI_prefix") + "> "
-							+ getSummaryNodeURI(URIprefix, ts.s) + " .\n");
-						bw.write(reifEdgeURI + " <" + summarizationProperties.getProperty("drawing.reified_edge_property_URI_prefix") + "> "
-							+ RDF2SQLEncoding.dictionaryDecode(ts.p) + " .\n");
-						bw.write(reifEdgeURI + " <" + summarizationProperties.getProperty("drawing.reified_edge_object_URI_prefix") + "> "
-							+ getSummaryNodeURI(URIprefix, ts.o) + " .\n");
-						bw.write(reifEdgeURI + " <" + summarizationProperties.getProperty("drawing.summary_edge_support_URI_prefix") + "> \""
-							+ numberOfRepresentedEdges + "\" .\n");
+						// the reified edge's own URI, and all its reification triples, share the
+						// authority of the edge it describes (its subject), so they land in the same
+						// graph as the edge itself
+						long edgeAuthorityId = summary.getSummaryNodeAuthorityId(ts.s);
+						String reifEdgeURI = getSummaryNodeURI(edgeAuthorityId, reifiedEdgeNumber);
+						writeQuad(bw, reifEdgeURI, "<" + summarizationProperties.getProperty("drawing.reified_edge_subject_URI_prefix") + ">",
+							getSummaryNodeURI(edgeAuthorityId, ts.s), edgeAuthorityId, includeGraphTerm);
+						writeQuad(bw, reifEdgeURI, "<" + summarizationProperties.getProperty("drawing.reified_edge_property_URI_prefix") + ">",
+							RDF2SQLEncoding.dictionaryDecode(ts.p), edgeAuthorityId, includeGraphTerm);
+						writeQuad(bw, reifEdgeURI, "<" + summarizationProperties.getProperty("drawing.reified_edge_object_URI_prefix") + ">",
+							getSummaryNodeURI(summary.getSummaryNodeAuthorityId(ts.o), ts.o), edgeAuthorityId, includeGraphTerm);
+						writeQuad(bw, reifEdgeURI, "<" + summarizationProperties.getProperty("drawing.summary_edge_support_URI_prefix") + ">",
+							"\"" + numberOfRepresentedEdges + "\"", edgeAuthorityId, includeGraphTerm);
 						reifiedEdgeNumber++;
 					}
 				}
 			}
 		}
 		catch (IOException e) {
-			throw new IllegalStateException("Could not save the decoded summary in .nt file: " + e);
+			throw new IllegalStateException("Could not save the decoded summary in " + extension + " file: " + e);
 		}
-		LOGGER.info("Summary decoded and saved in .nt format");
-		return summaryNTFileName;
+		LOGGER.info("Summary decoded and saved in " + extension + " format");
+		return summaryFileName;
+	}
+
+	/**
+	 * Writes one summary statement, appending a named-graph term (the subject's authority) when
+	 * includeGraphTerm is set and the subject has a real authority; otherwise writes a plain triple
+	 * line, landing in the unnamed default graph.
+	 */
+	private void writeQuad(BufferedWriter bw, String subject, String property, String object, Long subjectAuthorityId, boolean includeGraphTerm) throws IOException {
+		if (includeGraphTerm && subjectAuthorityId != null && subjectAuthorityId != Summary.AUTHORITY_NONE) {
+			bw.write(subject + " " + property + " " + object + " " + RDF2SQLEncoding.dictionaryDecode(subjectAuthorityId) + " .\n");
+		}
+		else {
+			bw.write(subject + " " + property + " " + object + " .\n");
+		}
 	}
 
 	//============= Saving in DOT format ====
@@ -447,8 +486,8 @@ public class SummaryExport {
 					}
 					else if (RDF2SQLEncoding.isSchemaProperty(t.p)) { // schema
 						//System.out.println("Schema triple\n");
-						subject = getVeryShortForDot(RDF2SQLEncoding.dictionaryDecode(t.s));
-						//subject = RDF2SQLEncoding.dictionaryDecode(t.s);
+						subject = getVeryShortForDot(summary.decodeNode(t.s));
+						//subject = summary.decodeNode(t.s);
 						subjectInDot = subject.replaceAll("\"", "");
 						if (gatherStatistics){
 							subjectInDot = subjectInDot + " (" + summary.getRepresentedNodeNumber(t.s) + ")";
@@ -470,8 +509,8 @@ public class SummaryExport {
 							LOGGER.error("Schema property without dictionary encoding.");
 						}
 
-						object = getVeryShortForDot(RDF2SQLEncoding.dictionaryDecode(t.o));
-						//object = RDF2SQLEncoding.dictionaryDecode(t.o);
+						object = getVeryShortForDot(summary.decodeNode(t.o));
+						//object = summary.decodeNode(t.o);
 						objectInDot = object.replaceAll("\"", "");
 						if (gatherStatistics){
 							objectInDot = objectInDot + " (" + summary.getRepresentedNodeNumber(t.o) + ")";
@@ -503,8 +542,8 @@ public class SummaryExport {
 
 						propertyInDot = "rdf:type";
 
-						object = getVeryShortForDot(RDF2SQLEncoding.dictionaryDecode(t.o));
-						//object = RDF2SQLEncoding.dictionaryDecode(t.o);
+						object = getVeryShortForDot(summary.decodeNode(t.o));
+						//object = summary.decodeNode(t.o);
 						objectInDot = object.replaceAll("\"", "");
 						if (gatherStatistics){
 							objectInDot = objectInDot + " (" + summary.getRepresentedNodeNumber(t.o) + ")";
@@ -559,7 +598,7 @@ public class SummaryExport {
 	String getSubjectOrObjectURIforSummaryDataNode(Long s, String URIprefix, HashSet<Long> sn) {
 		String subject, subjectInDot;
 		if (sn.contains(s)) {
-			subject = RDF2SQLEncoding.dictionaryDecode(s);
+			subject = summary.decodeNode(s);
 		}
 		else {
 			subject = getSummaryNodeURI(URIprefix, s);
@@ -585,7 +624,7 @@ public class SummaryExport {
 	String getObjectURIforSummaryDataNodeWithCountSuffix(Triple t, String URIprefix, HashSet<Long> sn, Integer suffix) {
 		String object, objectInDot;
 		if (sn.contains(t.o)) {
-			object = RDF2SQLEncoding.dictionaryDecode(t.o);
+			object = summary.decodeNode(t.o);
 		}
 		else {
 			object = getSummaryNodeURI(URIprefix, t.o);
@@ -604,7 +643,7 @@ public class SummaryExport {
 	String getVeryShortLabelforSummaryDataObjectWithCountSuffix(Triple t, HashSet<Long> sn, Integer suffix) {
 		String object, objectInDot;
 		if (sn.contains(t.o)) {
-			object = RDF2SQLEncoding.dictionaryDecode(t.o);
+			object = summary.decodeNode(t.o);
 		}
 		else {
 			String existing = this.newNodeLabels.get(t.o);
@@ -628,7 +667,7 @@ public class SummaryExport {
 	String getVeryShortLabelForSummaryDataSubject(Long s, HashSet<Long> sn) {
 		String subject, subjectInDot;
 		if (sn.contains(s)) {
-			subject = RDF2SQLEncoding.dictionaryDecode(s);
+			subject = summary.decodeNode(s);
 		}
 		else {
 			String existing = this.newNodeLabels.get(s);
@@ -752,7 +791,7 @@ public class SummaryExport {
 						//LOGGER.info("Data triple" + t.toString() + " property: " + propertyInDot);
 						subjectInDot = getVeryShortLabelForSummaryDataSubject(t.s, sn);
 						if (sn.contains(t.s)) {// The subject is a schema node -- this can happen
-							subjectInDot = getVeryShortForDot(RDF2SQLEncoding.dictionaryDecode(t.s));
+							subjectInDot = getVeryShortForDot(summary.decodeNode(t.s));
 							if (dax.unknownSchemaNode(t.s)){
 								bw.write("\"" + subjectInDot + schemaNodeLineSuffix);
 								dotLinesPrinted++;
@@ -791,12 +830,12 @@ public class SummaryExport {
 						}
 					} else if (RDF2SQLEncoding.isSchemaProperty(t.p)) { // schema
 						//System.out.println("Schema triple" + RDF2SQLEncoding.decode(t).toString());
-						subjectInDot = getVeryShortForDot(RDF2SQLEncoding.dictionaryDecode(t.s));
+						subjectInDot = getVeryShortForDot(summary.decodeNode(t.s));
 
 						if (gatherStatistics){
 							subjectInDot = subjectInDot + " (" + summary.getRepresentedNodeNumber(t.s) + ")";
 						}
-						objectInDot = getVeryShortForDot(RDF2SQLEncoding.dictionaryDecode(t.o));
+						objectInDot = getVeryShortForDot(summary.decodeNode(t.o));
 						if (gatherStatistics){
 							objectInDot = objectInDot + " (" + summary.getRepresentedNodeNumber(t.o) + ")";
 						}
@@ -814,7 +853,7 @@ public class SummaryExport {
 						}
 						subjectInDot = getVeryShortLabelForSummaryDataSubject(t.s, sn);
 						//object
-						objectInDot = getVeryShortForDot(RDF2SQLEncoding.dictionaryDecode(t.o));
+						objectInDot = getVeryShortForDot(summary.decodeNode(t.o));
 						//System.out.println("Type triple: " + subjectInDot + " " + propertyInDot + " " + objectInDot);
 						propertyInDot = "rdf:type";
 						if (gatherStatistics){
@@ -937,7 +976,7 @@ public class SummaryExport {
 					String subject, property, object, subjectInDot, propertyInDot, objectInDot;
 					// in all cases, edge labels are preserved:
 					property = RDF2SQLEncoding.dictionaryDecode(t.p);
-					//object = RDF2SQLEncoding.dictionaryDecode(t.o); Don't do this: the object may be a new node
+					//object = summary.decodeNode(t.o); Don't do this: the object may be a new node
 					// thus it may lack a code in the dictionary
 					//LOGGER.debug("Trying to write " + t.p + " edge, decoded into: |" + property + "|");
 					propertyInDot = getVeryShortForDot(property.replaceAll("\"", ""));
@@ -1426,6 +1465,33 @@ public class SummaryExport {
 	}
 
 	/**
+	 * Same as getNTSummaryFileName, for the N-Quads export (summary.nq_file_prefix).
+	 *
+	 * @return
+	 */
+	public String getNQuadsSummaryFileName() {
+		String filePathWithoutExtension = Interface.trimExtension(triplesFileName, false);
+		String NQFilenamePrefix = summarizationProperties.getProperty("summary.nq_file_prefix");
+		String separator = System.getProperty("file.separator");
+		int lastSlashPosition = filePathWithoutExtension.lastIndexOf(separator);
+		String newPath = filePathWithoutExtension.substring(0, lastSlashPosition + 1) + NQFilenamePrefix;
+		String filename = filePathWithoutExtension.substring(lastSlashPosition + 1);
+		filePathWithoutExtension = newPath + filename;
+		if (NQFilenamePrefix.contains(separator)) {
+			lastSlashPosition = newPath.lastIndexOf(separator);
+			newPath = newPath.substring(0, lastSlashPosition);
+			File f = new File(newPath);
+			if(f.getParentFile() != null) {
+				f.getParentFile().mkdirs();
+			}
+		}
+
+		String saturated = summarizationProperties.getProperty("summary.summarize_saturated_graph").equals("true") ? "_sat" : "";
+
+		return filePathWithoutExtension + saturated + "_" + summaryTablePrefix + ".nq";
+	}
+
+	/**
 	 * Computes a DOT filename by:
 	 * 1) adding prefix for DOT filename after last slash
 	 * 2) adding information about saturation after dataset filename
@@ -1590,5 +1656,25 @@ public class SummaryExport {
 	 */
 	protected String getSummaryNodeURI(String uriPrefix, long n) {
 		return ("<" + uriPrefix + summaryTablePrefix + n + ">");
+	}
+
+	/**
+	 * Authority-aware summary node URI minting: the minted URI is prefixed by the node's own
+	 * authority rather than a fixed generic prefix, so that re-applying the federation authority
+	 * regex to it recovers the same authority its members had (required for the fixpoint property to
+	 * hold under authority-based equivalence - see PLAN.md). Falls back to the configured generic
+	 * prefix for AUTHORITY_NONE (no real authority - blank nodes, literals, non-matching URIs).
+	 */
+	protected String getSummaryNodeURI(long authorityId, long n) {
+		return ("<" + authorityURIPrefix(authorityId) + summaryTablePrefix + n + ">");
+	}
+
+	private String authorityURIPrefix(long authorityId) {
+		if (authorityId == Summary.AUTHORITY_NONE) {
+			return summarizationProperties.getProperty("drawing.summary_node_URI_prefix");
+		}
+		String decodedAuthority = RDF2SQLEncoding.dictionaryDecode(authorityId); // "<https://example.org/dataset1>"
+		String authorityURI = decodedAuthority.substring(1, decodedAuthority.length() - 1); // strip <...>
+		return authorityURI + "/";
 	}
 }
