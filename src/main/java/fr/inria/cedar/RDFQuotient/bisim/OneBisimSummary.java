@@ -18,7 +18,8 @@ public class OneBisimSummary extends Summary{
 
 	private final HashMap<Long, TreeSet<Long>> n2ip; // node to incoming property set
 	private final HashMap<Long, TreeSet<Long>> n2op; // node to outgoing property set
-	private final HashMap<TreeSet<Long>, HashMap<TreeSet<Long>, Long>> ip2op2sn; // incoming property set to outgoing property set to summary node
+	// authority -> incoming property set -> outgoing property set -> summary node
+	private final HashMap<Long, HashMap<TreeSet<Long>, HashMap<TreeSet<Long>, Long>>> ip2op2sn;
 
 	public OneBisimSummary(String triplesFileName, String triplesTableName, String encodedTriplesTableName, String dictionaryTableName) {
 		super();
@@ -42,9 +43,12 @@ public class OneBisimSummary extends Summary{
 
 	@Override
 	protected void classifyDataTriple(Triple t) {
+        // a literal object shares its raw dictionary code with every occurrence of that value in the
+        // graph, so it is resolved to a synthetic per-(literal, authority) node before use
+        long resolvedO = resolveObjectNodeId(t.s, t.o);
         TreeSet<Long> previousSOP = n2op.computeIfAbsent(t.s, k -> new TreeSet<>());
         previousSOP.add(t.p);
-        TreeSet<Long> previousOIP = n2ip.computeIfAbsent(t.o, k -> new TreeSet<>());
+        TreeSet<Long> previousOIP = n2ip.computeIfAbsent(resolvedO, k -> new TreeSet<>());
         previousOIP.add(t.p);
 	}
 
@@ -59,9 +63,10 @@ public class OneBisimSummary extends Summary{
 			if (!sn.contains(n)) { // not a schema node
 				TreeSet<Long> nop = n2op.get(n);
 				TreeSet<Long> nip = n2ip.get(n);
-				Long summaryNode = getSummaryNode(nop, nip);
+				long authorityId = authorityOfResolvedNode(n);
+				Long summaryNode = getSummaryNode(authorityId, nop, nip);
 				if (summaryNode == null){
-					summaryNode = createSummaryNode(nop, nip);
+					summaryNode = createSummaryNode(authorityId, nop, nip);
 				}
 				//LOGGER.debug("REPRESENTED NODE (1) " + RDF2SQLEncoding.dictionaryDecode(n) + " BY " + sn);
 				rep.put(n, summaryNode);
@@ -73,9 +78,10 @@ public class OneBisimSummary extends Summary{
 				if (!sn.contains(n)) { // not a schema node
 					TreeSet<Long> nop = n2op.get(n);
 					TreeSet<Long> nip = n2ip.get(n);
-					Long summaryNode = getSummaryNode(nop, nip);
+					long authorityId = authorityOfResolvedNode(n);
+					Long summaryNode = getSummaryNode(authorityId, nop, nip);
 					if (summaryNode == null){
-						summaryNode = createSummaryNode(nop, nip);
+						summaryNode = createSummaryNode(authorityId, nop, nip);
 					}
 					//LOGGER.debug("REPRESENTED NODE (2) " + RDF2SQLEncoding.dictionaryDecode(n) + " BY " + sn);
 					rep.put(n, summaryNode);
@@ -89,41 +95,49 @@ public class OneBisimSummary extends Summary{
 	@Override
 	protected void representDataTriple(Triple t) {
 		//System.out.println("\nREPRESENTING DATA TRIPLE " + RDF2SQLEncoding.decode(t).toString());
+		long resolvedO = resolveObjectNodeId(t.s, t.o);
 		Long repS = rep.get(t.s);
 		if (repS == null){
 			TreeSet<Long> sop = n2op.get(t.s);
 			TreeSet<Long> sip = n2ip.get(t.s);
 			// probably both are null. We know rep doesn't exist, so we create it:
-			repS = getSummaryNode(sop, sip);
+			long sAuthority = getOrComputeAuthorityId(t.s);
+			repS = getSummaryNode(sAuthority, sop, sip);
 			if (repS == null){
-				repS = createSummaryNode(sop, sip);
+				repS = createSummaryNode(sAuthority, sop, sip);
 			}
 			rep.put(t.s, repS);
 		}
-		Long repO = rep.get(t.o);
+		Long repO = rep.get(resolvedO);
 		if (repO == null){
-			TreeSet<Long> oop = n2op.get(t.s);
-			TreeSet<Long> oip = n2ip.get(t.s);
+			TreeSet<Long> oop = n2op.get(resolvedO);
+			TreeSet<Long> oip = n2ip.get(resolvedO);
 			// probably both are null. We know rep doesn't exist, so we create it:
-			repO = getSummaryNode(oop, oip);
+			long oAuthority = objectAuthorityId(t.s, t.o);
+			repO = getSummaryNode(oAuthority, oop, oip);
 			if (repO == null){
-				repO = createSummaryNode(oop, oip);
+				repO = createSummaryNode(oAuthority, oop, oip);
 			}
-			rep.put(t.o, repO);
+			rep.put(resolvedO, repO);
 		}
 		// Commented this out since the Traverser (also) adds the triple.
 		// this.edgesWithProv.addTriple(repS, t.p, repO);
 	}
 
-	private long createSummaryNode(TreeSet<Long> nop, TreeSet<Long> nip) {
+	private long createSummaryNode(long authorityId, TreeSet<Long> nop, TreeSet<Long> nip) {
 		long n = this.getNextSummaryNode();
-        HashMap<TreeSet<Long>, Long> o2n = this.ip2op2sn.computeIfAbsent(nip, k -> new HashMap<>());
+        HashMap<TreeSet<Long>, HashMap<TreeSet<Long>, Long>> ip2op2snForAuthority = this.ip2op2sn.computeIfAbsent(authorityId, k -> new HashMap<>());
+        HashMap<TreeSet<Long>, Long> o2n = ip2op2snForAuthority.computeIfAbsent(nip, k -> new HashMap<>());
         o2n.put(nop, n);
 		return n;
 	}
 
-	private Long getSummaryNode(TreeSet<Long> nop, TreeSet<Long> nip) {
-		HashMap<TreeSet<Long>, Long> o2n = this.ip2op2sn.get(nip);
+	private Long getSummaryNode(long authorityId, TreeSet<Long> nop, TreeSet<Long> nip) {
+		HashMap<TreeSet<Long>, HashMap<TreeSet<Long>, Long>> ip2op2snForAuthority = this.ip2op2sn.get(authorityId);
+		if (ip2op2snForAuthority == null){
+			return null;
+		}
+		HashMap<TreeSet<Long>, Long> o2n = ip2op2snForAuthority.get(nip);
 		if (o2n == null){
 			return null;
 		}
