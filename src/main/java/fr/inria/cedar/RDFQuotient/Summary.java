@@ -720,6 +720,18 @@ public class Summary {
     }
 
     /**
+     * Simplified authority policy for algorithm families (strong/weak) that do not thread
+     * per-occurrence literal-authority-inheritance through their node identity: a literal always
+     * falls into the shared AUTHORITY_NONE partition (as it did before authority existed), while any
+     * other node still uses its own, intrinsic authority. Unlike objectAuthorityId, this never
+     * requires resolving the object through resolveObjectNodeId, since the object's raw id is used
+     * unchanged as its node identity in these families.
+     */
+    protected long coarseObjectAuthorityId(long objectId) {
+        return isLiteralNode(objectId) ? AUTHORITY_NONE : getOrComputeAuthorityId(objectId);
+    }
+
+    /**
      * Authority of a node identity that may be a resolveObjectNodeId result: for a synthetic
      * literal-occurrence id (not itself a dictionary entry), returns the authority it was minted
      * under; for any other (real, dictionary-backed) id, computes it directly as usual.

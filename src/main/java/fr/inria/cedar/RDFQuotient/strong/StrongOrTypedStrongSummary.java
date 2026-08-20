@@ -30,7 +30,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 	protected Long2Long n2tc; // for each data node, its target clique ID
 	protected Long2Long p2sc; // property to source clique
 	protected Long2Long p2tc; // property to target clique
-	protected TwoLevelLongMap untypedSummaryNodes; // source clique --> target clique --> summary node
+	protected HashMap<Long, TwoLevelLongMap> untypedSummaryNodes; // authority --> source clique --> target clique --> summary node
 	// for patching edges, we really need to store the data graph in memory... :(
 	protected HashMap<Long, Long2LongSet> triplesBySubject; // s-->{p-->{o}} s, o are data nodes
 	protected HashMap<Long, Long2LongSet> triplesByObject; // o-->{p-->{s}}
@@ -83,7 +83,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		n2tc = new Long2Long();
 		p2sc = new Long2Long();
 		p2tc = new Long2Long();
-		untypedSummaryNodes = new TwoLevelLongMap();
+		untypedSummaryNodes = new HashMap<>();
 		triplesBySubject = new HashMap<>();
 		triplesByObject = new HashMap<>();
 		minCliqueID = -1;
@@ -121,8 +121,8 @@ public class StrongOrTypedStrongSummary extends Summary {
 		Long repO = rep.get(t.o);
 
 		// determine future representatives: we create them but do nothing else so far
-		Long newRepS = getOrCreateSummaryNode(newSourceCliqueS, newTargetCliqueS);
-		Long newRepO = getOrCreateSummaryNode(newSourceCliqueO, newTargetCliqueO);
+		Long newRepS = getOrCreateSummaryNode(getOrComputeAuthorityId(t.s), newSourceCliqueS, newTargetCliqueS);
+		Long newRepO = getOrCreateSummaryNode(coarseObjectAuthorityId(t.o), newSourceCliqueO, newTargetCliqueO);
 
 		// for s (o), we will either replace the former with the new
 		// representative, or change the representative just of s (o) while
@@ -280,8 +280,8 @@ public class StrongOrTypedStrongSummary extends Summary {
 		Long repS = rep.get(t.s);
 		Long repO = rep.get(t.o);
 
-		Long newRepS = getOrCreateSummaryNode(newSourceCliqueS, newTargetCliqueS);
-		Long newRepO = getOrCreateSummaryNode(newSourceCliqueO, newTargetCliqueO);
+		Long newRepS = getOrCreateSummaryNode(getOrComputeAuthorityId(t.s), newSourceCliqueS, newTargetCliqueS);
+		Long newRepO = getOrCreateSummaryNode(coarseObjectAuthorityId(t.o), newSourceCliqueO, newTargetCliqueO);
 
 		boolean replaceForS = true;
 		boolean replaceForO = true;
@@ -369,11 +369,11 @@ public class StrongOrTypedStrongSummary extends Summary {
 		Long newTargetCliqueO = cliqueFusionResult(targetCliqueO, targetCliqueP, TARGET);
 
 		// unrepresented subject
-		Long repS = getOrCreateSummaryNode(newSourceCliqueS, getEmptyTargetCliqueID());
+		Long repS = getOrCreateSummaryNode(getOrComputeAuthorityId(t.s), newSourceCliqueS, getEmptyTargetCliqueID());
 		Long repO = rep.get(t.o);
 
 		Long newRepS = repS;
-		Long newRepO = getOrCreateSummaryNode(sourceCliqueO, newTargetCliqueO);
+		Long newRepO = getOrCreateSummaryNode(coarseObjectAuthorityId(t.o), sourceCliqueO, newTargetCliqueO);
 
 		boolean replaceForO = true;
 		if (targetCliqueO.equals(getEmptyTargetCliqueID())) {
@@ -431,9 +431,9 @@ public class StrongOrTypedStrongSummary extends Summary {
 		Long newTargetCliqueO = targetCliqueP;
 
 		Long repS = rep.get(t.s);
-		Long repO = getOrCreateSummaryNode(getEmptySourceCliqueID(), newTargetCliqueO);
+		Long repO = getOrCreateSummaryNode(coarseObjectAuthorityId(t.o), getEmptySourceCliqueID(), newTargetCliqueO);
 
-		Long newRepS = getOrCreateSummaryNode(newSourceCliqueS, targetCliqueS);
+		Long newRepS = getOrCreateSummaryNode(getOrComputeAuthorityId(t.s), newSourceCliqueS, targetCliqueS);
 		Long newRepO = repO;
 
 		boolean replaceForS = true;
@@ -495,11 +495,11 @@ public class StrongOrTypedStrongSummary extends Summary {
 		Long newSourceCliqueS = sourceCliqueP;
 		Long newTargetCliqueO = cliqueFusionResult(targetCliqueO, targetCliqueP, TARGET);
 
-		Long repS = getOrCreateSummaryNode(newSourceCliqueS, getEmptyTargetCliqueID());
+		Long repS = getOrCreateSummaryNode(getOrComputeAuthorityId(t.s), newSourceCliqueS, getEmptyTargetCliqueID());
 		Long repO = rep.get(t.o);
 
 		Long newRepS = repS;
-		Long newRepO = getOrCreateSummaryNode(sourceCliqueO, newTargetCliqueO);
+		Long newRepO = getOrCreateSummaryNode(coarseObjectAuthorityId(t.o), sourceCliqueO, newTargetCliqueO);
 
 		boolean replaceForO = true;
 		if (targetCliqueO.equals(getEmptyTargetCliqueID())) {
@@ -561,9 +561,9 @@ public class StrongOrTypedStrongSummary extends Summary {
 		Long newTargetCliqueO = targetCliqueP;
 
 		Long repS = rep.get(t.s);
-		Long repO = getOrCreateSummaryNode(getEmptySourceCliqueID(), newTargetCliqueO);
+		Long repO = getOrCreateSummaryNode(coarseObjectAuthorityId(t.o), getEmptySourceCliqueID(), newTargetCliqueO);
 
-		Long newRepS = getOrCreateSummaryNode(newSourceCliqueS, targetCliqueS);
+		Long newRepS = getOrCreateSummaryNode(getOrComputeAuthorityId(t.s), newSourceCliqueS, targetCliqueS);
 		Long newRepO = repO;
 
 		boolean replaceForS = true;
@@ -635,15 +635,15 @@ public class StrongOrTypedStrongSummary extends Summary {
 			}
 			//else { // both not null
 			//}
-			newRepS = getOrCreateSummaryNode(newSourceCliqueS, newTargetCliqueO);
-			newRepO = getOrCreateSummaryNode(newSourceCliqueS, newTargetCliqueO);
+			newRepS = getOrCreateSummaryNode(getOrComputeAuthorityId(t.s), newSourceCliqueS, newTargetCliqueO);
+			newRepO = getOrCreateSummaryNode(getOrComputeAuthorityId(t.s), newSourceCliqueS, newTargetCliqueO);
 
 			n2sc.put(t.o, newSourceCliqueS);
 			n2tc.put(t.s, newTargetCliqueO);
 		}
 		else {
-			newRepS = getOrCreateSummaryNode(newSourceCliqueS, getEmptyTargetCliqueID());
-			newRepO = getOrCreateSummaryNode(getEmptySourceCliqueID(), newTargetCliqueO);
+			newRepS = getOrCreateSummaryNode(getOrComputeAuthorityId(t.s), newSourceCliqueS, getEmptyTargetCliqueID());
+			newRepO = getOrCreateSummaryNode(coarseObjectAuthorityId(t.o), getEmptySourceCliqueID(), newTargetCliqueO);
 
 			n2sc.put(t.o, getEmptySourceCliqueID());
 			n2tc.put(t.s, getEmptyTargetCliqueID());
@@ -676,15 +676,15 @@ public class StrongOrTypedStrongSummary extends Summary {
 		Long newRepO;
 
 		if (t.s == t.o) {
-			newRepS = getOrCreateSummaryNode(newSourceCliqueS, newTargetCliqueO);
-			newRepO = getOrCreateSummaryNode(newSourceCliqueS, newTargetCliqueO);
+			newRepS = getOrCreateSummaryNode(getOrComputeAuthorityId(t.s), newSourceCliqueS, newTargetCliqueO);
+			newRepO = getOrCreateSummaryNode(getOrComputeAuthorityId(t.s), newSourceCliqueS, newTargetCliqueO);
 
 			n2sc.put(t.o, newSourceCliqueS);
 			n2tc.put(t.s, newTargetCliqueO);
 		}
 		else {
-			newRepS = getOrCreateSummaryNode(newSourceCliqueS, getEmptyTargetCliqueID());
-			newRepO = getOrCreateSummaryNode(getEmptySourceCliqueID(), newTargetCliqueO);
+			newRepS = getOrCreateSummaryNode(getOrComputeAuthorityId(t.s), newSourceCliqueS, getEmptyTargetCliqueID());
+			newRepO = getOrCreateSummaryNode(coarseObjectAuthorityId(t.o), getEmptySourceCliqueID(), newTargetCliqueO);
 
 			n2sc.put(t.o, getEmptySourceCliqueID());
 			n2tc.put(t.s, getEmptyTargetCliqueID());
@@ -715,7 +715,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		Long repS = rep.get(t.s);
 		Long repO = rep.get(t.o);
 
-		Long newRepS = getOrCreateSummaryNode(newSourceCliqueS, targetCliqueS);
+		Long newRepS = getOrCreateSummaryNode(getOrComputeAuthorityId(t.s), newSourceCliqueS, targetCliqueS);
 		Long newRepO = repO;
 
 		boolean replaceForS = true;
@@ -773,7 +773,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		Long repO = rep.get(t.o);
 
 		Long newRepS = repS;
-		Long newRepO = getOrCreateSummaryNode(sourceCliqueO, newTargetCliqueO);
+		Long newRepO = getOrCreateSummaryNode(coarseObjectAuthorityId(t.o), sourceCliqueO, newTargetCliqueO);
 
 		boolean replaceForO = true;
 		if (targetCliqueO.equals(getEmptyTargetCliqueID())) {
@@ -831,7 +831,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		Long repS = rep.get(t.s);
 		Long repO = rep.get(t.o);
 
-		Long newRepS = getOrCreateSummaryNode(newSourceCliqueS, targetCliqueS);
+		Long newRepS = getOrCreateSummaryNode(getOrComputeAuthorityId(t.s), newSourceCliqueS, targetCliqueS);
 		Long newRepO = repO;
 
 		boolean replaceForS = true;
@@ -891,7 +891,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		Long repO = rep.get(t.o);
 
 		Long newRepS = repS;
-		Long newRepO = getOrCreateSummaryNode(sourceCliqueO, newTargetCliqueO);
+		Long newRepO = getOrCreateSummaryNode(coarseObjectAuthorityId(t.o), sourceCliqueO, newTargetCliqueO);
 
 		boolean replaceForO = true;
 		if (targetCliqueO.equals(getEmptyTargetCliqueID())) {
@@ -943,7 +943,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 	protected void handleDataTriple_US_RP_TRO(Triple t) {
 		Long newSourceCliqueS = sourceCliqueP;
 
-		Long repS = getOrCreateSummaryNode(newSourceCliqueS, getEmptyTargetCliqueID());
+		Long repS = getOrCreateSummaryNode(getOrComputeAuthorityId(t.s), newSourceCliqueS, getEmptyTargetCliqueID());
 		Long repO = rep.get(t.o);
 
 		Long newRepS = repS;
@@ -964,7 +964,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		Long newTargetCliqueO = targetCliqueP;
 
 		Long repS = rep.get(t.s);
-		Long repO = getOrCreateSummaryNode(getEmptySourceCliqueID(), newTargetCliqueO);
+		Long repO = getOrCreateSummaryNode(coarseObjectAuthorityId(t.o), getEmptySourceCliqueID(), newTargetCliqueO);
 
 		Long newRepS = repS;
 		Long newRepO = repO;
@@ -986,7 +986,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 
 		Long newSourceCliqueS = sourceCliqueP;
 
-		Long repS = getOrCreateSummaryNode(newSourceCliqueS, getEmptyTargetCliqueID());
+		Long repS = getOrCreateSummaryNode(getOrComputeAuthorityId(t.s), newSourceCliqueS, getEmptyTargetCliqueID());
 		Long repO = rep.get(t.o);
 
 		Long newRepS = repS;
@@ -1010,7 +1010,7 @@ public class StrongOrTypedStrongSummary extends Summary {
 		Long newTargetCliqueO = targetCliqueP;
 
 		Long repS = rep.get(t.s);
-		Long repO = getOrCreateSummaryNode(getEmptySourceCliqueID(), newTargetCliqueO);
+		Long repO = getOrCreateSummaryNode(coarseObjectAuthorityId(t.o), getEmptySourceCliqueID(), newTargetCliqueO);
 
 		Long newRepS = repS;
 		Long newRepO = repO;
@@ -1148,36 +1148,42 @@ public class StrongOrTypedStrongSummary extends Summary {
 	}
 
 	// modifies only untyped
+	// cliques are global (shared across authorities), so a clique relabeling is applied identically
+	// to every authority's own partition of untypedSummaryNodes
 	protected void replaceCliqueInUntyped(Long oldClique, Long newClique, char param, ArrayList<ReplacementSpecification> nodeReps){
 		if (oldClique.equals(newClique)) {
 			return;
 		}
 		if (param == TARGET) { // we find all occurrences of the old cliques (in the 2nd level), remove them and replace with the new clique
-			HashSet<Triple> replacements = untypedSummaryNodes.replaceAt2ndLevel(oldClique, newClique);
-			for (Triple t: replacements) {
-				Long sourceClique = t.s;
-				Long targetClique = newClique;
-				Long oldNode = t.p;
-				Long newNode = t.o;
-				ReplacementSpecification reps = new ReplacementSpecification(sourceClique, targetClique, oldNode, newNode);
-				if (checkConsistency) {
-					reps.checkForConflicts(nodeReps);
+			for (TwoLevelLongMap untypedSummaryNodesForAuthority : untypedSummaryNodes.values()) {
+				HashSet<Triple> replacements = untypedSummaryNodesForAuthority.replaceAt2ndLevel(oldClique, newClique);
+				for (Triple t: replacements) {
+					Long sourceClique = t.s;
+					Long targetClique = newClique;
+					Long oldNode = t.p;
+					Long newNode = t.o;
+					ReplacementSpecification reps = new ReplacementSpecification(sourceClique, targetClique, oldNode, newNode);
+					if (checkConsistency) {
+						reps.checkForConflicts(nodeReps);
+					}
+					nodeReps.add(reps);
 				}
-				nodeReps.add(reps);
 			}
 		}
 		else if (param == SOURCE) {
-			HashSet<Triple> replacements = untypedSummaryNodes.replaceAt1stLevel(oldClique, newClique);
-			for (Triple t: replacements) {
-				Long sourceClique = newClique;
-				Long targetClique = t.s;
-				Long oldNode = t.p;
-				Long newNode = t.o;
-				ReplacementSpecification reps = new ReplacementSpecification(sourceClique, targetClique, oldNode, newNode);
-				if (checkConsistency) {
-					reps.checkForConflicts(nodeReps);
+			for (TwoLevelLongMap untypedSummaryNodesForAuthority : untypedSummaryNodes.values()) {
+				HashSet<Triple> replacements = untypedSummaryNodesForAuthority.replaceAt1stLevel(oldClique, newClique);
+				for (Triple t: replacements) {
+					Long sourceClique = newClique;
+					Long targetClique = t.s;
+					Long oldNode = t.p;
+					Long newNode = t.o;
+					ReplacementSpecification reps = new ReplacementSpecification(sourceClique, targetClique, oldNode, newNode);
+					if (checkConsistency) {
+						reps.checkForConflicts(nodeReps);
+					}
+					nodeReps.add(reps);
 				}
-				nodeReps.add(reps);
 			}
 		}
 	}
@@ -1226,11 +1232,12 @@ public class StrongOrTypedStrongSummary extends Summary {
 	 *
 	 * @return
 	 */
-	protected Long getOrCreateSummaryNode(Long sourceClique, Long targetClique) {
-		Long node = untypedSummaryNodes.getIfExists(sourceClique, targetClique);
+	protected Long getOrCreateSummaryNode(long authorityId, Long sourceClique, Long targetClique) {
+		TwoLevelLongMap untypedSummaryNodesForAuthority = untypedSummaryNodes.computeIfAbsent(authorityId, k -> new TwoLevelLongMap());
+		Long node = untypedSummaryNodesForAuthority.getIfExists(sourceClique, targetClique);
 		if (node == null) {
 			node = getNextSummaryNode(); // from the Summary class;
-			untypedSummaryNodes.add(sourceClique, targetClique, node);
+			untypedSummaryNodesForAuthority.add(sourceClique, targetClique, node);
 		}
 		return node;
 	}
@@ -1340,7 +1347,8 @@ public class StrongOrTypedStrongSummary extends Summary {
 			}
 			Long nsc = n2sc.get(dataNode);
 			Long ntc = n2tc.get(dataNode);
-			HashMap<Long, Long> tc2Nodes = untypedSummaryNodes.get(nsc);
+			TwoLevelLongMap untypedSummaryNodesForAuthority = untypedSummaryNodes.get(coarseObjectAuthorityId(dataNode));
+			HashMap<Long, Long> tc2Nodes = (untypedSummaryNodesForAuthority == null) ? null : untypedSummaryNodesForAuthority.get(nsc);
 			if (tc2Nodes == null) {
 				msg += "untypedSummaryNodes has no (target clique, node) pairs on source clique " + nsc + " of node " + dataNode + "(" + RDF2SQLEncoding.dictionaryDecode(dataNode) + ")";
 				//LOGGER.debug(msg);
