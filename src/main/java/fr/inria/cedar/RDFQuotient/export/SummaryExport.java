@@ -326,8 +326,11 @@ public class SummaryExport {
 					// write node cardinality statistics:
 					for (long node : summaryNodeStats.keySet()) {
 						long numberOfRepresentedGraphNodes = summaryNodeStats.get(node);
-						long nodeAuthorityId = summary.getSummaryNodeAuthorityId(node);
-						String subject = getSummaryNodeURI(nodeAuthorityId, node);
+						// schema nodes map to themselves in rep and keep their own real URI - they
+						// must not be run through the summary-node URI minter, which would otherwise
+						// fabricate a URI under the schema node's own (real) authority
+						long nodeAuthorityId = schemaAwareAuthorityId(sn, node);
+						String subject = schemaAwareNodeURI(sn, node);
 						String property = "<" + summarizationProperties.getProperty("drawing.summary_node_support_URI_prefix") + ">";
 						String object = ("\"" + numberOfRepresentedGraphNodes + "\"");
 						//LOGGER.debug(subject + " " + property + " " + object);
@@ -341,14 +344,14 @@ public class SummaryExport {
 						// the reified edge's own URI, and all its reification triples, share the
 						// authority of the edge it describes (its subject), so they land in the same
 						// graph as the edge itself
-						long edgeAuthorityId = summary.getSummaryNodeAuthorityId(ts.s);
+						long edgeAuthorityId = schemaAwareAuthorityId(sn, ts.s);
 						String reifEdgeURI = getSummaryNodeURI(edgeAuthorityId, reifiedEdgeNumber);
 						writeQuad(bw, reifEdgeURI, "<" + summarizationProperties.getProperty("drawing.reified_edge_subject_URI_prefix") + ">",
-							getSummaryNodeURI(edgeAuthorityId, ts.s), edgeAuthorityId, includeGraphTerm);
+							schemaAwareNodeURI(sn, ts.s), edgeAuthorityId, includeGraphTerm);
 						writeQuad(bw, reifEdgeURI, "<" + summarizationProperties.getProperty("drawing.reified_edge_property_URI_prefix") + ">",
 							RDF2SQLEncoding.dictionaryDecode(ts.p), edgeAuthorityId, includeGraphTerm);
 						writeQuad(bw, reifEdgeURI, "<" + summarizationProperties.getProperty("drawing.reified_edge_object_URI_prefix") + ">",
-							getSummaryNodeURI(summary.getSummaryNodeAuthorityId(ts.o), ts.o), edgeAuthorityId, includeGraphTerm);
+							schemaAwareNodeURI(sn, ts.o), edgeAuthorityId, includeGraphTerm);
 						writeQuad(bw, reifEdgeURI, "<" + summarizationProperties.getProperty("drawing.summary_edge_support_URI_prefix") + ">",
 							"\"" + numberOfRepresentedEdges + "\"", edgeAuthorityId, includeGraphTerm);
 						reifiedEdgeNumber++;
@@ -361,6 +364,19 @@ public class SummaryExport {
 		}
 		LOGGER.info("Summary decoded and saved in " + extension + " format");
 		return summaryFileName;
+	}
+
+	/**
+	 * A schema node (e.g. a class or property) keeps its own real URI in the summary rather than
+	 * being quotiented - it must never be run through the summary-node URI minter, which would
+	 * otherwise fabricate a bogus URI under the schema node's own (real) authority.
+	 */
+	private String schemaAwareNodeURI(HashSet<Long> sn, long nodeId) {
+		return sn.contains(nodeId) ? summary.decodeNode(nodeId) : getSummaryNodeURI(summary.getSummaryNodeAuthorityId(nodeId), nodeId);
+	}
+
+	private long schemaAwareAuthorityId(HashSet<Long> sn, long nodeId) {
+		return sn.contains(nodeId) ? summary.getNodeAuthorityIdForExport(nodeId) : summary.getSummaryNodeAuthorityId(nodeId);
 	}
 
 	/**
@@ -1209,7 +1225,10 @@ public class SummaryExport {
 				//LOGGER.debug("DrawTriples: Encoded " + subject + " into " + s + " whose representative is: "  + sRep);
 
 				long o = RDF2SQLEncoding.dictionaryEncode(object);
-				long oRep = summary.getRepresentative(o);
+				// a literal object may have been represented under a resolved (possibly synthetic
+				// per-occurrence) id rather than its own raw id - see Summary.resolveObjectNodeId
+				long representedO = summary.usesLiteralOccurrenceResolution() ? summary.resolveObjectNodeIdForExport(s, o) : o;
+				long oRep = summary.getRepresentative(representedO);
 
 				//LOGGER.debug("DrawTriples: Encoded " + object + " into " + o + " whose representative is: " + oRep);
 				//LOGGER.debug("DRAW Triple! (" + subject + " " + property + " " + object + ")");

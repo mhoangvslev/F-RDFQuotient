@@ -12,6 +12,7 @@ nbactions.xml
 !/src/test/resources/rdf-nt-files/*.nt
 !/src/test/resources/*/test-?.nt
 !/src/test/resources/*/test-??.nt
+!/src/test/resources/test-authority-typed/test-authority.nt
 *.dot
 !/src/test/resources/*/*reference.dot
 *.png

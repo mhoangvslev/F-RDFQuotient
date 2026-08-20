@@ -66,6 +66,12 @@ public class Summary {
     protected final HashMap<Long, HashMap<Long, Long>> literalOccurrenceId = new HashMap<>(); // rawLiteralId -> authorityId -> syntheticOccurrenceId
     protected final HashMap<Long, Long> occurrenceToRawLiteral = new HashMap<>(); // syntheticOccurrenceId -> rawLiteralId, for export-time decoding
     protected final HashMap<Long, Long> occurrenceAuthority = new HashMap<>(); // syntheticOccurrenceId -> the authority it was minted under
+    // Whether this variant resolves literal objects through resolveObjectNodeId (TypedSummary,
+    // OneBisimSummary, OneFWSummary, and subclasses thereof) as opposed to the strong/weak families'
+    // coarser AUTHORITY_NONE-for-literals policy. Read by the shared Traverser classes, which add a
+    // triple's summary edge using summ.rep - looking that up by the correct (possibly resolved) key
+    // requires knowing which policy this instance uses.
+    protected boolean usesLiteralOccurrenceResolution = false;
 
     // these serve to represent the nodes that may have types but no data property
     protected long typeOnlyNodeID;
@@ -762,6 +768,23 @@ public class Summary {
      */
     public long getNodeAuthorityIdForExport(long nodeId) {
         return getOrComputeAuthorityId(nodeId);
+    }
+
+    /**
+     * Whether this variant resolves literal objects through resolveObjectNodeId, as opposed to the
+     * strong/weak families' coarser AUTHORITY_NONE-for-literals policy - see
+     * usesLiteralOccurrenceResolution. Public accessor for export code (a different package), which
+     * must resolve an object the same way before looking it up in rep.
+     */
+    public boolean usesLiteralOccurrenceResolution() {
+        return usesLiteralOccurrenceResolution;
+    }
+
+    /**
+     * Public accessor for export code (a different package) - see resolveObjectNodeId.
+     */
+    public long resolveObjectNodeIdForExport(long subjectId, long objectId) {
+        return resolveObjectNodeId(subjectId, objectId);
     }
 
     /**

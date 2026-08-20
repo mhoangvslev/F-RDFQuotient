@@ -32,6 +32,7 @@ public class OneFWSummary extends Summary {
 		this.isTypeFirst = false;
 		this.isDataAndType = false;
 		this.isTwoPass = true;
+		this.usesLiteralOccurrenceResolution = true;
 		this.n2op = new HashMap<>();
 		this.op2sn = new HashMap<>();
 		this.leafSummaryNodeByAuthority = new HashMap<>();

@@ -385,7 +385,11 @@ public abstract class Traverser {
 							&& (t.p != domainCode)
 							&& (t.p != rangeCode)) { // data triple
 							summ.representDataTriple(t);
-							summ.edgesWithProv.addTriple(summ.rep.get(t.s), t.p, summ.rep.get(t.o));
+							// a literal object may have been represented under a resolved (possibly
+							// synthetic per-occurrence) id rather than its own raw id - see
+							// Summary.resolveObjectNodeId and usesLiteralOccurrenceResolution
+							long representedO = summ.usesLiteralOccurrenceResolution ? summ.resolveObjectNodeId(t.s, t.o) : t.o;
+							summ.edgesWithProv.addTriple(summ.rep.get(t.s), t.p, summ.rep.get(representedO));
 						}
 						summ.triplesSummarizedSoFar++;
 						summ.nonTypeTriplesSummarizedSoFar++;

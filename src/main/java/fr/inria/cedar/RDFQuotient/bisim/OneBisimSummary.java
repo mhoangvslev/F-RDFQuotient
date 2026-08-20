@@ -31,6 +31,7 @@ public class OneBisimSummary extends Summary{
 		this.isTypeFirst = false;
 		this.isDataAndType = false;
 		this.isTwoPass = true;
+		this.usesLiteralOccurrenceResolution = true;
 		this.n2ip = new HashMap<>();
 		this.n2op = new HashMap<>();
 		this.ip2op2sn = new HashMap<>();
