@@ -49,24 +49,28 @@ public class TwoPassWeakSummaryWithUnionFind extends WeakOrTypedWeakSummary {
             n2o.computeIfAbsent(t.s, k -> new TreeSet<>());
 			n2o.get(t.s).add(t.p);
 
+			long sAuthorityId = getOrComputeAuthorityId(t.s);
 			repS = disjointSetForest.find(shiftNodeNumber(t.s));
-			if (!ps.containsKey(t.p)) {
-				ps.put(t.p, repS);
+			HashMap<Long, Long> psForP = ps.computeIfAbsent(t.p, k -> new HashMap<>());
+			if (!psForP.containsKey(sAuthorityId)) {
+				psForP.put(sAuthorityId, repS);
 			}
 			else {
-				disjointSetForest.union(repS, ps.get(t.p)); // source-source union
+				disjointSetForest.union(repS, psForP.get(sAuthorityId)); // source-source union
 			}
 		}
 		if (!sn.contains(t.o)) {
             n2i.computeIfAbsent(t.o, k -> new TreeSet<>());
 			n2i.get(t.o).add(t.p);
 
+			long oAuthorityId = coarseObjectAuthorityId(t.o);
 			repO = disjointSetForest.find(shiftNodeNumber(t.o));
-			if (!pt.containsKey(t.p)) {
-				pt.put(t.p, repO);
+			HashMap<Long, Long> ptForP = pt.computeIfAbsent(t.p, k -> new HashMap<>());
+			if (!ptForP.containsKey(oAuthorityId)) {
+				ptForP.put(oAuthorityId, repO);
 			}
 			else {
-				disjointSetForest.union(repO, pt.get(t.p)); // target-target union
+				disjointSetForest.union(repO, ptForP.get(oAuthorityId)); // target-target union
 			}
 		}
 		nodes.add(t.s);
@@ -88,7 +92,10 @@ public class TwoPassWeakSummaryWithUnionFind extends WeakOrTypedWeakSummary {
 			if (n2o.containsKey(n) && n2i.containsKey(n)) {
 				Long p1 = n2o.get(n).first();
 				Long p2 = n2i.get(n).first();
-				disjointSetForest.union(ps.get(p1), pt.get(p2)); // source-target union
+				// n plays both roles here, so it cannot be a literal (only a real resource can have
+				// outgoing edges); its own authority governs both lookups
+				long authorityId = getOrComputeAuthorityId(n);
+				disjointSetForest.union(ps.get(p1).get(authorityId), pt.get(p2).get(authorityId)); // source-target union
 			}
 		}
 	}
@@ -97,11 +104,11 @@ public class TwoPassWeakSummaryWithUnionFind extends WeakOrTypedWeakSummary {
 	protected void representDataTriple(Triple t) {
 		// schema nodes already represented in collectSchemaNodes
 		if (!sn.contains(t.s)) {
-			repS = disjointSetForest.find(ps.get(t.p));
+			repS = disjointSetForest.find(ps.get(t.p).get(getOrComputeAuthorityId(t.s)));
 			rep.put(t.s, repS);
 		}
 		if (!sn.contains(t.o)) {
-			repO = disjointSetForest.find(pt.get(t.p));
+			repO = disjointSetForest.find(pt.get(t.p).get(coarseObjectAuthorityId(t.o)));
 			rep.put(t.o, repO);
 		}
 	}

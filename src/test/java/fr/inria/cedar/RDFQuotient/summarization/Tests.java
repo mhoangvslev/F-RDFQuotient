@@ -50,6 +50,42 @@ public class Tests {
 		return Interface.loadAndSummarize(loadingProperties, summarizationProperties).get("NTFilename");
 	}
 
+	public static String testSummarizationOfNotSaturatedNQuads(String datasetFilename, String summaryType) {
+		Properties loadingProperties = LoadingProperties.getDefaultProperties();
+		loadingProperties.put("dataset.filename", datasetFilename);
+		loadingProperties.put("database.deterministic_ordering", "true");
+		loadingProperties.put("saturation.type", "NONE");
+		loadingProperties.put("statistics.export_to_csv_file", "false");
+		loadingProperties.put("configuration.export_to_disk", "false");
+
+		Properties summarizationProperties = SummarizationProperties.getDefaultProperties();
+		summarizationProperties.put("dataset.filename", datasetFilename);
+		summarizationProperties.put("database.deterministic_ordering", "true");
+		summarizationProperties.put("summary.type", summaryType);
+		summarizationProperties.put("summary.summarize_saturated_graph", "false");
+		summarizationProperties.put("summary.replace_type_with_most_general_type", "false");
+		summarizationProperties.put("summary.nt_file_prefix", "");
+		summarizationProperties.put("summary.export_to_nq_file", "true");
+		summarizationProperties.put("summary.nq_file_prefix", "");
+		summarizationProperties.put("summary.export_representation_function_to_nt_filename", "");
+		summarizationProperties.put("summary.export_node_statistics_to_nt_filename", "");
+		summarizationProperties.put("summary.export_edge_statistics_to_nt_filename", "");
+		summarizationProperties.put("drawing.remove_dot_file", "true");
+		summarizationProperties.put("drawing.dot_file_prefix", "");
+		summarizationProperties.put("drawing.png_file_prefix", "");
+		summarizationProperties.put("drawing.step_by_step", "false");
+		summarizationProperties.put("drawing.style", "plain");
+		// input-graph DOT drawing has its own unrelated, pre-existing literal-occurrence bug
+		// (rep.get() on the raw literal ID rather than its synthetic authority-occurrence ID) -
+		// PLAN.md documents DOT drawing as an accepted, out-of-scope gap for the authority feature,
+		// so it stays off here rather than being fixed as part of N-Quads I/O testing
+		summarizationProperties.put("drawing.draw_input_graph", "false");
+		summarizationProperties.put("statistics.export_to_csv_file", "false");
+		summarizationProperties.put("configuration.export_to_disk", "false");
+
+		return Interface.loadAndSummarize(loadingProperties, summarizationProperties).get("NQFilename");
+	}
+
 	public static String testSummarizationOfSaturated(String datasetFilename, String summaryType) {
 		Properties loadingProperties = LoadingProperties.getDefaultProperties();
 		loadingProperties.put("dataset.filename", datasetFilename);

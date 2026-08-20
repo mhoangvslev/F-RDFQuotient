@@ -110,8 +110,10 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 		//LOGGER.debug("\n### Read data triple: " + t.toString());
 		repS = rep.get(t.s);
 		repO = rep.get(t.o);
-		sourceP = ps.get(t.p);
-		targetP = pt.get(t.p);
+		sAuthority = getOrComputeAuthorityId(t.s);
+		oAuthority = coarseObjectAuthorityId(t.o);
+		sourceP = sourceOfProperty(t.p, sAuthority);
+		targetP = targetOfProperty(t.p, oAuthority);
 
 		boolean pRepresented = sourceP != null || targetP != null;
 		boolean sRepresented = repS != null;
@@ -193,17 +195,16 @@ public class WeakSummary extends WeakOrTypedWeakSummary {
 					if (objectsOfThisSandP.size() > 1)
 						throw new IllegalStateException("Subject " + s + " has more than one edge with label " + p);
 					for (Long o: objectsOfThisSandP) {
-						if (ps.get(p) == null) {
-							throw new IllegalStateException("No source for " + p);
+						// ps/pt are now scoped per authority; since s/o are summary node ids (not
+						// dictionary-backed), their authority cannot be recomputed here, so we check
+						// existence across all authority partitions instead
+						HashMap<Long, Long> psForP = ps.get(p);
+						if (psForP == null || !psForP.containsValue(s)) {
+							throw new IllegalStateException("No source for " + p + " matching " + s);
 						}
-						if (!ps.get(p).equals(s)) {
-							throw new IllegalStateException("Source of " + p + " is not " + s + " but " + ps.get(p));
-						}
-						if (pt.get(p) == null) {
-							throw new IllegalStateException("No target for " + p);
-						}
-						if (!pt.get(p).equals(o)) {
-							throw new IllegalStateException("Target of " + p + " is not " + o + " but " + pt.get(p));
+						HashMap<Long, Long> ptForP = pt.get(p);
+						if (ptForP == null || !ptForP.containsValue(o)) {
+							throw new IllegalStateException("No target for " + p + " matching " + o);
 						}
 					}
 				}

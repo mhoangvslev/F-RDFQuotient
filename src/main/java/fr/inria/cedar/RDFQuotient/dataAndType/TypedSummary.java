@@ -17,7 +17,8 @@ public class TypedSummary extends Summary {
 		LOGGER.setLevel(Level.INFO);
 	}
 
-	long untypedNodesSummaryNode;
+	// authority -> the shared summary node representing all of that authority's untyped resources
+	HashMap<Long, Long> untypedNodesSummaryNodeByAuthority = new HashMap<>();
 
 	public TypedSummary(String triplesFileName, String triplesTableName, String encodedTriplesTableName, String dictionaryTableName) {
 		super();
@@ -33,7 +34,6 @@ public class TypedSummary extends Summary {
 		acs = new Long2LongSet();
 		n2cs = new Long2Long();
 		cs2csID = new HashMap<>();
-		untypedNodesSummaryNode = getNextSummaryNode();
 	}
 
 	@Override
@@ -41,24 +41,34 @@ public class TypedSummary extends Summary {
 		throw new IllegalStateException("This method does not belong to " + this.getClass().getName());
 	}
 
+	private long untypedNodesSummaryNodeForAuthority(long authorityId) {
+		return untypedNodesSummaryNodeByAuthority.computeIfAbsent(authorityId, k -> getNextSummaryNode());
+	}
+
 	@Override
 	protected void handleDataTriple(Triple t) {
 		//LOGGER.debug("### Data triple: " + t.toString());
 
+		// a literal object shares its raw dictionary code with every occurrence of that value in the
+		// graph, so it is resolved to a synthetic per-(literal, authority) node before use
+		long resolvedO = resolveObjectNodeId(t.s, t.o);
+
 		boolean sTyped = n2cs.get(t.s) != null;
 		boolean sSchemaNode = sn.contains(t.s);
-		boolean oTyped = n2cs.get(t.o) != null;
-		boolean oSchemaNode = sn.contains(t.o);
+		boolean oTyped = n2cs.get(resolvedO) != null;
+		boolean oSchemaNode = sn.contains(resolvedO);
 
 		// schema nodes already represented in collectSchemaNodes
 		// typed nodes already represented in typePass
+		// untyped nodes are grouped per authority, so untyped resources from different sources are
+		// never silently merged together
 		if (!sSchemaNode && !sTyped) {
-			rep.put(t.s, untypedNodesSummaryNode);
+			rep.put(t.s, untypedNodesSummaryNodeForAuthority(getOrComputeAuthorityId(t.s)));
 		}
 		if (!oSchemaNode && !oTyped) {
-			rep.put(t.o, untypedNodesSummaryNode);
+			rep.put(resolvedO, untypedNodesSummaryNodeForAuthority(objectAuthorityId(t.s, t.o)));
 		}
 
-		edgesWithProv.addTriple(rep.get(t.s), t.p, rep.get(t.o));
+		edgesWithProv.addTriple(rep.get(t.s), t.p, rep.get(resolvedO));
 	}
 }

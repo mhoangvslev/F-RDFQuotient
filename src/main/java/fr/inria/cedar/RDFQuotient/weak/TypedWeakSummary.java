@@ -158,8 +158,10 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 		//LOGGER.debug("### Data triple: " + t.toString());
 		repS = rep.get(t.s);
 		repO = rep.get(t.o);
-		sourceP = ps.get(t.p);
-		targetP = pt.get(t.p);
+		sAuthority = getOrComputeAuthorityId(t.s);
+		oAuthority = coarseObjectAuthorityId(t.o);
+		sourceP = sourceOfProperty(t.p, sAuthority);
+		targetP = targetOfProperty(t.p, oAuthority);
 
 		// Properties appearing in triples where one node is typed and the other is not,
 		// may have a source but lack a target, or the opposite.
@@ -264,27 +266,18 @@ public class TypedWeakSummary extends WeakOrTypedWeakSummary {
 							throw new IllegalStateException("Subject " + s + " has more than one edge with label " + p);
 						for (Long o: objectsOfThisSandP) {
 							if (n2cs.getInverse(o) == null) { // untyped o
-								Long sp = ps.get(p);
-								if (sp == null){
-									throw new IllegalStateException("Null source for property " + p + " (" +
-												RDF2SQLEncoding.dictionaryDecode(p) + ") of untyped node " + s +
-												 " (" +	RDF2SQLEncoding.dictionaryDecode(s) + ")");
+								// ps/pt are now scoped per authority; since s/o are summary node ids
+								// (not dictionary-backed), their authority cannot be recomputed here,
+								// so we check existence across all authority partitions instead
+								HashMap<Long, Long> sp = ps.get(p);
+								if (sp == null || !sp.containsValue(s)){
+									throw new IllegalStateException("No source for property " + p + " (" +
+												RDF2SQLEncoding.dictionaryDecode(p) + ") matching untyped node " + s);
 								}
-								else{
-									if (!sp.equals(s)){
-										throw new IllegalStateException("Source of " + p + " is not " + s + " but " + sp);
-									}
-								}
-								Long tp = pt.get(p);
-								if (tp == null){
-									throw new IllegalStateException("Null target for property " + p + " (" +
-												RDF2SQLEncoding.dictionaryDecode(p) + ") incoming untyped node " + o +
-												 " (" +	RDF2SQLEncoding.dictionaryDecode(o) + ")");
-								}
-								else{
-									if (!tp.equals(o)){
-										throw new IllegalStateException("Target of " + p + " is not " + o + " but " + tp);
-									}
+								HashMap<Long, Long> tp = pt.get(p);
+								if (tp == null || !tp.containsValue(o)){
+									throw new IllegalStateException("No target for property " + p + " (" +
+												RDF2SQLEncoding.dictionaryDecode(p) + ") matching incoming untyped node " + o);
 								}
 							}
 						}

@@ -8,7 +8,6 @@ import fr.inria.cedar.RDFQuotient.datastructures.Triple;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Objects;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
@@ -80,11 +79,15 @@ public class TwoPassTypedWeakSummary extends WeakOrTypedWeakSummary {
 
 	protected void findSummaryNodesAndEdges() {
 		for (Long n: nodes) {
+			// n plays a source role only where it's non-literal (n2o membership already guarantees
+			// that), and a target role governed by its own authority, or AUTHORITY_NONE if literal
+			long authorityId = coarseObjectAuthorityId(n);
 			ArrayList<Long> outgoing = new ArrayList<>();
 			if (n2o.containsKey(n)) {
 				for (Long p: n2o.get(n)) {
-					if (ps.get(p) != null) {
-						outgoing.add(ps.get(p));
+					Long sp = sourceOfProperty(p, authorityId);
+					if (sp != null) {
+						outgoing.add(sp);
 					}
 				}
 			}
@@ -93,8 +96,9 @@ public class TwoPassTypedWeakSummary extends WeakOrTypedWeakSummary {
 			ArrayList<Long> incoming = new ArrayList<>();
 			if (n2i.containsKey(n)) {
 				for (Long p: n2i.get(n)) {
-					if (pt.get(p) != null) {
-						incoming.add(pt.get(p));
+					Long tp = targetOfProperty(p, authorityId);
+					if (tp != null) {
+						incoming.add(tp);
 					}
 				}
 			}
@@ -104,18 +108,30 @@ public class TwoPassTypedWeakSummary extends WeakOrTypedWeakSummary {
 
 			if (n2o.containsKey(n)) {
 				for (Long p: n2o.get(n)) {
-					if (ps.get(p) != null) { // apply source-target replacements
-						pt.replaceAll((k, v) -> (Objects.equals(v, ps.get(p))) ? min : v);
+					Long sp = sourceOfProperty(p, authorityId);
+					if (sp != null) { // apply source-target replacements, within this authority only
+						for (HashMap<Long, Long> ptForP2: pt.values()) {
+							Long v = ptForP2.get(authorityId);
+							if (v != null && v.equals(sp)) {
+								ptForP2.put(authorityId, min);
+							}
+						}
 					}
-					ps.put(p, min);
+					ps.computeIfAbsent(p, k -> new HashMap<>()).put(authorityId, min);
 				}
 			}
 			if (n2i.containsKey(n)) {
 				for (Long p: n2i.get(n)) {
-					if (pt.get(p) != null) { // apply source-target replacements
-						ps.replaceAll((k, v) -> (Objects.equals(v, pt.get(p))) ? min : v);
+					Long tp = targetOfProperty(p, authorityId);
+					if (tp != null) { // apply source-target replacements, within this authority only
+						for (HashMap<Long, Long> psForP2: ps.values()) {
+							Long v = psForP2.get(authorityId);
+							if (v != null && v.equals(tp)) {
+								psForP2.put(authorityId, min);
+							}
+						}
 					}
-					pt.put(p, min);
+					pt.computeIfAbsent(p, k -> new HashMap<>()).put(authorityId, min);
 				}
 			}
 		}
@@ -128,14 +144,14 @@ public class TwoPassTypedWeakSummary extends WeakOrTypedWeakSummary {
 		boolean sTyped = (classSetS != null);
 		boolean oTyped = (classSetO != null);
 		if (!sTyped && !sn.contains(t.s)) {
-			repS = ps.get(t.p);
+			repS = sourceOfProperty(t.p, getOrComputeAuthorityId(t.s));
 			rep.put(t.s, repS);
 		}
 		//else {
 		// typed or schema node already represented
 		//}
 		if (!oTyped && !sn.contains(t.o)) {
-			repO = pt.get(t.p);
+			repO = targetOfProperty(t.p, coarseObjectAuthorityId(t.o));
 			rep.put(t.o, repO);
 		}
 		//else {

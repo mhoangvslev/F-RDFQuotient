@@ -17,6 +17,8 @@ import org.apache.log4j.Logger;
 import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Summary {
     private static final Logger LOGGER = Logger.getLogger(Summary.class.getName());
@@ -42,9 +44,34 @@ public class Summary {
     protected Long2LongSet acs; // for each class set ID, a set of actual types encountered on nodes which fall in this
     // class set. This is used only if parameter replaceTypeWithMostGeneralType is true.
     protected Long2Long n2cs; // for each data node, its class set ID. This is also the rep function for typed nodes
-    protected HashMap<TreeSet<Long>, Long> cs2csID; // for each set of types known so far, the ID of that set
+    protected HashMap<Long, HashMap<TreeSet<Long>, Long>> cs2csID; // authority -> (set of types known so far -> the ID of that set)
 
     protected Traverser traverser;
+
+    // === Federation support: authority ===
+    // A node's authority partitions equivalence: two nodes can only be merged into the same
+    // summary node if they also agree on authority. Extracted from a URI node's own dictionary
+    // string via AUTHORITY_PATTERN; nodes with no authority (blank nodes, non-matching URIs) share
+    // the AUTHORITY_NONE sentinel so they keep merging with each other, in their own partition.
+    public static final long AUTHORITY_NONE = -2L;
+    private static final Pattern AUTHORITY_PATTERN = Pattern.compile("^(https?://.*)/[^/]*$");
+    protected final HashMap<Long, Long> n2authority = new HashMap<>();
+
+    // A literal's dictionary code is shared by every occurrence of that value anywhere in the
+    // graph, regardless of which subject introduced it. Since a literal inherits its authority from
+    // whichever subject it was reached through (it has no URI of its own), the same raw literal ID
+    // can legitimately need different summary representations under different authorities. These
+    // two maps mint and track a synthetic per-(literal, authority) occurrence ID, used internally in
+    // place of the raw literal ID wherever a literal is treated as a data node.
+    protected final HashMap<Long, HashMap<Long, Long>> literalOccurrenceId = new HashMap<>(); // rawLiteralId -> authorityId -> syntheticOccurrenceId
+    protected final HashMap<Long, Long> occurrenceToRawLiteral = new HashMap<>(); // syntheticOccurrenceId -> rawLiteralId, for export-time decoding
+    protected final HashMap<Long, Long> occurrenceAuthority = new HashMap<>(); // syntheticOccurrenceId -> the authority it was minted under
+    // Whether this variant resolves literal objects through resolveObjectNodeId (TypedSummary,
+    // OneBisimSummary, OneFWSummary, and subclasses thereof) as opposed to the strong/weak families'
+    // coarser AUTHORITY_NONE-for-literals policy. Read by the shared Traverser classes, which add a
+    // triple's summary edge using summ.rep - looking that up by the correct (possibly resolved) key
+    // requires knowing which policy this instance uses.
+    protected boolean usesLiteralOccurrenceResolution = false;
 
     // these serve to represent the nodes that may have types but no data property
     protected long typeOnlyNodeID;
@@ -633,6 +660,143 @@ public class Summary {
     }
 
     /**
+     * True if the dictionary-decoded form of this node is an RDF literal (not a URI or blank node).
+     * URIs are stored in the dictionary wrapped in angle brackets, blank nodes as "_:...".
+     */
+    protected boolean isLiteralNode(long nodeId) {
+        String decoded = RDF2SQLEncoding.dictionaryDecode(nodeId);
+        return !decoded.startsWith("<") && !decoded.startsWith("_:");
+    }
+
+    /**
+     * Authority of a node, extracted from its own URI via AUTHORITY_PATTERN and memoized. Must not
+     * be called directly on a literal (a literal has no URI of its own) - see resolveObjectNodeId.
+     */
+    protected long getOrComputeAuthorityId(long nodeId) {
+        Long cached = n2authority.get(nodeId);
+        if (cached != null) {
+            return cached;
+        }
+        long authorityId = AUTHORITY_NONE;
+        String decoded = RDF2SQLEncoding.dictionaryDecode(nodeId);
+        if (decoded.length() >= 2 && decoded.charAt(0) == '<' && decoded.charAt(decoded.length() - 1) == '>') {
+            String uri = decoded.substring(1, decoded.length() - 1);
+            Matcher m = AUTHORITY_PATTERN.matcher(uri);
+            if (m.matches()) {
+                String authorityURI = "<" + m.group(1) + ">";
+                long found = RDF2SQLEncoding.dictionaryEncode(authorityURI);
+                authorityId = (found != -1) ? found : RDF2SQLEncoding.addNewEntryToDictionary(authorityURI, dictionaryTableName);
+            }
+        }
+        n2authority.put(nodeId, authorityId);
+        return authorityId;
+    }
+
+    /**
+     * Resolves a node ID for use as a data node in equivalence-building, given the subject of the
+     * triple it occurs in as object. A literal has no URI of its own, so it inherits the subject's
+     * authority; since its raw dictionary code is shared by every occurrence of that value in the
+     * graph, a fresh synthetic occurrence ID is minted per (literal, authority) pair the first time
+     * it is seen, so the same literal reached through different authorities is tracked as distinct
+     * nodes. Non-literal nodes (URIs, blank nodes) are returned unchanged - their authority is
+     * intrinsic to their own ID, computed via getOrComputeAuthorityId.
+     */
+    protected long resolveObjectNodeId(long subjectId, long objectId) {
+        if (!isLiteralNode(objectId)) {
+            return objectId;
+        }
+        long authorityId = getOrComputeAuthorityId(subjectId);
+        HashMap<Long, Long> byAuthority = literalOccurrenceId.computeIfAbsent(objectId, k -> new HashMap<>());
+        Long occurrence = byAuthority.get(authorityId);
+        if (occurrence == null) {
+            occurrence = getNextSummaryNode();
+            byAuthority.put(authorityId, occurrence);
+            occurrenceToRawLiteral.put(occurrence, objectId);
+            occurrenceAuthority.put(occurrence, authorityId);
+        }
+        return occurrence;
+    }
+
+    /**
+     * The authority governing a node as it occurs in object position: a literal inherits the
+     * subject's authority (see resolveObjectNodeId); any other node uses its own.
+     */
+    protected long objectAuthorityId(long subjectId, long objectId) {
+        return isLiteralNode(objectId) ? getOrComputeAuthorityId(subjectId) : getOrComputeAuthorityId(objectId);
+    }
+
+    /**
+     * Simplified authority policy for algorithm families (strong/weak) that do not thread
+     * per-occurrence literal-authority-inheritance through their node identity: a literal always
+     * falls into the shared AUTHORITY_NONE partition (as it did before authority existed), while any
+     * other node still uses its own, intrinsic authority. Unlike objectAuthorityId, this never
+     * requires resolving the object through resolveObjectNodeId, since the object's raw id is used
+     * unchanged as its node identity in these families.
+     */
+    protected long coarseObjectAuthorityId(long objectId) {
+        return isLiteralNode(objectId) ? AUTHORITY_NONE : getOrComputeAuthorityId(objectId);
+    }
+
+    /**
+     * Authority of a node identity that may be a resolveObjectNodeId result: for a synthetic
+     * literal-occurrence id (not itself a dictionary entry), returns the authority it was minted
+     * under; for any other (real, dictionary-backed) id, computes it directly as usual.
+     */
+    protected long authorityOfResolvedNode(long resolvedId) {
+        Long occurrenceAuth = occurrenceAuthority.get(resolvedId);
+        return (occurrenceAuth != null) ? occurrenceAuth : getOrComputeAuthorityId(resolvedId);
+    }
+
+    /**
+     * The authority of a summary node, for export-time URI minting. A summary node's authority is
+     * never recorded directly - instead, it's recovered from any one original node it represents
+     * (every original node mapped to the same summary node necessarily shares one authority, by
+     * construction of the partition), via the same resolution logic used while building it.
+     */
+    public long getSummaryNodeAuthorityId(long summaryNodeId) {
+        HashSet<Long> originals = rep.getInverse(summaryNodeId);
+        if (originals == null || originals.isEmpty()) {
+            return AUTHORITY_NONE;
+        }
+        return authorityOfResolvedNode(originals.iterator().next());
+    }
+
+    /**
+     * Public accessor for export code (a different package): the authority of a real,
+     * dictionary-backed node (e.g. a schema node), as opposed to a summary node - see
+     * getSummaryNodeAuthorityId for that case.
+     */
+    public long getNodeAuthorityIdForExport(long nodeId) {
+        return getOrComputeAuthorityId(nodeId);
+    }
+
+    /**
+     * Whether this variant resolves literal objects through resolveObjectNodeId, as opposed to the
+     * strong/weak families' coarser AUTHORITY_NONE-for-literals policy - see
+     * usesLiteralOccurrenceResolution. Public accessor for export code (a different package), which
+     * must resolve an object the same way before looking it up in rep.
+     */
+    public boolean usesLiteralOccurrenceResolution() {
+        return usesLiteralOccurrenceResolution;
+    }
+
+    /**
+     * Public accessor for export code (a different package) - see resolveObjectNodeId.
+     */
+    public long resolveObjectNodeIdForExport(long subjectId, long objectId) {
+        return resolveObjectNodeId(subjectId, objectId);
+    }
+
+    /**
+     * Decodes a node for export, resolving synthetic literal-occurrence IDs (minted by
+     * resolveObjectNodeId) back to their real literal before dictionary decoding.
+     */
+    public String decodeNode(long nodeId) {
+        Long raw = occurrenceToRawLiteral.get(nodeId);
+        return RDF2SQLEncoding.dictionaryDecode(raw != null ? raw : nodeId);
+    }
+
+    /**
      * write in summaryNodeStatistics the number of
      * data nodes each summary node represented
      */
@@ -764,6 +928,9 @@ public class Summary {
         }
 
         // not a schema triple
+        // the class-set signature is scoped per authority: two subjects with the same type set but
+        // different authorities must not be merged into the same summary node
+        HashMap<TreeSet<Long>, Long> cs2csIDForAuthority = cs2csID.computeIfAbsent(getOrComputeAuthorityId(t.s), k -> new HashMap<>());
         HashSet<Long> oTopClasses = null; //top ancestors of this type
         if (this.replaceTypeWithMostGeneralType) {
             oTopClasses = this.topClasses.get(t.o);
@@ -785,12 +952,12 @@ public class Summary {
             else {
                 sClassSet.add(t.o); // add the actual class we found here
             }
-            repS = cs2csID.get(sClassSet); // type-based representative
+            repS = cs2csIDForAuthority.get(sClassSet); // type-based representative
             // comparison between sets uses equals and compares the structures of the sets
             if (repS == null) { // we create it
                 repS = getNextSummaryNode();
                 cs.put(repS, sClassSet); // installs the new class set
-                cs2csID.put(sClassSet, repS); // installs the new class set
+                cs2csIDForAuthority.put(sClassSet, repS); // installs the new class set
             }
             // whether or not newClassSetID was known:
             n2cs.put(t.s, repS); // erases/replaces previously known class set ID
@@ -824,11 +991,11 @@ public class Summary {
                 else {
                     newSClassSet.add(t.o); // add the appropriate type in
                 }
-                Long newSRep = cs2csID.get(newSClassSet);
+                Long newSRep = cs2csIDForAuthority.get(newSClassSet);
                 if (newSRep == null) {
                     newSRep = getNextSummaryNode();
                     cs.put(newSRep, newSClassSet);
-                    cs2csID.put(newSClassSet, newSRep);
+                    cs2csIDForAuthority.put(newSClassSet, newSRep);
                 }
                 if (this.replaceTypeWithMostGeneralType) {
                     //this.summaryNodeToActualTypeToCardinality.put(newClassSetID,
@@ -1242,6 +1409,11 @@ public class Summary {
     public String writeDecodedSummaryToNTFile(Connection conn) {
         ensureExporter();
         return exporter.writeDecodedSummaryToNTFile(conn);
+    }
+
+    public String writeDecodedSummaryToNQuadsFile(Connection conn) {
+        ensureExporter();
+        return exporter.writeDecodedSummaryToNQuadsFile(conn);
     }
 
     /**

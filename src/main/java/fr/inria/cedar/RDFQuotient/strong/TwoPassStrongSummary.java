@@ -142,12 +142,12 @@ public class TwoPassStrongSummary extends StrongOrTypedStrongSummary {
 		if (!sn.contains(t.s)) {
 			sourceCliqueS = n2sc.get(t.s) != null ? n2sc.get(t.s) : getEmptySourceCliqueID();
 			targetCliqueS = n2tc.get(t.s) != null ? n2tc.get(t.s) : getEmptyTargetCliqueID();
-			rep.put(t.s, getOrCreateSummaryNode(sourceCliqueS, targetCliqueS));
+			rep.put(t.s, getOrCreateSummaryNode(getOrComputeAuthorityId(t.s), sourceCliqueS, targetCliqueS));
 		}
 		if (!sn.contains(t.o)) {
 			sourceCliqueO = n2sc.get(t.o) != null ? n2sc.get(t.o) : getEmptySourceCliqueID();
 			targetCliqueO = n2tc.get(t.o) != null ? n2tc.get(t.o) : getEmptyTargetCliqueID();
-			rep.put(t.o, getOrCreateSummaryNode(sourceCliqueO, targetCliqueO));
+			rep.put(t.o, getOrCreateSummaryNode(coarseObjectAuthorityId(t.o), sourceCliqueO, targetCliqueO));
 		}
 	}
 }
