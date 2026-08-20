@@ -17,13 +17,18 @@ public class WeakOrTypedWeakSummary extends Summary {
 		LOGGER.setLevel(Level.INFO);
 	}
 
-	protected final HashMap<Long, Long> ps; // for each property, the property source
-	protected final HashMap<Long, Long> pt; // for each property, the property target
+	protected final HashMap<Long, HashMap<Long, Long>> ps; // for each property, per authority, the property source
+	protected final HashMap<Long, HashMap<Long, Long>> pt; // for each property, per authority, the property target
 
 	protected Long repS;
 	protected Long repO;
 	protected Long sourceP;
 	protected Long targetP;
+	// the authority context of the triple currently being processed, set once per triple by the
+	// dispatcher alongside repS/repO/sourceP/targetP; a literal object falls back to AUTHORITY_NONE
+	// (coarseObjectAuthorityId) rather than per-occurrence inheritance - see PLAN.md
+	protected long sAuthority;
+	protected long oAuthority;
 
 	// U means unrepresented (so far)
 	// R means represented (so far)
@@ -57,6 +62,24 @@ public class WeakOrTypedWeakSummary extends Summary {
 		super();
 		ps = new HashMap<>();
 		pt = new HashMap<>();
+	}
+
+	protected Long sourceOfProperty(long p, long authorityId) {
+		HashMap<Long, Long> psForP = ps.get(p);
+		return (psForP == null) ? null : psForP.get(authorityId);
+	}
+
+	protected Long targetOfProperty(long p, long authorityId) {
+		HashMap<Long, Long> ptForP = pt.get(p);
+		return (ptForP == null) ? null : ptForP.get(authorityId);
+	}
+
+	protected void putSourceOfProperty(long p, Long node) {
+		ps.computeIfAbsent(p, k -> new HashMap<>()).put(sAuthority, node);
+	}
+
+	protected void putTargetOfProperty(long p, Long node) {
+		pt.computeIfAbsent(p, k -> new HashMap<>()).put(oAuthority, node);
 	}
 
 	// -->
@@ -124,8 +147,8 @@ public class WeakOrTypedWeakSummary extends Summary {
 		// represent the property by the subject and object codes
 		sourceP = rep.get(t.s);
 		targetP = rep.get(t.o);
-		ps.put(t.p, sourceP);
-		pt.put(t.p, targetP);
+		putSourceOfProperty(t.p,sourceP);
+		putTargetOfProperty(t.p,targetP);
 		edgesWithProv.addTriple(sourceP, t.p, targetP);
 	}
 
@@ -136,8 +159,8 @@ public class WeakOrTypedWeakSummary extends Summary {
 		sourceP = rep.get(t.s);
 		targetP = getNextSummaryNode();
 		rep.put(t.o, targetP);
-		ps.put(t.p, sourceP);
-		pt.put(t.p, targetP);
+		putSourceOfProperty(t.p,sourceP);
+		putTargetOfProperty(t.p,targetP);
 		edgesWithProv.addTriple(sourceP, t.p, targetP);
 	}
 
@@ -148,8 +171,8 @@ public class WeakOrTypedWeakSummary extends Summary {
 		// create source for p; represent the subject by that source;
 		sourceP = getNextSummaryNode();
 		rep.put(t.s, sourceP);
-		ps.put(t.p, sourceP);
-		pt.put(t.p, targetP);
+		putSourceOfProperty(t.p,sourceP);
+		putTargetOfProperty(t.p,targetP);
 		edgesWithProv.addTriple(sourceP, t.p, targetP);
 	}
 
@@ -160,7 +183,7 @@ public class WeakOrTypedWeakSummary extends Summary {
 	protected void handleDataTriple_US_RP_RO(Triple t) {
 		if (sourceP == null) {
 			sourceP = getNextSummaryNode();
-			ps.put(t.p, sourceP);
+			putSourceOfProperty(t.p,sourceP);
 		}
 		Long addedTripleSource = sourceP;
 		rep.put(t.s, addedTripleSource);
@@ -180,7 +203,7 @@ public class WeakOrTypedWeakSummary extends Summary {
 			applySubstitutions(subs);
 		}
 		else { // target of p was null, just take repO as target
-			pt.put(t.p, repO);
+			putTargetOfProperty(t.p,repO);
 		}
 		edgesWithProv.addTriple(addedTripleSource, t.p, addedTripleTarget);
 	}
@@ -193,7 +216,7 @@ public class WeakOrTypedWeakSummary extends Summary {
 
 		if (targetP == null) { // fixing the triple target if not already there
 			targetP = getNextSummaryNode();
-			pt.put(t.p, targetP);
+			putTargetOfProperty(t.p,targetP);
 		}
 		Long addedTripleTarget = targetP;
 		rep.put(t.o, addedTripleTarget);
@@ -215,7 +238,7 @@ public class WeakOrTypedWeakSummary extends Summary {
 		else { // p may have empty source if so far we only found it on typed nodes
 			// here, s is represented and untyped. Thus, we put p's source on s' representative.
 			//LOGGER.debug("RS_RP_UO: source of " +  t.p + " is: " + repS);
-			ps.put(t.p, repS);
+			putSourceOfProperty(t.p,repS);
 		}
 		edgesWithProv.addTriple(addedTripleSource, t.p, addedTripleTarget);
 	}
@@ -225,14 +248,14 @@ public class WeakOrTypedWeakSummary extends Summary {
 		// in this case we need to represent s by the source of p and o by the target of p
 		if (sourceP == null) {
 			sourceP = getNextSummaryNode();
-			ps.put(t.p, sourceP);
+			putSourceOfProperty(t.p,sourceP);
 		}
 		if (targetP == null) {
 			targetP = sourceP;
 			if (t.s != t.o) { // if it's not a self loop
 				targetP = getNextSummaryNode();
 			}
-			pt.put(t.p, targetP);
+			putTargetOfProperty(t.p,targetP);
 		}
 		rep.put(t.s, sourceP);
 		rep.put(t.o, targetP);
@@ -247,8 +270,8 @@ public class WeakOrTypedWeakSummary extends Summary {
 		if (t.s != t.o) { // if it's not a self loop
 			targetP = getNextSummaryNode();
 		}
-		ps.put(t.p, sourceP);
-		pt.put(t.p, targetP);
+		putSourceOfProperty(t.p,sourceP);
+		putTargetOfProperty(t.p,targetP);
 		rep.put(t.s, sourceP);
 		rep.put(t.o, targetP);
 		edgesWithProv.addTriple(sourceP, t.p, targetP);
@@ -272,7 +295,7 @@ public class WeakOrTypedWeakSummary extends Summary {
 			addedTripleSource = getNextSummaryNode();
 		}
 		rep.put(t.s, addedTripleSource);
-		ps.put(t.p, addedTripleSource);
+		putSourceOfProperty(t.p,addedTripleSource);
 
 		edgesWithProv.addTriple(addedTripleSource, t.p, addedTripleTarget);
 	}
@@ -292,7 +315,7 @@ public class WeakOrTypedWeakSummary extends Summary {
 			addedTripleTarget = getNextSummaryNode();
 		}
 		rep.put(t.o, addedTripleTarget);
-		pt.put(t.p, addedTripleTarget);
+		putTargetOfProperty(t.p,addedTripleTarget);
 
 		edgesWithProv.addTriple(addedTripleSource, t.p, addedTripleTarget);
 	}
@@ -305,7 +328,7 @@ public class WeakOrTypedWeakSummary extends Summary {
 	 */
 	protected void handleDataTriple_US_UP_TRO(Triple t) {
 		sourceP = getNextSummaryNode();
-		ps.put(t.p, sourceP);
+		putSourceOfProperty(t.p,sourceP);
 		rep.put(t.s, sourceP);
 		edgesWithProv.addTriple(sourceP, t.p, repO);
 	}
@@ -318,7 +341,7 @@ public class WeakOrTypedWeakSummary extends Summary {
 	 */
 	protected void handleDataTriple_TRS_UP_UO(Triple t) {
 		targetP = getNextSummaryNode();
-		pt.put(t.p, targetP);
+		putTargetOfProperty(t.p,targetP);
 		rep.put(t.o, targetP);
 		edgesWithProv.addTriple(repS, t.p, targetP);
 	}
@@ -347,7 +370,7 @@ public class WeakOrTypedWeakSummary extends Summary {
 			applySubstitutions(subs);
 		}
 		else {
-			ps.put(t.p, addedTripleSource);
+			putSourceOfProperty(t.p,addedTripleSource);
 		}
 		edgesWithProv.addTriple(addedTripleSource, t.p, addedTripleTarget);
 	}
@@ -375,7 +398,7 @@ public class WeakOrTypedWeakSummary extends Summary {
 			applySubstitutions(subs);
 		}
 		else {
-			pt.put(t.p, addedTripleTarget);
+			putTargetOfProperty(t.p,addedTripleTarget);
 		}
 		edgesWithProv.addTriple(addedTripleSource, t.p, addedTripleTarget);
 	}
@@ -387,7 +410,7 @@ public class WeakOrTypedWeakSummary extends Summary {
 	 * @param t
 	 */
 	protected void handleDataTriple_RS_UP_TRO(Triple t) {
-		ps.put(t.p, repS);
+		putSourceOfProperty(t.p,repS);
 		edgesWithProv.addTriple(repS, t.p, repO);
 	}
 
@@ -397,7 +420,7 @@ public class WeakOrTypedWeakSummary extends Summary {
 	 * @param t
 	 */
 	protected void handleDataTriple_TRS_UP_RO(Triple t) {
-		pt.put(t.p, repO);
+		putTargetOfProperty(t.p,repO);
 		edgesWithProv.addTriple(repS, t.p, repO);
 	}
 
@@ -413,18 +436,19 @@ public class WeakOrTypedWeakSummary extends Summary {
 	protected void replaceAll(Long oldNode, Long newNode) {
 		edgesWithProv.replaceNodeInSummaryEdges(oldNode, newNode);
 		rep.replaceValue(oldNode, newNode);
-		// now we need to replace oldNode with newNode in the property source and target. It does not suffice to do it for one property.
-		if (ps.containsValue(oldNode)) {
-			for (Long prop: ps.keySet()) {
-				if (ps.get(prop).equals(oldNode)) {
-					ps.replace(prop, newNode);
+		// now we need to replace oldNode with newNode in the property source and target, in every
+		// authority partition. It does not suffice to do it for one property.
+		for (HashMap<Long, Long> psForProperty: ps.values()) {
+			for (Long authorityId: psForProperty.keySet()) {
+				if (psForProperty.get(authorityId).equals(oldNode)) {
+					psForProperty.put(authorityId, newNode);
 				}
 			}
 		}
-		if (pt.containsValue(oldNode)) {
-			for (Long prop: pt.keySet()) {
-				if (pt.get(prop).equals(oldNode)) {
-					pt.replace(prop, newNode);
+		for (HashMap<Long, Long> ptForProperty: pt.values()) {
+			for (Long authorityId: ptForProperty.keySet()) {
+				if (ptForProperty.get(authorityId).equals(oldNode)) {
+					ptForProperty.put(authorityId, newNode);
 				}
 			}
 		}

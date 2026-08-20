@@ -5,6 +5,7 @@ package fr.inria.cedar.RDFQuotient.strong;
 import fr.inria.cedar.RDFQuotient.datastructures.Long2Long;
 import fr.inria.cedar.RDFQuotient.datastructures.Long2LongSet;
 import fr.inria.cedar.RDFQuotient.datastructures.Triple;
+import fr.inria.cedar.RDFQuotient.datastructures.TwoLevelLongMap;
 import java.util.HashMap;
 import java.util.TreeSet;
 import org.apache.log4j.Level;
@@ -321,11 +322,13 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 	}
 
 	private void displayClassSets() {
-		for (TreeSet<Long> classSets: cs2csID.keySet()){
-            String thisCSBuffer = showLongSet(classSets) +
-                    "-->" +
-                    cs2csID.get(classSets);
-            System.out.println(thisCSBuffer);
+		for (Long authorityId: cs2csID.keySet()){
+			for (TreeSet<Long> classSets: cs2csID.get(authorityId).keySet()){
+				String thisCSBuffer = showLongSet(classSets) +
+						"-->" +
+						cs2csID.get(authorityId).get(classSets);
+				System.out.println(thisCSBuffer);
+			}
 		}
 	}
 
@@ -344,9 +347,10 @@ public class TypedStrongSummary extends StrongOrTypedStrongSummary {
 				throw new IllegalStateException("Null target clique for " + node);
 			if (untypedSummaryNodes == null)
 				throw new IllegalStateException("Untyped summary nodes");
-			if (untypedSummaryNodes.get(thisNodeSC) == null)
+			TwoLevelLongMap untypedSummaryNodesForAuthority = untypedSummaryNodes.get(coarseObjectAuthorityId(node));
+			if (untypedSummaryNodesForAuthority == null || untypedSummaryNodesForAuthority.get(thisNodeSC) == null)
 				throw new IllegalStateException("Unknown source clique " + thisNodeSC);
-			Long summaryNode = untypedSummaryNodes.get(thisNodeSC).get(thisNodeTC);
+			Long summaryNode = untypedSummaryNodesForAuthority.get(thisNodeSC).get(thisNodeTC);
 			if (summaryNode == null)
 				throw new IllegalStateException("Null summary node");
 			sb.append(node).append("->").append(summaryNode).append(" ");
