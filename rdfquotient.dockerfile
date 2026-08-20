@@ -1,4 +1,4 @@
-FROM maven:3.8.1-jdk-8-openj9
+FROM maven:3.9-eclipse-temurin-25
 
 
 RUN apt-get update && \
