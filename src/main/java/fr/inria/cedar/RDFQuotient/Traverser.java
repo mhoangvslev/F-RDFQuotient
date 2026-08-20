@@ -243,7 +243,7 @@ public abstract class Traverser {
 			getUntypedTriplesString.append(prefix).append("p <> ").append(typeCode);
 			prefix = " and ";
 		}
-		getUntypedTriplesString.append(summ.summarizationProperties.getProperty("database.deterministic_ordering").equals("false") ? "" : "order by s, p, o");
+		getUntypedTriplesString.append(summ.summarizationProperties.getProperty("database.deterministic_ordering").equals("false") ? "" : " order by s, p, o");
 
 		try {
 			try (Statement getUntypedTriples = conn.createStatement()) {
@@ -316,7 +316,7 @@ public abstract class Traverser {
 			getUntypedTriplesString.append(prefix).append("p <> ").append(typeCode);
 			prefix = " and ";
 		}
-		getUntypedTriplesString.append(summ.summarizationProperties.getProperty("database.deterministic_ordering").equals("false") ? "" : "order by s, p, o");
+		getUntypedTriplesString.append(summ.summarizationProperties.getProperty("database.deterministic_ordering").equals("false") ? "" : " order by s, p, o");
 
 		Triple t;
 		try {
@@ -365,7 +365,7 @@ public abstract class Traverser {
 			getUntypedTriplesString.append(prefix).append("p <> ").append(typeCode);
 			prefix = " and ";
 		}
-		getUntypedTriplesString.append(summ.summarizationProperties.getProperty("database.deterministic_ordering").equals("false") ? "" : "order by s, p, o");
+		getUntypedTriplesString.append(summ.summarizationProperties.getProperty("database.deterministic_ordering").equals("false") ? "" : " order by s, p, o");
 
 		Triple t;
 		try {
