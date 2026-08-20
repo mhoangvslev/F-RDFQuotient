@@ -12,6 +12,7 @@ import fr.inria.cedar.RDFQuotient.strong.StrongSummary;
 import fr.inria.cedar.RDFQuotient.strong.TwoPassStrongSummary;
 import fr.inria.cedar.RDFQuotient.strong.TwoPassTypedStrongSummary;
 import fr.inria.cedar.RDFQuotient.strong.TypedStrongSummary;
+import fr.inria.cedar.RDFQuotient.util.NQuadsToNTriplesConverter;
 import fr.inria.cedar.RDFQuotient.util.PostgresIdentifier;
 import fr.inria.cedar.RDFQuotient.weak.*;
 import fr.inria.cedar.ontosql.db.UnsupportedDatabaseEngineException;
@@ -367,8 +368,16 @@ public class Interface {
             databaseConnection = null;
         }
 
+        String datasetFilenameForLoading = datasetFilename;
+        if (NQuadsToNTriplesConverter.isNQuadsFile(datasetFilename)) {
+            LOGGER.info("Detected N-Quads input; converting to N-Triples for the loader "
+                + "(graph term dropped -- authority is derived from each node's own URI, "
+                + "not from named-graph context, see PLAN.md)");
+            datasetFilenameForLoading = NQuadsToNTriplesConverter.convertToNTriplesFile(datasetFilename);
+        }
+
         List<String> datasetSourceFiles = new ArrayList<>();
-        datasetSourceFiles.add(datasetFilename);
+        datasetSourceFiles.add(datasetFilenameForLoading);
         Parameters datasets = new Parameters();
         datasets.setAllInFile(datasetSourceFiles);
 
@@ -643,9 +652,10 @@ public class Interface {
             LOGGER.info("Summary NT file exported to disk");
         }
 
+        String NQFilename = null;
         if (summarizationProperties.getProperty("summary.export_to_nq_file").equals("true")) {
             LOGGER.info("Exporting summary to disk to N-Quads file");
-            summary.writeDecodedSummaryToNQuadsFile(databaseConnection);
+            NQFilename = summary.writeDecodedSummaryToNQuadsFile(databaseConnection);
             LOGGER.info("Summary N-Quads file exported to disk");
         }
 
@@ -677,6 +687,7 @@ public class Interface {
         HashMap<String, String> names = new HashMap<>();
         names.put("databaseName", summarizationProperties.getProperty("database.name"));
         names.put("NTFilename", NTFilename);
+        names.put("NQFilename", NQFilename);
         names.put("DOTFilename", DOTFilename);
         LOGGER.info("END summarize");
         return names;
