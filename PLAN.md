@@ -1,5 +1,51 @@
 # Adding "authority" as a third equivalence component (federation support)
 
+## Status: implemented on branch `feature/authority-federation`
+
+All 5 phases below are done and committed (base on top of `appmod/java-upgrade-20260820135516`,
+per user decision):
+
+- **Phase 1** — authority/literal infrastructure in `Summary.java`; wired into `TypedSummary`,
+  `OneBisimSummary`/`InputOutputAndTypedSummary`, `OneFWSummary`.
+- **Phase 2** — strong family (5 files): `StrongOrTypedStrongSummary`, `StrongSummary`,
+  `TypedStrongSummary`, `TwoPassStrongSummary`, `TwoPassTypedStrongSummary`. Uses the simplified
+  `coarseObjectAuthorityId` policy (literals → `AUTHORITY_NONE`, no per-occurrence inheritance) —
+  see "Strong/weak scope" decision below.
+- **Phase 3** — weak family (6 files): `WeakOrTypedWeakSummary`, `WeakSummary`, `TypedWeakSummary`,
+  `TwoPassWeakSummary`, `TwoPassTypedWeakSummary`, `TwoPassWeakSummaryWithUnionFind`. Same coarse
+  policy as strong.
+- **Phase 4** — `SummaryExport.java`: fixpoint-safe authority-embedded URI minting, N-Quads export
+  (`summary.export_to_nq_file`, off by default), literal-occurrence-safe decoding routed through
+  `Summary.decodeNode`.
+- **Phase 5** — verified against a live Postgres (via a throwaway Docker container, not part of the
+  repo). Found and fixed two real bugs in the two-pass classify-then-represent flow and in DOT-drawing
+  export where a raw (unresolved) object id was looked up in `rep` after `representDataTriple` had
+  stored it under a resolved one — see commit `8fd36e41`. Also fixed a schema-node URI-fabrication bug
+  in the reified-statistics export path. Added `AuthorityFederationTests` (a real, non-golden-file
+  test) confirming same-authority merging and cross-authority splitting both work correctly end to end.
+
+This covers all 12 of the README's algorithm variants.
+
+### Known follow-up required before merging
+
+**All existing golden-file tests need their reference `.nt` files regenerated.** The phase 4
+fixpoint fix changes summary-node URIs from a flat `http://rq.org/` prefix to the node's own
+authority — this is the deliberate, correct consequence of the fixpoint design (see "Formal impact"
+below), not a bug, but it means every `test-N-*/test-N_*-reference.nt` file in the suite now expects
+the old prefix and needs to be regenerated against a real Postgres instance. Confirmed via the live
+run: **zero exceptions** anywhere in the suite — all failures are this single, expected, accepted
+category (byte-diff against the old prefix), verified by structural spot-check (identical line counts,
+identical real-property usage counts) to not be a hidden second regression.
+
+### Known gap: DOT drawing's own URI scheme
+
+DOT visualization output still mints summary-node URIs under the flat legacy prefix (not
+authority-embedded) — fixing that fully would mean touching ~700 more lines of visualization code,
+out of scope for the SPARQL/N-Quads querying goal this plan targets. The literal-occurrence *crash*
+in DOT export was fixed (see phase 5), so it no longer throws — only the URI-scheme
+inconsistency (DOT URIs vs. NT/NQ URIs won't match for authority-partitioned nodes) remains
+undone, documented here rather than silently left.
+
 ## Goal
 
 Extend node equivalence so that, in addition to the existing criteria (type,
